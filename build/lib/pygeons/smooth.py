@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import modest.cv
-import rbf.smooth
+import rbf.fd
 import modest
 import modest.solvers
 import scipy.sparse
@@ -63,13 +63,13 @@ def _bootstrap_uncertainty(G,L,solver='spsolve',itr=10,**kwargs):
   return np.sqrt(soln.get_variance())
 
 
-def network_smooth(u,t,x,sigma=None,
-                   stencil_size=5,connectivity=None,order=1,
-                   t_damping=None,x_damping=None,solver='spsolve',
-                   basis=rbf.basis.phs3,x_vert=None,x_smp=None,
-                   t_vert=None,t_smp=None,cv_itr=100,bs_itr=100,plot=False,
-                   x_log_bounds=None,t_log_bounds=None,fold=10,
-                   **kwargs):
+def network_smoother(u,t,x,sigma=None,
+                     stencil_size=5,connectivity=None,order=1,
+                     t_damping=None,x_damping=None,solver='spsolve',
+                     basis=rbf.basis.phs3,x_vert=None,x_smp=None,
+                     t_vert=None,t_smp=None,cv_itr=100,bs_itr=100,plot=False,
+                     x_log_bounds=None,t_log_bounds=None,fold=10,
+                     **kwargs):
 
 
   if x_log_bounds is None:
@@ -96,20 +96,24 @@ def network_smooth(u,t,x,sigma=None,
   sigma_flat = sigma.flatten()
 
   # form space smoothing matrix
-  Lx = rbf.smooth.smoothing_matrix(x,stencil_size=stencil_size,
-                                   connectivity=connectivity,
-                                   order=order,basis=basis,
-                                   vert=x_vert,smp=x_smp)
+  Lx = rbf.fd.diff_matrix(x,N=stencil_size,
+                          C=connectivity,
+                          coeffs=np.array([1.0,1.0]),
+                          diffs=np.array([[2,0],[0,2]]), 
+                          order=order,basis=basis,
+                          vert=x_vert,smp=x_smp)
   # this produces the traditional finite difference matrix for a 
   # second derivative
-  Lt = rbf.smooth.smoothing_matrix(t[:,None],stencil_size=5,order='max',
-                                   basis=basis,vert=t_vert,smp=t_smp)
+  Lt = rbf.fd.diff_matrix(t[:,None],N=3,order=2,
+                          coeffs=np.array([1.0]),
+                          diffs=np.array([[2]]), 
+                          basis=basis,vert=t_vert,smp=t_smp)
   modest.tic('building')
   # the solution for the first timestep is defined to be zero and so 
   # we do not need the first column
   Lt = Lt[:,1:]
 
-  Lt,Lx = rbf.smooth.grid_smoothing_matrices(Lt,Lx)
+  Lt,Lx = rbf.fd.grid_diff_matrices(Lt,Lx)
 
   # I will be estimating baseline displacement for each station
   # which have no regularization constraints.  
@@ -132,7 +136,7 @@ def network_smooth(u,t,x,sigma=None,
   # add baseline elements
   Bt = scipy.sparse.csr_matrix(np.ones((Nt,1)))
   Bx = scipy.sparse.csr_matrix((0,Nx))
-  Bt,Bx = rbf.smooth.grid_smoothing_matrices(Bt,Bx)
+  Bt,Bx = rbf.fd.grid_diff_matrices(Bt,Bx)
   G = scipy.sparse.hstack((Bt,G))
   G = G.tocsr()
 
