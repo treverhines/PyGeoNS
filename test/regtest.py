@@ -6,8 +6,8 @@ import rbf.halton
 import matplotlib.pyplot as plt
 import modest
 
-Nt = 100
-Nx = 500
+Nt = 5
+Nx = 20
 t = np.linspace(0.0,1.0,Nt)
 pos = rbf.halton.halton(Nx,2)
 
@@ -19,11 +19,15 @@ tcc = pygeons.cuts.CutCollection([tc])
 tcc = None
 
 modest.tic()
-Lt,Lx = pygeons.smooth._reg_matrices(t,pos,space_cuts=scc,time_cuts=tcc,Nprocs=6)
-
+Lt,Lx = pygeons.smooth._reg_matrices(t,pos,space_cuts=scc,time_cuts=tcc)
 print(modest.toc())
-#plt.figure(1)
-#plt.imshow(Lt.toarray(),interpolation='none')
-#plt.figure(2)
-#plt.imshow(Lx.toarray(),interpolation='none')
-#plt.show()
+modest.tic()
+G = pygeons.smooth._system_matrix(Nt,Nx)
+print(modest.toc())
+plt.figure(1)
+plt.imshow(Lt.toarray(),interpolation='none')
+plt.figure(2)
+plt.imshow(Lx.toarray(),interpolation='none')
+plt.figure(3)
+plt.imshow(G.toarray(),interpolation='none')
+plt.show()

@@ -9,7 +9,7 @@ import pygeons.smooth
 import rbf.basis
 import logging
 logger = logging.basicConfig(level=logging.INFO)
-np.random.seed(1)
+#np.random.seed(1)
 
 def correlated_noise(var,decay,times):
   N = len(times)
@@ -71,8 +71,10 @@ def animate_quiver(u,v,t,x):
 
   return ani
 
+Nprocs = 2
+
 # number of stations
-Ns = 50
+Ns = 20
 # number of time steps
 Nt = 50
 
@@ -96,14 +98,14 @@ pnts = np.hstack((pnts,np.zeros((Ns,1))))
 # coseismic displacements
 cdisp,cderr = rectangular(pnts,slip,top_center,length,width,strike,dip)
 # interseismic velocities
-idisp,cderr = rectangular(pnts,slip,[0.0,0.0,-1.0],1000.0,1000.0,strike,90.0)
+idisp,cderr = rectangular(pnts,slip,[0.0,0.0,-5.0],1000.0,1000.0,strike,90.0)
 
 t = np.linspace(0.0,5.0,Nt) 
 
 # interseismic displacement 
 disp = 0.01*t[:,None,None]**2*idisp
 # dislocation at t=0.5
-disp[t>2.5,:,:] += cdisp
+disp[t>2.5,:,:] += 0.0*cdisp
 
 # add noise
 #disp += np.random.normal(0.0,0.01,disp.shape)
@@ -119,29 +121,31 @@ print('finished')
 
 # mask some of the data
 sigma = 0.05*np.ones((Nt,Ns))
-sigma[t<1.0,10] = np.inf
-disp[t<1.0,10,:] = 0.0
+#sigma[t<1.0,10] = np.inf
+#disp[t<1.0,10,:] = 0.0
 
 
 # smooth displacement
 pred1,sigma_pred1 = pygeons.smooth.network_smoother(
                       disp[:,:,0],t,pnts[:,[0,1]],
-                      sigma=sigma,
-                      reg_space_parameter=None,reg_time_parameter=1.0, 
-                      cv_plot=True,cv_itr=20,
-                      cv_space_bounds=[-4.0,4.0],cv_time_bounds=[-4.0,4.0],
-                      solve_atol=1e-3,
-                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
-                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
+                      sigma=sigma,procs=Nprocs,stencil_size=5,
+                      cv_plot=True,cv_itr=200,
+                      cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
+                      reg_space_parameter=1000.0,
+                      reg_time_parameter=1.0,
+                      solve_atol=1e-4,solve_ksp='preonly',solve_pc='lu')
+#                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
+#                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
 pred2,sigma_pred2 = pygeons.smooth.network_smoother(
                       disp[:,:,1],t,pnts[:,[0,1]],
-                      sigma=sigma,
-                      reg_space_parameter=None,reg_time_parameter=1.0,
-                      cv_plot=True,cv_itr=20,
-                      cv_space_bounds=[-4.0,4.0],cv_time_bounds=[-4.0,4.0],
-                      solve_atol=1e-3,
-                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
-                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
+                      sigma=sigma,procs=Nprocs,
+                      cv_plot=True,cv_itr=200,stencil_size=5,
+                      reg_space_parameter=1000.0,
+                      reg_time_parameter=1.0,solve_ksp='preonly',solve_pc='lu',
+                      cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
+                      solve_atol=1e-4)
+#                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
+#                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
 
 #fig,ax = plt.subplots()
 #ax.quiver(pnts[:,0],pnts[:,1],cdisp[:,0],cdisp[:,1],color='r',scale=10.0)
