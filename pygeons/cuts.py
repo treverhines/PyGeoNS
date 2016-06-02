@@ -2,26 +2,32 @@
 import numpy as np
 
 class TimeCut:
-  def __init__(self,time,pos_center,pos_radius):
+  def __init__(self,time,center=None,radius=None):
     ''' 
     Parameters
     ----------
-      time: (scalar) time of the discontinuity
-      pos_center: (2-array) spatial center of the discontinuity
-      pos_radius: (scalar) spatial radius of the discontinuity
+      time: time of the discontinuity
+      center: spatial center of the discontinuity
+      radius: spatial radius of the discontinuity
     '''
     self.time = time
-    self.pos_center = pos_center 
-    self.pos_radius = pos_radius
+    if center is None:
+      center = [0.0,0.0]
+
+    if radius is None:
+      radius = np.inf
+
+    self.center = center 
+    self.radius = radius
     return
 
-  def is_cut(self,pos):
+  def exists(self,pos):
     ''' 
-    tests whether pos is sufficiently close to the discontinuity
+    returns True if the time discontinuity exists at this location
     '''
-    r = np.sqrt((pos[0] - self.pos_center[0])**2 +
-                (pos[1] - self.pos_center[1])**2)
-    if r < self.pos_radius:
+    r = np.sqrt((pos[0] - self.center[0])**2 +
+                (pos[1] - self.center[1])**2)
+    if r < self.radius:
       return True
     else:
       return False
@@ -31,7 +37,7 @@ class TimeCut:
     returns the vertices and simplices of the discontinuity if pos is 
     sufficiently close
     '''
-    if self.is_cut(pos):
+    if self.exists(pos):
       vert = np.array([[self.time]])
       smp = np.array([[0]])
     else:
@@ -41,27 +47,31 @@ class TimeCut:
     return vert,smp
 
 class SpaceCut:
-  def __init__(self,pos1,pos2,time_center,time_radius):
+  def __init__(self,end_point1,end_point2,start=None,stop=None):
     ''' 
     Parameters
     ----------
-      pos1: (2-array) first vertex of the spatial discontinuity
-      pos2: (2-array) second vertex of the spatial discontinuity
-      time_center: (scalar) time center of the discontinuity
-      time_radius: (scalar) time radius of the discontinuity
+      end_point1: first end point of the spatial discontinuity
+      end_point2: second end point of the spatial discontinuity
+      start: start time of the spatial discontinuity
+      stop: end time of the spatial discontinuity
     '''
-    self.pos1 = pos1
-    self.pos2 = pos2
-    self.time_center = time_center
-    self.time_radius = time_radius
+    self.end_point1 = end_point1
+    self.end_point2 = end_point2
+    if start is None:
+      start = -np.inf
+    if stop is None:
+      stop = np.inf
+
+    self.start = start
+    self.stop = stop
     return
 
-  def is_cut(self,time):
+  def exists(self,time):
     ''' 
-    returns True if the time is sufficiently close to the discontinuity
+    returns True if the spatial discontinuity exists during this time 
     '''
-    r = abs(time - self.time_center)
-    if r < self.time_radius:
+    if (time >= self.start) & (time < self.stop):
       return True
     else:
       return False
@@ -71,8 +81,8 @@ class SpaceCut:
     returns the vertices and simplices of the discontinuity if time is 
     sufficiently close
     '''
-    if self.is_cut(time):
-      vert = np.array([self.pos1,self.pos2])
+    if self.exists(time):
+      vert = np.array([self.end_point1,self.end_point2])
       smp = np.array([[0,1]])
 
     else:
@@ -82,9 +92,9 @@ class SpaceCut:
     return vert,smp 
 
 
-class CutCollection:
+class TimeCutCollection:
   ''' 
-  container for either TimeCuts or SpaceCuts
+  container for TimeCut instances
   '''
   def __init__(self,cuts=None):  
     if cuts is None:
@@ -100,20 +110,41 @@ class CutCollection:
     returns the vertices and simplices of all cuts that x is 
     sufficiently close to
     '''
-    vert = None
-    smp = None
+    vert = np.zeros((0,1),dtype=float)
+    smp = np.zeros((0,1),dtype=int)
     for i,c in enumerate(self.cuts):
       verti,smpi = c.get_vert_smp(x)
-      if vert is None:
-        vert = verti 
-      else:
-        vert = np.vstack((vert,verti))
+      vert = np.vstack((vert,verti))
+      smpi += smp.size
+      smp = np.vstack((smp,smpi)) 
 
-      if smp is None:
-        smp = smpi
-      else:
-        smpi += smp.size
-        smp = np.vstack((smp,smpi)) 
+    return vert,smp      
+
+class SpaceCutCollection:
+  ''' 
+  container for SpaceCut instances
+  '''
+  def __init__(self,cuts=None):  
+    if cuts is None:
+      cuts = []
+
+    self.cuts = cuts
+
+  def add(self,cut):
+    self.cuts += [cut]
+
+  def get_vert_smp(self,x):
+    ''' 
+    returns the vertices and simplices of all cuts that x is 
+    sufficiently close to
+    '''
+    vert = np.zeros((0,2),dtype=float)
+    smp = np.zeros((0,2),dtype=int)
+    for i,c in enumerate(self.cuts):
+      verti,smpi = c.get_vert_smp(x)
+      vert = np.vstack((vert,verti))
+      smpi += smp.size
+      smp = np.vstack((smp,smpi)) 
 
     return vert,smp      
 
@@ -122,15 +153,15 @@ def load_space_cut_file(file_name,bm):
   ''' 
   space cut file contains 6 columns:
 
-    pos1_lon pos1_lat pos2_lon pos2_lat time_center time_radius 
+    lon1 lat1 lon2 lat2 start stop
 
-  posX_lon and posX_lat are the coordinates of the discontinuity vertices
+  lonX and latX are the coordinates of the discontinuity end points
 
-  time_center and time_radius specify the temporal duration of the 
+  times outside of the bounds, start and stop, will not have the 
   spatial discontinuity
   ''' 
   data = np.loadtxt(file_name,skiprows=1,dtype=float)
-  cc = CutCollection()
+  cc = SpaceCutCollection()
   for d in data:
     x1,y1 = bm(d[0],d[1]) 
     x2,y2 = bm(d[2],d[3]) 
@@ -141,12 +172,17 @@ def load_space_cut_file(file_name,bm):
 
 def load_time_cut_file(file_name,bm):
   ''' 
-  time cut file contains 6 columns:
+  time cut file contains 4 columns:
 
-  time pos_lon pos_lat pos_radius 
+    time lon lat radius 
+
+  time is the time of the discontinuity 
+
+  stations outside the circle specified by lon,lat and radius will not 
+  have the time discontinuity 
   ''' 
   data = np.loadtxt(file_name,skiprows=1,dtype=float)
-  cc = CutCollection()
+  cc = TimeCutCollection()
   for d in data:
     x,y = bm(d[1],d[2]) 
     c = TimeCut(d[0],[x,y],d[3])

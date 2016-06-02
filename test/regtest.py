@@ -12,10 +12,10 @@ t = np.linspace(0.0,1.0,Nt)
 pos = rbf.halton.halton(Nx,2)
 
 sc = pygeons.cuts.SpaceCut([0.501,0.0],[0.501,1.0],0.5,10.1)
-scc = pygeons.cuts.CutCollection([sc])
+scc = pygeons.cuts.SpaceCutCollection([sc])
 
 tc = pygeons.cuts.TimeCut(0.5,[0.0,0.0],0.5)
-tcc = pygeons.cuts.CutCollection([tc])
+tcc = pygeons.cuts.TimeCutCollection([tc])
 tcc = None
 
 modest.tic()

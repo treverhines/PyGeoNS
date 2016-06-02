@@ -101,9 +101,9 @@ def _reg_matrices(t,x,
   reg_basis(np.zeros((0,2)),np.zeros((0,2)),diff=(0,2))
 
   if time_cuts is None:
-    time_cuts = pygeons.cuts.CutCollection()
+    time_cuts = pygeons.cuts.TimeCutCollection()
   if space_cuts is None:
-    space_cuts = pygeons.cuts.CutCollection()
+    space_cuts = pygeons.cuts.SpaceCutCollection()
 
   # make submatrices for spatial smoothing on each time step
   def space_args_maker():
@@ -200,9 +200,8 @@ def _reg_matrices(t,x,
 
   return Lt_out,Lx_out
 
-def _system_matrix(Nt,Nx):
-  wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
 
+def _system_matrix(Nt,Nx):
   diag_data = np.ones(Nx*(Nt - 1))
   diag_row = np.arange(Nx,Nx*Nt)
   diag_col = np.arange(Nx,Nx*Nt)
@@ -217,6 +216,7 @@ def _system_matrix(Nt,Nx):
 
   G = scipy.sparse.csr_matrix((data,(row,col)),(Nt*Nx,Nt*Nx))
   return G
+
 
 def network_smoother(u,t,x,
                      sigma=None,
@@ -275,42 +275,7 @@ def network_smoother(u,t,x,
   u_flat = u.flatten()
   sigma_flat = sigma.flatten()
 
-  # form space smoothing matrix
-  #Lx = rbf.fd.diff_matrix(x,
-  #                        N=stencil_size,
-  #                        C=stencil_connectivity,
-  #                        coeffs=np.array([1.0,1.0]),
-  #                        diffs=np.array([[2,0],[0,2]]), 
-  #                        basis=reg_basis,
-  #                        order=reg_poly_order,
-  #                        vert=stencil_space_vert,
-  #                        smp=stencil_space_smp)
-  # this produces the traditional finite difference matrix for a 
-  # second derivative
-  #Lt = rbf.fd.diff_matrix(t[:,None],
-  #                        N=3,
-  #                        coeffs=np.array([1.0]),
-  #                        diffs=np.array([[2]]), 
-  #                        basis=reg_basis,
-  #                        order=2,
-  #                        vert=stencil_time_vert,
-  #                        smp=stencil_time_smp)
-
-  # the solution for the first timestep is defined to be zero and so 
-  # we do not need the first column
-  #Lt = Lt[:,1:]
-
-  #Lt,Lx = rbf.fd.grid_diff_matrices(Lt,Lx)
-
-  # I will be estimating baseline displacement for each station
-  # which have no regularization constraints.  
-  #ext = scipy.sparse.csr_matrix((Lt.shape[0],Nx))
-  #Lt = scipy.sparse.hstack((ext,Lt))
-  #Lt = Lt.tocsr()
-
-  #ext = scipy.sparse.csr_matrix((Lx.shape[0],Nx))
-  #Lx = scipy.sparse.hstack((ext,Lx))
-  #Lx = Lx.tocsr()
+  logger.info('building regularization matrix...')
   Lt,Lx = _reg_matrices(t,x,
                         stencil_size=stencil_size,
                         reg_basis=reg_basis,
@@ -318,22 +283,11 @@ def network_smoother(u,t,x,
                         time_cuts=stencil_time_cuts,
                         space_cuts=stencil_space_cuts,
                         procs=procs)
+  logger.info('done')
 
+  logger.info('building system matrix...')
   G = _system_matrix(Nt,Nx)
-  # build observation matrix
-  #G = scipy.sparse.eye(Nx*Nt)
-  #G = G.tocsr()
-
-  # chop off the first Nx columns to make room for the baseline 
-  # conditions
-  #G = G[:,Nx:]
-
-  # add baseline elements
-  #Bt = scipy.sparse.csr_matrix(np.ones((Nt,1)))
-  #Bx = scipy.sparse.csr_matrix((0,Nx))
-  #Bt,Bx = rbf.fd.grid_diff_matrices(Bt,Bx)
-  #G = scipy.sparse.hstack((Bt,G))
-  #G = G.tocsr()
+  logger.info('done')
 
   # weigh G and u by the inverse of data uncertainty. this creates 
   # duplicates but G should still be small
@@ -344,7 +298,8 @@ def network_smoother(u,t,x,
   # clean up any zero entries
   G.eliminate_zeros()
 
-  # make cross validation testing sets if necessary
+  # make cross validation testing sets if necessary. the testing sets 
+  # are split up by station
   if (reg_time_parameter is None) | (reg_space_parameter is None):
     cv_fold = min(cv_fold,Nx)
     testing_x_sets = modest.cv.chunkify(range(Nx),cv_fold) 
@@ -401,19 +356,19 @@ def network_smoother(u,t,x,
   # this makes matrix copies
   L = scipy.sparse.vstack((reg_time_parameter*Lt,reg_space_parameter*Lx))
 
-  logger.info('solving for predicted displacements ...')
+  logger.info('solving for predicted displacements...')
   u_pred = modest.sparse_reg_petsc(G,L,u_flat,
                                    ksp=solve_ksp,pc=solve_pc,
                                    maxiter=solve_max_itr,view=solve_view,
                                    atol=solve_atol,rtol=solve_rtol)
-  logger.info('finished')
+  logger.info('done')
 
-  logger.info('bootstrapping uncertainty ...')
+  logger.info('bootstrapping uncertainty...')
   sigma_u_pred = _bootstrap_uncertainty(G,L,itr=bs_itr,
                                         ksp=solve_ksp,pc=solve_pc,
                                         maxiter=solve_max_itr,view=solve_view,
                                         atol=solve_atol,rtol=solve_rtol)
-  logger.info('finished')
+  logger.info('done')
 
   u_pred = u_pred.reshape((Nt,Nx))
   sigma_u_pred = sigma_u_pred.reshape((Nt,Nx))

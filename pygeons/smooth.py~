@@ -101,9 +101,9 @@ def _reg_matrices(t,x,
   reg_basis(np.zeros((0,2)),np.zeros((0,2)),diff=(0,2))
 
   if time_cuts is None:
-    time_cuts = pygeons.cuts.CutCollection()
+    time_cuts = pygeons.cuts.TimeCutCollection()
   if space_cuts is None:
-    space_cuts = pygeons.cuts.CutCollection()
+    space_cuts = pygeons.cuts.SpaceCutCollection()
 
   # make submatrices for spatial smoothing on each time step
   def space_args_maker():
@@ -274,6 +274,8 @@ def network_smoother(u,t,x,
 
   u_flat = u.flatten()
   sigma_flat = sigma.flatten()
+
+  logger.info('building regularization matrix...')
   Lt,Lx = _reg_matrices(t,x,
                         stencil_size=stencil_size,
                         reg_basis=reg_basis,
@@ -281,8 +283,11 @@ def network_smoother(u,t,x,
                         time_cuts=stencil_time_cuts,
                         space_cuts=stencil_space_cuts,
                         procs=procs)
+  logger.info('done')
 
+  logger.info('building system matrix...')
   G = _system_matrix(Nt,Nx)
+  logger.info('done')
 
   # weigh G and u by the inverse of data uncertainty. this creates 
   # duplicates but G should still be small
@@ -293,7 +298,8 @@ def network_smoother(u,t,x,
   # clean up any zero entries
   G.eliminate_zeros()
 
-  # make cross validation testing sets if necessary
+  # make cross validation testing sets if necessary. the testing sets 
+  # are split up by station
   if (reg_time_parameter is None) | (reg_space_parameter is None):
     cv_fold = min(cv_fold,Nx)
     testing_x_sets = modest.cv.chunkify(range(Nx),cv_fold) 
@@ -350,19 +356,19 @@ def network_smoother(u,t,x,
   # this makes matrix copies
   L = scipy.sparse.vstack((reg_time_parameter*Lt,reg_space_parameter*Lx))
 
-  logger.info('solving for predicted displacements ...')
+  logger.info('solving for predicted displacements...')
   u_pred = modest.sparse_reg_petsc(G,L,u_flat,
                                    ksp=solve_ksp,pc=solve_pc,
                                    maxiter=solve_max_itr,view=solve_view,
                                    atol=solve_atol,rtol=solve_rtol)
-  logger.info('finished')
+  logger.info('done')
 
-  logger.info('bootstrapping uncertainty ...')
+  logger.info('bootstrapping uncertainty...')
   sigma_u_pred = _bootstrap_uncertainty(G,L,itr=bs_itr,
                                         ksp=solve_ksp,pc=solve_pc,
                                         maxiter=solve_max_itr,view=solve_view,
                                         atol=solve_atol,rtol=solve_rtol)
-  logger.info('finished')
+  logger.info('done')
 
   u_pred = u_pred.reshape((Nt,Nx))
   sigma_u_pred = sigma_u_pred.reshape((Nt,Nx))

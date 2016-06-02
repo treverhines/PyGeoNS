@@ -9,7 +9,7 @@ import pygeons.smooth
 import rbf.basis
 import logging
 logger = logging.basicConfig(level=logging.INFO)
-#np.random.seed(1)
+np.random.seed(1)
 
 def correlated_noise(var,decay,times):
   N = len(times)
@@ -49,10 +49,11 @@ def animate_scatter(u,t,x):
 def animate_quiver(u,v,t,x):
   fig,ax = plt.subplots()
   q = ax.quiver(x[:,0],x[:,1],u[0,:],v[0,:],scale=2.0)
-
+  ax.quiverkey(q,0.1,0.1,0.1,'0.1m')
   def animate(i):
     ax.clear()
     q = ax.quiver(x[:,0],x[:,1],u[i,:],v[i,:],scale=2.0)
+    ax.quiverkey(q,0.1,0.1,0.1,'0.1m')
     #ax.scatter(x[:,0],x[:,1],s=200,c=u[i,:],
     #q.set_UVC(u[i,:],v[i,:])  
     #cmap=viridis,edgecolor='k',
@@ -71,12 +72,12 @@ def animate_quiver(u,v,t,x):
 
   return ani
 
-Nprocs = 2
+Nprocs = 6
 
 # number of stations
-Ns = 20
+Ns = 200
 # number of time steps
-Nt = 50
+Nt = 500
 
 # fault geometry
 strike = 0.0
@@ -129,21 +130,24 @@ sigma = 0.05*np.ones((Nt,Ns))
 pred1,sigma_pred1 = pygeons.smooth.network_smoother(
                       disp[:,:,0],t,pnts[:,[0,1]],
                       sigma=sigma,procs=Nprocs,stencil_size=5,
-                      cv_plot=True,cv_itr=200,
+#                      cv_plot=True,cv_itr=200,
                       cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
-                      reg_space_parameter=1000.0,
+                      reg_space_parameter=10.0,
                       reg_time_parameter=1.0,
-                      solve_atol=1e-4,solve_ksp='preonly',solve_pc='lu')
+                      bs_itr=0,solve_view=False,
+                      solve_max_itr=10000,solve_atol=1e-6,solve_rtol=1e-10,solve_ksp='lgmres',solve_pc='icc')
 #                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
 #                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
 pred2,sigma_pred2 = pygeons.smooth.network_smoother(
                       disp[:,:,1],t,pnts[:,[0,1]],
                       sigma=sigma,procs=Nprocs,
-                      cv_plot=True,cv_itr=200,stencil_size=5,
-                      reg_space_parameter=1000.0,
-                      reg_time_parameter=1.0,solve_ksp='preonly',solve_pc='lu',
-                      cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
-                      solve_atol=1e-4)
+#                      cv_plot=True,cv_itr=200,stencil_size=5,
+                      reg_space_parameter=10.0,
+                      reg_time_parameter=1.0,
+                      bs_itr=0,solve_view=False,
+                      solve_max_itr=10000,solve_atol=1e-6,solve_rtol=1e-10,solve_ksp='lgmres',solve_pc='icc')
+#                      cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
+#                      solve_atol=1e-4)
 #                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
 #                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
 
@@ -152,15 +156,20 @@ pred2,sigma_pred2 = pygeons.smooth.network_smoother(
 #ax.quiver(pnts[:,0],pnts[:,1],idisp[:,0],idisp[:,1],color='k',scale=10.0)
 #a1 = animate_it(disp[:,:,0],t,pnts)
 a1 = animate_quiver(disp[:,:,0],disp[:,:,1],t,pnts)
-a2 = animate_quiver(pred1,pred2,t,pnts)
+a2 = animate_quiver(disp_true[:,:,0],disp_true[:,:,1],t,pnts)
+a3 = animate_quiver(pred1,pred2,t,pnts)
+print(pred1[25,10])
+print(pred2[25,10])
+print(pred1[35,19])
+print(pred2[35,19])
 #a3 = animate_it(disp[:,:,2],t,pnts)
-idx = 10
-print(pnts[idx])
-fig,ax = plt.subplots()
-ax.plot(t,disp[:,idx,1],'k.')
-ax.plot(t,disp_true[:,idx,1],'k--')
-ax.fill_between(t,pred2[:,idx]+sigma_pred2[:,idx],pred2[:,idx]-sigma_pred2[:,idx],color='b',alpha=0.3,edgecolor='none')
-ax.plot(t,pred2[:,idx],'b-')
+#idx = 10
+#print(pnts[idx])
+#fig,ax = plt.subplots()
+#ax.plot(t,disp[:,idx,1],'k.')
+#ax.plot(t,disp_true[:,idx,1],'k--')
+#ax.fill_between(t,pred2[:,idx]+sigma_pred2[:,idx],pred2[:,idx]-sigma_pred2[:,idx],color='b',alpha=0.3,edgecolor='none')
+#ax.plot(t,pred2[:,idx],'b-')
 
 plt.show()
 
