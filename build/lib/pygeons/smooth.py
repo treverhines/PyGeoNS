@@ -10,6 +10,7 @@ import logging
 from scipy.spatial import cKDTree
 import pygeons.cuts
 import modest.mp
+import pygeons.diff
 
 logger = logging.getLogger(__name__)
 
@@ -69,142 +70,59 @@ class _RunningVariance(object):
     return (self.sumsqs - self.sum**2/self.count)/(self.count-1.0)
 
 
-def _bootstrap_uncertainty(G,L,itr=10,**kwargs):
-  ''' 
-  estimates the uncertainty for the solution to the regularized linear 
-  system.  Bootstrapping is necessary because computing the model 
-  covariance matrix is too expensive.  It is assumed that G is already 
-  weighted by the data uncertainty
-  '''
-  if itr <= 1:
-    logger.info('cannot bootstrap uncertainties with %s iterations. returning zeros' % itr)
-    return np.zeros(G.shape[1])
-
-  soln = _RunningVariance()
-  for i in range(itr):
-    d = np.random.normal(0.0,1.0,G.shape[0])
-    solni = modest.sparse_reg_petsc(G,L,d,**kwargs)
-    soln.add(solni)
-    logger.info('finished bootstrap iteration %s of %s' % (i+1,itr))
-
-  return np.sqrt(soln.get_variance())
-
-
 def _reg_matrices(t,x,
-                  stencil_time_size,
-                  stencil_space_size,
-                  reg_basis,
-                  reg_time_order, 
-                  reg_space_order, 
-                  time_cuts,
-                  space_cuts,
-                  procs,
-                  baseline):
+                  stencil_time_size=None,
+                  stencil_space_size=None,
+                  reg_basis=rbf.basis.phs3,
+                  reg_time_order=None, 
+                  reg_space_order=None, 
+                  time_cuts=None,
+                  space_cuts=None,
+                  procs=None,
+                  baseline=False):
 
-  # compile the necessary derivatives for our rbf. This is done so 
-  # that each subprocesses does not need to
-  reg_basis(np.zeros((0,1)),np.zeros((0,1)),diff=(0,))
-  reg_basis(np.zeros((0,1)),np.zeros((0,1)),diff=(2,))
-  reg_basis(np.zeros((0,2)),np.zeros((0,2)),diff=(0,0))
-  reg_basis(np.zeros((0,2)),np.zeros((0,2)),diff=(2,0))
-  reg_basis(np.zeros((0,2)),np.zeros((0,2)),diff=(0,2))
-
-  # make submatrices for spatial smoothing on each time step
-  def space_args_maker():
-    for ti in t:
-      vert,smp = space_cuts.get_vert_smp(ti) 
-      args = (x,stencil_space_size,
-              np.array([1.0,1.0]),
-              np.array([[2,0],[0,2]]), 
-              reg_basis,reg_space_order,
-              vert,smp)
-      yield args 
-
-  # make submatrices for time smoothing for each station
-  def time_args_maker():
-    for xi in x:
-      vert,smp = time_cuts.get_vert_smp(xi) 
-      # note that stencil size and polynomial order are hard coded at 
-      # 3 and 2
-      args = (t[:,None],stencil_time_size,
-              np.array([1.0]),
-              np.array([[2]]), 
-              reg_basis,reg_time_order,
-              vert,smp)
-      yield args 
-
-  def mappable_diff_matrix(args):
-    return rbf.fd.diff_matrix(args[0],N=args[1],
-                              coeffs=args[2],diffs=args[3],
-                              basis=args[4],order=args[5],
-                              vert=args[6],smp=args[7])
-
-  # form the submatrices in parallel
-  Lx = modest.mp.parmap(mappable_diff_matrix,space_args_maker(),Nprocs=procs)
-  Lt = modest.mp.parmap(mappable_diff_matrix,time_args_maker(),Nprocs=procs)
-
-  Nx = x.shape[0]
+  t = np.asarray(t)
+  x = np.asarray(x)
   Nt = t.shape[0]
+  Nx = x.shape[0]
 
-  ## combine submatrices into the master matrix
-  ###################################################################
-  wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
-  
-  rows = np.zeros((stencil_time_size*Nt,Nx))
-  cols = np.zeros((stencil_time_size*Nt,Nx))
-  vals = np.zeros((stencil_time_size*Nt,Nx))
-  for i,Li in enumerate(Lt):
-    Li = Li.tocoo()
-    ri,ci,vi = Li.row,Li.col,Li.data
-    rows[:,i] = wrapped_indices[ri,i]
-    cols[:,i] = wrapped_indices[ci,i]
-    vals[:,i] = vi
+  Lt = pygeons.diff._time_diff_matrix(t,x,
+                                  basis=reg_basis,
+                                  stencil_size=stencil_time_size,
+                                  order=reg_time_order,
+                                  cuts=time_cuts,
+                                  diffs=[[2]],
+                                  coeffs=[1.0])
 
-  rows = rows.ravel()
-  cols = cols.ravel()
-  vals = vals.ravel()
-
-  # form sparse time regularization matrix
-  Lt_out = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
-
-  rows = np.zeros((stencil_space_size*Nx,Nt))
-  cols = np.zeros((stencil_space_size*Nx,Nt))
-  vals = np.zeros((stencil_space_size*Nx,Nt))
-  for i,Li in enumerate(Lx):
-    Li = Li.tocoo()
-    ri,ci,vi = Li.row,Li.col,Li.data
-    rows[:,i] = wrapped_indices[i,ri]
-    cols[:,i] = wrapped_indices[i,ci]
-    vals[:,i] = vi
-
-  rows = rows.ravel()
-  cols = cols.ravel()
-  vals = vals.ravel()
-  
-  # form sparse spatial regularization matrix
-  Lx_out = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
-  
-
+  Lx = pygeons.diff._space_diff_matrix(t,x,
+                                   basis=reg_basis,
+                                   stencil_size=stencil_space_size,
+                                   order=reg_space_order,
+                                   cuts=space_cuts,
+                                   diffs=[[2,0],[0,2]],
+                                   coeffs=[1.0,1.0])
+                                       
   if baseline:
+    wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
     # zero all regularization constraints for the first timestep since 
     # all displacements are initially zero
     zero_cols = wrapped_indices[0,:] 
 
-    Lt_out = Lt_out.tocoo()
-    Lx_out = Lx_out.tocoo()
+    Lt = Lt.tocoo()
+    Lx = Lx.tocoo()
 
     for z in zero_cols:
-      Lt_out.data[Lt_out.col==z] = 0.0
-      Lx_out.data[Lx_out.col==z] = 0.0
+      Lt.data[Lt.col==z] = 0.0
+      Lx.data[Lx.col==z] = 0.0
 
-    Lt_out = Lt_out.tocsr()
-    Lx_out = Lx_out.tocsr()
+    Lt = Lt.tocsr()
+    Lx = Lx.tocsr()
 
   # remove any unnecessary zero entries
-  Lt_out.eliminate_zeros()
-  Lx_out.eliminate_zeros()
+  Lt.eliminate_zeros()
+  Lx.eliminate_zeros()
 
-  return Lt_out,Lx_out
+  return Lt,Lx
 
 
 def _system_matrix(Nt,Nx,baseline):
@@ -252,7 +170,7 @@ def network_smoother(u,t,x,
                      cv_plot=False,
                      cv_fold=10,
                      cv_chunk='both',
-                     bs_itr=10,
+                     perts=10,
                      procs=None,
                      baseline=True):
 
@@ -430,27 +348,33 @@ def network_smoother(u,t,x,
   L = scipy.sparse.vstack((reg_time_parameter*Lt,reg_space_parameter*Lx))
 
   logger.info('solving for predicted displacements...')
-  u_pred = modest.sparse_reg_petsc(G,L,u_flat,
-                                   ksp=solve_ksp,pc=solve_pc,
-                                   maxiter=solve_max_itr,view=solve_view,
-                                   atol=solve_atol,rtol=solve_rtol)
+  u_pred = modest.sparse_reg_petsc(
+             G,L,u_flat,
+             ksp=solve_ksp,pc=solve_pc,
+             maxiter=solve_max_itr,view=solve_view,
+             atol=solve_atol,rtol=solve_rtol)
   logger.info('done')
 
-  logger.info('bootstrapping uncertainty...')
-  sigma_u_pred = _bootstrap_uncertainty(G,L,itr=bs_itr,
-                                        ksp=solve_ksp,pc=solve_pc,
-                                        maxiter=solve_max_itr,view=solve_view,
-                                        atol=solve_atol,rtol=solve_rtol)
+  logger.info('computing perturbed predicted displacements...')
+  u_pert = np.zeros((perts,G.shape[0]))
+  for i in range(perts):
+    d = np.random.normal(0.0,1.0,G.shape[0])
+    u_pert[i,:] = modest.sparse_reg_petsc(G,L,d,
+                    ksp=solve_ksp,pc=solve_pc,
+                    maxiter=solve_max_itr,view=solve_view,
+                    atol=solve_atol,rtol=solve_rtol)
+    u_pert[i,:] += u_pred
+
   logger.info('done')
 
   u_pred = u_pred.reshape((Nt,Nx))
-  sigma_u_pred = sigma_u_pred.reshape((Nt,Nx))
+  u_pert = u_pert.reshape((perts,Nt,Nx))
 
   # zero the initial displacements if we are removing baseline
   if baseline:
     u_pred[0,:] = 0.0
-    sigma_u_pred[0,:] = 0.0
+    u_pert[:,0,:] = 0.0
 
-  return u_pred,sigma_u_pred
+  return u_pred,u_pert
 
 
