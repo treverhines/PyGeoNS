@@ -86,21 +86,34 @@ def _reg_matrices(t,x,
   Nt = t.shape[0]
   Nx = x.shape[0]
 
+  Lt1 = pygeons.diff._time_diff_matrix(t,x,
+                                      basis=reg_basis,
+                                      stencil_size=2,
+                                      order=1,
+                                      cuts=time_cuts,
+                                      diffs=[[1]],
+                                      coeffs=[1.0],
+                                      procs=procs)
+
   Lt = pygeons.diff._time_diff_matrix(t,x,
-                                  basis=reg_basis,
-                                  stencil_size=stencil_time_size,
-                                  order=reg_time_order,
-                                  cuts=time_cuts,
-                                  diffs=[[2]],
-                                  coeffs=[1.0])
+                                      basis=reg_basis,
+                                      stencil_size=stencil_time_size,
+                                      order=reg_time_order,
+                                      cuts=time_cuts,
+                                      diffs=[[2]],
+                                      coeffs=[1.0],
+                                      procs=procs)
 
   Lx = pygeons.diff._space_diff_matrix(t,x,
-                                   basis=reg_basis,
-                                   stencil_size=stencil_space_size,
-                                   order=reg_space_order,
-                                   cuts=space_cuts,
-                                   diffs=[[2,0],[0,2]],
-                                   coeffs=[1.0,1.0])
+                                       basis=reg_basis,
+                                       stencil_size=stencil_space_size,
+                                       order=reg_space_order,
+                                       cuts=space_cuts,
+                                       diffs=[[2,0],[0,2]],
+                                       coeffs=[1.0,1.0],
+                                       procs=procs)
+  L1 = Lt
+  L2 = Lx.dot(Lt)  
                                        
   if baseline:
     wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
@@ -108,21 +121,21 @@ def _reg_matrices(t,x,
     # all displacements are initially zero
     zero_cols = wrapped_indices[0,:] 
 
-    Lt = Lt.tocoo()
-    Lx = Lx.tocoo()
+    L1 = L1.tocoo()
+    L2 = L2.tocoo()
 
     for z in zero_cols:
-      Lt.data[Lt.col==z] = 0.0
-      Lx.data[Lx.col==z] = 0.0
+      L1.data[L1.col==z] = 0.0
+      L2.data[L2.col==z] = 0.0
 
-    Lt = Lt.tocsr()
-    Lx = Lx.tocsr()
+    L1 = L1.tocsr()
+    L2 = L2.tocsr()
 
   # remove any unnecessary zero entries
-  Lt.eliminate_zeros()
-  Lx.eliminate_zeros()
+  L1.eliminate_zeros()
+  L2.eliminate_zeros()
 
-  return Lt,Lx
+  return L1,L2
 
 
 def _system_matrix(Nt,Nx,baseline):
@@ -172,7 +185,7 @@ def network_smoother(u,t,x,
                      cv_chunk='both',
                      perts=10,
                      procs=None,
-                     baseline=True):
+                     baseline=False):
 
   u = np.asarray(u)
   t = np.asarray(t)
@@ -301,7 +314,7 @@ def network_smoother(u,t,x,
             plot=cv_plot,log_bounds=[cv_time_bounds,cv_space_bounds],
             solver='petsc',ksp=solve_ksp,pc=solve_pc,
             maxiter=solve_max_itr,view=solve_view,atol=solve_atol,
-            rtol=solve_rtol,Nprocs=procs)
+            rtol=solve_rtol,procs=procs)
 
     reg_time_parameter = out[0][0] 
     reg_space_parameter = out[0][1] 
@@ -322,7 +335,7 @@ def network_smoother(u,t,x,
                          np.log10(reg_space_parameter)+1e-4]],
             solver='petsc',ksp=solve_ksp,pc=solve_pc,
             maxiter=solve_max_itr,view=solve_view,atol=solve_atol,
-            rtol=solve_rtol,Nprocs=procs)
+            rtol=solve_rtol,procs=procs)
     reg_time_parameter = out[0][0]
 
   elif reg_space_parameter is None:
@@ -341,7 +354,7 @@ def network_smoother(u,t,x,
                         cv_space_bounds],
             solver='petsc',ksp=solve_ksp,pc=solve_pc,
             maxiter=solve_max_itr,view=solve_view,atol=solve_atol,
-            rtol=solve_rtol,Nprocs=procs)
+            rtol=solve_rtol,procs=procs)
     reg_space_parameter = out[0][1]
 
   # this makes matrix copies

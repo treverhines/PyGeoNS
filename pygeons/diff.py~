@@ -58,7 +58,7 @@ def _time_diff_matrix(t,x,
                               basis=args[5],order=args[6],
                               vert=args[7],smp=args[8])
 
-  Lsubs = modest.mp.parmap(mappable_diff_matrix,args_maker(),Nprocs=procs)
+  Lsubs = modest.mp.parmap(mappable_diff_matrix,args_maker(),workers=procs)
 
   # combine submatrices into the master matrix
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
@@ -133,7 +133,7 @@ def _space_diff_matrix(t,x,
                               basis=args[5],order=args[6],
                               vert=args[7],smp=args[8])
 
-  Lsubs = modest.mp.parmap(mappable_diff_matrix,args_maker(),Nprocs=procs)
+  Lsubs = modest.mp.parmap(mappable_diff_matrix,args_maker(),workers=procs)
 
   # combine submatrices into the master matrix
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
@@ -155,7 +155,6 @@ def _space_diff_matrix(t,x,
   # form sparse time regularization matrix
   Lmaster = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
   return Lmaster
-
 
 def time_diff(u,t,x,**kwargs):
   ''' 

@@ -5,6 +5,7 @@ import matplotlib.animation as animation
 from dislocation.source import rectangular
 from myplot.cm import viridis
 import rbf.halton
+import pygeons.cuts
 import pygeons.smooth
 import rbf.basis
 import logging
@@ -48,12 +49,12 @@ def animate_scatter(u,t,x):
 
 def animate_quiver(u,v,t,x):
   fig,ax = plt.subplots()
-  q = ax.quiver(x[:,0],x[:,1],u[0,:],v[0,:],scale=2.0)
-  ax.quiverkey(q,0.1,0.1,0.1,'0.1m')
+  q = ax.quiver(x[:,0],x[:,1],u[0,:],v[0,:],scale=1.0)
+  ax.quiverkey(q,0.1,0.1,1.0,'1.0m')
   def animate(i):
     ax.clear()
-    q = ax.quiver(x[:,0],x[:,1],u[i,:],v[i,:],scale=2.0)
-    ax.quiverkey(q,0.1,0.1,0.1,'0.1m')
+    q = ax.quiver(x[:,0],x[:,1],u[i,:],v[i,:],scale=1.0)
+    ax.quiverkey(q,0.1,0.1,1.0,'1.0m')
     #ax.scatter(x[:,0],x[:,1],s=200,c=u[i,:],
     #q.set_UVC(u[i,:],v[i,:])  
     #cmap=viridis,edgecolor='k',
@@ -75,38 +76,39 @@ def animate_quiver(u,v,t,x):
 Nprocs = 6
 
 # number of stations
-Ns = 200
+Ns = 20
 # number of time steps
-Nt = 500
+Nt = 100
 
 # fault geometry
 strike = 0.0
 dip = 90.0
 top_center = [0.0,0.0,0.0]
-width  = 1.0
-length = 1.0
+width  = 5.0
+length = 40.0
 slip = [10.0,0.0,0.0]
 
 
 
 # create synthetic data
 #####################################################################
-#pnts = 3*(rbf.halton.halton(Ns,2) - 0.51251241124) 
-pnts = np.random.normal(0.0,5.0,(Ns,2))
+#pnts = 50*(rbf.halton.halton(Ns,2) - 0.51251241124) 
+pnts = np.random.normal(0.0,20.0,(Ns,2))
 # add z component, which is zero
 pnts = np.hstack((pnts,np.zeros((Ns,1))))
 
 # coseismic displacements
 cdisp,cderr = rectangular(pnts,slip,top_center,length,width,strike,dip)
 # interseismic velocities
-idisp,cderr = rectangular(pnts,slip,[0.0,0.0,-5.0],1000.0,1000.0,strike,90.0)
+idisp,cderr = rectangular(pnts,slip,[0.0,0.0,-width],1000.0,1000.0,strike,90.0)
 
 t = np.linspace(0.0,5.0,Nt) 
 
 # interseismic displacement 
-disp = 0.01*t[:,None,None]**2*idisp
+#disp = 0.1*np.sin(t[:,None,None])*idisp
+disp = 0.1*np.sin(t[:,None,None])*idisp
 # dislocation at t=0.5
-disp[t>2.5,:,:] += 0.0*cdisp
+disp[t>2.5,:,:] += 1.0*cdisp
 
 # add noise
 #disp += np.random.normal(0.0,0.01,disp.shape)
@@ -117,6 +119,7 @@ print('adding noise')
 for n in range(Ns):
   for j in range(3):
     disp[:,n,j] += correlated_noise(0.05**2,0.5,t)
+    #disp[:,n,j] += np.random.normal(0.0,0.05,len(t))
 
 print('finished')
 
@@ -126,50 +129,52 @@ sigma = 0.05*np.ones((Nt,Ns))
 #disp[t<1.0,10,:] = 0.0
 
 
-# smooth displacement
-pred1,sigma_pred1 = pygeons.smooth.network_smoother(
-                      disp[:,:,0],t,pnts[:,[0,1]],
-                      sigma=sigma,procs=Nprocs,stencil_size=5,
-#                      cv_plot=True,cv_itr=200,
-                      cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
-                      reg_space_parameter=10.0,
-                      reg_time_parameter=1.0,
-                      bs_itr=0,solve_view=False,
-                      solve_max_itr=10000,solve_atol=1e-6,solve_rtol=1e-10,solve_ksp='lgmres',solve_pc='icc')
-#                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
-#                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
-pred2,sigma_pred2 = pygeons.smooth.network_smoother(
-                      disp[:,:,1],t,pnts[:,[0,1]],
-                      sigma=sigma,procs=Nprocs,
-#                      cv_plot=True,cv_itr=200,stencil_size=5,
-                      reg_space_parameter=10.0,
-                      reg_time_parameter=1.0,
-                      bs_itr=0,solve_view=False,
-                      solve_max_itr=10000,solve_atol=1e-6,solve_rtol=1e-10,solve_ksp='lgmres',solve_pc='icc')
-#                      cv_space_bounds=[0.0,4.0],cv_time_bounds=[0.0,4.0],
-#                      solve_atol=1e-4)
-#                      stencil_time_smp=[[0]],stencil_time_vert=[[2.5]],
-#                      stencil_space_smp=[[0,1]],stencil_space_vert=[[0.0,-0.5],[0.0,0.5]])
+time_cut = pygeons.cuts.TimeCut(2.5)
+space_cut = pygeons.cuts.SpaceCut([0.0,-20],[0.0,20])
+#space_cut = pygeons.cuts.SpaceCut()
+#scc = pygeons.cuts.SpaceCutCollection([space_cut])
+scc = pygeons.cuts.SpaceCutCollection()
+tcc = pygeons.cuts.TimeCutCollection([time_cut])
 
-#fig,ax = plt.subplots()
-#ax.quiver(pnts[:,0],pnts[:,1],cdisp[:,0],cdisp[:,1],color='r',scale=10.0)
-#ax.quiver(pnts[:,0],pnts[:,1],idisp[:,0],idisp[:,1],color='k',scale=10.0)
-#a1 = animate_it(disp[:,:,0],t,pnts)
+# smooth displacement
+pred1,pert1 = pygeons.smooth.network_smoother(
+                      disp[:,:,0],t,pnts[:,[0,1]],
+#                      reg_space_parameter=1e-10,
+#                      reg_time_parameter=1.0,
+                      stencil_time_cuts=tcc, 
+                      stencil_space_cuts=scc, 
+                      sigma=sigma,stencil_space_size=8,
+                      cv_itr=200,cv_plot=True,cv_chunk='space',
+                      baseline=False,procs=6,
+#                      solve_ksp='preonly',solve_pc='lu',
+                      solve_atol=1e-6,solve_max_itr=10000)
+#pred1 = pygeons.diff.time_diff(pred1,t,pnts[:,[0,1]],diff=(1,),cuts=tcc)
+#pred1 = pygeons.diff.space_diff(pred1,t,pnts[:,[0,1]],diff=(1,0))
+
+pred2,pert2 = pygeons.smooth.network_smoother(
+                      disp[:,:,1],t,pnts[:,[0,1]],
+                      stencil_time_cuts=tcc, 
+                      stencil_space_cuts=scc, 
+#                      reg_space_parameter=1e-10,
+#                      reg_time_parameter=1.0,
+                      sigma=sigma,stencil_space_size=8,
+                      cv_itr=200,cv_plot=True,cv_chunk='space',
+                      procs=6,baseline=False,
+#                      solve_ksp='preonly',solve_pc='lu',
+                      solve_atol=1e-6,solve_max_itr=10000)
+#pred2 = pygeons.diff.time_diff(pred2,t,pnts[:,[0,1]],diff=(1,),cuts=tcc)
+#pred2 = pygeons.diff.space_diff(pred2,t,pnts[:,[0,1]],diff=(1,0))
+#disp_true[:,:,0] = pygeons.diff.time_diff(disp_true[:,:,0],t,pnts[:,[0,1]],diff=(1,),cuts=tcc)
+#disp_true[:,:,1] = pygeons.diff.time_diff(disp_true[:,:,1],t,pnts[:,[0,1]],diff=(1,),cuts=tcc)
+
 a1 = animate_quiver(disp[:,:,0],disp[:,:,1],t,pnts)
 a2 = animate_quiver(disp_true[:,:,0],disp_true[:,:,1],t,pnts)
 a3 = animate_quiver(pred1,pred2,t,pnts)
-print(pred1[25,10])
-print(pred2[25,10])
-print(pred1[35,19])
-print(pred2[35,19])
-#a3 = animate_it(disp[:,:,2],t,pnts)
-#idx = 10
-#print(pnts[idx])
-#fig,ax = plt.subplots()
-#ax.plot(t,disp[:,idx,1],'k.')
-#ax.plot(t,disp_true[:,idx,1],'k--')
-#ax.fill_between(t,pred2[:,idx]+sigma_pred2[:,idx],pred2[:,idx]-sigma_pred2[:,idx],color='b',alpha=0.3,edgecolor='none')
-#ax.plot(t,pred2[:,idx],'b-')
+
+fig,ax = plt.subplots()
+ax.plot(t,disp[:,:,1],'b.-')
+ax.plot(t,disp_true[:,:,1],'k.-')
+ax.plot(t,pred2,'r.-')
 
 plt.show()
 
