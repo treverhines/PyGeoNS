@@ -91,7 +91,7 @@ def network_smoother(u,t,x,
   sigma_flat = sigma.ravel()
 
   logger.info('building regularization matrix...')
-  reg_matrices = [pygeons.diff._diff_matrix(t,x,d) for d in diff_specs]
+  reg_matrices = [pygeons.diff.diff_matrix(t,x,d,procs=procs) for d in diff_specs]
   logger.info('done')
 
   # system matrix is the identity matrix scaled by data weight

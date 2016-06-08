@@ -8,48 +8,97 @@ import modest.mp
 import scipy.sparse
 import copy
 
-class DiffSpecs:
+class DiffSpecs(dict):
   ''' 
-  This class is a container for all the arguments that go into 
-  creating a differentiation matrix 
+  specialized dictionary-like class containing the specifications 
+  used to make a differentiation matrix
+
+  A DiffSpec instance contains the dictionaries 'time' and 'space' 
+  which contain specifications for differentiation along the time and 
+  space dimensions.  Each dictionary contains the following items:  
   
-  items in self.time get passed to _time_diff_matrix and items in 
-  self.space get passed to _space_diff_matrix
+    basis : rbf.basis.RBF instance (default=rbf.basis.phs3)
+      radial basis function used to generate the weights. this does 
+      nothing if 'diff_type' is poly
+
+    stencil_size : int (default=None)
+      number of nodes to use for each finite difference stencil
+      
+    order : int (default=None)
+      polynomial order to use when computing weights.  this does 
+      nothing if 'diff_type' is poly
+      
+    cuts : TimeCutCollection or SpaceCutCollection (default=None)
+      indicates discontinuities that should not be smoothed across
+
+    diffs : (N,D) array (default=[[0]](time) or [[0,0]](space))
+      derivative orders for each dimension for each term in a 
+      differential operator
+
+    coeffs : (N,) array (default=[1.0](time) or [1.0,1.0](space))
+      coefficient for each term in a differential operator
+
+    diff_type : str (default='poly'(time) or 'rbf'(space))
+      indicates whether to compute weights using an RBF or polynomial 
+      expansion. must be either 'rbf' or 'poly'
+  
+
+  Note
+  ----
+    elements in a DiffSpecs instance can be modified just like 
+    elements in a dictionary.  When using a DiffSpecs instance as an 
+    argument to diff_matrix, diff, or network_smooth, it must contain 
+    a 'time' and 'space' dictionary and each dictionary must have 
+    entries for 'diffs' and 'coeffs'
+
+    value which default to None do not need to be specified. If left 
+    as None they will be assigned values during lower level function 
+    calls
+    
   '''
   def __init__(self,time=None,space=None):  
+    ''' 
+    creates a instance containing the minimum specs necessary to 
+    form a differentiation matrix
+    
+    Parameters
+    ----------
+      time : dict, optional
+      
+      space : dict, optional
+      
+    '''
     if time is None:
       time = {}
     if space is None:
       space = {}  
-          
-    self.time = {}  
-    self.time['basis'] = rbf.basis.phs3
-    self.time['stencil_size'] = None
-    self.time['order'] = None
-    self.time['cuts'] = None
-    self.time['procs'] = None
-    self.time['diffs'] = [[0]]
-    self.time['coeffs'] = [1.0,1.0]
-    self.time['diff_type'] = 'poly'
-    self.time.update(time)
-    
-    self.space = {}
-    self.space['basis'] = rbf.basis.phs3
-    self.space['stencil_size'] = None
-    self.space['order'] = None
-    self.space['cuts'] = None
-    self.space['procs'] = None
-    self.space['diffs'] = [[0,0]]
-    self.space['coeffs'] = [1.0,1.0]
-    self.space['diff_type'] = 'rbf'
-    self.space.update(time)
+
+    dict.__init__(self)
+
+    self['time'] = {'basis':rbf.basis.phs3,
+                    'stencil_size':None, 
+                    'order':None,
+                    'cuts':None,
+                    'diffs':[[0]],
+                    'coeffs':[1.0],
+                    'diff_type':'poly'} 
+    self['space'] = {'basis':rbf.basis.phs3,
+                     'stencil_size':None, 
+                     'order':None,
+                     'cuts':None,
+                     'diffs':[[0,0]],
+                     'coeffs':[1.0,1.0],
+                     'diff_type':'rbf'} 
+
+    self['time'].update(time)                     
+    self['space'].update(time)                     
 
   def __str__(self):
     out = 'DiffSpec instance\n'
     out +=           '    time differentiation specifications\n'    
-    out += ''.join('        %s : %s\n' % (k,v) for (k,v) in self.time.iteritems())
+    out += ''.join('        %s : %s\n' % (k,v) for (k,v) in self['time'].iteritems())
     out +=           '    space differentiation specifications\n'    
-    out += ''.join('        %s : %s\n' % (k,v) for (k,v) in self.space.iteritems())
+    out += ''.join('        %s : %s\n' % (k,v) for (k,v) in self['space'].iteritems())
     return out
     
   def __repr__(self):
@@ -57,52 +106,52 @@ class DiffSpecs:
 
 # make a few default DiffSpec instances
 DISPLACEMENT_LAPLACIAN = DiffSpecs()
-DISPLACEMENT_LAPLACIAN.time['diffs'] = [[0]]
-DISPLACEMENT_LAPLACIAN.time['coeffs'] = [1.0]
-DISPLACEMENT_LAPLACIAN.time['diff_type'] = 'poly'
-DISPLACEMENT_LAPLACIAN.space['diffs'] = [[2,0],[0,2]]
-DISPLACEMENT_LAPLACIAN.space['coeffs'] = [1.0,1.0]
-DISPLACEMENT_LAPLACIAN.space['diff_type'] = 'rbf'
+DISPLACEMENT_LAPLACIAN['time']['diffs'] = [[0]]
+DISPLACEMENT_LAPLACIAN['time']['coeffs'] = [1.0]
+DISPLACEMENT_LAPLACIAN['time']['diff_type'] = 'poly'
+DISPLACEMENT_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
+DISPLACEMENT_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
+DISPLACEMENT_LAPLACIAN['space']['diff_type'] = 'rbf'
 
 VELOCITY_LAPLACIAN = DiffSpecs()
-VELOCITY_LAPLACIAN.time['diffs'] = [[1]]
-VELOCITY_LAPLACIAN.time['coeffs'] = [1.0]
-VELOCITY_LAPLACIAN.time['diff_type'] = 'poly'
-VELOCITY_LAPLACIAN.space['diffs'] = [[2,0],[0,2]]
-VELOCITY_LAPLACIAN.space['coeffs'] = [1.0,1.0]
-VELOCITY_LAPLACIAN.space['diff_type'] = 'rbf'
+VELOCITY_LAPLACIAN['time']['diffs'] = [[1]]
+VELOCITY_LAPLACIAN['time']['coeffs'] = [1.0]
+VELOCITY_LAPLACIAN['time']['diff_type'] = 'poly'
+VELOCITY_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
+VELOCITY_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
+VELOCITY_LAPLACIAN['space']['diff_type'] = 'rbf'
 
 ACCELERATION_LAPLACIAN = DiffSpecs()
-ACCELERATION_LAPLACIAN.time['diffs'] = [[2]]
-ACCELERATION_LAPLACIAN.time['coeffs'] = [1.0]
-ACCELERATION_LAPLACIAN.time['diff_type'] = 'poly'
-ACCELERATION_LAPLACIAN.space['diffs'] = [[2,0],[0,2]]
-ACCELERATION_LAPLACIAN.space['coeffs'] = [1.0,1.0]
-ACCELERATION_LAPLACIAN.space['diff_type'] = 'rbf'
+ACCELERATION_LAPLACIAN['time']['diffs'] = [[2]]
+ACCELERATION_LAPLACIAN['time']['coeffs'] = [1.0]
+ACCELERATION_LAPLACIAN['time']['diff_type'] = 'poly'
+ACCELERATION_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
+ACCELERATION_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
+ACCELERATION_LAPLACIAN['space']['diff_type'] = 'rbf'
 
 DISPLACEMENT = DiffSpecs()
-DISPLACEMENT.time['diffs'] = [[0]]
-DISPLACEMENT.time['coeffs'] = [1.0]
-DISPLACEMENT.time['diff_type'] = 'poly'
-DISPLACEMENT.space['diffs'] = [[0,0]]
-DISPLACEMENT.space['coeffs'] = [1.0]
-DISPLACEMENT.space['diff_type'] = 'rbf'
+DISPLACEMENT['time']['diffs'] = [[0]]
+DISPLACEMENT['time']['coeffs'] = [1.0]
+DISPLACEMENT['time']['diff_type'] = 'poly'
+DISPLACEMENT['space']['diffs'] = [[0,0]]
+DISPLACEMENT['space']['coeffs'] = [1.0]
+DISPLACEMENT['space']['diff_type'] = 'rbf'
 
 VELOCITY = DiffSpecs()
-VELOCITY.time['diffs'] = [[1]]
-VELOCITY.time['coeffs'] = [1.0]
-VELOCITY.time['diff_type'] = 'poly'
-VELOCITY.space['diffs'] = [[0,0]]
-VELOCITY.space['coeffs'] = [1.0]
-VELOCITY.space['diff_type'] = 'rbf'
+VELOCITY['time']['diffs'] = [[1]]
+VELOCITY['time']['coeffs'] = [1.0]
+VELOCITY['time']['diff_type'] = 'poly'
+VELOCITY['space']['diffs'] = [[0,0]]
+VELOCITY['space']['coeffs'] = [1.0]
+VELOCITY['space']['diff_type'] = 'rbf'
 
 ACCELERATION = DiffSpecs()
-ACCELERATION.time['diffs'] = [[2]]
-ACCELERATION.time['coeffs'] = [1.0]
-ACCELERATION.time['diff_type'] = 'poly'
-ACCELERATION.space['diffs'] = [[0,0]]
-ACCELERATION.space['coeffs'] = [1.0]
-ACCELERATION.space['diff_type'] = 'rbf'
+ACCELERATION['time']['diffs'] = [[2]]
+ACCELERATION['time']['coeffs'] = [1.0]
+ACCELERATION['time']['diff_type'] = 'poly'
+ACCELERATION['space']['diffs'] = [[0,0]]
+ACCELERATION['space']['coeffs'] = [1.0]
+ACCELERATION['space']['diff_type'] = 'rbf'
 
 def make_displacement_laplacian_diffspec():
   ''' 
@@ -141,13 +190,24 @@ def make_acceleration_diffspec():
   return copy.deepcopy(ACCELERATION)
 
 
-def _diff_matrix(t,x,ds):
+def diff_matrix(t,x,ds,procs=None):
   ''' 
   returns a matrix that performs the specified differentiation of 
   displacement 
+  
+  Parameters
+  ----------
+    t : (Nt,) array
+    
+    x : (Nx,2) array
+    
+    ds : DiffSpec instance
+    
+    procs : int, optional
+    
   '''
-  Dt = _time_diff_matrix(t,x,**ds.time)
-  Dx = _space_diff_matrix(t,x,**ds.space)
+  Dt = _time_diff_matrix(t,x,procs=procs,**ds['time'])
+  Dx = _space_diff_matrix(t,x,procs=procs,**ds['space'])
   D = Dt.dot(Dx)
   return D
 
@@ -179,10 +239,10 @@ def _time_diff_matrix(t,x,
     raise ValueError('coeffs was not specified')
     
   # return an identity matrix if all derivatives in diffs are zero
-  if np.all(np.array(diffs) == 0):
-    coeff = np.sum(coeffs)
-    Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
-    return Lmaster
+  #if np.all(np.array(diffs) == 0):
+  #  coeff = np.sum(coeffs)
+  #  Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
+  #  return Lmaster
   
   # compile the necessary derivatives for our rbf. This is done so 
   # that each subprocesses does not need to
@@ -289,10 +349,10 @@ def _space_diff_matrix(t,x,
     raise ValueError('coeffs was not specified')
     
   # return an identity matrix if all derivatives in diffs are zero
-  if np.all(np.array(diffs) == 0):
-    coeff = np.sum(coeffs)
-    Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
-    return Lmaster
+  #if np.all(np.array(diffs) == 0):
+  #  coeff = np.sum(coeffs)
+  #  Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
+  #  return Lmaster
 
   # compile the necessary derivatives for our rbf. This is done so 
   # that each subprocesses does not need to
@@ -373,7 +433,7 @@ def _space_diff_matrix(t,x,
   return Lmaster
 
 
-def differentiate(u,t,x,ds):
+def diff(u,t,x,ds,procs=None):
   ''' 
   differentiates u
   
@@ -406,7 +466,7 @@ def differentiate(u,t,x,ds):
   if u.shape[1:] != (Nt,Nx):
     raise ValueError('u must either be a (Nt,Nx) or (K,Nt,Nx) array')
 
-  D = _diff_matrix(t,x,ds)
+  D = diff_matrix(t,x,ds,procs=procs)
   u_flat = u.reshape((u.shape[0],Nt*Nx))
   u_diff_flat = D.dot(u_flat.T).T
 
