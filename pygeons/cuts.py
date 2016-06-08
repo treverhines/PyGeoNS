@@ -6,9 +6,14 @@ class TimeCut:
     ''' 
     Parameters
     ----------
-      time: time of the discontinuity
-      center: spatial center of the discontinuity
-      radius: spatial radius of the discontinuity
+      time: float
+        time of the discontinuity
+
+      center: (2,) array, optional
+        spatial center of the discontinuity
+
+      radius: float, optional
+        spatial radius of the discontinuity
     '''
     self.time = time
     if center is None:
@@ -51,10 +56,17 @@ class SpaceCut:
     ''' 
     Parameters
     ----------
-      end_point1: first end point of the spatial discontinuity
-      end_point2: second end point of the spatial discontinuity
-      start: start time of the spatial discontinuity
-      stop: end time of the spatial discontinuity
+      end_point1: (2,) array
+        first end point of the spatial discontinuity
+
+      end_point2: (2,) array
+        second end point of the spatial discontinuity
+
+      start: float
+        start time of the spatial discontinuity
+
+      stop: float
+        end time of the spatial discontinuity
     '''
     self.end_point1 = end_point1
     self.end_point2 = end_point2
