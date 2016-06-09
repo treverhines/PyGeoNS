@@ -153,37 +153,37 @@ ACCELERATION['space']['diffs'] = [[0,0]]
 ACCELERATION['space']['coeffs'] = [1.0]
 ACCELERATION['space']['diff_type'] = 'rbf'
 
-def make_displacement_laplacian_diffspec():
+def make_displacement_laplacian_diff_specs():
   ''' 
   returns a copy of the global variable
   '''
   return copy.deepcopy(DISPLACEMENT_LAPLACIAN)
 
-def make_velocity_laplacian_diffspec():
+def make_velocity_laplacian_diff_specs():
   ''' 
   returns a copy of the global variable
   '''
   return copy.deepcopy(VELOCITY_LAPLACIAN)
 
-def make_acceleration_laplacian_diffspec():
+def make_acceleration_laplacian_diff_specs():
   ''' 
   returns a copy of the global variable
   '''
   return copy.deepcopy(ACCELERATION_LAPLACIAN)
 
-def make_displacement_diffspec():
+def make_displacement_diff_specs():
   ''' 
   returns a copy of the global variable
   '''
   return copy.deepcopy(DISPLACEMENT)
 
-def make_velocity_diffspec():
+def make_velocity_diff_specs():
   ''' 
   returns a copy of the global variable
   '''
   return copy.deepcopy(VELOCITY)
 
-def make_acceleration_diffspec():
+def make_acceleration_diff_specs():
   ''' 
   returns a copy of the global variable
   '''
