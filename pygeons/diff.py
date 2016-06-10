@@ -239,10 +239,10 @@ def _time_diff_matrix(t,x,
     raise ValueError('coeffs was not specified')
     
   # return an identity matrix if all derivatives in diffs are zero
-  #if np.all(np.array(diffs) == 0):
-  #  coeff = np.sum(coeffs)
-  #  Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
-  #  return Lmaster
+  if np.all(np.array(diffs) == 0):
+    coeff = np.sum(coeffs)
+    Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
+    return Lmaster
   
   # compile the necessary derivatives for our rbf. This is done so 
   # that each subprocesses does not need to
@@ -349,10 +349,10 @@ def _space_diff_matrix(t,x,
     raise ValueError('coeffs was not specified')
     
   # return an identity matrix if all derivatives in diffs are zero
-  #if np.all(np.array(diffs) == 0):
-  #  coeff = np.sum(coeffs)
-  #  Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
-  #  return Lmaster
+  if np.all(np.array(diffs) == 0):
+    coeff = np.sum(coeffs)
+    Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
+    return Lmaster
 
   # compile the necessary derivatives for our rbf. This is done so 
   # that each subprocesses does not need to

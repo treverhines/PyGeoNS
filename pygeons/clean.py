@@ -73,7 +73,6 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
 def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
   ''' 
   single iteration of outliers 
-    
   '''
   zero_tol = 1e-10
   u = np.asarray(u)
@@ -142,9 +141,10 @@ def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
       
   return idx_row,idx_col
 
-def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=0.1,plot=True):  
+def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True):  
   ''' 
-  returns common mode time series
+  returns common mode time series. Common mode is a weighted mean 
+  residual time series between all stations
   
   Parameters
   ----------
@@ -172,20 +172,46 @@ def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=0.1,plot=True):
                   solve_ksp='preonly',
                   solve_pc='lu')
   res = u - upred
-  comm = np.mean(res,axis=1)
-  std = np.std(res,axis=1)
+  if sigma is None:
+    sigma = np.ones(u.shape)
+    
+  comm = np.ma.average(res,axis=1,weights=1.0/sigma)
+  comm = np.nan_to_num(comm)
   if plot:
     fig,ax = plt.subplots()
-    ax.errorbar(t,comm,std,fmt='ro',capsize=0.0,zorder=1)
-    ax.plot(t,res,'k.',zorder=0)
+    masked_res = np.ma.masked_array(res,mask=np.isinf(sigma))
+    ax.plot(t,comm,'ro',zorder=1)
+    ax.plot(t,masked_res,'k.',zorder=0)
     ax.set_xlabel('time')
     ax.set_ylabel('residual')
     ax.legend(['common mode','residuals'],frameon=False)
     fig.tight_layout()
     plt.show()  
                           
-  return comm[:,None]
+  comm = comm[:,None]
+  return comm
   
+def network_cleaner(u,t,x,sigma=None,time_cuts=None,
+                    outlier_tol=3.0,penalty=None,plot=True):
+
+  u = np.array(u,copy=True)
+  if sigma is None:
+    sigma = np.ones(u.shape)
+  else:
+    sigma = np.array(sigma,copy=True)  
+    
+  # remove outliers
+  ridx,cidx = outliers(u,t,x,sigma=sigma,time_cuts=time_cuts,
+                       tol=outlier_tol,penalty=penalty,plot=plot)
+                       
+  sigma[ridx,cidx] = np.inf
+  # remove common mode
+  comm = common_mode(u,t,x,sigma=sigma,time_cuts=time_cuts,
+                     penalty=penalty,plot=plot)
+  u -= comm                     
+  u[ridx,cidx] = 0.0
+  return u,sigma
+                     
   
 def duplicates(pos):
   ''' 
