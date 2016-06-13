@@ -3,7 +3,8 @@ import numpy as np
 import rbf.halton
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from pygeons.diff import ACCELERATION, DISPLACEMENT_LAPLACIAN, VELOCITY_LAPLACIAN, VELOCITY, diff
+import myplot.cm
+from pygeons.diff import ACCELERATION, DISPLACEMENT_LAPLACIAN, VELOCITY_LAPLACIAN, VELOCITY, diff, DiffSpecs
 from pygeons.smooth import network_smoother
 import time
 import logging
@@ -11,23 +12,23 @@ logger = logging.basicConfig(level=logging.INFO)
 np.random.seed(1)
 
 def animate(u,t,x,title=''):
-  vmin = -50.0
-  vmax = 50.0
   fig,ax = plt.subplots()
   ax.set_title(title)
+  vmax = 1.0
+  vmin = -1.0
   c = ax.scatter(x[:,0],x[:,1],
-                 s=200,c=0.0*u[0,:],
-                 edgecolor='k')
-#                 vmin=vmin,vmax=vmax)
+                 s=200,c=0.0*u[0,:],vmin=vmin,vmax=vmax,
+                 edgecolor='k',cmap=myplot.cm.viridis)
+  #vmin = c.get_clim()[0]                 
+  #vmax = c.get_clim()[1]                 
   cbar = fig.colorbar(c)
   cbar.set_label('displacement')
   
   def animate(i):
     ax.clear()
     ax.set_title(title)
-    ax.scatter(x[:,0],x[:,1],s=200,c=u[i,:],
-    edgecolor='k')
-#    vmin=vmin,vmax=vmax)
+    ax.scatter(x[:,0],x[:,1],s=200,c=u[i,:],vmin=vmin,vmax=vmax,
+    edgecolor='k',cmap=myplot.cm.viridis)
     ax.text(np.min(x[:,0])-0.4*np.std(x[:,0]),
             np.min(x[:,1])-0.4*np.std(x[:,1]),
             'time: ' + str(np.round(t[i],2)))
@@ -38,7 +39,7 @@ def animate(u,t,x,title=''):
     return ()
 
   ani = animation.FuncAnimation(fig, animate,len(t),init_func=init,
-                                interval=500, blit=True)
+                                interval=100, blit=True)
 
   return ani
 
@@ -127,42 +128,40 @@ fig.tight_layout()
 '''
 # test network smoother for Nt=100 and Nx=50
 #####################################################################
-T = 0.25
-L = 0.2
-S = 1.0
-Nt = 100
-Nx = 500
-dt = 1.0/(Nt-1)
+T = 1.0
+L = 1.0
+S = 0.5
+Nt = 500
+Nx = 200
 
-penalties = [(T/2.0)**2/S,(L/2.0)**2/S]
 penalties = [(T/2.0)**2/S,(T/2.0)*(L/2.0)**2/S]
 
-t = np.linspace(0.0,1.0,Nt)
-x = rbf.halton.halton(Nx,2)
+t = np.linspace(0.0,2*np.pi,Nt)
+x = 2*np.pi*rbf.halton.halton(Nx,2)
 
-u_true = 0.0*np.sin(2*np.pi*x[:,0])*np.sin(2*np.pi*x[:,1])[None,:]*np.sin(2*1.0*np.pi*t)[:,None]
+u_true = (np.sin(x[:,0])*np.sin(x[:,1])[None,:]*
+              np.sin(t)[:,None])
 u = u_true + np.random.normal(0.0,S,(Nt,Nx))
 sigma = S*np.ones((Nt,Nx))
 
 start_time = time.time()
+DuDx = DiffSpecs()
+DuDx['space']['diffs'] = [[1,0]]
+DuDx['space']['coeffs'] = [1.0]
 u_smooth,u_pert = network_smoother(
                     u,t,x,
                     penalties=penalties, 
                     sigma=sigma,perts=0,
                     diff_specs=[ACCELERATION,VELOCITY_LAPLACIAN],
-                    solve_ksp='preonly',solve_pc='lu')
-
-#sigma = np.std(u_pert,axis=0)
-#u_smooth,u_pert = network_smoother(
-#                    u_smooth,t,x,
-#                    penalties=[penalties[1]], 
-#                    sigma=sigma,perts=0,
-#                    diff_specs=[VELOCITY_LAPLACIAN],
-#                    solve_ksp='preonly',solve_pc='lu')
-
+                    solve_ksp='preonly',solve_pc='lu',solve_atol=1e-6,
+                    solve_max_itr=10000,solve_view=True)
 u_true = diff(u_true,t,x,VELOCITY)
 u_smooth = diff(u_smooth,t,x,VELOCITY)
-u_pert = diff(u_smooth,t,x,VELOCITY)
+u_pert = diff(u_pert,t,x,VELOCITY)
+u_true = diff(u_true,t,x,DuDx)
+u_smooth = diff(u_smooth,t,x,DuDx)
+u_pert = diff(u_pert,t,x,DuDx)
+
 end_time = time.time()       
 anim1 = animate(u,t,x,'observed')
 anim2 = animate(u_smooth,t,x,'smoothed')

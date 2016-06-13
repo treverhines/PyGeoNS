@@ -87,7 +87,7 @@ class DiffSpecs(dict):
                      'order':None,
                      'cuts':None,
                      'diffs':[[0,0]],
-                     'coeffs':[1.0,1.0],
+                     'coeffs':[1.0],
                      'diff_type':'rbf'} 
 
     self['time'].update(time)                     
