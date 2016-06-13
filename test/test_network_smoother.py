@@ -14,8 +14,8 @@ np.random.seed(1)
 def animate(u,t,x,title=''):
   fig,ax = plt.subplots()
   ax.set_title(title)
-  vmax = 1.0
-  vmin = -1.0
+  vmax = 0.05
+  vmin = -0.05
   c = ax.scatter(x[:,0],x[:,1],
                  s=200,c=0.0*u[0,:],vmin=vmin,vmax=vmax,
                  edgecolor='k',cmap=myplot.cm.viridis)
@@ -128,15 +128,15 @@ fig.tight_layout()
 '''
 # test network smoother for Nt=100 and Nx=50
 #####################################################################
-T = 1.0
-L = 1.0
+T = 0.8
+L = 0.8
 S = 0.5
 Nt = 500
 Nx = 200
 
 penalties = [(T/2.0)**2/S,(T/2.0)*(L/2.0)**2/S]
 
-t = np.linspace(0.0,2*np.pi,Nt)
+t = 1.0*np.linspace(0.0,2*np.pi,Nt)
 x = 2*np.pi*rbf.halton.halton(Nx,2)
 
 u_true = (np.sin(x[:,0])*np.sin(x[:,1])[None,:]*
@@ -153,14 +153,14 @@ u_smooth,u_pert = network_smoother(
                     penalties=penalties, 
                     sigma=sigma,perts=0,
                     diff_specs=[ACCELERATION,VELOCITY_LAPLACIAN],
-                    solve_ksp='preonly',solve_pc='lu',solve_atol=1e-6,
+                    solve_ksp='lgmres',solve_pc='icc',solve_atol=1e-6,
                     solve_max_itr=10000,solve_view=True)
 u_true = diff(u_true,t,x,VELOCITY)
 u_smooth = diff(u_smooth,t,x,VELOCITY)
 u_pert = diff(u_pert,t,x,VELOCITY)
-u_true = diff(u_true,t,x,DuDx)
-u_smooth = diff(u_smooth,t,x,DuDx)
-u_pert = diff(u_pert,t,x,DuDx)
+#u_true = diff(u_true,t,x,DuDx)
+#u_smooth = diff(u_smooth,t,x,DuDx)
+#u_pert = diff(u_pert,t,x,DuDx)
 
 end_time = time.time()       
 anim1 = animate(u,t,x,'observed')
