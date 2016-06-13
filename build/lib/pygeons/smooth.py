@@ -5,34 +5,11 @@ import modest
 import modest.solvers
 import scipy.sparse
 import logging
-from scipy.spatial import cKDTree
 import pygeons.cuts
 import modest.mp
 import pygeons.diff
 
 logger = logging.getLogger(__name__)
-
-
-def _identify_duplicate_stations(pos):
-  ''' 
-  identifies stations which are abnormally close to eachother
-  '''
-  # if there is zero or one station then dont run this check
-  if pos.shape[0] <= 1:
-    return
-
-  T = cKDTree(pos)
-  dist,idx = T.query(pos,2)
-  r = dist[:,1]
-  ri = idx[:,1]
-  logr = np.log10(r)
-  cutoff = np.mean(logr) - 4*np.std(logr)
-  duplicates = np.nonzero(logr < cutoff)[0]
-  for d in duplicates:
-    logger.warning('station %s is close to station %s. '
-                   'This may result in numerical instability. One '                 
-                   'of the stations should be removed or they should '
-                   'be merged together.' % (d,ri[d]))
 
 
 def network_smoother(u,t,x,
@@ -157,13 +134,27 @@ def network_smoother(u,t,x,
 
   logger.info('computing perturbed predicted displacements...')
   u_pert = np.zeros((perts,G.shape[0]))
-  for i in range(perts):
-    d = np.random.normal(0.0,1.0,G.shape[0])
-    u_pert[i,:] = modest.sparse_reg_petsc(G,L,d,
-                    ksp=solve_ksp,pc=solve_pc,
-                    maxiter=solve_max_itr,view=solve_view,
-                    atol=solve_atol,rtol=solve_rtol)
-    u_pert[i,:] += u_pred
+  # perturbed displacements will be computed in parallel and so this 
+  # needs to be turned into a mappable function
+  def calculate_pert(args):
+    G = args[0]
+    L = args[1]
+    d = args[2]
+    ksp = args[3]
+    pc = args[4]
+    maxiter = args[5]
+    view = args[6]
+    atol = args[7]
+    rtol = args[8]
+    return modest.sparse_reg_petsc(G,L,d,ksp=ksp,pc=pc,maxiter=maxiter,view=view,atol=atol,rtol=rtol)
+
+  # generator for arguments that will be passed to calculate_pert
+  args = ((G,L,np.random.normal(0.0,1.0,G.shape[0]),
+           solve_ksp,solve_pc,solve_max_itr,
+           solve_view,solve_atol,solve_rtol) for i in range(perts))
+  u_pert = modest.mp.parmap(calculate_pert,args,workers=procs)
+  u_pert = np.reshape(u_pert,(perts,(Nt*Nx)))
+  u_pert += u_pred[None,:]
 
   logger.info('done')
 
