@@ -11,17 +11,11 @@ import pygeons.diff
 
 logger = logging.getLogger(__name__)
 
-
 def network_smoother(u,t,x,
                      sigma=None,
                      diff_specs=None,
                      penalties=None, 
-                     solve_ksp='lgmres',
-                     solve_pc='icc',
-                     solve_max_itr=1000,
-                     solve_atol=1e-6, 
-                     solve_rtol=1e-8, 
-                     solve_view=False, 
+                     use_umfpack=True,
                      cv_itr=100,
                      cv_bounds=None, 
                      cv_plot=False,
@@ -115,21 +109,16 @@ def network_smoother(u,t,x,
     out = modest.cv.optimal_damping_parameters(
             G,reg_matrices,u_flat,itr=cv_itr,fold=testing_sets,
             plot=cv_plot,log_bounds=cv_bounds,
-            solver='petsc',ksp=solve_ksp,pc=solve_pc,
-            maxiter=solve_max_itr,view=solve_view,atol=solve_atol,
-            rtol=solve_rtol,procs=procs)
+            solver='spsolve',use_umfpack=use_umfpack)
 
     penalties = out[0]
 
   # this makes matrix copies
   L = scipy.sparse.vstack(p*r for p,r in zip(penalties,reg_matrices))
-
+  L.eliminate_zeros()
+  
   logger.info('solving for predicted displacements...')
-  u_pred = modest.sparse_reg_petsc(
-             G,L,u_flat,
-             ksp=solve_ksp,pc=solve_pc,
-             maxiter=solve_max_itr,view=solve_view,
-             atol=solve_atol,rtol=solve_rtol)
+  u_pred = modest.sparse_reg_dsolve(G,L,u_flat,use_umfpack=use_umfpack)
   logger.info('done')
 
   logger.info('computing perturbed predicted displacements...')
@@ -140,18 +129,12 @@ def network_smoother(u,t,x,
     G = args[0]
     L = args[1]
     d = args[2]
-    ksp = args[3]
-    pc = args[4]
-    maxiter = args[5]
-    view = args[6]
-    atol = args[7]
-    rtol = args[8]
-    return modest.sparse_reg_petsc(G,L,d,ksp=ksp,pc=pc,maxiter=maxiter,view=view,atol=atol,rtol=rtol)
+    use_umfpack=args[3]
+    return modest.sparse_reg_dsolve(G,L,d,use_umfpack=use_umfpack)
 
   # generator for arguments that will be passed to calculate_pert
-  args = ((G,L,np.random.normal(0.0,1.0,G.shape[0]),
-           solve_ksp,solve_pc,solve_max_itr,
-           solve_view,solve_atol,solve_rtol) for i in range(perts))
+  args = ((G,L,np.random.normal(0.0,1.0,G.shape[0]),use_umfpack)
+           for i in range(perts))
   u_pert = modest.mp.parmap(calculate_pert,args,workers=procs)
   u_pert = np.reshape(u_pert,(perts,(Nt*Nx)))
   u_pert += u_pred[None,:]

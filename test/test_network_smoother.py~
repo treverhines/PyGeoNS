@@ -9,13 +9,13 @@ from pygeons.smooth import network_smoother
 import time
 import logging
 logger = logging.basicConfig(level=logging.INFO)
-np.random.seed(1)
+np.random.seed(2)
 
 def animate(u,t,x,title=''):
   fig,ax = plt.subplots()
   ax.set_title(title)
-  vmax = 1.0
-  vmin = -1.0
+  vmax = np.max(u)
+  vmin = np.min(u)
   c = ax.scatter(x[:,0],x[:,1],
                  s=200,c=0.0*u[0,:],vmin=vmin,vmax=vmax,
                  edgecolor='k',cmap=myplot.cm.viridis)
@@ -128,22 +128,24 @@ fig.tight_layout()
 '''
 # test network smoother for Nt=100 and Nx=50
 #####################################################################
-T = 1.0
-L = 1.0
+T = 0.2
+L = 0.1
 S = 0.5
-Nt = 500
-Nx = 200
+Nt = 200
+Nx = 500
 
 penalties = [(T/2.0)**2/S,(T/2.0)*(L/2.0)**2/S]
 
-t = np.linspace(0.0,2*np.pi,Nt)
-x = 2*np.pi*rbf.halton.halton(Nx,2)
+t = 1.0*np.linspace(0.0,0.5*np.pi,Nt)
+x = 20*np.pi*rbf.halton.halton(Nx,2)
 
-u_true = (np.sin(x[:,0])*np.sin(x[:,1])[None,:]*
+u_true = 0*(np.sin(x[:,0])*np.sin(x[:,1])[None,:]*
               np.sin(t)[:,None])
 u = u_true + np.random.normal(0.0,S,(Nt,Nx))
 sigma = S*np.ones((Nt,Nx))
 
+import mkl
+mkl.set_num_threads(6)
 start_time = time.time()
 DuDx = DiffSpecs()
 DuDx['space']['diffs'] = [[1,0]]
@@ -151,20 +153,24 @@ DuDx['space']['coeffs'] = [1.0]
 u_smooth,u_pert = network_smoother(
                     u,t,x,
                     penalties=penalties, 
-                    sigma=sigma,perts=0,
-                    diff_specs=[ACCELERATION,VELOCITY_LAPLACIAN],
-                    solve_ksp='preonly',solve_pc='lu',solve_atol=1e-6,
-                    solve_max_itr=10000,solve_view=True)
+                    sigma=sigma,perts=0,procs=6,
+                    diff_specs=[ACCELERATION,VELOCITY_LAPLACIAN],use_umfpack=True)
+end_time = time.time()       
+
+print('total run time for network_smoother: %s milliseconds' % 
+      np.round((end_time - start_time)*1000,3))
+#                    solve_ksp='lgmres',solve_pc='icc',solve_atol=1e-6,
+#                    solve_max_itr=10000,solve_view=True)
 u_true = diff(u_true,t,x,VELOCITY)
 u_smooth = diff(u_smooth,t,x,VELOCITY)
 u_pert = diff(u_pert,t,x,VELOCITY)
-u_true = diff(u_true,t,x,DuDx)
-u_smooth = diff(u_smooth,t,x,DuDx)
-u_pert = diff(u_pert,t,x,DuDx)
+#u_true = diff(u_true,t,x,DuDx)
+#u_smooth = diff(u_smooth,t,x,DuDx)
+#u_pert = diff(u_pert,t,x,DuDx)
 
 end_time = time.time()       
-anim1 = animate(u,t,x,'observed')
-anim2 = animate(u_smooth,t,x,'smoothed')
+anim1 = animate(u,t,x,'observed displacement')
+anim2 = animate(u_smooth,t,x,'smoothed velocity')
 fig,ax = plt.subplots()
 plt.plot(t,u_smooth[:,10],'b-')
 plt.plot(t,u_true[:,10],'k-')

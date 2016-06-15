@@ -7,7 +7,23 @@ from scipy.spatial import cKDTree
 import logging
 logger = logging.getLogger(__name__)
 
-def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
+def most(a,axis=None,cutoff=0.5):
+  ''' 
+  behaves like np.all but returns True if the percentage of Trues
+  is greater than or equal to cutoff
+  '''
+  a = np.asarray(a,dtype=bool)
+  if axis is None:
+    b = np.prod(a.shape)
+  else:
+    b = a.shape[axis]
+
+  asum = np.sum(a,axis=axis)
+  return asum >= b*cutoff
+
+
+def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
+             plot=True,**kwargs):
   ''' 
   returns indices of time series outliers
   
@@ -57,7 +73,7 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
   while True:
     ri,ci = _outliers(u,t,x,sigma=sigma,
                       time_cuts=time_cuts,penalty=penalty,
-                      tol=tol,plot=plot)
+                      tol=tol,plot=plot,**kwargs)
     logger.info('removed %s outliers on iteration %s' % (ri.shape[0],itr))
     if ri.shape[0] == 0:
       break
@@ -70,7 +86,8 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
         
   return rout,cout  
   
-def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
+def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
+              plot=True,**kwargs):
   ''' 
   single iteration of outliers 
   '''
@@ -89,9 +106,7 @@ def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
                   u,t,x,sigma=sigma,
                   diff_specs=[ds],
                   penalties=penalty,
-                  perts=0,
-                  solve_ksp='preonly',
-                  solve_pc='lu')
+                  perts=0,**kwargs)
   res = u - upred
   res[np.abs(res) < zero_tol] = 0.0
   if sigma is None:
@@ -141,7 +156,9 @@ def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,plot=True):
       
   return idx_row,idx_col
 
-def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True):  
+
+def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True,
+                **kwargs):  
   ''' 
   returns common mode time series. Common mode is a weighted mean 
   residual time series between all stations
@@ -168,9 +185,7 @@ def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True):
                   u,t,x,sigma=sigma,
                   diff_specs=[ds],
                   penalties=penalty,
-                  perts=0,
-                  solve_ksp='preonly',
-                  solve_pc='lu')
+                  perts=0,**kwargs)
   res = u - upred
   if sigma is None:
     sigma = np.ones(u.shape)
@@ -192,7 +207,8 @@ def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True):
   return comm
   
 def network_cleaner(u,t,x,sigma=None,time_cuts=None,
-                    outlier_tol=3.0,penalty=None,plot=True):
+                    outlier_tol=3.0,penalty=None,plot=True,
+                    **kwargs):
 
   u = np.array(u,copy=True)
   if sigma is None:
@@ -202,35 +218,106 @@ def network_cleaner(u,t,x,sigma=None,time_cuts=None,
     
   # remove outliers
   ridx,cidx = outliers(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                       tol=outlier_tol,penalty=penalty,plot=plot)
+                       tol=outlier_tol,penalty=penalty,plot=plot,
+                       **kwargs)
                        
   sigma[ridx,cidx] = np.inf
   # remove common mode
   comm = common_mode(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                     penalty=penalty,plot=plot)
+                     penalty=penalty,plot=plot,
+                     **kwargs)
   u -= comm                     
   u[ridx,cidx] = 0.0
   return u,sigma
                      
   
-def duplicates(pos):
+def time_lacks_data(sigma,cutoff=0.5):
   ''' 
-  identifies stations which are abnormally close to eachother
+  returns true for each time where sigma is np.inf for most of the stations.
+  The percentage of infs must exceed cutoff in order to return True.
+  '''
+  out = most(np.isinf(sigma),axis=1,cutoff=cutoff)
+  return out
+
+
+def station_lacks_data(sigma,cutoff=0.5):
+  ''' 
+  returns true for each station where sigma is np.inf for most of the times.
+  The percentage of infs must exceed cutoff in order to return True.
+  '''
+  out = most(np.isinf(sigma),axis=0,cutoff=cutoff)
+  return out
+
+
+def station_is_duplicate(sigma,x,tol=4.0,plot=True):
+  ''' 
+  returns the indices for a set of nonduplicate stations. if duplicate 
+  stations are found then the one that has the most observations is 
+  retained
+  '''
+  x = np.asarray(x)
+  # if there is zero or one station then dont run this check
+
+  is_duplicate = np.zeros(x.shape[0],dtype=bool)
+  while True:
+    xi = x[~is_duplicate]
+    sigmai = sigma[:,~is_duplicate]
+    idx = _identify_duplicate_station(sigmai,xi,tol=tol) 
+    if idx is None:
+      break
+    else:  
+      global_idx = np.nonzero(~is_duplicate)[0][idx]
+      logger.info('identified station %s as a duplicate' % global_idx)
+      is_duplicate[global_idx] = True
+
+  if plot:
+    # get nearest neighbors
+    T = cKDTree(x)
+    dist,idx = T.query(x,2)
+    rbefore = dist[:,1]
+    T = cKDTree(x[~is_duplicate])
+    dist,idx = T.query(x[~is_duplicate],2)
+    rafter = dist[:,1]
+    fig,ax = plt.subplots()
+    bin_count = max(len(x)/10,10)
+    out,bins,patches = ax.hist(np.log10(rbefore),bin_count,color='r',edgecolor='none')
+    ax.hist(np.log10(rafter),bins,color='k',edgecolor='none')
+    ax.set_xlabel('log10 distance to nearest neighbor')
+    ax.set_ylabel('count')
+    ax.legend(['outliers'],loc=2,frameon=False)
+    ax.grid()
+    plt.show()
+    
+  return is_duplicate      
+
+
+def _identify_duplicate_station(sigma,x,tol=3.0):
+  ''' 
+  returns the index of the station which is likely to be a duplicate 
+  due to its proximity to another station.  The station which has the 
+  least amount of data is identified as the duplicate
   '''
   # if there is zero or one station then dont run this check
-  if pos.shape[0] <= 1:
-    return
-
-  T = cKDTree(pos)
-  dist,idx = T.query(pos,2)
+  if x.shape[0] <= 1:
+    return None
+    
+  T = cKDTree(x)
+  dist,idx = T.query(x,2)
   r = dist[:,1]
   ri = idx[:,1]
   logr = np.log10(r)
-  cutoff = np.mean(logr) - 4*np.std(logr)
-  duplicates = np.nonzero(logr < cutoff)[0]
-  for d in duplicates:
-    print('station %s is close to station %s. '
-          'This may result in numerical instability. One '
-          'of the stations should be removed or they should '
-          'be merged together.' % (d,ri[d]))
+  cutoff = np.mean(logr) - tol*np.std(logr)
+  if not np.any(logr < cutoff):
+    # if no duplicates were found then return nothing
+    return None
 
+  else:
+    # otherwise return the index of the least useful of the two 
+    # nearest stations
+    idx1 = np.argmin(logr)    
+    idx2 = ri[idx1]
+    count1 = np.sum(~np.isinf(sigma[:,idx1]))
+    count2 = np.sum(~np.isinf(sigma[:,idx2]))
+    count,out = min((count1,idx1),(count2,idx2))
+    return out
+  

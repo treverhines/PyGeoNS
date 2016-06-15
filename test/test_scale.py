@@ -8,9 +8,10 @@ import rbf.nodegen
 import rbf.integrate
 import logging
 import myplot.cm
+import scipy.signal
 logging.basicConfig(level=logging.INFO)
 np.random.seed(1)
-''' 
+
 ## SCALING FOR TIME SMOOTHING 
 #####################################################################
 # length scale
@@ -40,13 +41,13 @@ sigma = S*np.ones((N,1))
 
 fig1,ax1 = plt.subplots()
 fig2,ax2 = plt.subplots()
+fig3,ax3 = plt.subplots()
 ax2.plot(t/T,data/S,'k.')
 for i in range(len(Pscale)): 
   smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
                    diff_specs=[pygeons.diff.ACCELERATION],
-                   penalties=[P[i]],perts=PERTS,
-                   solve_ksp='preonly',solve_pc='lu',procs=6)
+                   penalties=[P[i]],perts=PERTS,procs=6)
   # remove x axis
   smooth = smooth[:,0]
   perts = perts[:,:,0]
@@ -57,6 +58,10 @@ for i in range(len(Pscale)):
 
   ax1.plot(t/T,corr,'-',lw=2)
   ax2.plot(t/T,smooth/S,'-',lw=2)
+  # sample spacing
+  dt = (t[1] - t[0])/T
+  freq,pow = scipy.signal.periodogram(corr,1.0/dt)
+  ax3.loglog(1.0/freq,pow)
   #ax.set_title(u'penalty: %s (T^2/S)' % Pscale)
 
 ax1.set_xlabel('time (T)')
@@ -73,7 +78,7 @@ ax2.set_xlabel('time (T)')
 ax2.set_ylim((-4.0,4.0))
 ax2.grid()
 plt.show()
-
+quit()
 ## SCALING FOR SPACE SMOOTHING 
 #####################################################################
 
@@ -110,8 +115,7 @@ sigma = S*np.ones((1,N))
 smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
                    diff_specs=[pygeons.diff.DISPLACEMENT_LAPLACIAN],
-                   penalties=[P],perts=PERTS,
-                   solve_ksp='preonly',solve_pc='lu',procs=6)
+                   penalties=[P],perts=PERTS,procs=6)
 # remove x axis
 smooth = smooth[0,:]
 perts = perts[:,0,:]
@@ -157,7 +161,7 @@ ax.grid()
 cbar = plt.colorbar(c,ax=ax)
 cbar.set_label('correlation')
 plt.show()
-'''
+
 ## SCALING FOR SPACE VELOCITY SMOOTHING 
 #####################################################################
 
@@ -206,8 +210,7 @@ sigma = S*np.ones((Nt,N))
 smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
                    diff_specs=[pygeons.diff.VELOCITY_LAPLACIAN],
-                   penalties=[P],perts=PERTS,
-                   solve_ksp='preonly',solve_pc='lu',procs=6)
+                   penalties=[P],perts=PERTS,procs=6)
 smooth = pygeons.diff.diff(smooth,t,x,pygeons.diff.VELOCITY,procs=6)
 perts = pygeons.diff.diff(perts,t,x,pygeons.diff.VELOCITY,procs=6)
 

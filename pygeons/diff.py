@@ -129,6 +129,54 @@ ACCELERATION_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
 ACCELERATION_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
 ACCELERATION_LAPLACIAN['space']['diff_type'] = 'rbf'
 
+DISPLACEMENT_DX = DiffSpecs()
+DISPLACEMENT_DX['time']['diffs'] = [[0]]
+DISPLACEMENT_DX['time']['coeffs'] = [1.0]
+DISPLACEMENT_DX['time']['diff_type'] = 'poly'
+DISPLACEMENT_DX['space']['diffs'] = [[1,0]]
+DISPLACEMENT_DX['space']['coeffs'] = [1.0]
+DISPLACEMENT_DX['space']['diff_type'] = 'rbf'
+
+VELOCITY_DX = DiffSpecs()
+VELOCITY_DX['time']['diffs'] = [[1]]
+VELOCITY_DX['time']['coeffs'] = [1.0]
+VELOCITY_DX['time']['diff_type'] = 'poly'
+VELOCITY_DX['space']['diffs'] = [[1,0]]
+VELOCITY_DX['space']['coeffs'] = [1.0]
+VELOCITY_DX['space']['diff_type'] = 'rbf'
+
+ACCELERATION_DX = DiffSpecs()
+ACCELERATION_DX['time']['diffs'] = [[2]]
+ACCELERATION_DX['time']['coeffs'] = [1.0]
+ACCELERATION_DX['time']['diff_type'] = 'poly'
+ACCELERATION_DX['space']['diffs'] = [[1,0]]
+ACCELERATION_DX['space']['coeffs'] = [1.0]
+ACCELERATION_DX['space']['diff_type'] = 'rbf'
+
+DISPLACEMENT_DY = DiffSpecs()
+DISPLACEMENT_DY['time']['diffs'] = [[0]]
+DISPLACEMENT_DY['time']['coeffs'] = [1.0]
+DISPLACEMENT_DY['time']['diff_type'] = 'poly'
+DISPLACEMENT_DY['space']['diffs'] = [[0,1]]
+DISPLACEMENT_DY['space']['coeffs'] = [1.0]
+DISPLACEMENT_DY['space']['diff_type'] = 'rbf'
+
+VELOCITY_DY = DiffSpecs()
+VELOCITY_DY['time']['diffs'] = [[1]]
+VELOCITY_DY['time']['coeffs'] = [1.0]
+VELOCITY_DY['time']['diff_type'] = 'poly'
+VELOCITY_DY['space']['diffs'] = [[0,1]]
+VELOCITY_DY['space']['coeffs'] = [1.0]
+VELOCITY_DY['space']['diff_type'] = 'rbf'
+
+ACCELERATION_DY = DiffSpecs()
+ACCELERATION_DY['time']['diffs'] = [[2]]
+ACCELERATION_DY['time']['coeffs'] = [1.0]
+ACCELERATION_DY['time']['diff_type'] = 'poly'
+ACCELERATION_DY['space']['diffs'] = [[0,1]]
+ACCELERATION_DY['space']['coeffs'] = [1.0]
+ACCELERATION_DY['space']['diff_type'] = 'rbf'
+
 DISPLACEMENT = DiffSpecs()
 DISPLACEMENT['time']['diffs'] = [[0]]
 DISPLACEMENT['time']['coeffs'] = [1.0]
@@ -158,6 +206,42 @@ def make_displacement_laplacian_diff_specs():
   returns a copy of the global variable
   '''
   return copy.deepcopy(DISPLACEMENT_LAPLACIAN)
+
+def make_displacement_dx_diff_specs():
+  ''' 
+  returns a copy of the global variable
+  '''
+  return copy.deepcopy(DISPLACEMENT_DX)
+
+def make_displacement_dy_diff_specs():
+  ''' 
+  returns a copy of the global variable
+  '''
+  return copy.deepcopy(DISPLACEMENT_DY)
+
+def make_displacement_dz_diff_specs():
+  ''' 
+  returns a copy of the global variable
+  '''
+  return copy.deepcopy(DISPLACEMENT_DZ)
+
+def make_velocity_dx_diff_specs():
+  ''' 
+  returns a copy of the global variable
+  '''
+  return copy.deepcopy(VELOCITY_DX)
+
+def make_velocity_dy_diff_specs():
+  ''' 
+  returns a copy of the global variable
+  '''
+  return copy.deepcopy(VELOCITY_DY)
+
+def make_velocity_dz_diff_specs():
+  ''' 
+  returns a copy of the global variable
+  '''
+  return copy.deepcopy(VELOCITY_DZ)
 
 def make_velocity_laplacian_diff_specs():
   ''' 
@@ -209,6 +293,7 @@ def diff_matrix(t,x,ds,procs=None):
   Dt = _time_diff_matrix(t,x,procs=procs,**ds['time'])
   Dx = _space_diff_matrix(t,x,procs=procs,**ds['space'])
   D = Dt.dot(Dx)
+  D.eliminate_zeros()
   return D
 
 def _time_diff_matrix(t,x,
@@ -242,6 +327,7 @@ def _time_diff_matrix(t,x,
   if np.all(np.array(diffs) == 0):
     coeff = np.sum(coeffs)
     Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
+    Lmaster.tocsr()
     return Lmaster
   
   # compile the necessary derivatives for our rbf. This is done so 
@@ -352,6 +438,7 @@ def _space_diff_matrix(t,x,
   if np.all(np.array(diffs) == 0):
     coeff = np.sum(coeffs)
     Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
+    Lmaster.tocsr()
     return Lmaster
 
   # compile the necessary derivatives for our rbf. This is done so 
