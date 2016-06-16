@@ -3,9 +3,11 @@ import numpy as np
 from pygeons.smooth import network_smoother
 import matplotlib.pyplot as plt
 import pygeons.diff
+import pygeons.cuts
 from scipy.spatial import cKDTree
 import logging
 logger = logging.getLogger(__name__)
+
 
 def most(a,axis=None,cutoff=0.5):
   ''' 
@@ -22,7 +24,8 @@ def most(a,axis=None,cutoff=0.5):
   return asum >= b*cutoff
 
 
-def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
+def outliers(u,t,x,sigma=None,
+             time_scale=None,time_cuts=None,tol=3.0,
              plot=True,**kwargs):
   ''' 
   returns indices of time series outliers
@@ -38,9 +41,20 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
   ----------
     u : (Nt,Nx) array
 
+    t : (Nt,) array
+    
+    x : (Nx,2) array
+      this is only used when time_cuts has spatial dependence
+      
     sigma : (Nt,Nx) array, optional
     
-    penalty : float, optional
+    time_scale : float, optional
+    
+    time_cuts : TimeCuts instance, optional
+    
+    tol : float, optional
+    
+    plot : bool, optional
     
   Returns
   -------
@@ -58,6 +72,7 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
   u = np.asarray(u)
   t = np.asarray(t)
   x = np.asarray(x)
+    
   if not (tol > 0.0):
     raise ValueError('tol must be greater than zero')
     
@@ -71,9 +86,9 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
   cout = np.zeros((0,),dtype=int)
   itr = 0  
   while True:
-    ri,ci = _outliers(u,t,x,sigma=sigma,
-                      time_cuts=time_cuts,penalty=penalty,
-                      tol=tol,plot=plot,**kwargs)
+    ri,ci = _outliers(u,t,x,sigma,
+                      time_scale,time_cuts,tol,
+                      plot,**kwargs)
     logger.info('removed %s outliers on iteration %s' % (ri.shape[0],itr))
     if ri.shape[0] == 0:
       break
@@ -87,26 +102,21 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
   return rout,cout  
   
 
-def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
-              plot=True,**kwargs):
+def _outliers(u,t,x,sigma,
+              time_scale,time_cuts,tol,
+              plot,**kwargs):
   ''' 
   single iteration of outliers 
   '''
   zero_tol = 1e-10
-  u = np.asarray(u)
-  t = np.asarray(t)
-  x = np.asarray(x)
   Nt,Nx = u.shape
     
-  if penalty is not None:
-    penalty = [penalty]
-    
-  ds = pygeons.diff.make_acceleration_diff_specs()
+  ds = pygeons.diff.acc()
   ds['time']['cuts'] = time_cuts
   upred,upert = network_smoother(
                   u,t,x,sigma=sigma,
                   diff_specs=[ds],
-                  penalties=penalty,
+                  time_scale=time_scale,
                   perts=0,**kwargs)
   res = u - upred
   res[np.abs(res) < zero_tol] = 0.0
@@ -158,8 +168,9 @@ def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
   return idx_row,idx_col
 
 
-def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True,
-                **kwargs):  
+def common_mode(u,t,x,sigma=None,
+               time_scale=None,time_cuts=None,
+               plot=True,**kwargs):  
   ''' 
   returns common mode time series. Common mode is a weighted mean 
   residual time series between all stations
@@ -168,24 +179,34 @@ def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True,
   ----------
     u : (Nt,Nx) array
 
-    sigma : (Nt,Nx) array
+    t : (Nt,) array
     
-    penalty : float, optional
+    x : (Nx,2) array
+    
+    sigma : (Nt,Nx) array, optional
+    
+    time_scale : float, optional
+    
+    time_cuts : TimeCuts instance, optional
+    
+    plot : bool, optional
+
+  Returns
+  -------
+    comm : (Nt,1) array
+
   '''
   u = np.asarray(u)
   t = np.asarray(t)
   x = np.asarray(x)
   Nt,Nx = u.shape
     
-  if penalty is not None:
-    penalty = [penalty]
-    
-  ds = pygeons.diff.make_acceleration_diff_specs()
+  ds = pygeons.diff.acc()
   ds['time']['cuts'] = time_cuts
   upred,upert = network_smoother(
                   u,t,x,sigma=sigma,
                   diff_specs=[ds],
-                  penalties=penalty,
+                  time_scale=time_scale,
                   perts=0,**kwargs)
   res = u - upred
   if sigma is None:
@@ -208,31 +229,8 @@ def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True,
   return comm
   
 
-def network_downsampler(u,t_in,t_out,sigma=None,time_cuts=None):
-  ''' 
-  Parameters
-  ---------- 
-    u : (Nin,Nx) array
-    
-    t_in : (Nin,) array
-    
-    t_out : (Nout,) array
-    
-    sigma : (Nin,Nx) array
-    
-    time_cuts : TimeCutCollection
-
-  Returns
-  -------
-    u_out : (Nout,Nx) array
-
-    sigma_out :(Nout,Nx) array
-  
-  '''   
-        
-
-def network_cleaner(u,t,x,sigma=None,time_cuts=None,
-                    outlier_tol=3.0,penalty=None,plot=True,
+def network_cleaner(u,t,sigma=None,time_cuts=None,
+                    tol=3.0,time_scale=None,plot=True,
                     **kwargs):
   ''' 
   Parameters
@@ -249,8 +247,6 @@ def network_cleaner(u,t,x,sigma=None,time_cuts=None,
     
     time_scale : scalar    
     
-  TODO
-  remove x dependence
   '''
   u = np.array(u,copy=True)
   if sigma is None:
@@ -259,14 +255,14 @@ def network_cleaner(u,t,x,sigma=None,time_cuts=None,
     sigma = np.array(sigma,copy=True)  
     
   # remove outliers
-  ridx,cidx = outliers(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                       tol=outlier_tol,penalty=penalty,plot=plot,
+  ridx,cidx = outliers(u,t,sigma=sigma,time_cuts=time_cuts,
+                       tol=tol,time_scale=time_scale,plot=plot,
                        **kwargs)
                        
   sigma[ridx,cidx] = np.inf
   # remove common mode
-  comm = common_mode(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                     penalty=penalty,plot=plot,
+  comm = common_mode(u,t,sigma=sigma,time_cuts=time_cuts,
+                     time_scale=time_scale,plot=plot,
                      **kwargs)
   u -= comm                     
   u[ridx,cidx] = 0.0

@@ -4,6 +4,7 @@ import modest.cv
 import modest
 import modest.solvers
 import scipy.sparse
+from scipy.spatial import cKDTree
 import logging
 import pygeons.cuts
 import modest.mp
@@ -11,20 +12,32 @@ import pygeons.diff
 logger = logging.getLogger(__name__)
 
 
+def _average_shortest_distance(x):
+  ''' 
+  returns the average distance to nearest neighbor           
+
+  Parameters
+  ----------
+    x : (N,D) array
+
+  Returns
+  -------
+    out : float
+  '''
+  T = cKDTree(x)
+  out = np.mean(T.query(x,2)[0][:,1])
+  return out
+
+
 def _estimate_scales(t,x):
   ''' 
-  returns a time scale which is one tenth of the time spanned by t
-  
-  returns a length scale which is one tenth the diagonal of a bounding 
-  box surrounding x
+  returns a time and spatial scale which is 10x the average shortest 
+  distance between times
   '''
-  t_min = np.min(t)
-  t_max = np.max(t)
-  T = (t_max - t_min)/10.0
-  
-  x_min = np.min(x,axis=0)
-  x_max = np.min(x,axis=0)
-  L = np.linalg.norm(x_max - x_min)/10.0  
+  dt = _average_shortest_distance(t[:,None])
+  dl = _average_shortest_distance(x)
+  T = 10*dt
+  L = 10*dl
   return T,L
 
 
