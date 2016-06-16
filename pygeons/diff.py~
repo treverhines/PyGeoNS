@@ -6,14 +6,15 @@ import rbf.basis
 import pygeons.cuts
 import modest.mp
 import scipy.sparse
-import copy
+import logging
+logger = logging.getLogger(__name__)
 
 class DiffSpecs(dict):
   ''' 
   specialized dictionary-like class containing the specifications 
   used to make a differentiation matrix
 
-  A DiffSpec instance contains the dictionaries 'time' and 'space' 
+  A DiffSpecs instance contains the dictionaries 'time' and 'space' 
   which contain specifications for differentiation along the time and 
   space dimensions.  Each dictionary contains the following items:  
   
@@ -75,209 +76,238 @@ class DiffSpecs(dict):
 
     dict.__init__(self)
 
-    self['time'] = {'basis':rbf.basis.phs3,
+    self['time'] = {'basis':None,
                     'stencil_size':None, 
                     'order':None,
                     'cuts':None,
-                    'diffs':[[0]],
-                    'coeffs':[1.0],
-                    'diff_type':'poly'} 
-    self['space'] = {'basis':rbf.basis.phs3,
+                    'diffs':None,
+                    'coeffs':None,
+                    'diff_type':None} 
+    self['space'] = {'basis':None,
                      'stencil_size':None, 
                      'order':None,
                      'cuts':None,
-                     'diffs':[[0,0]],
-                     'coeffs':[1.0],
-                     'diff_type':'rbf'} 
+                     'diffs':None,
+                     'coeffs':None,
+                     'diff_type':None} 
 
     self['time'].update(time)                     
     self['space'].update(time)                     
 
   def __str__(self):
-    out = 'DiffSpec instance\n'
-    out +=           '    time differentiation specifications\n'    
+    out = 'DiffSpecs instance\n'
+    out +=           '    time : \n'    
     out += ''.join('        %s : %s\n' % (k,v) for (k,v) in self['time'].iteritems())
-    out +=           '    space differentiation specifications\n'    
+    out +=           '    space : \n'    
     out += ''.join('        %s : %s\n' % (k,v) for (k,v) in self['space'].iteritems())
     return out
     
   def __repr__(self):
     return self.__str__()    
 
-# make a few default DiffSpec instances
-DISPLACEMENT_LAPLACIAN = DiffSpecs()
-DISPLACEMENT_LAPLACIAN['time']['diffs'] = [[0]]
-DISPLACEMENT_LAPLACIAN['time']['coeffs'] = [1.0]
-DISPLACEMENT_LAPLACIAN['time']['diff_type'] = 'poly'
-DISPLACEMENT_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
-DISPLACEMENT_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
-DISPLACEMENT_LAPLACIAN['space']['diff_type'] = 'rbf'
+  def fill(self,t,x):
+    ''' 
+    uses the x and t values to fill in any Nones
 
-VELOCITY_LAPLACIAN = DiffSpecs()
-VELOCITY_LAPLACIAN['time']['diffs'] = [[1]]
-VELOCITY_LAPLACIAN['time']['coeffs'] = [1.0]
-VELOCITY_LAPLACIAN['time']['diff_type'] = 'poly'
-VELOCITY_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
-VELOCITY_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
-VELOCITY_LAPLACIAN['space']['diff_type'] = 'rbf'
+    Parameters
+    ----------
+      t : (Nt,) array
 
-ACCELERATION_LAPLACIAN = DiffSpecs()
-ACCELERATION_LAPLACIAN['time']['diffs'] = [[2]]
-ACCELERATION_LAPLACIAN['time']['coeffs'] = [1.0]
-ACCELERATION_LAPLACIAN['time']['diff_type'] = 'poly'
-ACCELERATION_LAPLACIAN['space']['diffs'] = [[2,0],[0,2]]
-ACCELERATION_LAPLACIAN['space']['coeffs'] = [1.0,1.0]
-ACCELERATION_LAPLACIAN['space']['diff_type'] = 'rbf'
+      x : (Nx,2) array
+    '''    
+    Nt = t.shape[0]
+    Nx = x.shape[0]
+    T = self['time']
+    X = self['space']
 
-DISPLACEMENT_DX = DiffSpecs()
-DISPLACEMENT_DX['time']['diffs'] = [[0]]
-DISPLACEMENT_DX['time']['coeffs'] = [1.0]
-DISPLACEMENT_DX['time']['diff_type'] = 'poly'
-DISPLACEMENT_DX['space']['diffs'] = [[1,0]]
-DISPLACEMENT_DX['space']['coeffs'] = [1.0]
-DISPLACEMENT_DX['space']['diff_type'] = 'rbf'
+    if T['basis'] is None:
+      T['basis'] = rbf.basis.phs3
 
-VELOCITY_DX = DiffSpecs()
-VELOCITY_DX['time']['diffs'] = [[1]]
-VELOCITY_DX['time']['coeffs'] = [1.0]
-VELOCITY_DX['time']['diff_type'] = 'poly'
-VELOCITY_DX['space']['diffs'] = [[1,0]]
-VELOCITY_DX['space']['coeffs'] = [1.0]
-VELOCITY_DX['space']['diff_type'] = 'rbf'
+    if T['diffs'] is None:
+      T['diffs'] = [[0]]
 
-ACCELERATION_DX = DiffSpecs()
-ACCELERATION_DX['time']['diffs'] = [[2]]
-ACCELERATION_DX['time']['coeffs'] = [1.0]
-ACCELERATION_DX['time']['diff_type'] = 'poly'
-ACCELERATION_DX['space']['diffs'] = [[1,0]]
-ACCELERATION_DX['space']['coeffs'] = [1.0]
-ACCELERATION_DX['space']['diff_type'] = 'rbf'
+    if T['coeffs'] is None:
+      T['coeffs'] = [1.0 for d in T['diffs']]
+      
+    if T['stencil_size'] is None:
+      T['stencil_size'] = rbf.fd._default_stencil_size(Nt,1,diffs=T['diffs'])
 
-DISPLACEMENT_DY = DiffSpecs()
-DISPLACEMENT_DY['time']['diffs'] = [[0]]
-DISPLACEMENT_DY['time']['coeffs'] = [1.0]
-DISPLACEMENT_DY['time']['diff_type'] = 'poly'
-DISPLACEMENT_DY['space']['diffs'] = [[0,1]]
-DISPLACEMENT_DY['space']['coeffs'] = [1.0]
-DISPLACEMENT_DY['space']['diff_type'] = 'rbf'
+    if T['order'] is None:
+      T['order'] = rbf.fd._default_poly_order(T['stencil_size'],1)
+      
+    if T['cuts'] is None:
+      T['cuts'] = pygeons.cuts.TimeCutCollection()  
+      
+    if T['diff_type'] is None:
+      T['diff_type'] = 'poly'  
 
-VELOCITY_DY = DiffSpecs()
-VELOCITY_DY['time']['diffs'] = [[1]]
-VELOCITY_DY['time']['coeffs'] = [1.0]
-VELOCITY_DY['time']['diff_type'] = 'poly'
-VELOCITY_DY['space']['diffs'] = [[0,1]]
-VELOCITY_DY['space']['coeffs'] = [1.0]
-VELOCITY_DY['space']['diff_type'] = 'rbf'
+    if X['basis'] is None:
+      X['basis'] = rbf.basis.phs3
 
-ACCELERATION_DY = DiffSpecs()
-ACCELERATION_DY['time']['diffs'] = [[2]]
-ACCELERATION_DY['time']['coeffs'] = [1.0]
-ACCELERATION_DY['time']['diff_type'] = 'poly'
-ACCELERATION_DY['space']['diffs'] = [[0,1]]
-ACCELERATION_DY['space']['coeffs'] = [1.0]
-ACCELERATION_DY['space']['diff_type'] = 'rbf'
+    if X['diffs'] is None:
+      X['diffs'] = [[0,0]]
 
-DISPLACEMENT = DiffSpecs()
-DISPLACEMENT['time']['diffs'] = [[0]]
-DISPLACEMENT['time']['coeffs'] = [1.0]
-DISPLACEMENT['time']['diff_type'] = 'poly'
-DISPLACEMENT['space']['diffs'] = [[0,0]]
-DISPLACEMENT['space']['coeffs'] = [1.0]
-DISPLACEMENT['space']['diff_type'] = 'rbf'
+    if X['coeffs'] is None:
+      X['coeffs'] = [1.0 for d in X['diffs']]
+      
+    if X['stencil_size'] is None:
+      X['stencil_size'] = rbf.fd._default_stencil_size(Nx,2,diffs=X['diffs'])
 
-VELOCITY = DiffSpecs()
-VELOCITY['time']['diffs'] = [[1]]
-VELOCITY['time']['coeffs'] = [1.0]
-VELOCITY['time']['diff_type'] = 'poly'
-VELOCITY['space']['diffs'] = [[0,0]]
-VELOCITY['space']['coeffs'] = [1.0]
-VELOCITY['space']['diff_type'] = 'rbf'
+    if X['order'] is None:
+      X['order'] = rbf.fd._default_poly_order(X['stencil_size'],2)
+      
+    if X['cuts'] is None:
+      X['cuts'] = pygeons.cuts.SpaceCutCollection()  
+      
+    if X['diff_type'] is None:
+      X['diff_type'] = 'rbf'  
 
-ACCELERATION = DiffSpecs()
-ACCELERATION['time']['diffs'] = [[2]]
-ACCELERATION['time']['coeffs'] = [1.0]
-ACCELERATION['time']['diff_type'] = 'poly'
-ACCELERATION['space']['diffs'] = [[0,0]]
-ACCELERATION['space']['coeffs'] = [1.0]
-ACCELERATION['space']['diff_type'] = 'rbf'
 
-def make_displacement_laplacian_diff_specs():
+# make a convenience functions that generate common diff specs
+def disp_laplacian():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(DISPLACEMENT_LAPLACIAN)
+  returns displacement laplacian DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[0]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[2,0],[0,2]]
+  out['space']['coeffs'] = [1.0,1.0]
+  return out
 
-def make_displacement_dx_diff_specs():
+def vel_laplacian():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(DISPLACEMENT_DX)
+  returns velocity laplacian DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[1]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[2,0],[0,2]]
+  out['space']['coeffs'] = [1.0,1.0]
+  return out
 
-def make_displacement_dy_diff_specs():
+def acc_laplacian():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(DISPLACEMENT_DY)
+  returns acceleration laplacian DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[2]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[2,0],[0,2]]
+  out['space']['coeffs'] = [1.0,1.0]
+  return out
 
-def make_displacement_dz_diff_specs():
+def disp_dx():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(DISPLACEMENT_DZ)
+  returns displacement x derivative DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[0]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[1,0]]
+  out['space']['coeffs'] = [1.0]
+  return out
 
-def make_velocity_dx_diff_specs():
+def vel_dx():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(VELOCITY_DX)
+  returns velocity x derivative DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[1]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[1,0]]
+  out['space']['coeffs'] = [1.0]
+  return out
 
-def make_velocity_dy_diff_specs():
+def acc_dx():  
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(VELOCITY_DY)
+  returns acceleration x derivative DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[2]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[1,0]]
+  out['space']['coeffs'] = [1.0]
+  return out
+  
+def disp_dy():
+  ''' 
+  returns displacement y derivative DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[0]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[0,1]]
+  out['space']['coeffs'] = [1.0]
+  return out
 
-def make_velocity_dz_diff_specs():
+def vel_dy():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(VELOCITY_DZ)
+  returns velocity y derivative DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[1]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[0,1]]
+  out['space']['coeffs'] = [1.0]
+  return out
 
-def make_velocity_laplacian_diff_specs():
+def acc_dy():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(VELOCITY_LAPLACIAN)
+  returns acceleration y derivative DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[2]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[0,1]]
+  out['space']['coeffs'] = [1.0]
+  return out
+  
+def disp():
+  ''' 
+  returns displacement DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[0]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[0,0]]
+  out['space']['coeffs'] = [1.0]
+  return out
 
-def make_acceleration_laplacian_diff_specs():
+def vel():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(ACCELERATION_LAPLACIAN)
-
-def make_displacement_diff_specs():
+  returns velocity DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[1]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[0,0]]
+  out['space']['coeffs'] = [1.0]
+  return out
+  
+def acc():
   ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(DISPLACEMENT)
-
-def make_velocity_diff_specs():
-  ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(VELOCITY)
-
-def make_acceleration_diff_specs():
-  ''' 
-  returns a copy of the global variable
-  '''
-  return copy.deepcopy(ACCELERATION)
+  returns acceleration DiffSpecs instance
+  '''  
+  out = DiffSpecs()
+  out['time']['diffs'] = [[2]]
+  out['time']['coeffs'] = [1.0]
+  out['space']['diffs'] = [[0,0]]
+  out['space']['coeffs'] = [1.0]
+  return out
 
 
 def diff_matrix(t,x,ds,procs=None):
   ''' 
   returns a matrix that performs the specified differentiation of 
-  displacement 
+  displacement. A differentiation matrix is generated for both time 
+  and space and the output of this function is their product. This 
+  means that the differential opperator must be expressible as the 
+  product of a time and space differential operator. For example:
+  
+    possible : Dt(Dxx + Dyy)
+  
+    not possible : Dt*Dxx + Dyy
   
   Parameters
   ----------
@@ -285,43 +315,35 @@ def diff_matrix(t,x,ds,procs=None):
     
     x : (Nx,2) array
     
-    ds : DiffSpec instance
+    ds : DiffSpecs instance
     
     procs : int, optional
     
   '''
+  t = np.asarray(t)
+  x = np.asarray(x)
+  ds.fill(t,x)
+  
+  logger.info('creating differentiation matrix: \n' + str(ds))
   Dt = _time_diff_matrix(t,x,procs=procs,**ds['time'])
   Dx = _space_diff_matrix(t,x,procs=procs,**ds['space'])
   D = Dt.dot(Dx)
   D.eliminate_zeros()
   return D
 
+
 def _time_diff_matrix(t,x,
-                      basis=rbf.basis.phs3,
+                      basis=None,
                       stencil_size=None,
                       order=None,
                       cuts=None,
                       procs=None,
                       diffs=None,
                       coeffs=None,
-                      diff_type='rbf'):
+                      diff_type=None):
   # fill in missing arguments
-  t = np.asarray(t)
-  x = np.asarray(x)
   Nt = t.shape[0]
   Nx = x.shape[0]
-
-  if stencil_size is None:
-    stencil_size = rbf.fd._default_stencil_size(t[:,None],diffs=diffs)
-
-  if cuts is None:
-    cuts = pygeons.cuts.TimeCutCollection()
-
-  if diffs is None:
-    raise ValueError('diffs was not specified')
-
-  if coeffs is None:
-    raise ValueError('coeffs was not specified')
     
   # return an identity matrix if all derivatives in diffs are zero
   if np.all(np.array(diffs) == 0):
@@ -408,31 +430,17 @@ def _time_diff_matrix(t,x,
 
 
 def _space_diff_matrix(t,x,
-                       basis=rbf.basis.phs3,
+                       basis=None,
                        stencil_size=None,
                        order=None,
                        cuts=None,
                        procs=None,
                        diffs=None,
                        coeffs=None,
-                       diff_type='rbf'):
+                       diff_type=None):
   # fill in missing arguments
-  t = np.asarray(t)
-  x = np.asarray(x)
   Nt = t.shape[0]
   Nx = x.shape[0]
-
-  if stencil_size is None:
-    stencil_size = rbf.fd._default_stencil_size(x,diffs=diffs)
-
-  if cuts is None:
-    cuts = pygeons.cuts.SpaceCutCollection()
-
-  if diffs is None:
-    raise ValueError('diffs was not specified')
-
-  if coeffs is None:
-    raise ValueError('coeffs was not specified')
     
   # return an identity matrix if all derivatives in diffs are zero
   if np.all(np.array(diffs) == 0):

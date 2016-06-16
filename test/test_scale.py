@@ -11,17 +11,13 @@ import myplot.cm
 import scipy.signal
 logging.basicConfig(level=logging.INFO)
 np.random.seed(1)
-
+''' 
 ## SCALING FOR TIME SMOOTHING 
 #####################################################################
 # length scale
 T = 5.0
 # uncertainty scale
 S = 0.1
-
-# damping parameters
-Pscale = [0.05,0.25,1.0]
-P = [i*T**2/S for i in Pscale]
 
 # number of observations (should be odd so that it is centered on 
 # zero)
@@ -43,42 +39,47 @@ fig1,ax1 = plt.subplots()
 fig2,ax2 = plt.subplots()
 fig3,ax3 = plt.subplots()
 ax2.plot(t/T,data/S,'k.')
-for i in range(len(Pscale)): 
-  smooth,perts = pygeons.smooth.network_smoother(
-                   data,t,x,sigma=sigma,
-                   diff_specs=[pygeons.diff.ACCELERATION],
-                   penalties=[P[i]],perts=PERTS,procs=6)
-  # remove x axis
-  smooth = smooth[:,0]
-  perts = perts[:,:,0]
-  # compute correlation matrix
-  C = np.corrcoef(perts.T)
-  # extract correlation for just t=0.0
-  corr = C[N//2,:]
+smooth,perts = pygeons.smooth.network_smoother(
+                 data,t,x,sigma=sigma,
+                 diff_specs=[pygeons.diff.acc()],
+                 time_scale=T,
+                 perts=PERTS,procs=6)
 
-  ax1.plot(t/T,corr,'-',lw=2)
-  ax2.plot(t/T,smooth/S,'-',lw=2)
-  # sample spacing
-  dt = (t[1] - t[0])/T
-  freq,pow = scipy.signal.periodogram(corr,1.0/dt)
-  ax3.loglog(1.0/freq,pow)
-  #ax.set_title(u'penalty: %s (T^2/S)' % Pscale)
+# remove x axis
+smooth = smooth[:,0]
+perts = perts[:,:,0]
+# compute correlation matrix
+C = np.corrcoef(perts.T)
+# extract correlation for just t=0.0
+corr = C[N//2,:]
 
-ax1.set_xlabel('time (T)')
+ax1.plot(t/T,corr,'-',lw=2)
+ax2.plot(t/T,smooth/S,'-',lw=2)
+# sample spacing
+dt = (t[1] - t[0])/T
+freq,pow = scipy.signal.periodogram(corr,1.0/dt)
+ax3.loglog(freq,pow,lw=2)
+ax3.set_xlabel('frequency [1/T]') 
+ax3.set_ylabel('power') 
+ax3.set_ylim((1e-15,1e1))
+ax3.grid()
+#ax.set_title(u'penalty: %s (T^2/S)' % Pscale)
+
+ax1.set_xlabel('time [T]')
 ax1.set_ylabel('correlation')
-ax1.legend(['penalty=%s' % i for i in Pscale],frameon=False)
+#ax1.legend(['penalty=%s' % i for i in Pscale],frameon=False)
 ax1.set_ylim((-0.1,1.0))
 ax1.set_xlim((-5.0,5.0))
 ax1.grid()
 
 #ax.legend(['observed','smoothed'],frameon=False)
-ax2.legend(['observed'] + ['penalty=%s' % i for i in Pscale],frameon=False)
-ax2.set_ylabel('displacement (S)')
-ax2.set_xlabel('time (T)')
+#ax2.legend(['observed'] + ['penalty=%s' % i for i in Pscale],frameon=False)
+ax2.set_ylabel('displacement [S]')
+ax2.set_xlabel('time [T]')
 ax2.set_ylim((-4.0,4.0))
 ax2.grid()
 plt.show()
-quit()
+
 ## SCALING FOR SPACE SMOOTHING 
 #####################################################################
 
@@ -114,8 +115,10 @@ sigma = S*np.ones((1,N))
 
 smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
-                   diff_specs=[pygeons.diff.DISPLACEMENT_LAPLACIAN],
-                   penalties=[P],perts=PERTS,procs=6)
+                   diff_specs=[pygeons.diff.disp_laplacian()],
+                   length_scale=L,
+                   time_scale=T,
+                   perts=PERTS,procs=6)
 # remove x axis
 smooth = smooth[0,:]
 perts = perts[:,0,:]
@@ -161,32 +164,25 @@ ax.grid()
 cbar = plt.colorbar(c,ax=ax)
 cbar.set_label('correlation')
 plt.show()
-
+'''
 ## SCALING FOR SPACE VELOCITY SMOOTHING 
 #####################################################################
 
 # time steps
-Nt = 50
+Nt = 100
 
-# total time 
-T = 1000.0
+# time scale
+
+T = 1.0
 
 # length scale
-L = 1.0
+L = 100.0
 
 # uncertainty scale
 S = 1.0
 
-# damping parameters. scale the damping parameter by the signal length 
-# scale squared and the time step size. multiplying by the time step 
-# size effectively means that we are putting a laplacian damping on 
-# the difference between successive displacement observations, 
-# which renders time irrelevant 
-Pscale = 0.25
-P = Pscale*L**2*(T/(Nt-1))/S
-
-# number of observations 
-N = 400
+# number of stations
+N = 100
 
 # number of perturbations to use when computing correlation. Should be 
 # about 1000 for a good plots
@@ -198,21 +194,35 @@ t = np.linspace(0.0,2*np.pi,100)
 vert = 5*L*np.array([np.sin(t),np.cos(t)]).T
 smp = np.array([range(100),np.roll(range(100),-1)]).T
 fix = np.array([[0.0,0.0]])
-x,sid = rbf.nodegen.volume(N-1,vert,smp,fix_nodes=fix,n=5,itr=1000,delta=0.01)
 
+x,sid = rbf.nodegen.volume(N-1,vert,smp,fix_nodes=fix,n=5,itr=1000,delta=0.01)
 x = np.vstack((fix,x))
-t = np.linspace(0.0,T,Nt)
+
+t = np.linspace(0.0,10.0*T,Nt)
 
 # make data
-data = np.random.normal(0.0,S,(Nt,N))
 sigma = S*np.ones((Nt,N))
+data = np.random.normal(0.0,sigma)
 
 smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
-                   diff_specs=[pygeons.diff.VELOCITY_LAPLACIAN],
-                   penalties=[P],perts=PERTS,procs=6)
-smooth = pygeons.diff.diff(smooth,t,x,pygeons.diff.VELOCITY,procs=6)
-perts = pygeons.diff.diff(perts,t,x,pygeons.diff.VELOCITY,procs=6)
+                   diff_specs=[pygeons.diff.acc(),pygeons.diff.disp_laplacian()],
+                   length_scale=L,use_umfpack=True,
+                   time_scale=T,
+                   perts=PERTS,procs=0)
+                   
+#smooth = pygeons.diff.diff(smooth,t,x,pygeons.diff.VELOCITY)
+#perts = pygeons.diff.diff(perts,t,x,pygeons.diff.VELOCITY)
+
+smooth_t = smooth[:,0]
+perts_t = perts[:,:,0]
+Ct = np.corrcoef(perts_t.T)
+corr = Ct[Nt//2,:]
+fig,ax = plt.subplots()
+ax.plot(t,corr)
+
+fig,ax = plt.subplots()
+ax.plot(t,smooth_t)
 
 # remove x axis
 smooth = smooth[Nt//2,:]
@@ -226,7 +236,7 @@ corr = C[0,:]
 # plot the data
 fig,ax = plt.subplots()
 c = ax.scatter(x[:,0]/L,x[:,1]/L,s=100,c=data[0,:]/S,cmap=myplot.cm.viridis,
-      vmin=-2.0,vmax=2.0)
+               vmin=-2.0,vmax=2.0)
 ax.set_xlim((-5.5,5.5))
 ax.set_ylim((-5.5,5.5))
 ax.set_xlabel('position (L)')

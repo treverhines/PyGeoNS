@@ -86,6 +86,7 @@ def outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
         
   return rout,cout  
   
+
 def _outliers(u,t,x,sigma=None,time_cuts=None,penalty=None,tol=3.0,
               plot=True,**kwargs):
   ''' 
@@ -206,10 +207,51 @@ def common_mode(u,t,x,sigma=None,time_cuts=None,penalty=None,plot=True,
   comm = comm[:,None]
   return comm
   
+
+def network_downsampler(u,t_in,t_out,sigma=None,time_cuts=None):
+  ''' 
+  Parameters
+  ---------- 
+    u : (Nin,Nx) array
+    
+    t_in : (Nin,) array
+    
+    t_out : (Nout,) array
+    
+    sigma : (Nin,Nx) array
+    
+    time_cuts : TimeCutCollection
+
+  Returns
+  -------
+    u_out : (Nout,Nx) array
+
+    sigma_out :(Nout,Nx) array
+  
+  '''   
+        
+
 def network_cleaner(u,t,x,sigma=None,time_cuts=None,
                     outlier_tol=3.0,penalty=None,plot=True,
                     **kwargs):
-
+  ''' 
+  Parameters
+  ----------
+    u : (Nt,Nx) array
+    
+    t : (Nt,) array
+    
+    sigma : (Nt,Nx) array
+    
+    time_cuts : TimeCutCollection 
+    
+    tol : scalar
+    
+    time_scale : scalar    
+    
+  TODO
+  remove x dependence
+  '''
   u = np.array(u,copy=True)
   if sigma is None:
     sigma = np.ones(u.shape)
@@ -230,7 +272,7 @@ def network_cleaner(u,t,x,sigma=None,time_cuts=None,
   u[ridx,cidx] = 0.0
   return u,sigma
                      
-  
+
 def time_lacks_data(sigma,cutoff=0.5):
   ''' 
   returns true for each time where sigma is np.inf for most of the stations.

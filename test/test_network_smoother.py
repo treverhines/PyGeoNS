@@ -4,7 +4,7 @@ import rbf.halton
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import myplot.cm
-from pygeons.diff import ACCELERATION, DISPLACEMENT_LAPLACIAN, VELOCITY_LAPLACIAN, VELOCITY, diff, DiffSpecs
+import pygeons.diff
 from pygeons.smooth import network_smoother
 import time
 import logging
@@ -43,13 +43,12 @@ def animate(u,t,x,title=''):
 
   return ani
 
-''' 
 ## test network smoother for Nx=1
 #####################################################################
 # time scale 
 T = 0.1
-S = 0.5
-Nt = 100
+S = 0.1
+Nt = 1000
 Nx = 1
 
 t = np.linspace(0.0,1.0,Nt)
@@ -62,10 +61,8 @@ sigma = S*np.ones((Nt,Nx))
 start_time = time.time()
 u_smooth,u_pert = network_smoother(
                     u,t,x,
-                    penalties=[(T/2)**2/S],
-                    sigma=sigma,
-                    diff_specs=[ACCELERATION],
-                    cv_plot=True)
+                    time_scale=0.1,
+                    sigma=sigma)
 end_time = time.time()       
 
 print('total run time for network_smoother: %s milliseconds' % 
@@ -83,28 +80,27 @@ ax.grid()
 ax.fill_between(t,u_smooth[:,0]-u_std[:,0],u_smooth[:,0]+u_std[:,0],color='b',alpha=0.2)
 ax.legend(['observed','smoothed','true'],frameon=False)
 fig.tight_layout()
+plt.show()
 
 ## test network smoother for Nt=1
 #####################################################################
 L = 0.1
 S = 0.5
 Nt = 1
-Nx = 100
+Nx = 1000
 t = np.zeros(Nt)
 x = rbf.halton.halton(Nx,2)
 
 u_true = np.sin(2*np.pi*x[:,0])*np.sin(2*np.pi*x[:,1])[None,:]
 u_true = u_true.repeat(Nt,axis=0)
-u = u_true + np.random.normal(0.0,S,(Nt,Nx))
 sigma = S*np.ones((Nt,Nx))
+u = u_true + np.random.normal(0.0,sigma)
 
 start_time = time.time()
 u_smooth,u_pert = network_smoother(
                     u,t,x,
-                    penalties=[(L/2)**2/S],
-                    sigma=sigma,
-                    diff_specs=[DISPLACEMENT_LAPLACIAN],
-                    cv_plot=True)
+                    length_scale=L,
+                    sigma=sigma)
 end_time = time.time()       
 
 print('total run time for network_smoother: %s milliseconds' % 
@@ -125,48 +121,40 @@ cbar = plt.colorbar(c,ax=ax)
 cbar.set_label('displacement')
 ax.set_title('observed')
 fig.tight_layout()
-'''
+plt.show()
+
 # test network smoother for Nt=100 and Nx=50
 #####################################################################
-T = 0.2
-L = 0.1
-S = 0.5
-Nt = 200
-Nx = 500
+T = 1.0
+L = 0.5
+S = 1.0
+Nt = 10
+Nx = 2000
 
-penalties = [(T/2.0)**2/S,(T/2.0)*(L/2.0)**2/S]
-
-t = 1.0*np.linspace(0.0,0.5*np.pi,Nt)
+t = 1.0*np.linspace(0.0,2.0*np.pi,Nt)
 x = 2*np.pi*rbf.halton.halton(Nx,2)
 
-u_true = 0*(np.sin(x[:,0])*np.sin(x[:,1])[None,:]*
-              np.sin(t)[:,None])
-u = u_true + np.random.normal(0.0,S,(Nt,Nx))
+u_true = (np.sin(x[:,0])*np.sin(x[:,1])[None,:]*
+          np.sin(t)[:,None])
 sigma = S*np.ones((Nt,Nx))
+u = u_true + np.random.normal(0.0,sigma)
 
-import mkl
-mkl.set_num_threads(6)
 start_time = time.time()
-DuDx = DiffSpecs()
-DuDx['space']['diffs'] = [[1,0]]
-DuDx['space']['coeffs'] = [1.0]
 u_smooth,u_pert = network_smoother(
                     u,t,x,
-                    penalties=penalties, 
-                    sigma=sigma,perts=0,procs=6,
-                    diff_specs=[ACCELERATION,VELOCITY_LAPLACIAN],use_umfpack=True)
+                    length_scale=L,
+                    time_scale=T,use_umfpack=False,
+                    sigma=sigma,perts=0,
+                    diff_specs=[pygeons.diff.acc(),
+                                pygeons.diff.disp_laplacian()])
 end_time = time.time()       
 
 print('total run time for network_smoother: %s milliseconds' % 
       np.round((end_time - start_time)*1000,3))
-#                    solve_ksp='lgmres',solve_pc='icc',solve_atol=1e-6,
-#                    solve_max_itr=10000,solve_view=True)
-u_true = diff(u_true,t,x,VELOCITY)
-u_smooth = diff(u_smooth,t,x,VELOCITY)
-u_pert = diff(u_pert,t,x,VELOCITY)
-#u_true = diff(u_true,t,x,DuDx)
-#u_smooth = diff(u_smooth,t,x,DuDx)
-#u_pert = diff(u_pert,t,x,DuDx)
+
+#u_true = pygeons.diff.diff(u_true,t,x,pygeons.diff.vel())
+#u_smooth = pygeons.diff.diff(u_smooth,t,x,pygeons.diff.vel())
+#u_pert = pygeons.diff.diff(u_pert,t,x,pygeons.diff.vel())
 
 end_time = time.time()       
 anim1 = animate(u,t,x,'observed displacement')
