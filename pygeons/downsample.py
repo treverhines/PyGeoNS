@@ -1,4 +1,5 @@
 #!/usr/bin/env python 
+from __future__ import division
 import numpy as np
 from scipy.spatial import cKDTree
 import rbf.geometry
@@ -147,4 +148,14 @@ def network_downsampler(u,t,t_itp,x,sigma=None,time_cuts=None):
     u_out[:,i],sigma_out[:,i] = I(t_itp[:,None])
 
   return u_out,sigma_out
+
+
+
+
+
+
+
+
+
+
 

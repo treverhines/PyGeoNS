@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+from __future__ import division
 import numpy as np
 import rbf.fd
 import rbf.poly
 import rbf.basis
 import pygeons.cuts
 import modest.mp
+import modest
 import scipy.sparse
 import logging
 logger = logging.getLogger(__name__)
@@ -297,6 +299,7 @@ def acc():
   return out
 
 
+@modest.funtime
 def diff_matrix(t,x,ds,procs=None):
   ''' 
   returns a matrix that performs the specified differentiation of 
@@ -324,14 +327,13 @@ def diff_matrix(t,x,ds,procs=None):
   x = np.asarray(x)
   ds.fill(t,x)
   
-  logger.info('creating differentiation matrix: \n' + str(ds))
+  logger.debug('creating differentiation matrix: \n' + str(ds))
   Dt = _time_diff_matrix(t,x,procs=procs,**ds['time'])
   Dx = _space_diff_matrix(t,x,procs=procs,**ds['space'])
   D = Dt.dot(Dx)
-  D.eliminate_zeros()
   return D
 
-
+@modest.funtime
 def _time_diff_matrix(t,x,
                       basis=None,
                       stencil_size=None,
@@ -429,6 +431,7 @@ def _time_diff_matrix(t,x,
   return Lmaster
 
 
+@modest.funtime
 def _space_diff_matrix(t,x,
                        basis=None,
                        stencil_size=None,
@@ -527,7 +530,7 @@ def _space_diff_matrix(t,x,
   Lmaster = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
   return Lmaster
 
-
+@modest.funtime
 def diff(u,t,x,ds,procs=None):
   ''' 
   differentiates u

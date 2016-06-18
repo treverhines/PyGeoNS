@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import numpy as np
 from pygeons.smooth import network_smoother
 import matplotlib.pyplot as plt
@@ -6,6 +7,7 @@ import pygeons.diff
 import pygeons.cuts
 from scipy.spatial import cKDTree
 import logging
+import warnings
 logger = logging.getLogger(__name__)
 
 
@@ -119,6 +121,11 @@ def _outliers(u,t,x,sigma,
                   time_scale=time_scale,
                   perts=0,**kwargs)
   res = u - upred
+  # it is possible that there are not enough observations to make the 
+  # problem overdetermined. In such case the solution should be exact. 
+  # If the residual is less than zero tol then we can assume the 
+  # solution is supposed to be exact and any errors are due to 
+  # numerical rounding. 
   res[np.abs(res) < zero_tol] = 0.0
   if sigma is None:
     sigma = np.ones((Nt,Nx))
@@ -128,11 +135,15 @@ def _outliers(u,t,x,sigma,
 
   # compute standard deviation of weighted residuals for each station 
   # and ignore missing data marked with sigma=np.inf. 
-  res[sigma==np.inf] = np.nan
-  std = np.nanstd(res,axis=0)[None,:].repeat(Nt,axis=0)
-  res[sigma==np.inf] = 0.0
+  res[np.isinf(sigma)] = np.nan
+  with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    std = np.nanstd(res,axis=0)[None,:].repeat(Nt,axis=0)
+    # if there are too few degrees of freedom then make std 0
+    std[np.isnan(std)] = 0.0
     
-  # identify the largest outlier for each station if one exists
+  res[np.isinf(sigma)] = 0.0
+  # remove all outliers 
   absres = np.abs(res)
   idx_row,idx_col = np.nonzero((absres > tol*std) & 
                                (absres == np.max(absres,axis=0)))
@@ -193,12 +204,18 @@ def common_mode(u,t,x,sigma=None,
 
   Returns
   -------
-    comm : (Nt,1) array
+    u_comm : (Nt,1) array
 
+    sigma_comm : (Nt,1) array
   '''
   u = np.asarray(u)
   t = np.asarray(t)
   x = np.asarray(x)
+  if sigma is None:
+    sigma = np.ones(u.shape)
+  else:
+    sigma = np.asarray(sigma)
+
   Nt,Nx = u.shape
     
   ds = pygeons.diff.acc()
@@ -209,15 +226,21 @@ def common_mode(u,t,x,sigma=None,
                   time_scale=time_scale,
                   perts=0,**kwargs)
   res = u - upred
-  if sigma is None:
-    sigma = np.ones(u.shape)
     
-  comm = np.ma.average(res,axis=1,weights=1.0/sigma)
-  comm = np.nan_to_num(comm)
+  with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    numer = np.sum(res/sigma**2,axis=1)
+    denom = np.sum(1.0/sigma**2,axis=1)
+    u_comm = numer/denom
+    sigma_comm = np.sqrt(1.0/denom)
+
+  #comm = np.ma.average(res,axis=1,weights=1.0/sigma)
+  # if a time has no observations then make its common mode zero
+  u_comm[np.isnan(u_comm)] = 0.0
   if plot:
     fig,ax = plt.subplots()
     masked_res = np.ma.masked_array(res,mask=np.isinf(sigma))
-    ax.plot(t,comm,'ro',zorder=1)
+    ax.plot(t,u_comm,'ro',zorder=1)
     ax.plot(t,masked_res,'k.',zorder=0)
     ax.set_xlabel('time')
     ax.set_ylabel('residual')
@@ -225,19 +248,74 @@ def common_mode(u,t,x,sigma=None,
     fig.tight_layout()
     plt.show()  
                           
-  comm = comm[:,None]
-  return comm
+  u_comm = u_comm[:,None]
+  sigma_comm = sigma_comm[:,None]
+  return u_comm,sigma_comm
   
+def baseline(u,t,x,sigma=None,time_scale=None,
+             zero_idx=None,time_cuts=None,perts=20,**kwargs):
+  ''' 
+  Estimates the displacements at t_zero for each station. 
+  Estimates of displacement are made with a weighted mean of 
+  displacements within some time interval of t_zero
 
-def network_cleaner(u,t,sigma=None,time_cuts=None,
-                    tol=3.0,time_scale=None,plot=True,
-                    **kwargs):
+  Parameters
+  ----------
+    u : (Nt,Nx) array
+ 
+    t : (Nt,) array
+ 
+    x : (Nx,2) array
+
+    sigma : (Nt,Nx) array, optional
+    
+    zero_idx : int, optional
+
+    time_cuts : TimeCuts instance, optional
+
+  Returns 
+  -------
+    u_out : (Nt,Nx) array
+
+    sigma_out : (Nt,Nx) array
+  '''
+  u = np.asarray(u)
+  t = np.asarray(t)
+  x = np.asarray(x)
+  Nt,Nx = u.shape
+  if sigma is None:
+    sigma = np.ones(u.shape)
+  else:
+    sigma = np.asarray(sigma)
+
+  if zero_idx is None:
+    zero_idx = Nt//2
+    
+  ds = pygeons.diff.acc()
+  ds['time']['cuts'] = time_cuts
+  upred,upert = network_smoother(
+                  u,t,x,sigma=sigma,
+                  diff_specs=[ds],
+                  time_scale=time_scale,
+                  perts=perts,**kwargs)
+  sigma = np.std(upert,axis=0)                  
+
+  u_out = upred[[zero_idx],:]   
+  sigma_out = sigma[[zero_idx],:]
+  return u_out,sigma_out
+
+
+def network_cleaner(u,t,x,sigma=None,time_cuts=None,
+                    tol=3.0,zero_idx=None,time_scale=None,plot=True,
+                    perts=20,**kwargs):
   ''' 
   Parameters
   ----------
     u : (Nt,Nx) array
     
     t : (Nt,) array
+
+    x : (Nx,2) array
     
     sigma : (Nt,Nx) array
     
@@ -248,24 +326,42 @@ def network_cleaner(u,t,sigma=None,time_cuts=None,
     time_scale : scalar    
     
   '''
-  u = np.array(u,copy=True)
+  u = np.asarray(u)
+  t = np.asarray(t)
+  x = np.asarray(x)
   if sigma is None:
     sigma = np.ones(u.shape)
   else:
     sigma = np.array(sigma,copy=True)  
     
-  # remove outliers
-  ridx,cidx = outliers(u,t,sigma=sigma,time_cuts=time_cuts,
+  # identify outliers
+  ridx,cidx = outliers(u,t,x,sigma=sigma,time_cuts=time_cuts,
                        tol=tol,time_scale=time_scale,plot=plot,
                        **kwargs)
                        
   sigma[ridx,cidx] = np.inf
+  # u[ridx,cidx] = 0.0
+
   # remove common mode
-  comm = common_mode(u,t,sigma=sigma,time_cuts=time_cuts,
-                     time_scale=time_scale,plot=plot,
-                     **kwargs)
-  u -= comm                     
-  u[ridx,cidx] = 0.0
+  u_comm,sigma_comm = common_mode(u,t,x,sigma=sigma,time_cuts=time_cuts,
+                        time_scale=time_scale,plot=plot,
+                        **kwargs)
+  u = u - u_comm                     
+  sigma = np.sqrt(sigma**2 + sigma_comm**2)
+
+  # remove baseline
+  u_base,sigma_base = baseline(u,t,x,sigma=sigma,time_cuts=time_cuts,
+                               time_scale=time_scale,zero_idx=zero_idx,
+                               perts=perts)
+  u = u - u_base
+  sigma = np.sqrt(sigma**2 + sigma_base**2)
+
+  # stations which have anomalously large uncertainties are given inf 
+  # uncertainty so that they can be treated as masked data
+  mean_sigma = np.mean(sigma[np.isfinite(sigma)])
+  std_sigma = np.std(sigma[np.isfinite(sigma)])
+  sigma[sigma > (mean_sigma + tol*std_sigma)] = np.inf
+
   return u,sigma
                      
 
