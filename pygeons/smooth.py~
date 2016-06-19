@@ -29,8 +29,6 @@ def _solve(A,L,data):
     
     d : (N,) array
   '''  
-  A = A.tocsr()
-  L = L.tocsr()
   lhs = A.T.dot(A) + L.T.dot(L)
   rhs = A.T.dot(data)
   # do not use umfpack because it raises an error when the memory 

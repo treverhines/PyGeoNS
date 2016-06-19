@@ -70,6 +70,7 @@ print('total run time for network_smoother: %s milliseconds' %
       
 u_std = np.std(u_pert,axis=0)
 
+
 fig,ax = plt.subplots()
 ax.plot(t,u,'k.')
 ax.plot(t,u_smooth[:,0],'b-')
@@ -143,7 +144,7 @@ start_time = time.time()
 u_smooth,u_pert = network_smoother(
                     u,t,x,
                     length_scale=L,
-                    time_scale=T,use_umfpack=False,
+                    time_scale=T,
                     sigma=sigma,perts=0,
                     diff_specs=[pygeons.diff.acc(),
                                 pygeons.diff.disp_laplacian()])

@@ -70,6 +70,7 @@ print('total run time for network_smoother: %s milliseconds' %
       
 u_std = np.std(u_pert,axis=0)
 
+
 fig,ax = plt.subplots()
 ax.plot(t,u,'k.')
 ax.plot(t,u_smooth[:,0],'b-')
