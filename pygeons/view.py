@@ -8,15 +8,10 @@ from matplotlib.cm import ScalarMappable
 import pygeons.quiver
 import rbf.basis
 import modest
-import logging
-import myplot.cm
-from myplot.colorbar import pseudo_transparent_cmap
 
 # change behavior of mpl.quiver. this is necessary for error 
 # ellipses but may lead to insidious bugs
 matplotlib.quiver.Quiver = pygeons.quiver.Quiver
-
-viridis_alpha = pseudo_transparent_cmap(myplot.cm.viridis,1.0)
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
@@ -67,7 +62,6 @@ def _grid_interp_data(u,pnts,x,y):
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
   
-
 
 class InteractiveView:
   def __init__(self,data_sets,t,x,
@@ -542,6 +536,5 @@ if __name__ == '__main__':
   data = data.repeat(3,axis=2)
   data[:,:,[0,1]] = 0.0
 
-  import matplotlib.cm
-  network_viewer(t,x,z=[data[:,:,2],data[:,:,0]],cmap=matplotlib.cm.seismic,vmin=-1,vmax=1)
+  network_viewer(t,x,z=[data[:,:,2],data[:,:,0]],vmin=-1,vmax=1)
   quit()

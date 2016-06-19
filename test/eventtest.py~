@@ -67,6 +67,8 @@ def _grid_interp_data(u,pnts,x,y):
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
   
+
+
 class InteractiveView:
   def __init__(self,data_sets,t,x,
                sigma_sets=None,
@@ -141,8 +143,8 @@ class InteractiveView:
     if data_set_names is None:
       data_set_names = np.arange(len(self.data_sets)).astype(str)
 
-    self.station_names = station_names
-    self.data_set_names = data_set_names
+    self.station_names = list(station_names)
+    self.data_set_names = list(data_set_names)
     
     if quiver_key_pos is None:
       quiver_key_pos = (0.1,0.1)
@@ -470,103 +472,76 @@ class InteractiveView:
 
     self._draw()    
     
-Nt = 10
-Nx = 500
-t = 2010 + np.linspace(0.0,1.0,Nt)
-x = rbf.halton.halton(Nx,2)
-data = (np.cos(2*np.pi*t[:,None,None]) *
-        np.sin(2*np.pi*x[:,0])[None,:,None] *
-        np.cos(2*np.pi*x[:,1])[None,:,None])
-data = data.repeat(3,axis=2)
-data[:,:,[0,1]] = 0.0
-#data[data > 0.5] = np.nan
-#data = np.ma.masked_array(data,mask=np.isnan(data))
-#data_sets = [data,data+np.random.normal(0.0,0.1,data.shape)]
-#sigma_sets = [np.zeros(data.shape),0.1*np.ones(data.shape)]
-data_sets = [data,-data,2*data]
-sigma_sets = [np.zeros(data.shape),np.zeros(data.shape),np.zeros(data.shape)]
-data_set_names = ['foo','barizzle','bo']
-#fig,ax = plt.subplots()
-#ax.plot([0.0,1.0],[0.0,1.0],'g-',zorder=100)
-#plt.show()
-a1 = InteractiveView(data_sets,
-                     t,x,
-                     cmap=viridis_alpha,
-                     sigma_sets=sigma_sets,
-#                     vmin=-1.0,vmax=1.0,
-                     quiver_scale=5.0,
-                     data_set_names=data_set_names,
-                     station_names=np.arange(100,100+len(x)).astype(str))
-a1.connect()
-plt.show()
-quit()
-#fig,axs = plt.subplots(1,2)
-#_static_view(data,t,x,0,0,axs[0],axs[1])
-#plt.show()
-#quit()
-
-class MatrixViewer:
-  def __init__(self,M):
-    self.ridx = 0
-    self.cidx = 0
-    fig,axs = plt.subplots(1,2)
-    axs[0].plot(M[self.ridx,:])
-    axs[1].plot(M[:,self.cidx])
-    self.fig = fig
-    self.axs = axs
-    self.M = M
-
-  def connect(self):
-    self.fig.canvas.mpl_connect('key_press_event',self.onkey)
-    self.fig.canvas.mpl_connect('pick_event',self.onpick)
- 
-  def draw(self):
-    self.axs[0].cla()
-    self.axs[1].cla()
-    self.axs[0].plot(self.M[self.ridx,:],picker=10)
-    self.axs[1].plot(self.M[:,self.cidx],picker=10)
-    self.fig.canvas.draw()
+def network_viewer(t,x,u=None,v=None,z=None,
+                   su=None,sv=None,sz=None,
+                   **kwargs):
+  ''' 
+  Parameters
+  ----------
+    t : (Nt,) array
+    x : (Nx,2) array
     
-  def onpick(self,event):
-    print('foo!!!')
-
-  def onkey(self,event):
-    if event.key == 'right':
-      self.cidx += 1
-      self.draw()    
-    elif event.key == 'left':
-      self.cidx -= 1
-      self.draw()    
-    elif event.key == 'up':
-      self.ridx += 1
-      self.draw()    
-    elif event.key == 'down':
-      self.ridx -= 1
-      self.draw()    
+    u,v,z : (Nt,Nx) array
     
-        
-class LineBuilder:
-    def __init__(self, line):
-        self.line = line
-        self.xs = list(line.get_xdata())
-        self.ys = list(line.get_ydata())
-        self.cid = line.figure.canvas.mpl_connect('button_press_event', self)
+    su,sv,sz : (Nt,Nx) array
+      uncertainties in u,v, and z. data with uncertainties of np.inf will be 
+      treated as masked data
+    
+    **kwargs : arguments passed to InteractiveViewer  
+  '''
+  x = np.asarray(x)
+  t = np.asarray(t)
+  Nx = x.shape[0]
+  Nt = t.shape[0]
+  # find the number of data sets
+  if u is not None:
+    Ns = len(u)
+  elif v is not None:
+    Ns = len(v)
+  elif z is not None:
+    Ns = len(z)
+  else:
+    raise ValueError('one of u,v, or z must be specified')  
+      
+  if u is None:
+    u = Ns*[np.zeros((Nt,Nx))]
+  if v is None:
+    v = Ns*[np.zeros((Nt,Nx))]
+  if z is None:
+    z = Ns*[np.zeros((Nt,Nx))]
+  if su is None:
+    su = Ns*[np.zeros((Nt,Nx))]
+  if sv is None:
+    sv = Ns*[np.zeros((Nt,Nx))]
+  if sz is None:
+    sz = Ns*[np.zeros((Nt,Nx))]
+    
+  su = [np.ma.masked_array(i,mask=np.isinf(i)) for i in su]
+  sv = [np.ma.masked_array(i,mask=np.isinf(i)) for i in sv]
+  sz = [np.ma.masked_array(i,mask=np.isinf(i)) for i in sz]
+  
+  data_sets = []
+  sigma_sets = []
+  for i in range(Ns):
+    data_sets += [np.concatenate((u[i][:,:,None],v[i][:,:,None],z[i][:,:,None]),axis=2)]
+    sigma_sets += [np.concatenate((su[i][:,:,None],sv[i][:,:,None],sz[i][:,:,None]),axis=2)]
+  
+  iv = InteractiveView(data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
+  iv.connect()
+  plt.show()
+    
 
-    def __call__(self, event):
-        print('click', event)
-        if event.inaxes!=self.line.axes: return
-        self.xs.append(event.xdata)
-        self.ys.append(event.ydata)
-        self.line.set_data(self.xs, self.ys)
-        self.line.figure.canvas.draw()
+if __name__ == '__main__':
+  Nt = 10
+  Nx = 50
+  t = 2010 + np.linspace(0.0,1.0,Nt)
+  x = rbf.halton.halton(Nx,2)
+  data = (np.cos(2*np.pi*t[:,None,None]) *
+          np.sin(2*np.pi*x[:,0])[None,:,None] *
+          np.cos(2*np.pi*x[:,1])[None,:,None])
+  data = data.repeat(3,axis=2)
+  data[:,:,[0,1]] = 0.0
 
-M = np.random.random((20,10))
-A = MatrixViewer(M)
-A.connect()
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#a#x.set_title('click to build line segments')
-#line, = ax.plot([0], [0])  # empty line
-#linebuilder = LineBuilder(line)
-
-plt.show()
+  import matplotlib.cm
+  network_viewer(t,x,z=[data[:,:,2],data[:,:,0]],cmap=matplotlib.cm.seismic,vmin=-1,vmax=1)
+  quit()
