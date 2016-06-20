@@ -75,6 +75,8 @@ class InteractiveView:
                data_set_names=None,
                vmin=None,
                vmax=None,
+               ylim=None,
+               xlim=None,
                time_series_axs=None,
                map_ax=None,
                ylabel='displacement [m]',
@@ -87,11 +89,42 @@ class InteractiveView:
     
     Parameters
     ----------
-      data : (Nt,Nx,3) array (can me masked)
+      data : (Ns,) list of (Nt,Nx,3) arrays
 
       t : (Nt,) array
 
       x : (Nx,2) array
+      
+      quiver_key_label : str
+
+      quiver_key_length : float
+
+      quiver_scale : float
+
+      quiver_key_pos : (2,) array
+        
+      station_names : (Nx,) str array
+      
+      data_set_names : (Ns,) str array
+      
+      vmin : float
+      
+      vmax : float
+      
+      time_series_axs : (3,) list of Axis instances
+        list of three axes where time series will be plotted
+
+      map_ax : Axis instance
+        axis where map view will be plotted
+      
+      ylabel : str
+        time series y label
+      
+      xlabel : str
+        time series x label
+        
+      clabel : str
+        color bar label  
       
     '''
     if time_series_axs is None:
@@ -127,6 +160,8 @@ class InteractiveView:
     self.cmap = cmap
     self.vmin = vmin
     self.vmax = vmax
+    self.ylim = ylim
+    self.xlim = xlim
     self.quiver_scale = quiver_scale
     self.xlabel = xlabel # xlabel for time series plot
     self.ylabel = ylabel # ylabel for time series plots
@@ -141,7 +176,7 @@ class InteractiveView:
     self.data_set_names = list(data_set_names)
     
     if quiver_key_pos is None:
-      quiver_key_pos = (0.1,0.1)
+      quiver_key_pos = (0.2,0.1)
 
     if quiver_key_label is None:   
       quiver_key_label = str(quiver_key_length) + ' [m]'
@@ -193,6 +228,14 @@ class InteractiveView:
       self.P += self.ax2.plot(xi[0],xi[1],'.',
                               picker=10,
                               markersize=0)
+
+    # if ylim and xlim were not user specified then fix them now
+    if self.xlim is None:
+      self.xlim = self.ax2.get_xlim()
+
+    if self.ylim is None:  
+      self.ylim = self.ax2.get_ylim()
+    
     self.Q = []
     self.L1,self.L2,self.L3 = [],[],[]
     self.F1,self.F2,self.F3 = [],[],[]
@@ -211,7 +254,8 @@ class InteractiveView:
       # time series instances
       self.L1 += self.ax1[0].plot(self.t,
                                   self.data_sets[si][:,self.xidx,0],
-                                  color=self.color_cycle[si])
+                                  color=self.color_cycle[si],
+                                  label=self.data_set_names[si])
       self.F1 += [self.ax1[0].fill_between(self.t,
                                   self.data_sets[si][:,self.xidx,0] -
                                   self.sigma_sets[si][:,self.xidx,0],
@@ -221,7 +265,8 @@ class InteractiveView:
 
       self.L2 += self.ax1[1].plot(self.t,
                                   self.data_sets[si][:,self.xidx,1],
-                                  color=self.color_cycle[si])
+                                  color=self.color_cycle[si],
+                                  label=self.data_set_names[si])
       self.F2 += [self.ax1[1].fill_between(self.t,
                                   self.data_sets[si][:,self.xidx,1] -
                                   self.sigma_sets[si][:,self.xidx,1],
@@ -231,7 +276,8 @@ class InteractiveView:
 
       self.L3 += self.ax1[2].plot(self.t,
                                   self.data_sets[si][:,self.xidx,2],
-                                  color=self.color_cycle[si])
+                                  color=self.color_cycle[si],
+                                  label=self.data_set_names[si])
       self.F3 += [self.ax1[2].fill_between(self.t,
                                   self.data_sets[si][:,self.xidx,2] -
                                   self.sigma_sets[si][:,self.xidx,2],
@@ -249,14 +295,10 @@ class InteractiveView:
 
       if si == 0:
         # interpolate z value for first data set
-        xlim = self.ax2.get_xlim()
-        ylim = self.ax2.get_ylim()
-        
-        self.x_itp = [np.linspace(xlim[0],xlim[1],100),
-                      np.linspace(ylim[0],ylim[1],100)]
+        self.x_itp = [np.linspace(self.xlim[0],self.xlim[1],100),
+                      np.linspace(self.ylim[0],self.ylim[1],100)]
         data_itp = _grid_interp_data(self.data_sets[si][self.tidx,:,2],
-                                    self.x,
-                                    self.x_itp[0],self.x_itp[1])
+                                     self.x,self.x_itp[0],self.x_itp[1])
         
         if self.vmin is None:
           # self.vmin and self.vmax are the user specified color 
@@ -271,23 +313,18 @@ class InteractiveView:
         else:
           vmax = self.vmax
           
-        self.I = self.ax2.imshow(data_itp,extent=(xlim+ylim),
+        self.I = self.ax2.imshow(data_itp,extent=(self.xlim+self.ylim),
                                  interpolation='none',
                                  origin='lower',
-                                 vmin=vmin,
-                                 vmax=vmax,
+                                 vmin=vmin,vmax=vmax,
                                  cmap=self.cmap,zorder=0)
         self.I.set_clim((vmin,vmax))
 
         self.cbar = self.fig2.colorbar(self.I)  
         self.cbar.set_clim((vmin,vmax))
         self.cbar.set_label(self.clabel)
-        self.ax2.set_xlim(xlim)
-        self.ax2.set_ylim(ylim)
 
       if si == 1:  
-        ylim = self.ax2.get_ylim()  
-        xlim = self.ax2.get_xlim()  
         sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cmap)
         # use scatter points to show z for second data set 
         colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
@@ -295,10 +332,10 @@ class InteractiveView:
                                   c=colors,
                                   s=200,zorder=1,
                                   edgecolor=self.color_cycle[si])
-        self.ax2.set_ylim(ylim)
-        self.ax2.set_xlim(xlim)
       
-    self.ax1[0].legend(self.data_set_names,frameon=False)
+    self.ax2.set_ylim(self.ylim)
+    self.ax2.set_xlim(self.xlim)
+    self.ax1[0].legend(frameon=False)
     self.fig1.tight_layout()
     self.fig2.tight_layout()
     self.fig1.canvas.draw()
@@ -306,10 +343,6 @@ class InteractiveView:
 
 
   def _draw(self):
-    # make sure the ylim and xlim are not changed after this call
-    ylim = self.ax2.get_ylim()  
-    xlim = self.ax2.get_xlim()  
-    
     self.tidx = self.tidx%self.data_sets[0].shape[0]
     self.xidx = self.xidx%self.data_sets[0].shape[1]
 
@@ -336,6 +369,9 @@ class InteractiveView:
 
       self.L1[si].set_data(self.t,
                            self.data_sets[si][:,self.xidx,0])
+      # relabel in case the data_set order has switched
+      self.L1[si].set_label(self.data_set_names[si])                     
+      
       self.F1 += [self.ax1[0].fill_between(self.t,
                                   self.data_sets[si][:,self.xidx,0] -
                                   self.sigma_sets[si][:,self.xidx,0],
@@ -345,6 +381,8 @@ class InteractiveView:
 
       self.L2[si].set_data(self.t,
                            self.data_sets[si][:,self.xidx,1])
+      self.L2[si].set_label(self.data_set_names[si])                     
+
       self.F2 += [self.ax1[1].fill_between(self.t,
                                   self.data_sets[si][:,self.xidx,1] -
                                   self.sigma_sets[si][:,self.xidx,1],
@@ -354,6 +392,8 @@ class InteractiveView:
 
       self.L3[si].set_data(self.t,
                            self.data_sets[si][:,self.xidx,2])
+      self.L3[si].set_label(self.data_set_names[si])                     
+
       self.F3 += [self.ax1[2].fill_between(self.t,
                                   self.data_sets[si][:,self.xidx,2] -
                                   self.sigma_sets[si][:,self.xidx,2],
@@ -363,8 +403,8 @@ class InteractiveView:
 
       if si == 0:
         data_itp = _grid_interp_data(self.data_sets[si][self.tidx,:,2],
-                                    self.x,
-                                    self.x_itp[0],self.x_itp[1])
+                                     self.x,
+                                     self.x_itp[0],self.x_itp[1])
         self.I.set_data(data_itp)
 
         if self.vmin is None:
@@ -390,10 +430,9 @@ class InteractiveView:
         colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
         self.S.set_facecolors(colors)
         
-
-    self.ax1[0].legend(self.data_set_names,frameon=False)
-    self.ax2.set_ylim(ylim)
-    self.ax2.set_xlim(xlim)
+    self.ax2.set_ylim(self.ylim)
+    self.ax2.set_xlim(self.xlim)
+    self.ax1[0].legend(frameon=False)
     self.ax1[0].relim()
     self.ax1[1].relim()
     self.ax1[2].relim()
@@ -470,18 +509,57 @@ def network_viewer(t,x,u=None,v=None,z=None,
                    su=None,sv=None,sz=None,
                    **kwargs):
   ''' 
+  makes an interactive plot of a three-component vector field which is 
+  a function of time and two-dimensional space.  Produces two figures, one
+  is a map view of the vector field at some time, the other is a time series 
+  of the vector components for some position.   
+  
   Parameters
   ----------
     t : (Nt,) array
+
     x : (Nx,2) array
     
-    u,v,z : (Nt,Nx) array
+    u,v,z : (Ns,) list of (Nt,Nx) arrays
+      vector components all value must be finite
     
-    su,sv,sz : (Nt,Nx) array
-      uncertainties in u,v, and z. data with uncertainties of np.inf will be 
-      treated as masked data
+    su,sv,sz : (Ns,) list of (Nt,Nx) array
+      uncertainties in u,v, and z. data with uncertainties of np.inf 
+      will be treated as masked data. using zero effectively hides any 
+      error ellipses or uncertainty intervals
     
     **kwargs : arguments passed to InteractiveViewer  
+  
+  Usage
+  -----
+    Interaction is done entirely with the map view figure
+
+      right : move forward 1 time step
+      ctrl-right : move forward 10 time step
+      alt-right : move forward 100 time step
+
+      right : move back 1 time step
+      ctrl-right : move back 10 time step
+      alt-right : move back 100 time step
+
+      up : move up 1 station
+      ctrl-up : move up 10 station
+      alt-up : move up 100 station
+
+      down : move down 1 station
+      ctrl-down : move down 10 station
+      alt-down : move down 100 station
+      
+      c : hide/reveal station marker
+      
+      r : rotate data_sets      
+  
+  Example
+  -------
+    >>> t = np.linspace(0,1,100) # form observation times
+    >>> x = np.random.random((20,2)) # form observation positions
+    >>> u,v,z = np.cumsum(np.random.normal(0.0,0.1,(3,100,20)),axis=1)
+    >>> network_viewer(t,x,u=[u],v=[v],z=[z])    
   '''
   x = np.asarray(x)
   t = np.asarray(t)
@@ -510,6 +588,28 @@ def network_viewer(t,x,u=None,v=None,z=None,
   if sz is None:
     sz = Ns*[np.zeros((Nt,Nx))]
     
+  u = [np.asarray(i) for i in u]
+  v = [np.asarray(i) for i in v]
+  z = [np.asarray(i) for i in z]
+  su = [np.asarray(i) for i in su]
+  sv = [np.asarray(i) for i in sv]
+  sz = [np.asarray(i) for i in sz]
+  
+  if ((not all([np.isfinite(i).all() for i in u])) |
+      (not all([np.isfinite(i).all() for i in v])) |
+      (not all([np.isfinite(i).all() for i in z]))):
+    raise ValueError('u, v, and z must all have finite values')
+     
+  if (any([np.isnan(i).all() for i in su]) |
+      any([np.isnan(i).all() for i in sv]) |
+      any([np.isnan(i).all() for i in sz])):
+    raise ValueError('su, sv, and sz cannot be nan. Mask data by setting uncertainty to inf')
+  
+  if ((len(u) != Ns) | (len(v) != Ns) |
+      (len(z) != Ns) | (len(su) != Ns) |
+      (len(sv) != Ns) | (len(sz) != Ns)):
+    raise ValueError('specified values of u, v, z, su, sv, or sz must have the same length')
+      
   su = [np.ma.masked_array(i,mask=np.isinf(i)) for i in su]
   sv = [np.ma.masked_array(i,mask=np.isinf(i)) for i in sv]
   sz = [np.ma.masked_array(i,mask=np.isinf(i)) for i in sz]
