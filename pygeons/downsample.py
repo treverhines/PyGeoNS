@@ -143,7 +143,7 @@ def network_downsampler(u,t,t_itp,x,sigma=None,time_cuts=None):
   u_out = np.zeros((t_itp.shape[0],x.shape[0]))
   sigma_out = np.zeros((t_itp.shape[0],x.shape[0]))
   for i,xi in enumerate(x):
-    vert,smp = time_cuts.get_vert_smp(xi)
+    vert,smp = time_cuts.get_vert_and_smp(xi)
     I = MeanInterpolant(t[:,None],u[:,i],sigma=sigma[:,i],vert=vert,smp=smp)
     u_out[:,i],sigma_out[:,i] = I(t_itp[:,None])
 

@@ -126,11 +126,11 @@ plt.show()
 
 # test network smoother for Nt=100 and Nx=50
 #####################################################################
-T = 1.0
+T = 0.5
 L = 0.5
 S = 1.0
-Nt = 10
-Nx = 2000
+Nt = 100
+Nx = 200
 
 t = 1.0*np.linspace(0.0,2.0*np.pi,Nt)
 x = 2*np.pi*rbf.halton.halton(Nx,2)

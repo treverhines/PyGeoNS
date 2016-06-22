@@ -127,10 +127,10 @@ plt.show()
 # test network smoother for Nt=100 and Nx=50
 #####################################################################
 T = 1.0
-L = 0.5
+L = 1.0
 S = 1.0
-Nt = 10
-Nx = 2000
+Nt = 100
+Nx = 200
 
 t = 1.0*np.linspace(0.0,2.0*np.pi,Nt)
 x = 2*np.pi*rbf.halton.halton(Nx,2)
@@ -144,7 +144,7 @@ start_time = time.time()
 u_smooth,u_pert = network_smoother(
                     u,t,x,
                     length_scale=L,
-                    time_scale=T,use_umfpack=False,
+                    time_scale=T,
                     sigma=sigma,perts=0,
                     diff_specs=[pygeons.diff.acc(),
                                 pygeons.diff.disp_laplacian()])
