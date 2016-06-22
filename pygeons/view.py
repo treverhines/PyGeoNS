@@ -10,7 +10,7 @@ import rbf.basis
 import modest
 
 # change behavior of mpl.quiver. this is necessary for error 
-# ellipses but may lead to insidious bugs
+# ellipses but may lead to insidious bugs... 
 matplotlib.quiver.Quiver = pygeons.quiver.Quiver
 
 def _roll(lst):
@@ -18,29 +18,18 @@ def _roll(lst):
   out = [lst[-1]] + lst[:-1]
   return out
   
-def _merge_masks(data_set,sigma_set):
+def _make_masked_array(data_set,sigma_set):
   ''' 
-  returns a masked array for data_set and sigma_set where the masks for 
-  u,v,z,su,sv, and sz are all the same. If one of the input components is masked
-  then all components get masked 
+  returns masked array for data_set and sigma_set. The mask is true if 
+  the uncertainty for any component (su,sv,sz) is np.inf.
   '''
-  if not np.ma.isMA(data_set):
-    data_set = np.ma.masked_array(data_set)
-  if not np.ma.isMA(sigma_set):
-    sigma_set = np.ma.masked_array(sigma_set)
-    
-  # make sure mask is the same size as the array
-  if len(data_set.mask.shape) == 0:
-    data_set.mask = data_set.mask*np.ones(data_set.shape,dtype=bool)
-
-  if len(sigma_set.mask.shape) == 0:
-    sigma_set.mask = sigma_set.mask*np.ones(sigma_set.shape,dtype=bool)
-    
-  mask = np.any(data_set.mask,axis=-1) | np.any(sigma_set.mask,axis=-1) 
-  mask = mask[:,None].repeat(3)
-  data_set.mask = mask
-  sigma_set.mask = mask
+  data_set = np.asarray(data_set)  
+  sigma_set = np.asarray(sigma_set)  
+  mask = np.any(np.isinf(sigma_set),axis=2)[:,None].repeat(3)
+  data_set = np.ma.masked_array(data_set,mask=mask)
+  sigma_set = np.ma.masked_array(sigma_set,mask=mask)
   return data_set,sigma_set
+
 
 @modest.funtime
 def _grid_interp_data(u,pnts,x,y):
@@ -78,7 +67,10 @@ class InteractiveView:
                ylim=None,
                xlim=None,
                time_series_axs=None,
+               time_series_title=None,
                map_ax=None,
+               map_title=None,
+               fontsize=10,
                ylabel='displacement [m]',
                xlabel='time [years]',
                clabel='vertical displacement [m]'):
@@ -89,12 +81,16 @@ class InteractiveView:
     
     Parameters
     ----------
-      data : (Ns,) list of (Nt,Nx,3) arrays
+      data_sets : (Ns,) list of (Nt,Nx,3) arrays
 
       t : (Nt,) array
 
       x : (Nx,2) array
       
+      sigma_sets : (Ns,) list of (Nt,Nx,3) arrays
+        if an entry is np.inf then all components for that station at 
+        that time will be masked
+        
       quiver_key_label : str
 
       quiver_key_length : float
@@ -151,7 +147,7 @@ class InteractiveView:
     self.data_sets = []
     self.sigma_sets = []
     for d,s in zip(data_sets,sigma_sets):      
-      dout,sout = _merge_masks(d,s)
+      dout,sout = _make_masked_array(d,s)
       self.data_sets += [dout]
       self.sigma_sets += [sout]
 
@@ -166,7 +162,7 @@ class InteractiveView:
     self.xlabel = xlabel # xlabel for time series plot
     self.ylabel = ylabel # ylabel for time series plots
     self.clabel = clabel
-    self.color_cycle = ['k','b','r','g','c','m','y']
+    self.color_cycle = ['k',(0.0,0.7,0.0),'r','g','c','m','y']
     if station_names is None:
       station_names = np.arange(len(self.x)).astype(str)
     if data_set_names is None:
@@ -184,6 +180,9 @@ class InteractiveView:
     self.quiver_key_pos = quiver_key_pos
     self.quiver_key_label = quiver_key_label
     self.quiver_key_length = quiver_key_length
+    self.time_series_title = time_series_title
+    self.map_title = map_title
+    self.fontsize = fontsize
 
     self._init_draw()
 
@@ -206,7 +205,6 @@ class InteractiveView:
         S : scatter plot where color is z component for second data_set
 
     '''
-    self.ax1[0].set_title('station %s' % self.station_names[self.xidx])
     self.ax1[2].set_xlabel(self.xlabel)
     self.ax1[0].set_ylabel(self.ylabel)
     self.ax1[1].set_ylabel(self.ylabel)
@@ -215,8 +213,32 @@ class InteractiveView:
     self.ax1[0].get_xaxis().get_major_formatter().set_useOffset(False)
     self.ax1[1].get_xaxis().get_major_formatter().set_useOffset(False)
     self.ax1[2].get_xaxis().get_major_formatter().set_useOffset(False)
-    self.ax2.set_title('time %g' % self.t[self.tidx])
+
+    if self.time_series_title is None:
+      self.ax1[0].set_title('station %s' % self.station_names[self.xidx],fontsize=self.fontsize)
+    else:
+      self.ax1[0].set_title(self.time_series_title,fontsize=self.fontsize)
+
+    if self.map_title is None:
+      self.ax2.set_title('time %g' % self.t[self.tidx],fontsize=self.fontsize)
+    else:
+      self.ax2.set_title(self.map_title,fontsize=self.fontsize)
+      
     self.ax2.set_aspect('equal')
+    self.ax2.title.set_fontsize(self.fontsize)
+
+    self.ax1[0].xaxis.label.set_fontsize(self.fontsize)
+    self.ax1[1].xaxis.label.set_fontsize(self.fontsize)
+    self.ax1[2].xaxis.label.set_fontsize(self.fontsize)
+    self.ax1[0].yaxis.label.set_fontsize(self.fontsize)
+    self.ax1[1].yaxis.label.set_fontsize(self.fontsize)
+    self.ax1[2].yaxis.label.set_fontsize(self.fontsize)
+    
+    self.ax1[0].title.set_fontsize(self.fontsize)
+    self.ax1[0].tick_params(labelsize=self.fontsize)
+    self.ax1[1].tick_params(labelsize=self.fontsize)
+    self.ax1[2].tick_params(labelsize=self.fontsize)
+    self.ax2.tick_params(labelsize=self.fontsize)
 
     # highlighted point
     self.D = self.ax2.plot(self.x[self.xidx,0],
@@ -244,12 +266,13 @@ class InteractiveView:
                         self.data_sets[si][self.tidx,:,0],
                         self.data_sets[si][self.tidx,:,1],
                         scale=self.quiver_scale,  
+                        width=0.004,
                         sigma=(self.sigma_sets[si][self.tidx,:,0],
                                self.sigma_sets[si][self.tidx,:,1],
                                0.0*self.sigma_sets[si][self.tidx,:,0]),
                         color=self.color_cycle[si],
                         ellipse_edgecolors=self.color_cycle[si],
-                        zorder=2)]
+                        zorder=2+si)]
 
       # time series instances
       self.L1 += self.ax1[0].plot(self.t,
@@ -261,6 +284,7 @@ class InteractiveView:
                                   self.sigma_sets[si][:,self.xidx,0],
                                   self.data_sets[si][:,self.xidx,0] +
                                   self.sigma_sets[si][:,self.xidx,0],
+                                  edgecolor='none',
                                   color=self.color_cycle[si],alpha=0.5)]
 
       self.L2 += self.ax1[1].plot(self.t,
@@ -272,6 +296,7 @@ class InteractiveView:
                                   self.sigma_sets[si][:,self.xidx,1],
                                   self.data_sets[si][:,self.xidx,1] +
                                   self.sigma_sets[si][:,self.xidx,1],
+                                  edgecolor='none',
                                   color=self.color_cycle[si],alpha=0.5)]
 
       self.L3 += self.ax1[2].plot(self.t,
@@ -283,6 +308,7 @@ class InteractiveView:
                                   self.sigma_sets[si][:,self.xidx,2],
                                   self.data_sets[si][:,self.xidx,2] +
                                   self.sigma_sets[si][:,self.xidx,2],
+                                  edgecolor='none',
                                   color=self.color_cycle[si],alpha=0.5)]
 
       # quiver key
@@ -291,7 +317,9 @@ class InteractiveView:
                                     self.quiver_key_pos[0],
                                     self.quiver_key_pos[1],
                                     self.quiver_key_length,
-                                    self.quiver_key_label,zorder=2)
+                                    self.quiver_key_label,zorder=2,
+                                    labelsep=0.05,
+                                    fontproperties={'size':self.fontsize})
 
       if si == 0:
         # interpolate z value for first data set
@@ -314,7 +342,7 @@ class InteractiveView:
           vmax = self.vmax
           
         self.I = self.ax2.imshow(data_itp,extent=(self.xlim+self.ylim),
-                                 interpolation='none',
+                                 interpolation='bicubic',
                                  origin='lower',
                                  vmin=vmin,vmax=vmax,
                                  cmap=self.cmap,zorder=0)
@@ -322,7 +350,9 @@ class InteractiveView:
 
         self.cbar = self.fig2.colorbar(self.I)  
         self.cbar.set_clim((vmin,vmax))
-        self.cbar.set_label(self.clabel)
+        self.cbar.set_label(self.clabel,fontsize=self.fontsize)
+        self.cbar.ax.tick_params(labelsize=self.fontsize)
+        self.cbar.solids.set_rasterized(True)
 
       if si == 1:  
         sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cmap)
@@ -330,14 +360,23 @@ class InteractiveView:
         colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
         self.S = self.ax2.scatter(self.x[:,0],self.x[:,1],
                                   c=colors,
-                                  s=200,zorder=1,
+                                  s=50,zorder=1,
                                   edgecolor=self.color_cycle[si])
       
     self.ax2.set_ylim(self.ylim)
     self.ax2.set_xlim(self.xlim)
-    self.ax1[0].legend(frameon=False)
+    self.ax1[0].legend(frameon=False,fontsize=self.fontsize)
+    self.ax1[0].set_autoscale_on(True) 
+    self.ax1[1].set_autoscale_on(True) 
+    self.ax1[2].set_autoscale_on(True) 
+    self.ax1[0].relim()
+    self.ax1[1].relim()
+    self.ax1[2].relim()
+    self.ax1[0].autoscale_view()
+    self.ax1[1].autoscale_view()
+    self.ax1[2].autoscale_view()
     self.fig1.tight_layout()
-    self.fig2.tight_layout()
+    #self.fig2.tight_layout()
     self.fig1.canvas.draw()
     self.fig2.canvas.draw()
 
@@ -346,8 +385,17 @@ class InteractiveView:
     self.tidx = self.tidx%self.data_sets[0].shape[0]
     self.xidx = self.xidx%self.data_sets[0].shape[1]
 
-    self.ax1[0].set_title('station %s' % self.station_names[self.xidx])
-    self.ax2.set_title('time %g' % self.t[self.tidx])
+    if self.time_series_title is None:
+      self.ax1[0].set_title('station %s' % self.station_names[self.xidx],fontsize=self.fontsize)
+    else:
+      self.ax1[0].set_title(self.time_series_title,fontsize=self.fontsize)
+      
+    if self.map_title is None:
+      self.ax2.set_title('time %g' % self.t[self.tidx],fontsize=self.fontsize)
+    else:
+      self.ax2.set_title(self.map_title,fontsize=self.fontsize)
+      
+    self.ax2.set_aspect('equal')
 
     self.D.set_data(self.x[self.xidx,0],
                     self.x[self.xidx,1])
@@ -377,6 +425,7 @@ class InteractiveView:
                                   self.sigma_sets[si][:,self.xidx,0],
                                   self.data_sets[si][:,self.xidx,0] +
                                   self.sigma_sets[si][:,self.xidx,0],
+                                  edgecolor='none',
                                   color=self.color_cycle[si],alpha=0.5)]
 
       self.L2[si].set_data(self.t,
@@ -388,6 +437,7 @@ class InteractiveView:
                                   self.sigma_sets[si][:,self.xidx,1],
                                   self.data_sets[si][:,self.xidx,1] +
                                   self.sigma_sets[si][:,self.xidx,1],
+                                  edgecolor='none',
                                   color=self.color_cycle[si],alpha=0.5)]
 
       self.L3[si].set_data(self.t,
@@ -399,6 +449,7 @@ class InteractiveView:
                                   self.sigma_sets[si][:,self.xidx,2],
                                   self.data_sets[si][:,self.xidx,2] +
                                   self.sigma_sets[si][:,self.xidx,2],
+                                  edgecolor='none',
                                   color=self.color_cycle[si],alpha=0.5)]
 
       if si == 0:
@@ -422,6 +473,7 @@ class InteractiveView:
 
         self.I.set_clim((vmin,vmax))
         self.cbar.set_clim((vmin,vmax))
+        self.cbar.solids.set_rasterized(True)
 
       if si == 1:
         # set new colors for scatter plot. use the same colormap as 
@@ -430,9 +482,13 @@ class InteractiveView:
         colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
         self.S.set_facecolors(colors)
         
+    # fix the axes for ax2 and make sure the axes for ax1 are automatic
     self.ax2.set_ylim(self.ylim)
     self.ax2.set_xlim(self.xlim)
-    self.ax1[0].legend(frameon=False)
+    self.ax1[0].legend(frameon=False,fontsize=self.fontsize)
+    self.ax1[0].set_autoscale_on(True) 
+    self.ax1[1].set_autoscale_on(True) 
+    self.ax1[2].set_autoscale_on(True) 
     self.ax1[0].relim()
     self.ax1[1].relim()
     self.ax1[2].relim()
@@ -600,9 +656,9 @@ def network_viewer(t,x,u=None,v=None,z=None,
       (not all([np.isfinite(i).all() for i in z]))):
     raise ValueError('u, v, and z must all have finite values')
      
-  if (any([np.isnan(i).all() for i in su]) |
-      any([np.isnan(i).all() for i in sv]) |
-      any([np.isnan(i).all() for i in sz])):
+  if (any([np.isnan(i).any() for i in su]) |
+      any([np.isnan(i).any() for i in sv]) |
+      any([np.isnan(i).any() for i in sz])):
     raise ValueError('su, sv, and sz cannot be nan. Mask data by setting uncertainty to inf')
   
   if ((len(u) != Ns) | (len(v) != Ns) |
@@ -610,10 +666,6 @@ def network_viewer(t,x,u=None,v=None,z=None,
       (len(sv) != Ns) | (len(sz) != Ns)):
     raise ValueError('specified values of u, v, z, su, sv, or sz must have the same length')
       
-  su = [np.ma.masked_array(i,mask=np.isinf(i)) for i in su]
-  sv = [np.ma.masked_array(i,mask=np.isinf(i)) for i in sv]
-  sz = [np.ma.masked_array(i,mask=np.isinf(i)) for i in sz]
-  
   data_sets = []
   sigma_sets = []
   for i in range(Ns):
