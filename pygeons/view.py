@@ -59,7 +59,9 @@ class InteractiveView:
                quiver_key_label=None,
                quiver_key_length=1.0,
                quiver_scale=10.0,
+               quiver_width=0.005,
                quiver_key_pos=None,
+               scatter_size=100,
                station_names=None,
                data_set_names=None,
                vmin=None,
@@ -159,6 +161,8 @@ class InteractiveView:
     self.ylim = ylim
     self.xlim = xlim
     self.quiver_scale = quiver_scale
+    self.quiver_width = quiver_width
+    self.scatter_size = scatter_size
     self.xlabel = xlabel # xlabel for time series plot
     self.ylabel = ylabel # ylabel for time series plots
     self.clabel = clabel
@@ -266,7 +270,7 @@ class InteractiveView:
                         self.data_sets[si][self.tidx,:,0],
                         self.data_sets[si][self.tidx,:,1],
                         scale=self.quiver_scale,  
-                        width=0.004,
+                        width=self.quiver_width,
                         sigma=(self.sigma_sets[si][self.tidx,:,0],
                                self.sigma_sets[si][self.tidx,:,1],
                                0.0*self.sigma_sets[si][self.tidx,:,0]),
@@ -360,7 +364,7 @@ class InteractiveView:
         colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
         self.S = self.ax2.scatter(self.x[:,0],self.x[:,1],
                                   c=colors,
-                                  s=50,zorder=1,
+                                  s=self.scatter_size,zorder=1,
                                   edgecolor=self.color_cycle[si])
       
     self.ax2.set_ylim(self.ylim)
