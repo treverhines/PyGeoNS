@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 import numpy as np
+import math
 
 class _TimeCut:
   def __init__(self,time,center=None,radius=None):
@@ -11,10 +12,10 @@ class _TimeCut:
         time of the discontinuity
 
       center: (2,) array, optional
-        spatial center of the discontinuity
+        spatial center of the time discontinuity
 
       radius: float, optional
-        spatial radius of the discontinuity
+        spatial radius of the time discontinuity
     '''
     self.time = time
     if center is None:
@@ -23,27 +24,27 @@ class _TimeCut:
     if radius is None:
       radius = np.inf
 
-    self.center = center 
+    self.center = center
     self.radius = radius
     return
 
-  def exists(self,pos):
+  def exists_at_pos(self,pos):
     ''' 
     returns True if the time discontinuity exists at this location
     '''
-    r = np.sqrt((pos[0] - self.center[0])**2 +
-                (pos[1] - self.center[1])**2)
+    r = math.sqrt((pos[0] - self.center[0])**2 +
+                  (pos[1] - self.center[1])**2)
     if r < self.radius:
       return True
     else:
       return False
 
-  def get_vert_smp(self,pos):
+  def get_vert_and_smp(self,pos):
     ''' 
     returns the vertices and simplices of the discontinuity if pos is 
     sufficiently close
     '''
-    if self.exists(pos):
+    if self.exists_at_pos(pos):
       vert = np.array([[self.time]])
       smp = np.array([[0]])
     else:
@@ -80,7 +81,7 @@ class _SpaceCut:
     self.stop = stop
     return
 
-  def exists(self,time):
+  def exists_at_time(self,time):
     ''' 
     returns True if the spatial discontinuity exists during this time 
     '''
@@ -89,13 +90,14 @@ class _SpaceCut:
     else:
       return False
 
-  def get_vert_smp(self,time):
+  def get_vert_and_smp(self,time):
     ''' 
     returns the vertices and simplices of the discontinuity if time is 
     sufficiently close
     '''
-    if self.exists(time):
-      vert = np.array([self.end_point1,self.end_point2])
+    if self.exists_at_time(time):
+      vert = np.array([self.end_point1,
+                       self.end_point2])
       smp = np.array([[0,1]])
 
     else:
@@ -130,7 +132,7 @@ class TimeCuts:
     cuts = [_TimeCut(t,c,r) for t,c,r in zip(times,centers,radii)]
     self.cuts = cuts
 
-  def get_vert_smp(self,x):
+  def get_vert_and_smp(self,x):
     ''' 
     returns the vertices and simplices of all cuts that x is 
     sufficiently close to
@@ -149,13 +151,25 @@ class TimeCuts:
     vert = np.zeros((0,1),dtype=float)
     smp = np.zeros((0,1),dtype=int)
     for i,c in enumerate(self.cuts):
-      verti,smpi = c.get_vert_smp(x)
+      verti,smpi = c.get_vert_and_smp(x)
       vert = np.vstack((vert,verti))
       smpi += smp.size
       smp = np.vstack((smp,smpi)) 
 
     return vert,smp      
 
+  def get_indices(self,x):
+    ''' 
+    returns the indices of the time cuts which exist at this position
+    '''
+    idx = []
+    for i,c in enumerate(self.cuts):
+      if c.exists_at_pos(x):
+        idx += [i]
+        
+    idx = np.array(idx,dtype=int)
+    return idx    
+    
   def __str__(self):
     out = '<TimeCuts instance with %s entries>' % len(self.cuts) 
     return out
@@ -197,20 +211,32 @@ class SpaceCuts:
             zip(end_points1,end_points2,starts,stops)]
     self.cuts = cuts
 
-  def get_vert_smp(self,x):
+  def get_vert_and_smp(self,t):
     ''' 
-    returns the vertices and simplices of all cuts that x is 
+    returns the vertices and simplices of all cuts that t is 
     sufficiently close to
     '''
     vert = np.zeros((0,2),dtype=float)
     smp = np.zeros((0,2),dtype=int)
     for i,c in enumerate(self.cuts):
-      verti,smpi = c.get_vert_smp(x)
+      verti,smpi = c.get_vert_and_smp(t)
       vert = np.vstack((vert,verti))
       smpi += smp.size
       smp = np.vstack((smp,smpi)) 
 
     return vert,smp      
+
+  def get_indices(self,t):
+    ''' 
+    returns the indices of the space cuts which exist at this time
+    '''
+    idx = []
+    for i,c in enumerate(self.cuts):
+      if c.exists_at_time(t):
+        idx += [i]
+        
+    idx = np.array(idx,dtype=int)
+    return idx    
 
   def __str__(self):
     out = '<SpaceCuts instance with %s entries>' % len(self.cuts) 

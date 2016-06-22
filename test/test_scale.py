@@ -207,7 +207,7 @@ data = np.random.normal(0.0,sigma)
 smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
                    diff_specs=[pygeons.diff.acc(),pygeons.diff.disp_laplacian()],
-                   length_scale=L,use_umfpack=True,
+                   length_scale=L,
                    time_scale=T,
                    perts=PERTS,procs=0)
                    

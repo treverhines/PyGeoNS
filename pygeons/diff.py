@@ -347,68 +347,39 @@ def _time_diff_matrix(t,x,
   Nt = t.shape[0]
   Nx = x.shape[0]
     
-  # return an identity matrix if all derivatives in diffs are zero
-  if np.all(np.array(diffs) == 0):
-    coeff = np.sum(coeffs)
-    Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
-    Lmaster.tocsr()
-    return Lmaster
-  
-  # compile the necessary derivatives for our rbf. This is done so 
-  # that each subprocesses does not need to
-  if diff_type == 'rbf':
-    basis(np.zeros((0,1)),np.zeros((0,1)),diff=(0,))
-    for d in diffs:
-      basis(np.zeros((0,1)),np.zeros((0,1)),diff=d)
-
-  def args_maker():
-    for xi in x:
-      vert,smp = cuts.get_vert_smp(xi)
-      # the content of args will be pickled and sent over to each subprocess
-      args = (t[:,None],
-              basis,
-              stencil_size,
-              order,
-              diffs,
-              coeffs,
-              vert,
-              smp,
-              diff_type)
-      yield args
-
-  def mappable_diff_matrix(args):
-    t = args[0]
-    basis = args[1]
-    stencil_size = args[2]
-    order = args[3]
-    diffs = args[4]
-    coeffs = args[5]
-    vert = args[6]
-    smp = args[7]
-    diff_type = args[8]
+  # diff matrices for a given collection of time cuts are stored in 
+  # this dictionary and then recalled if another matrix is to be 
+  # generated with the the same time cuts
+  memo_dict = {}
+  Lsubs = []
+  for xi in x:
+    cut_indices = tuple(cuts.get_indices(xi))
+    if cut_indices in memo_dict:
+      Lsubs += [memo_dict[cut_indices]]
+      continue
+    
+    vert,smp = cuts.get_vert_and_smp(xi)
     if diff_type == 'rbf': 
-      return rbf.fd.diff_matrix(
-               t,
-               N=stencil_size,
-               diffs=diffs,
-               coeffs=coeffs,
-               basis=basis,
-               order=order,
-               vert=vert,
-               smp=smp)
+      Li = rbf.fd.diff_matrix(
+             t[:,None],N=stencil_size,
+             diffs=diffs,coeffs=coeffs,
+             basis=basis,order=order,
+             vert=vert,smp=smp)
+      memo_dict[cut_indices] = Li             
+      Lsubs += [Li]
+
     elif diff_type == 'poly':               
-      return rbf.fd.poly_diff_matrix(
-               t,
-               N=stencil_size,
-               diffs=diffs,
-               coeffs=coeffs,
-               vert=vert,
-               smp=smp)
+      Li = rbf.fd.poly_diff_matrix(
+             t[:,None],N=stencil_size,
+             diffs=diffs,coeffs=coeffs,
+             vert=vert,smp=smp)
+      memo_dict[cut_indices] = Li             
+      Lsubs += [Li]
+
     else:
-      raise ValueError('diff_type must be rbf or poly')               
-
-  Lsubs = modest.mp.parmap(mappable_diff_matrix,args_maker(),workers=procs)
-
+      raise ValueError('diff_type must be rbf or poly')
+      
+  
   # combine submatrices into the master matrix
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
 
@@ -445,69 +416,37 @@ def _space_diff_matrix(t,x,
   Nt = t.shape[0]
   Nx = x.shape[0]
     
-  # return an identity matrix if all derivatives in diffs are zero
-  if np.all(np.array(diffs) == 0):
-    coeff = np.sum(coeffs)
-    Lmaster = coeff*scipy.sparse.eye(Nt*Nx).tocsr()
-    Lmaster.tocsr()
-    return Lmaster
-
-  # compile the necessary derivatives for our rbf. This is done so 
-  # that each subprocesses does not need to
-  if diff_type == 'rbf':
-    basis(np.zeros((0,2)),np.zeros((0,2)),diff=(0,0))
-    for d in diffs:
-      basis(np.zeros((0,2)),np.zeros((0,2)),diff=d)
-
-
-  # make submatrices for time smoothing for each station
-  def args_maker():
-    for ti in t:
-      vert,smp = cuts.get_vert_smp(ti)
-      # the content of args will be pickled and sent over to each subprocess
-      args = (x,
-              basis,
-              stencil_size,
-              order,
-              diffs,
-              coeffs,
-              vert,
-              smp,
-              diff_type)
-      yield args
-
-  def mappable_diff_matrix(args):
-    x = args[0]
-    basis = args[1]
-    stencil_size = args[2]
-    order = args[3]
-    diffs = args[4]
-    coeffs = args[5]
-    vert = args[6]
-    smp = args[7]
-    diff_type = args[8]
+  # diff matrices for a given collection of time cuts are stored in 
+  # this dictionary and then recalled if another matrix is to be 
+  # generated with the the same time cuts
+  memo_dict = {}
+  Lsubs = []
+  for ti in t:
+    cut_indices = tuple(cuts.get_indices(ti))
+    if cut_indices in memo_dict:
+      Lsubs += [memo_dict[cut_indices]]
+      continue
+      
+    vert,smp = cuts.get_vert_and_smp(ti)
     if diff_type == 'rbf': 
-      return rbf.fd.diff_matrix(
-               x,
-               N=stencil_size,
-               diffs=diffs,
-               coeffs=coeffs,
-               basis=basis,
-               order=order,
-               vert=vert,
-               smp=smp)
+      Li = rbf.fd.diff_matrix(
+             x,N=stencil_size,
+             diffs=diffs,coeffs=coeffs,
+             basis=basis,order=order,
+             vert=vert,smp=smp)
+      memo_dict[cut_indices] = Li
+      Lsubs += [Li]
+      
     elif diff_type == 'poly':               
-      return rbf.fd.poly_diff_matrix(
-               x,
-               N=stencil_size,
-               diffs=diffs,
-               coeffs=coeffs,
-               vert=vert,
-               smp=smp)
+      Li = rbf.fd.poly_diff_matrix(
+             x,N=stencil_size,
+             diffs=diffs,coeffs=coeffs,
+             vert=vert,smp=smp)
+      memo_dict[cut_indices] = Li
+      Lsubs += [Li]
+             
     else:
       raise ValueError('diff_type must be rbf or poly')               
-
-  Lsubs = modest.mp.parmap(mappable_diff_matrix,args_maker(),workers=procs)
 
   # combine submatrices into the master matrix
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))

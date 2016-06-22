@@ -7,7 +7,7 @@ import pygeons.diff
 logging.basicConfig(level=logging.INFO)
 
 Nt = 1000
-Nx = 10
+Nx = 500
 S = 0.1
 t = np.linspace(0.0,5.0,Nt)
 #t = np.random.random((Nt,))
