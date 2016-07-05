@@ -493,7 +493,7 @@ def diff(u,t,x,ds,procs=None):
   Nx = x.shape[0]
 
   input2d = False
-  if len(u.shape) == 2:
+  if u.ndim == 2:
     input2d = True
     if u.shape != (Nt,Nx):
       raise ValueError('u must either be a (Nt,Nx) or (K,Nt,Nx) array')

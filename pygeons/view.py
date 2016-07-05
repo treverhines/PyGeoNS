@@ -84,7 +84,7 @@ class InteractiveView:
     Parameters
     ----------
       data_sets : (Ns,) list of (Nt,Nx,3) arrays
-
+        
       t : (Nt,) array
 
       x : (Nx,2) array
@@ -93,28 +93,54 @@ class InteractiveView:
         if an entry is np.inf then all components for that station at 
         that time will be masked
         
-      quiver_key_label : str
+      cmap : Colormap instance
+        colormap for vertical deformation
 
+      quiver_key_label : str
+        label above the quiver key
+        
       quiver_key_length : float
+        length of the quiver key
 
       quiver_scale : float
+        scales the vectors by this amount
 
       quiver_key_pos : (2,) array
+        position of th quiver key in axis coordinates
+        
+      scatter_size : float
+        size of the vertical deformation dots
         
       station_names : (Nx,) str array
       
       data_set_names : (Ns,) str array
       
       vmin : float
-      
+        minimum vertical color value      
+
       vmax : float
+        mmaximum vertical color value      
+              
+      ylim : (2,) array
+        ylim for the map view plot
+      
+      xlim : (2,) array
+        xlim for the map view plot
       
       time_series_axs : (3,) list of Axis instances
         list of three axes where time series will be plotted
 
+      time_series_title : str
+        title for time series plot
+      
       map_ax : Axis instance
         axis where map view will be plotted
       
+      map_title : str
+        replaces the default title for the map view plot
+      
+      fontsize : float
+        
       ylabel : str
         time series y label
       
