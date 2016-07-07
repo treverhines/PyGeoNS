@@ -25,10 +25,10 @@ fig,ax = plt.subplots()
 #pos = x
 u1,v1,z1 = np.cumsum(np.random.normal(0.0,0.5,(3,100,20)),axis=1)                   
 u2,v2,z2 = np.cumsum(np.random.normal(0.0,0.5,(3,100,20)),axis=1)                   
-su = 0.1 + 0*u1
-sv = 0.1 + 0*u1
-sz = 0.1 + 0*u1
+su = 0.0 + 0*u1
+sv = 0.0 + 0*u1
+sz = 0.0 + 0*u1
 
 network_viewer(t,x,u=[u1,u2],v=[v1,v2],z=[z1,z2],su=[su,su],sv=[sv,sv],
-               map_ax=ax,cmap='viridis') 
+               map_ax=ax) 
 #network_viewer(t,pos,u=[u1,u2],v=[v1,v2],z=[z1,z2],map_ax=ax,quiver_scale=0.00001) 

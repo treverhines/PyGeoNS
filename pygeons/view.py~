@@ -301,7 +301,7 @@ class InteractiveView:
                                self.sigma_sets[si][self.tidx,:,1],
                                0.0*self.sigma_sets[si][self.tidx,:,0]),
                         color=self.color_cycle[si],
-                        ellipse_edgecolors=self.color_cycle[si],
+                        ellipse_kwargs={'edgecolors':self.color_cycle[si]},
                         zorder=2+si)]
 
       # time series instances
@@ -423,7 +423,11 @@ class InteractiveView:
     if self.map_title is None:
       self.ax2.set_title('time %g' % self.t[self.tidx],fontsize=self.fontsize)
     else:
-      self.ax2.set_title(self.map_title,fontsize=self.fontsize)
+      #self.ax2.set_title(self.map_title,fontsize=self.fontsize)
+      # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      # XXXXXXXXXXXX  DELETE THIS  XXXXXXXXXXXXXXXXXXXXXXXXXXX
+      self.ax2.set_title(self.map_title,fontsize=10)
+      # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       
     self.ax2.set_aspect('equal')
 

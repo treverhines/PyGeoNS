@@ -7,7 +7,9 @@ from matplotlib.collections import EllipseCollection
 from matplotlib.backends import pylab_setup
 from matplotlib.pyplot import sci
 from matplotlib.pyplot import gca
+import warnings
 _backend_mod, new_figure_manager, draw_if_interactive, _show = pylab_setup()
+
 
 def compute_abphi(sigma_x,sigma_y,rho):
   n = len(sigma_x)
@@ -40,7 +42,7 @@ def compute_abphi(sigma_x,sigma_y,rho):
 
 
 def quiver(*args, **kw):
-    ax = kw.pop('ax',gca())
+    ax = gca()
     # allow callers to override the hold state by passing hold=True|False               
     washold = ax.ishold()
     hold = kw.pop('hold', None)
@@ -62,29 +64,42 @@ def quiver(*args, **kw):
     sci(q)
     return q
 
-
 class Quiver(_Quiver):
   def __init__(self,ax,*args,**kwargs):
     if kwargs.has_key('sigma'):
-      kwargs['scale_units'] = 'xy'
-      kwargs['angles'] = 'xy'
+      scale_units = kwargs.get('scale_units','xy')
+      kwargs['scale_units'] = scale_units
+      if kwargs['scale_units'] != 'xy':
+        raise ValueError('scale units must be "xy" when sigma is given')
+
+      angles = kwargs.get('angles','xy')
+      kwargs['angles'] = angles
+      if kwargs['angles'] != 'xy':
+        raise ValueError('angles must be "xy" when sigma is given')
+               
       if not kwargs.has_key('scale'):
         kwargs['scale'] = 1.0
 
     su,sv,rho = kwargs.pop('sigma',(None,None,None))
-    self.ellipse_kwargs = {}
-    self.ellipse_kwargs['zorder'] = kwargs.get('zorder')
-    self.ellipse_kwargs['edgecolors'] = kwargs.pop('ellipse_edgecolors','k')
-    self.ellipse_kwargs['facecolors'] = kwargs.pop('ellipse_facecolors','none')
-    self.ellipse_kwargs['linewidths'] = kwargs.pop('ellipse_linewidths',1.0)
+        
+    self.ellipse_kwargs = {'edgecolors':'k',
+                           'facecolors':'none',
+                           'linewidths':1.0}
+    user_ellipse_kwargs = kwargs.pop('ellipse_kwargs',{})
+    if user_ellipse_kwargs.has_key('offsets'):
+      raise ValueError('cannot specify ellipse offsets')
+    if user_ellipse_kwargs.has_key('units'):
+      raise ValueError('cannot specify ellipse units')
+    
+    self.ellipse_kwargs.update(user_ellipse_kwargs)
     _Quiver.__init__(self,
                      ax,
                      *args,
                      **kwargs)
 
-    # if any of x,y, u, or v are masked then mask all
-    if (su is not None) & (sv is not None):
+    if (su is not None) & (sv is not None) & (rho is not None):
       self._update_ellipsoids(su,sv,rho)
+
 
   def _update_ellipsoids(self,su,sv,rho):
     self.scale_units = 'xy'
@@ -100,6 +115,20 @@ class Quiver(_Quiver):
     if hasattr(self,'ellipsoids'):
       self.ellipsoids.remove()
 
+    # do not draw ellipses which are too small  
+    too_small = 0.001
+    length = np.sqrt((self.U/self.scale)**2 + (self.V/self.scale)**2)
+    with warnings.catch_warnings():
+      # do not print out zero division warning
+      warnings.simplefilter("ignore")
+      is_not_too_small = ((np.nan_to_num(width/length) > too_small) | 
+                          (np.nan_to_num(height/length) > too_small))
+
+    width = width[is_not_too_small]
+    height = height[is_not_too_small]
+    angle = angle[is_not_too_small]
+    tips = tips[is_not_too_small]    
+    
     self.ellipsoids = EllipseCollection(width,
                                         height,
                                         angle,
