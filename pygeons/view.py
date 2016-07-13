@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 from rbf.interpolate import RBFInterpolant
-from matplotlib.cm import ScalarMappable
+from pygeons._input import restricted_input
 from pygeons.quiver import Quiver as _Quiver
+from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
 from logging import getLogger
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
@@ -162,7 +163,9 @@ class InteractiveView:
                   
 Controls
 --------
-    Enter : edit the configurable parameters through the command line
+    Enter : edit the configurable parameters through the command line. 
+        Variables can be defined using any functions in the numpy, 
+        matplotlib, or base python namespace
 
     Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
         and 100 respectively)
@@ -743,7 +746,7 @@ Notes
 
       print('\ncurrent value is %s\n' % repr(val))
       try:
-        new_val = input('new value >>> ')
+        new_val = restricted_input('new value >>> ')
       except Exception as err:
         print('\nthe following error was raised when evaluating the above expression:\n    %s' % repr(err))
         new_val = val
