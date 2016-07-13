@@ -60,7 +60,48 @@ def _disable_default_key_bindings():
       plt.rcParams[k] = []
 
 
-class InteractiveView:
+class InteractiveViewer:
+  ''' 
+               --------------------------------
+               PyGeoNS Interactive Viewer (PIV)
+               --------------------------------
+                                 
+Controls
+--------
+    Enter : edit the configurable parameters through the command line.
+        Variables can be defined using any functions in the numpy, 
+        matplotlib, or base python namespace
+
+    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
+        and 100 respectively)
+
+    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
+        forward 10 and 100 respectively)
+
+    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10
+      and 100 respectively)
+          
+    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 
+      10 and 100 respectively)
+          
+    R : redraw figures
+        
+    C : cycle the ordering of the data sets
+ 
+    H : hide station marker
+        
+Notes
+-----
+    Stations may also be selected by clicking on them 
+    
+    Exit PIV by closing the figures
+  
+    Key bindings only work when the active window is one of the PIV 
+    figures   
+
+---------------------------------------------------------------------
+  '''
+
   def __init__(self,data_sets,t,x,
                sigma_sets=None,
                quiver_key_label=None,
@@ -156,44 +197,6 @@ class InteractiveView:
         color bar label  
       
     '''
-    self.doc = ''' 
-                 --------------------------------
-                 PyGeoNS Interactive Viewer (PIV)
-                 --------------------------------
-                  
-Controls
---------
-    Enter : edit the configurable parameters through the command line. 
-        Variables can be defined using any functions in the numpy, 
-        matplotlib, or base python namespace
-
-    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
-        and 100 respectively)
-
-    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
-        forward 10 and 100 respectively)
-
-    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
-        100 respectively)
-          
-    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 10 
-        and 100 respectively)
-          
-    R : redraw figures
-      
-    C : cycle the ordering of the data sets
-
-    H : hide station marker
-        
-Notes
------
-    Stations may also be selected by clicking on them 
-    
-    Exit PIV by closing the figures
-  
-    Key bindings only work when the active window is one of the PIV 
-    figures   
-'''
     # map view axis and figure
     if map_ax is None:
       map_fig,map_ax = plt.subplots()
@@ -273,8 +276,7 @@ Notes
     self.config['fontsize'] = fontsize
     self._init()
     _disable_default_key_bindings()
-    
-    print(self.doc)
+    print(self.__doc__)
 
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_press_event',self._onkey)
@@ -728,32 +730,36 @@ Notes
       while True:
         try:
           key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
+          print('')
           val = self.config[key]
           break
         except KeyError:  
           if key == 'exit':
             pyqtRestoreInputHook()
-            print('\nfigure interactivity has been restored\n')
+            print('figure interactivity has been restored\n')
             return
           
           if key != 'help':
-            print('\n"%s" is not a configurable parameter' % key)
+            print('"%s" is not a configurable parameter\n' % key)
 
-          print('\nselect from one of the following\n')
+          print('select from one of the following')
           for k in self.config.keys():
             print('    %s' % k)
           print('')
 
-      print('\ncurrent value is %s\n' % repr(val))
+      print('current value is %s\n' % repr(val))
       try:
         new_val = restricted_input('new value >>> ')
+        print('')
+        
       except Exception as err:
-        print('\nthe following error was raised when evaluating the above expression:\n    %s' % repr(err))
+        print('')
+        print('the following error was raised when evaluating the above expression:\n    %s\n' % repr(err))
         new_val = val
         
       self.config[key] = new_val
       pyqtRestoreInputHook()
-      print('\nfigure interactivity has been restored\n')
+      print('figure interactivity has been restored\n')
       
     else:
       # do nothing
@@ -879,7 +885,7 @@ def network_viewer(t,x,u=None,v=None,z=None,
     data_sets += [np.concatenate((u[i][:,:,None],v[i][:,:,None],z[i][:,:,None]),axis=2)]
     sigma_sets += [np.concatenate((su[i][:,:,None],sv[i][:,:,None],sz[i][:,:,None]),axis=2)]
   
-  iv = InteractiveView(data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
+  iv = InteractiveViewer(data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
   iv.connect()
   plt.show()
     

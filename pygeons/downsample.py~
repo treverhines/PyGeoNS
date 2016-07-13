@@ -6,6 +6,56 @@ import rbf.geometry
 import warnings
 import pygeons.cuts
 
+def weighted_mean(x,sigma,axis=None):
+  ''' 
+  computes the weighted mean of *x* with uncertainties *sigma*
+  
+  Parameters
+  ----------
+    x : (N,...) array
+    
+    sigma : (N,...) array
+      
+    axis : int, optional
+    
+  Notes
+  -----
+    If all uncertainties along the axis are np.inf then then the 
+    returned mean is 0.0 with uncertainty is np.inf
+    
+    If there are 0 entries along the axis then the returned mean is 
+    0.0 with uncertainty np.inf
+    
+    All input uncertainties less than 1e-10 are first set to 1e-10, to 
+    prevent division by zero complications. All calculated 
+    uncertainties less than 1e-10 are set to zero before being 
+    returned
+    
+  '''
+  # values less than this are considered zero
+  min_sigma = 1e-10
+
+  x = np.asarray(x)
+  sigma = np.asarray(sigma)
+  sigma[sigma <= min_sigma] = 1e-10
+  with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    numer = np.sum(x/sigma**2,axis=axis)
+    denom = np.sum(1.0/sigma**2,axis=axis)
+    out_value = numer/denom
+    out_sigma = np.sqrt(1.0/denom)
+  
+  if out_sigma.ndim == 0:
+    if np.isnan(out_value):
+      out_value = 0.0
+    if out_sigma <= min_sigma:
+      out_sigma = 0.0
+  else:
+    out_value[np.isnan(out_value)] = 0.0
+    out_sigma[out_sigma <= min_sigma] = 0.0
+
+  return out_value,out_sigma
+
 class MeanInterpolant:
   '''   
   An interplant whose value at x is the mean of all values observed 
@@ -96,17 +146,9 @@ class MeanInterpolant:
 
     out_value = np.zeros((xitp.shape[0],)+self.value_shape)
     out_sigma = np.zeros((xitp.shape[0],)+self.value_shape)
-    with warnings.catch_warnings():
-      warnings.simplefilter('ignore')
-      for i,idx in enumerate(idx_arr):
-        numer = np.sum(self.value[idx]/self.sigma[idx]**2,axis=0)
-        denom = np.sum(1.0/self.sigma[idx]**2,axis=0)
-        out_value[i] = numer/denom
-        out_sigma[i] = np.sqrt(1.0/denom)
-
-    # replace any nans with zero
-    out_value[np.isnan(out_value)] = 0.0
-
+    for i,idx in enumerate(idx_arr):
+      out_value[i],out_sigma[i] = weighted_mean(self.value[idx],self.sigma[idx],axis=0)
+    
     return out_value,out_sigma
 
 

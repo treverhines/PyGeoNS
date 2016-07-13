@@ -2,6 +2,9 @@
 from __future__ import division
 import numpy as np
 from pygeons.smooth import network_smoother
+from pygeons.view import InteractiveViewer
+from pygeons.view import _make_masked_array
+from pygeons.downsample import weighted_mean
 import matplotlib.pyplot as plt
 import pygeons.diff
 import pygeons.cuts
@@ -455,4 +458,177 @@ def _identify_duplicate_station(sigma,x,tol=3.0):
     count2 = np.sum(~np.isinf(sigma[:,idx2]))
     count,out = min((count1,idx1),(count2,idx2))
     return out
+  
+
+class InteractiveCleaner(InteractiveViewer):
+  ''' 
+               ---------------------------------
+               PyGeoNS Interactive Cleaner (PIC)
+               ---------------------------------
+
+Controls
+--------
+    Enter : edit the configurable parameters through the command line. 
+        Variables can be defined using any functions in the numpy, 
+        matplotlib, or base python namespace
+
+    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
+        and 100 respectively)
+
+    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
+        forward 10 and 100 respectively)
+
+    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10 
+        and 100 respectively)
+          
+    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 
+        10 and 100 respectively)
+          
+    R : redraw figures
+
+    H : hide station marker
+
+    D : remove data within a time interval for the current station. On 
+        the time series figure, press *d* with the cursor over the 
+        start of the time interval. With d still pressed down, move 
+        the cursor to the end of the time interval.  Release *d* to 
+        remove the data
+
+    J : estimate and remove time series jumps for the current station. 
+        The jump is estimated by taking a weighted mean of the data 
+        over some time interval before and after the jump. On the time 
+        series fugure, press *j* with the cursor over the jump time. 
+        With j still pressed down, move the cursor to the left or 
+        right by desired time interval. Release *j* to remove the 
+        jump.
+        
+Notes
+-----
+    Stations may also be selected by clicking on them 
+
+    Exit PIC by closing the figures
+
+    Key bindings only work when the active window is one of the PIC
+    figures   
+
+---------------------------------------------------------------------     
+  '''
+  def __init__(self,data,t,x,sigma=None,**kwargs):
+    old_data = np.copy(data)
+    if sigma is None:
+      sigma = np.zeros(data.shape)
+
+    old_sigma = np.copy(sigma)
+    
+    data_sets = [data,old_data]
+    sigma_sets = [sigma,old_sigma]
+    InteractiveViewer.__init__(self,data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
+    
+  def connect(self):
+    self.ts_fig.canvas.mpl_connect('key_release_event',self._onkey)
+    InteractiveViewer.connect(self)
+        
+  def _remove_jump(self,jump_time,radius):
+    xidx = self.config['xidx']
+    tidx_right, = np.nonzero((self.t > jump_time) & (self.t <= (jump_time+radius)))
+    tidx_left, = np.nonzero((self.t < jump_time) & (self.t >= (jump_time-radius)))
+    mean_right,sigma_right = weighted_mean(self.data_sets[0].data[tidx_right,xidx],
+                                           self.sigma_sets[0].data[tidx_right,xidx],
+                                           axis=0)
+    mean_left,sigma_left = weighted_mean(self.data_sets[0].data[tidx_left,xidx],
+                                         self.sigma_sets[0].data[tidx_left,xidx],
+                                         axis=0)
+    # jump for each component
+    jump = mean_right - mean_left
+    # uncertainty in the jump estimate
+    sigma = np.sqrt(sigma_right**2 + sigma_left**2)
+
+    # find indices of all times after the jump
+    all_tidx_right, = np.nonzero(self.t > jump_time)
+    
+    # remove jump from values make after the jump 
+    new_pos = self.data_sets[0].data[all_tidx_right,xidx,:] - jump
+    # increase uncertainty 
+    new_var = self.sigma_sets[0].data[all_tidx_right,xidx,:]**2 + sigma**2
+    new_sigma = np.sqrt(new_var)
+    self.data_sets[0].data[all_tidx_right,xidx,:] = new_pos
+    self.sigma_sets[0].data[all_tidx_right,xidx,:]= new_sigma
+    
+    # turn the new data sets into masked arrays
+    data_set,sigma_set = _make_masked_array(self.data_sets[0].data,
+                                            self.sigma_sets[0].data)
+    self.data_sets[0] = data_set
+    self.sigma_sets[0] = sigma_set
+      
+  def _remove_outliers(self,start_time,end_time):
+    # this function masks data for the current station which ranges 
+    # from start_time to end_time
+    xidx = self.config['xidx']
+    tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
+    self.data_sets[0].data[tidx,xidx] = 0.0
+    self.sigma_sets[0].data[tidx,xidx] = np.inf
+    # turn the new data sets into masked arrays
+    data_set,sigma_set = _make_masked_array(self.data_sets[0].data,
+                                            self.sigma_sets[0].data)
+    self.data_sets[0] = data_set
+    self.sigma_sets[0] = sigma_set
+
+  def _on_d_press(self,event):
+    self._d_pressed_in_ax = False
+    if event.inaxes is not None:
+      if event.inaxes.figure is self.ts_fig:
+        self._d_pressed_in_ax = True
+        self._d_start = event.xdata
+        print('drag cursor over the time interval containing the outliers\n') 
+  
+  def _on_d_release(self,event):
+    # in order for anything to happen, the key press and release need 
+    # to have been in a ts_ax
+    if self._d_pressed_in_ax:
+      if event.inaxes is not None:
+        if event.inaxes.figure is self.ts_fig:
+          d_start = self._d_start 
+          d_stop = event.xdata
+          print('removing data over the time interval %s - %s\n' % (d_start,d_stop))
+          self._remove_outliers(d_start,d_stop) 
+          self._update()   
+
+  def _on_j_press(self,event):
+    self._j_pressed_in_ax = False
+    if event.inaxes is not None:
+      if event.inaxes.figure is self.ts_fig:
+        self._j_pressed_in_ax = True
+        self._j_start = event.xdata        
+        print('drag cursor over the time radius used to estimate the jump\n') 
+
+  def _on_j_release(self,event):
+    if self._j_pressed_in_ax:
+      if event.inaxes is not None:
+        if event.inaxes.figure is self.ts_fig:
+          j_start = self._j_start
+          j_stop = event.xdata
+          print('removing jump at time %s with time radius %s\n' % (j_start,abs(j_stop-j_start)))
+          self._remove_jump(j_start,abs(j_stop-j_start))
+          self._update()   
+          
+  def _onkey(self,event):
+    if event.name == 'key_press_event':
+      if event.key == 'c':
+        # disable C
+        return
+        
+      InteractiveViewer._onkey(self,event)
+      if event.key == 'd':
+        self._on_d_press(event)
+
+      elif event.key == 'j':
+        self._on_j_press(event)
+        
+    elif event.name == 'key_release_event':   
+      if event.key == 'd':
+        self._on_d_release(event)
+
+      elif event.key == 'j':
+        self._on_j_release(event)
+      
   

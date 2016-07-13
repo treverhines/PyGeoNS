@@ -9,7 +9,7 @@ import pygeons.cuts
 import modest
   
 N1 = 10000
-N2 = 2000
+N2 = 200
 T = 0.1
 
 x = np.array([[0.0,0.0]])
