@@ -415,7 +415,6 @@ def station_is_duplicate(sigma,x,tol=4.0,plot=True):
     fig,ax = plt.subplots()
     bin_count = max(len(x)//10,10)
     out,bins,patches = ax.hist(np.log10(rbefore),bin_count,color='r',edgecolor='none')
-    print(bins)
     ax.hist(np.log10(rafter),bins,color='k',edgecolor='none')
     ax.set_xlabel('log10 distance to nearest neighbor')
     ax.set_ylabel('count')

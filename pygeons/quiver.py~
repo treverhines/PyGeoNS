@@ -124,8 +124,6 @@ class Quiver(_Quiver):
       is_not_too_small = ((np.nan_to_num(width/length) > too_small) | 
                           (np.nan_to_num(height/length) > too_small))
 
-    print(width/length)
-    print(height/length)
     width = width[is_not_too_small]
     height = height[is_not_too_small]
     angle = angle[is_not_too_small]
@@ -152,4 +150,9 @@ class Quiver(_Quiver):
       sv = sigma[1]
       rho = sigma[2]
       self._update_ellipsoids(su,sv,rho)
+      
+  def remove(self):  
+    # remove the quiver and ellipsoid collection
+    _Quiver.remove(self)    
+    self.ellipsoids.remove()
 

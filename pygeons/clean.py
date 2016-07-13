@@ -252,6 +252,7 @@ def common_mode(u,t,x,sigma=None,
   sigma_comm = sigma_comm[:,None]
   return u_comm,sigma_comm
   
+
 def baseline(u,t,x,sigma=None,time_scale=None,
              zero_idx=None,time_cuts=None,perts=20,**kwargs):
   ''' 

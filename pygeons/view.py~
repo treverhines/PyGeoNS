@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 import matplotlib.pyplot as plt
 import numpy as np
-import rbf.halton
 import matplotlib
-from rbf.interpolant import RBFInterpolant
+from rbf.interpolate import RBFInterpolant
 from matplotlib.cm import ScalarMappable
-import pygeons.quiver
-import rbf.basis
-import modest
+from pygeons.quiver import Quiver as _Quiver
+from rbf.basis import phs1
+from logging import getLogger
+from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+logger = getLogger(__name__)
+
+COLOR_CYCLE = ['k',(0.0,0.7,0.0),'r','g','c','m','y']
 
 # change behavior of mpl.quiver. this is necessary for error 
 # ellipses but may lead to insidious bugs... 
-matplotlib.quiver.Quiver = pygeons.quiver.Quiver
+matplotlib.quiver.Quiver = _Quiver
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
@@ -31,7 +34,6 @@ def _make_masked_array(data_set,sigma_set):
   return data_set,sigma_set
 
 
-@modest.funtime
 def _grid_interp_data(u,pnts,x,y):
   if np.ma.isMaskedArray(u):
     pnts = pnts[~u.mask]
@@ -46,38 +48,43 @@ def _grid_interp_data(u,pnts,x,y):
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
   I = RBFInterpolant(pnts,u,penalty=0.0,
-                     order=1,basis=rbf.basis.phs1)
+                     order=1,basis=phs1)
   uitp = I(pnts_itp)
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
   
+def _disable_default_key_bindings():
+  for k in plt.rcParams.keys():
+    if 'keymap' in k:
+      plt.rcParams[k] = []
+
 
 class InteractiveView:
   def __init__(self,data_sets,t,x,
                sigma_sets=None,
-               cmap=None,
                quiver_key_label=None,
                quiver_key_length=1.0,
                quiver_scale=10.0,
                quiver_width=0.005,
                quiver_key_pos=None,
                scatter_size=100,
+               image_vmin=None,
+               image_vmax=None,
+               image_cmap=None,
                station_names=None,
                data_set_names=None,
-               vmin=None,
-               vmax=None,
-               ylim=None,
-               xlim=None,
-               time_series_axs=None,
-               time_series_title=None,
+               ts_title=None,
+               ts_ylabel_0='easting [m]',
+               ts_ylabel_1='northing [m]',
+               ts_ylabel_2='vertical [m]',
+               ts_xlabel='time [years]',
+               fontsize=10,
                map_ax=None,
                map_title=None,
-               fontsize=10,
-               ylabel='displacement [m]',
-               xlabel='time [years]',
-               clabel='vertical displacement [m]'):
+               map_ylim=None,
+               map_xlim=None,
+               map_clabel='vertical displacement [m]'):
     ''' 
-
     interactively views vector valued data which is time and space 
     dependent
     
@@ -93,7 +100,7 @@ class InteractiveView:
         if an entry is np.inf then all components for that station at 
         that time will be masked
         
-      cmap : Colormap instance
+      image_cmap : Colormap instance
         colormap for vertical deformation
 
       quiver_key_label : str
@@ -115,25 +122,22 @@ class InteractiveView:
       
       data_set_names : (Ns,) str array
       
-      vmin : float
+      image_vmin : float
         minimum vertical color value      
 
-      vmax : float
+      image_vmax : float
         mmaximum vertical color value      
               
-      ylim : (2,) array
+      map_ylim : (2,) array
         ylim for the map view plot
       
-      xlim : (2,) array
+      map_xlim : (2,) array
         xlim for the map view plot
       
-      time_series_axs : (3,) list of Axis instances
-        list of three axes where time series will be plotted
-
-      time_series_title : str
+      ts_title : str
         title for time series plot
       
-      map_ax : Axis instance
+      ax : Axis instance
         axis where map view will be plotted
       
       map_title : str
@@ -141,460 +145,626 @@ class InteractiveView:
       
       fontsize : float
         
-      ylabel : str
+      ts_ylabel : str
         time series y label
       
-      xlabel : str
+      ts_xlabel : str
         time series x label
         
-      clabel : str
+      map_clabel : str
         color bar label  
       
     '''
-    if time_series_axs is None:
-      fig1,ax1 = plt.subplots(3,1,sharex=True)
-      self.fig1 = fig1
-      self.ax1 = ax1
-    else:
-      self.fig1 = time_series_axs[0].get_figure()
-      self.ax1 = time_series_axs
-      
-    if map_ax is None:
-      fig2,ax2 = plt.subplots()
-      self.fig2 = fig2
-      self.ax2 = ax2
-    else:
-      self.fig2 = map_ax.get_figure()  
-      self.ax2 = map_ax
-      
-    self.highlight = True
-    self.tidx,self.xidx = 0,0
-    if sigma_sets is None:
-      sigma_sets = [np.ones(d.shape) for d in data_sets]
+    self.doc = ''' 
+                 --------------------------------
+                 PyGeoNS Interactive Viewer (PIV)
+                 --------------------------------
+                  
+Controls
+--------
+    Enter : edit the configurable parameters through the command line
 
+    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
+        and 100 respectively)
+
+    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
+        forward 10 and 100 respectively)
+
+    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
+        100 respectively)
+          
+    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 10 
+        and 100 respectively)
+          
+    R : redraw figures
+      
+    C : cycle the ordering of the data sets
+
+    H : hide station marker
+        
+Notes
+-----
+    Stations may also be selected by clicking on them 
+    
+    Exit PIV by closing the figures
+  
+    Key bindings only work when the active window is one of the PIV 
+    figures   
+'''
+    # map view axis and figure
+    if map_ax is None:
+      map_fig,map_ax = plt.subplots()
+      self.map_fig = map_fig
+      self.map_ax = map_ax
+    else:
+      self.map_fig = map_ax.get_figure()  
+      self.map_ax = map_ax
+
+    # make figure and axis for the time series 
+    ts_fig,ts_ax = plt.subplots(3,1,sharex=True)
+    self.ts_fig = ts_fig
+    self.ts_ax = ts_ax
+      
+    # colorbar axis
+    self.cax = None
+    
+    # time and space arrays
+    self.t = t
+    self.x = x
+
+    # use uncertainties of zero if none are given
+    if sigma_sets is None:
+      sigma_sets = [np.zeros(d.shape) for d in data_sets]
+
+    # convert data and uncertainty to masked arrays
     self.data_sets = []
     self.sigma_sets = []
     for d,s in zip(data_sets,sigma_sets):      
       dout,sout = _make_masked_array(d,s)
       self.data_sets += [dout]
       self.sigma_sets += [sout]
-
-    self.t = t
-    self.x = x
-    self.cmap = cmap
-    self.vmin = vmin
-    self.vmax = vmax
-    self.ylim = ylim
-    self.xlim = xlim
-    self.quiver_scale = quiver_scale
-    self.quiver_width = quiver_width
-    self.scatter_size = scatter_size
-    self.xlabel = xlabel # xlabel for time series plot
-    self.ylabel = ylabel # ylabel for time series plots
-    self.clabel = clabel
-    self.color_cycle = ['k',(0.0,0.7,0.0),'r','g','c','m','y']
+      
+    # station names used for the time series plots
     if station_names is None:
       station_names = np.arange(len(self.x)).astype(str)
+
+    # data set names used for the legends
     if data_set_names is None:
       data_set_names = np.arange(len(self.data_sets)).astype(str)
 
     self.station_names = list(station_names)
     self.data_set_names = list(data_set_names)
-    
+
+
+    # position and length of the scale vector 
     if quiver_key_pos is None:
       quiver_key_pos = (0.2,0.1)
 
     if quiver_key_label is None:   
       quiver_key_label = str(quiver_key_length) + ' [m]'
 
-    self.quiver_key_pos = quiver_key_pos
-    self.quiver_key_label = quiver_key_label
-    self.quiver_key_length = quiver_key_length
-    self.time_series_title = time_series_title
-    self.map_title = map_title
-    self.fontsize = fontsize
-
-    self._init_draw()
+    # this dictionary contains plot configuration parameters which may 
+    # be interactively changed
+    self.config = {}
+    self.config['highlight'] = True
+    self.config['tidx'] = 0
+    self.config['xidx'] = 0
+    self.config['image_cmap'] = image_cmap
+    self.config['image_vmin'] = image_vmin        
+    self.config['image_vmax'] = image_vmax
+    self.config['quiver_scale'] = quiver_scale
+    self.config['quiver_width'] = quiver_width
+    self.config['quiver_key_pos'] = quiver_key_pos        
+    self.config['quiver_key_label'] = quiver_key_label
+    self.config['quiver_key_length'] = quiver_key_length
+    self.config['scatter_size'] = scatter_size
+    self.config['ts_xlabel'] = ts_xlabel
+    self.config['ts_ylabel_0'] = ts_ylabel_0
+    self.config['ts_ylabel_1'] = ts_ylabel_1
+    self.config['ts_ylabel_2'] = ts_ylabel_2
+    self.config['ts_title'] = ts_title
+    self.config['map_title'] = map_title
+    self.config['map_clabel'] = map_clabel
+    self.config['map_xlim'] = map_xlim
+    self.config['map_ylim'] = map_ylim
+    self.config['fontsize'] = fontsize
+    self._init()
+    _disable_default_key_bindings()
+    
+    print(self.doc)
 
   def connect(self):
-    self.fig1.canvas.mpl_connect('key_press_event',self._onkey)
-    self.fig2.canvas.mpl_connect('key_press_event',self._onkey)
-    self.fig2.canvas.mpl_connect('pick_event',self._onpick)
+    self.ts_fig.canvas.mpl_connect('key_press_event',self._onkey)
+    self.ts_fig.canvas.mpl_connect('pick_event',self._onpick)
+    self.map_fig.canvas.mpl_connect('key_press_event',self._onkey)
+    self.map_fig.canvas.mpl_connect('pick_event',self._onpick)
 
-
-  def _init_draw(self):
-    ''' 
-      creates the following artists
-        D : marker for current station
-        P : station pickers
-        L1-L3 : list of time series for each data_set
-        F1-F3 : list of fill between series for each data_set
-        Q : list of quiver instances for each data_set
-        K : quiver key for first element in Q
-        I : interpolated image of z component for first data_set
-        S : scatter plot where color is z component for second data_set
-
-    '''
-    self.ax1[2].set_xlabel(self.xlabel)
-    self.ax1[0].set_ylabel(self.ylabel)
-    self.ax1[1].set_ylabel(self.ylabel)
-    self.ax1[2].set_ylabel(self.ylabel)
+  def _init_ts_ax(self):
+    # call after _init_lines
+    self.ts_ax[2].set_xlabel(self.config['ts_xlabel'])
+    self.ts_ax[0].set_ylabel(self.config['ts_ylabel_0'])
+    self.ts_ax[1].set_ylabel(self.config['ts_ylabel_1'])
+    self.ts_ax[2].set_ylabel(self.config['ts_ylabel_2'])
     # dont convert to exponential form
-    self.ax1[0].get_xaxis().get_major_formatter().set_useOffset(False)
-    self.ax1[1].get_xaxis().get_major_formatter().set_useOffset(False)
-    self.ax1[2].get_xaxis().get_major_formatter().set_useOffset(False)
-
-    if self.time_series_title is None:
-      self.ax1[0].set_title('station %s' % self.station_names[self.xidx],fontsize=self.fontsize)
+    self.ts_ax[0].get_xaxis().get_major_formatter().set_useOffset(False)
+    self.ts_ax[1].get_xaxis().get_major_formatter().set_useOffset(False)
+    self.ts_ax[2].get_xaxis().get_major_formatter().set_useOffset(False)
+    self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[0].yaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[1].yaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[2].yaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[0].title.set_fontsize(self.config['fontsize'])
+    self.ts_ax[0].tick_params(labelsize=self.config['fontsize'])
+    self.ts_ax[1].tick_params(labelsize=self.config['fontsize'])
+    self.ts_ax[2].tick_params(labelsize=self.config['fontsize'])
+    if self.config['ts_title'] is None:
+      name = self.station_names[self.config['xidx']]
+      self.ts_ax[0].set_title('station %s' % name,
+                              fontsize=self.config['fontsize'])
     else:
-      self.ax1[0].set_title(self.time_series_title,fontsize=self.fontsize)
+      self.ts_ax[0].set_title(self.config['ts_title'],
+                              fontsize=self.config['fontsize'])
 
-    if self.map_title is None:
-      self.ax2.set_title('time %g' % self.t[self.tidx],fontsize=self.fontsize)
+    self.ts_ax[0].legend(frameon=False,fontsize=self.config['fontsize'])
+    plt.setp(self.ts_ax[0].get_xticklabels(), visible=False)
+    plt.setp(self.ts_ax[1].get_xticklabels(), visible=False)
+    self.ts_ax[0].set_autoscale_on(True) 
+    self.ts_ax[1].set_autoscale_on(True) 
+    self.ts_ax[2].set_autoscale_on(True) 
+    self.ts_ax[0].relim()
+    self.ts_ax[1].relim()
+    self.ts_ax[2].relim()
+    self.ts_ax[0].autoscale_view()
+    self.ts_ax[1].autoscale_view()
+    self.ts_ax[2].autoscale_view()
+    
+  def _update_ts_ax(self):
+    # call after _update_lines
+    #
+    # updates for:
+    #   xidx
+    #   ts_title
+    if self.config['ts_title'] is None:
+      name = self.station_names[self.config['xidx']]
+      self.ts_ax[0].set_title('station %s' % name,
+                              fontsize=self.config['fontsize'])
     else:
-      self.ax2.set_title(self.map_title,fontsize=self.fontsize)
+      self.ts_ax[0].set_title(self.config['ts_title'],
+                              fontsize=self.config['fontsize'])
+
+    self.ts_ax[0].legend(frameon=False,fontsize=self.config['fontsize'])
+    self.ts_ax[0].set_autoscale_on(True) 
+    self.ts_ax[1].set_autoscale_on(True) 
+    self.ts_ax[2].set_autoscale_on(True) 
+    self.ts_ax[0].relim()
+    self.ts_ax[1].relim()
+    self.ts_ax[2].relim()
+    self.ts_ax[0].autoscale_view()
+    self.ts_ax[1].autoscale_view()
+    self.ts_ax[2].autoscale_view()
+    
+
+  def _init_map_ax(self): 
+    # call after _init_scatter
+    self.map_ax.set_aspect('equal')
+    self.map_ax.tick_params(labelsize=self.config['fontsize'])
+    if self.config['map_title'] is None:
+      time = self.t[self.config['tidx']]
+      self.map_ax.set_title('time : %g' % time,
+                            fontsize=self.config['fontsize'])
+    else:
+      self.map_ax.set_title(self.config['map_title'],
+                            fontsize=self.config['fontsize'])
+
+    # do not dynamically update the axis limits
+    if self.config['map_xlim'] is None:
+      self.config['map_xlim'] = self.map_ax.get_xlim()
+
+    if self.config['map_ylim'] is None:  
+      self.config['map_ylim'] = self.map_ax.get_ylim()
       
-    self.ax2.set_aspect('equal')
-    self.ax2.title.set_fontsize(self.fontsize)
+    self.map_ax.set_xlim(self.config['map_xlim'])
+    self.map_ax.set_ylim(self.config['map_ylim'])
+      
+  def _update_map_ax(self):
+    # updates for:
+    #   map_title
+    #   tidx
+    if self.config['map_title'] is None:
+      time = self.t[self.config['tidx']]
+      self.map_ax.set_title('time : %g' % time,
+                            fontsize=self.config['fontsize'])
+    else:
+      self.map_ax.set_title(self.config['map_title'],
+                            fontsize=self.config['fontsize'])
 
-    self.ax1[0].xaxis.label.set_fontsize(self.fontsize)
-    self.ax1[1].xaxis.label.set_fontsize(self.fontsize)
-    self.ax1[2].xaxis.label.set_fontsize(self.fontsize)
-    self.ax1[0].yaxis.label.set_fontsize(self.fontsize)
-    self.ax1[1].yaxis.label.set_fontsize(self.fontsize)
-    self.ax1[2].yaxis.label.set_fontsize(self.fontsize)
-    
-    self.ax1[0].title.set_fontsize(self.fontsize)
-    self.ax1[0].tick_params(labelsize=self.fontsize)
-    self.ax1[1].tick_params(labelsize=self.fontsize)
-    self.ax1[2].tick_params(labelsize=self.fontsize)
-    self.ax2.tick_params(labelsize=self.fontsize)
+  def _init_image(self):
+    # call after _init_map_ax    
+    self.x_itp = [np.linspace(self.config['map_xlim'][0],self.config['map_xlim'][1],100),
+                  np.linspace(self.config['map_ylim'][0],self.config['map_ylim'][1],100)]
+    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
+                                 self.x,self.x_itp[0],self.x_itp[1])
+    if self.config['image_vmin'] is None:
+      # if vmin and vmax are None then the color bounds will be 
+      # updated each time the artists are redrawn
+      image_vmin = data_itp.min()
+    else:  
+      image_vmin = self.config['image_vmin']
 
-    # highlighted point
-    self.D = self.ax2.plot(self.x[self.xidx,0],
-                           self.x[self.xidx,1],'ko',
-                           markersize=20*self.highlight)[0]
-    # pickable artists
-    self.P = []
-    for xi in self.x:
-      self.P += self.ax2.plot(xi[0],xi[1],'.',
-                              picker=10,
-                              markersize=0)
-
-    # if ylim and xlim were not user specified then fix them now
-    if self.xlim is None:
-      self.xlim = self.ax2.get_xlim()
-
-    if self.ylim is None:  
-      self.ylim = self.ax2.get_ylim()
-    
-    self.Q = []
-    self.L1,self.L2,self.L3 = [],[],[]
-    self.F1,self.F2,self.F3 = [],[],[]
-    for si in range(len(self.data_sets)):
-      self.Q += [self.ax2.quiver(self.x[:,0],self.x[:,1],
-                        self.data_sets[si][self.tidx,:,0],
-                        self.data_sets[si][self.tidx,:,1],
-                        scale=self.quiver_scale,  
-                        width=self.quiver_width,
-                        sigma=(self.sigma_sets[si][self.tidx,:,0],
-                               self.sigma_sets[si][self.tidx,:,1],
-                               0.0*self.sigma_sets[si][self.tidx,:,0]),
-                        color=self.color_cycle[si],
-                        ellipse_kwargs={'edgecolors':self.color_cycle[si]},
-                        zorder=2+si)]
-
-      # time series instances
-      self.L1 += self.ax1[0].plot(self.t,
-                                  self.data_sets[si][:,self.xidx,0],
-                                  color=self.color_cycle[si],
-                                  label=self.data_set_names[si])
-      self.F1 += [self.ax1[0].fill_between(self.t,
-                                  self.data_sets[si][:,self.xidx,0] -
-                                  self.sigma_sets[si][:,self.xidx,0],
-                                  self.data_sets[si][:,self.xidx,0] +
-                                  self.sigma_sets[si][:,self.xidx,0],
-                                  edgecolor='none',
-                                  color=self.color_cycle[si],alpha=0.5)]
-
-      self.L2 += self.ax1[1].plot(self.t,
-                                  self.data_sets[si][:,self.xidx,1],
-                                  color=self.color_cycle[si],
-                                  label=self.data_set_names[si])
-      self.F2 += [self.ax1[1].fill_between(self.t,
-                                  self.data_sets[si][:,self.xidx,1] -
-                                  self.sigma_sets[si][:,self.xidx,1],
-                                  self.data_sets[si][:,self.xidx,1] +
-                                  self.sigma_sets[si][:,self.xidx,1],
-                                  edgecolor='none',
-                                  color=self.color_cycle[si],alpha=0.5)]
-
-      self.L3 += self.ax1[2].plot(self.t,
-                                  self.data_sets[si][:,self.xidx,2],
-                                  color=self.color_cycle[si],
-                                  label=self.data_set_names[si])
-      self.F3 += [self.ax1[2].fill_between(self.t,
-                                  self.data_sets[si][:,self.xidx,2] -
-                                  self.sigma_sets[si][:,self.xidx,2],
-                                  self.data_sets[si][:,self.xidx,2] +
-                                  self.sigma_sets[si][:,self.xidx,2],
-                                  edgecolor='none',
-                                  color=self.color_cycle[si],alpha=0.5)]
-
-      # quiver key
-      if si == 0:
-        self.K = self.ax2.quiverkey(self.Q[si],
-                                    self.quiver_key_pos[0],
-                                    self.quiver_key_pos[1],
-                                    self.quiver_key_length,
-                                    self.quiver_key_label,zorder=2,
-                                    labelsep=0.05,
-                                    fontproperties={'size':self.fontsize})
-
-      if si == 0:
-        # interpolate z value for first data set
-        self.x_itp = [np.linspace(self.xlim[0],self.xlim[1],100),
-                      np.linspace(self.ylim[0],self.ylim[1],100)]
-        data_itp = _grid_interp_data(self.data_sets[si][self.tidx,:,2],
-                                     self.x,self.x_itp[0],self.x_itp[1])
-        
-        if self.vmin is None:
-          # self.vmin and self.vmax are the user specified color 
-          # bounds. if they are None then the color bounds will be 
-          # updated each time the artists are redrawn
-          vmin = data_itp.min()
-        else:  
-          vmin = self.vmin
-
-        if self.vmax is None:
-          vmax = data_itp.max()
-        else:
-          vmax = self.vmax
+    if self.config['image_vmax'] is None:
+      image_vmax = data_itp.max()
+    else:
+      image_vmax = self.config['image_vmax']
           
-        self.I = self.ax2.imshow(data_itp,extent=(self.xlim+self.ylim),
-                                 interpolation='bicubic',
-                                 origin='lower',
-                                 vmin=vmin,vmax=vmax,
-                                 cmap=self.cmap,zorder=0)
-        self.I.set_clim((vmin,vmax))
+    self.image = self.map_ax.imshow(
+                   data_itp,
+                   extent=(self.config['map_xlim']+self.config['map_ylim']),
+                   interpolation='bicubic',
+                   origin='lower',
+                   vmin=image_vmin,vmax=image_vmax,
+                   cmap=self.config['image_cmap'],
+                   zorder=0)
 
-        self.cbar = self.fig2.colorbar(self.I)  
-        self.cbar.set_clim((vmin,vmax))
-        self.cbar.set_label(self.clabel,fontsize=self.fontsize)
-        self.cbar.ax.tick_params(labelsize=self.fontsize)
-        self.cbar.solids.set_rasterized(True)
+    # make colorbar     
+    self.cbar = self.map_fig.colorbar(self.image,cax=self.cax)  
+    self.cax = self.cbar.ax
+    self.cbar.set_clim((image_vmin,image_vmax))
+    self.cbar.set_label(self.config['map_clabel'],
+                        fontsize=self.config['fontsize'])
+    self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
+    self.cbar.solids.set_rasterized(True)
 
-      if si == 1:  
-        sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cmap)
-        # use scatter points to show z for second data set 
-        colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
-        self.S = self.ax2.scatter(self.x[:,0],self.x[:,1],
-                                  c=colors,
-                                  s=self.scatter_size,zorder=1,
-                                  edgecolor=self.color_cycle[si])
-      
-    self.ax2.set_ylim(self.ylim)
-    self.ax2.set_xlim(self.xlim)
-    self.ax1[0].legend(frameon=False,fontsize=self.fontsize)
-    self.ax1[0].set_autoscale_on(True) 
-    self.ax1[1].set_autoscale_on(True) 
-    self.ax1[2].set_autoscale_on(True) 
-    self.ax1[0].relim()
-    self.ax1[1].relim()
-    self.ax1[2].relim()
-    self.ax1[0].autoscale_view()
-    self.ax1[1].autoscale_view()
-    self.ax1[2].autoscale_view()
-    self.fig1.tight_layout()
-    #self.fig2.tight_layout()
-    self.fig1.canvas.draw()
-    self.fig2.canvas.draw()
+  def _update_image(self):
+    # updates for:
+    #   tidx
+    #   image_vmin
+    #   image_vmax  
+    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
+                                 self.x,
+                                 self.x_itp[0],
+                                 self.x_itp[1])
+    self.image.set_data(data_itp)
+    
+    if self.config['image_vmin'] is None:
+      # self.image_vmin and self.image_vmax are the user specified color 
+      # bounds. if they are None then the color bounds will be 
+      # updated each time the artists are redrawn
+      image_vmin = data_itp.min()
+    else:  
+      image_vmin = self.config['image_vmin']
 
-
-  def _draw(self):
-    self.tidx = self.tidx%self.data_sets[0].shape[0]
-    self.xidx = self.xidx%self.data_sets[0].shape[1]
-
-    if self.time_series_title is None:
-      self.ax1[0].set_title('station %s' % self.station_names[self.xidx],fontsize=self.fontsize)
+    if self.config['image_vmax'] is None:
+      image_vmax = data_itp.max()
     else:
-      self.ax1[0].set_title(self.time_series_title,fontsize=self.fontsize)
-      
-    if self.map_title is None:
-      self.ax2.set_title('time %g' % self.t[self.tidx],fontsize=self.fontsize)
-    else:
-      #self.ax2.set_title(self.map_title,fontsize=self.fontsize)
-      # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      # XXXXXXXXXXXX  DELETE THIS  XXXXXXXXXXXXXXXXXXXXXXXXXXX
-      self.ax2.set_title(self.map_title,fontsize=10)
-      # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      
-    self.ax2.set_aspect('equal')
+      image_vmax = self.config['image_vmax']
 
-    self.D.set_data(self.x[self.xidx,0],
-                    self.x[self.xidx,1])
-    self.D.set_markersize(20*self.highlight)
+    self.image.set_clim((image_vmin,image_vmax))
+    self.cbar.set_clim((image_vmin,image_vmax))
+    self.cbar.set_label(self.config['map_clabel'],
+                        fontsize=self.config['fontsize'])
+    self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
+    self.cbar.solids.set_rasterized(True)
+    
+  def _init_scatter(self):
+    # call after _init_image
+    if len(self.data_sets) < 2:
+      self.scatter = None
+      return
 
-    # unfortunately there is no option to update the fill between instances
-    # and so they must be deleted and redrawn
-    [self.ax1[0].collections.remove(f) for f in self.F1]
-    [self.ax1[1].collections.remove(f) for f in self.F2]
-    [self.ax1[2].collections.remove(f) for f in self.F3]
-    self.F1,self.F2,self.F3 = [],[],[]
-      
+    sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
+    # use scatter points to show z for second data set 
+    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
+    self.scatter = self.map_ax.scatter(
+                     self.x[:,0],self.x[:,1],
+                     c=colors,
+                     s=self.config['scatter_size'],
+                     zorder=1,
+                     edgecolor=COLOR_CYCLE[1])
+
+  def _update_scatter(self):
+    # call after _update_image
+    # 
+    # updates for:
+    #   tidx
+    #   image_vmin
+    #   image_vmax
+    if len(self.data_sets) < 2:
+      return
+
+    sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
+    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
+    self.scatter.set_facecolors(colors)
+
+  def _init_marker(self):
+    self.marker = self.map_ax.plot(self.x[self.config['xidx'],0],
+                                   self.x[self.config['xidx'],1],'ko',
+                                   markersize=20*self.config['highlight'])[0]
+
+  def _update_marker(self):
+    # updates for:
+    #   xidx
+    #   highlight
+    self.marker.set_data(self.x[self.config['xidx'],0],
+                         self.x[self.config['xidx'],1])
+    self.marker.set_markersize(20*self.config['highlight'])
+
+  def _init_quiver(self):
+    self.quiver = []
     for si in range(len(self.data_sets)):
-      self.Q[si].set_UVC(self.data_sets[si][self.tidx,:,0],
-                         self.data_sets[si][self.tidx,:,1],
-                         sigma=(self.sigma_sets[si][self.tidx,:,0],
-                                self.sigma_sets[si][self.tidx,:,1],
-                                0.0*self.sigma_sets[si][self.tidx,:,0]))
+      self.quiver += [self.map_ax.quiver(
+                        self.x[:,0],self.x[:,1],
+                        self.data_sets[si][self.config['tidx'],:,0],
+                        self.data_sets[si][self.config['tidx'],:,1],
+                        scale=self.config['quiver_scale'],  
+                        width=self.config['quiver_width'],
+                        sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
+                               self.sigma_sets[si][self.config['tidx'],:,1],
+                               0.0*self.sigma_sets[si][self.config['tidx'],:,0]),
+                        color=COLOR_CYCLE[si],
+                        ellipse_kwargs={'edgecolors':'k','zorder':1+si},
+                        zorder=2+si)]
+      if si == 0:
+        # plot quiver key for the first data set
+        self.key = self.map_ax.quiverkey(
+                     self.quiver[si],
+                     self.config['quiver_key_pos'][0],
+                     self.config['quiver_key_pos'][1],
+                     self.config['quiver_key_length'],
+                     self.config['quiver_key_label'],
+                     zorder=2,
+                     labelsep=0.05,
+                     fontproperties={'size':self.config['fontsize']})
+                     
+  def _update_quiver(self):
+    # updates for:
+    #   tidx
+    for si in range(len(self.data_sets)):
+      self.quiver[si].set_UVC(
+                        self.data_sets[si][self.config['tidx'],:,0],
+                        self.data_sets[si][self.config['tidx'],:,1],
+                        sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
+                               self.sigma_sets[si][self.config['tidx'],:,1],
+                               0.0*self.sigma_sets[si][self.config['tidx'],:,0]))
 
+  def _init_pickers(self):
+    # pickable artists
+    self.pickers = []
+    for xi in self.x:
+      self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                       picker=10,
+                                       markersize=0)
+
+  def _init_lines(self):
+    self.L1,self.L2,self.L3 = [],[],[]
+    for si in range(len(self.data_sets)):
+      self.L1 += self.ts_ax[0].plot(
+                   self.t,
+                   self.data_sets[si][:,self.config['xidx'],0],
+                   color=COLOR_CYCLE[si],
+                   label=self.data_set_names[si])
+      self.L2 += self.ts_ax[1].plot(
+                   self.t,
+                   self.data_sets[si][:,self.config['xidx'],1],
+                   color=COLOR_CYCLE[si],
+                   label=self.data_set_names[si])
+      self.L3 += self.ts_ax[2].plot(
+                   self.t,
+                   self.data_sets[si][:,self.config['xidx'],2],
+                   color=COLOR_CYCLE[si],
+                   label=self.data_set_names[si])
+    
+  def _update_lines(self):
+    # updates for:
+    #   xidx
+    for si in range(len(self.data_sets)):
       self.L1[si].set_data(self.t,
-                           self.data_sets[si][:,self.xidx,0])
+                           self.data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
       self.L1[si].set_label(self.data_set_names[si])                     
-      
-      self.F1 += [self.ax1[0].fill_between(self.t,
-                                  self.data_sets[si][:,self.xidx,0] -
-                                  self.sigma_sets[si][:,self.xidx,0],
-                                  self.data_sets[si][:,self.xidx,0] +
-                                  self.sigma_sets[si][:,self.xidx,0],
-                                  edgecolor='none',
-                                  color=self.color_cycle[si],alpha=0.5)]
-
       self.L2[si].set_data(self.t,
-                           self.data_sets[si][:,self.xidx,1])
+                           self.data_sets[si][:,self.config['xidx'],1])
       self.L2[si].set_label(self.data_set_names[si])                     
-
-      self.F2 += [self.ax1[1].fill_between(self.t,
-                                  self.data_sets[si][:,self.xidx,1] -
-                                  self.sigma_sets[si][:,self.xidx,1],
-                                  self.data_sets[si][:,self.xidx,1] +
-                                  self.sigma_sets[si][:,self.xidx,1],
-                                  edgecolor='none',
-                                  color=self.color_cycle[si],alpha=0.5)]
-
       self.L3[si].set_data(self.t,
-                           self.data_sets[si][:,self.xidx,2])
+                           self.data_sets[si][:,self.config['xidx'],2])
       self.L3[si].set_label(self.data_set_names[si])                     
+  
+  def _init_fill(self):
+    self.F1,self.F2,self.F3 = [],[],[]
+    for si in range(len(self.data_sets)):
+      self.F1 += [self.ts_ax[0].fill_between(
+                    self.t,
+                    self.data_sets[si][:,self.config['xidx'],0] -
+                    self.sigma_sets[si][:,self.config['xidx'],0],
+                    self.data_sets[si][:,self.config['xidx'],0] +
+                    self.sigma_sets[si][:,self.config['xidx'],0],
+                    edgecolor='none',
+                    color=COLOR_CYCLE[si],alpha=0.5)]
+      self.F2 += [self.ts_ax[1].fill_between(
+                    self.t,
+                    self.data_sets[si][:,self.config['xidx'],1] -
+                    self.sigma_sets[si][:,self.config['xidx'],1],
+                    self.data_sets[si][:,self.config['xidx'],1] +
+                    self.sigma_sets[si][:,self.config['xidx'],1],
+                    edgecolor='none',
+                    color=COLOR_CYCLE[si],alpha=0.5)]
+      self.F3 += [self.ts_ax[2].fill_between(
+                    self.t,
+                    self.data_sets[si][:,self.config['xidx'],2] -
+                    self.sigma_sets[si][:,self.config['xidx'],2],
+                    self.data_sets[si][:,self.config['xidx'],2] +
+                    self.sigma_sets[si][:,self.config['xidx'],2],
+                    edgecolor='none',
+                    color=COLOR_CYCLE[si],alpha=0.5)]
+  
+  def _update_fill(self):
+    # updates for:
+    #   xidx
+    [f.remove() for f in self.F1]
+    [f.remove() for f in self.F2]
+    [f.remove() for f in self.F3]
+    self._init_fill()
 
-      self.F3 += [self.ax1[2].fill_between(self.t,
-                                  self.data_sets[si][:,self.xidx,2] -
-                                  self.sigma_sets[si][:,self.xidx,2],
-                                  self.data_sets[si][:,self.xidx,2] +
-                                  self.sigma_sets[si][:,self.xidx,2],
-                                  edgecolor='none',
-                                  color=self.color_cycle[si],alpha=0.5)]
+  def _init(self):
+    self._init_marker()
+    self._init_pickers()
+    self._init_map_ax()
+    self._init_quiver()
+    self._init_lines()
+    self._init_fill()
+    self._init_image()
+    self._init_scatter()
+    self._init_ts_ax()
+    self.map_fig.tight_layout()
+    self.map_fig.canvas.draw()
+    self.ts_fig.tight_layout()
+    self.ts_fig.canvas.draw()
 
-      if si == 0:
-        data_itp = _grid_interp_data(self.data_sets[si][self.tidx,:,2],
-                                     self.x,
-                                     self.x_itp[0],self.x_itp[1])
-        self.I.set_data(data_itp)
+  def _update(self):
+    self._update_marker()
+    self._update_map_ax()
+    self._update_quiver()
+    self._update_lines()
+    self._update_fill()
+    self._update_image()
+    self._update_scatter()
+    self._update_ts_ax()
+    self.ts_fig.canvas.draw()
+    self.map_fig.canvas.draw()
 
-        if self.vmin is None:
-          # self.vmin and self.vmax are the user specified color 
-          # bounds. if they are None then the color bounds will be 
-          # updated each time the artists are redrawn
-          vmin = data_itp.min()
-        else:  
-          vmin = self.vmin
 
-        if self.vmax is None:
-          vmax = data_itp.max()
-        else:
-          vmax = self.vmax
+  def _hard_update(self):
+    # clears all axes and redraws everything
+    logger.debug('refreshing figures')
+    [f.remove() for f in self.F1]
+    [f.remove() for f in self.F2]
+    [f.remove() for f in self.F3]
+    [l.remove() for l in self.L1]
+    [l.remove() for l in self.L2]
+    [l.remove() for l in self.L3]
+    [q.remove() for q in self.quiver]
+    self.key.remove()
+    self.marker.remove()
+    self.image.remove()
+    if self.scatter is not None:
+      self.scatter.remove()        
 
-        self.I.set_clim((vmin,vmax))
-        self.cbar.set_clim((vmin,vmax))
-        self.cbar.solids.set_rasterized(True)
-
-      if si == 1:
-        # set new colors for scatter plot. use the same colormap as 
-        # the one used for data set 1
-        sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cmap)
-        colors = sm.to_rgba(self.data_sets[si][self.tidx,:,2])
-        self.S.set_facecolors(colors)
-        
-    # fix the axes for ax2 and make sure the axes for ax1 are automatic
-    self.ax2.set_ylim(self.ylim)
-    self.ax2.set_xlim(self.xlim)
-    self.ax1[0].legend(frameon=False,fontsize=self.fontsize)
-    self.ax1[0].set_autoscale_on(True) 
-    self.ax1[1].set_autoscale_on(True) 
-    self.ax1[2].set_autoscale_on(True) 
-    self.ax1[0].relim()
-    self.ax1[1].relim()
-    self.ax1[2].relim()
-    self.ax1[0].autoscale_view()
-    self.ax1[1].autoscale_view()
-    self.ax1[2].autoscale_view()
-
-    self.fig1.canvas.draw()
-    self.fig2.canvas.draw()
-
+    self.cax.clear()
+    self._init()
+    
 
   def _onpick(self,event):
-    for i,v in enumerate(self.P):
+    logger.debug('detected pick event')
+    for i,v in enumerate(self.pickers):
       if event.artist == v:
-        self.xidx = i
+        self.config['xidx'] = i
         break
 
-    self._draw()    
+    self._update()    
 
 
   def _onkey(self,event):
+    logger.debug('detected key event')
+    hard_update = False
+
     if event.key == 'right':
-      self.tidx += 1
+      self.config['tidx'] += 1
 
     elif event.key == 'ctrl+right':
-      self.tidx += 10
+      self.config['tidx'] += 10
 
     elif event.key == 'alt+right':
-      self.tidx += 100
+      self.config['tidx'] += 100
 
     elif event.key == 'left':
-      self.tidx -= 1
+      self.config['tidx'] -= 1
 
     elif event.key == 'ctrl+left':
-      self.tidx -= 10
+      self.config['tidx'] -= 10
 
     elif event.key == 'alt+left':
-      self.tidx -= 100
+      self.config['tidx'] -= 100
 
     elif event.key == 'up':
-      self.xidx += 1
+      self.config['xidx'] += 1
 
     elif event.key == 'ctrl+up':
-      self.xidx += 10
+      self.config['xidx'] += 10
 
     elif event.key == 'alt+up':
-      self.xidx += 100
+      self.config['xidx'] += 100
 
     elif event.key == 'down':
-      self.xidx -= 1
+      self.config['xidx'] -= 1
 
     elif event.key == 'ctrl+down':
-      self.xidx -= 10
+      self.config['xidx'] -= 10
 
     elif event.key == 'alt+down':
-      self.xidx -= 100
+      self.config['xidx'] -= 100
+
+    elif event.key == 'h':
+      self.config['highlight'] = not self.config['highlight']
 
     elif event.key == 'c':
-      self.highlight = not self.highlight
-
-    elif event.key == 'r':
-      # roll order of data arrays 
+      # cycle data arrays 
       self.data_sets = _roll(self.data_sets)
       self.data_set_names = _roll(self.data_set_names)
       self.sigma_sets = _roll(self.sigma_sets)
+      
+    elif event.key == 'r':
+      # refresh  
+      hard_update = True
+      pass
+      
+    elif event.key == 'enter':
+      hard_update = True
+      print('temporarily disabling figure interactivity to allow for command line configuration\n')
+      pyqtRemoveInputHook()
+      while True:
+        try:
+          key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
+          val = self.config[key]
+          break
+        except KeyError:  
+          if key == 'exit':
+            pyqtRestoreInputHook()
+            print('\nfigure interactivity has been restored\n')
+            return
+          
+          if key != 'help':
+            print('\n"%s" is not a configurable parameter' % key)
 
+          print('\nselect from one of the following\n')
+          for k in self.config.keys():
+            print('    %s' % k)
+          print('')
+
+      print('\ncurrent value is %s\n' % repr(val))
+      try:
+        new_val = input('new value >>> ')
+      except Exception as err:
+        print('\nthe following error was raised when evaluating the above expression:\n    %s' % repr(err))
+        new_val = val
+        
+      self.config[key] = new_val
+      pyqtRestoreInputHook()
+      print('\nfigure interactivity has been restored\n')
+      
     else:
       # do nothing
       return
 
-    self._draw()    
+    self.config['tidx'] = self.config['tidx']%self.data_sets[0].shape[0]
+    self.config['xidx'] = self.config['xidx']%self.data_sets[0].shape[1]
     
+    if hard_update:
+      self._hard_update()    
+    else:  
+      self._update()    
+    
+
 def network_viewer(t,x,u=None,v=None,z=None,
                    su=None,sv=None,sz=None,
                    **kwargs):
@@ -698,7 +868,7 @@ def network_viewer(t,x,u=None,v=None,z=None,
   if ((len(u) != Ns) | (len(v) != Ns) |
       (len(z) != Ns) | (len(su) != Ns) |
       (len(sv) != Ns) | (len(sz) != Ns)):
-    raise ValueError('specified values of u, v, z, su, sv, or sz must have the same length')
+    raise ValueError('provided values of u, v, z, su, sv, or sz must have the same length')
       
   data_sets = []
   sigma_sets = []
@@ -710,17 +880,3 @@ def network_viewer(t,x,u=None,v=None,z=None,
   iv.connect()
   plt.show()
     
-
-if __name__ == '__main__':
-  Nt = 10
-  Nx = 50
-  t = 2010 + np.linspace(0.0,1.0,Nt)
-  x = rbf.halton.halton(Nx,2)
-  data = (np.cos(2*np.pi*t[:,None,None]) *
-          np.sin(2*np.pi*x[:,0])[None,:,None] *
-          np.cos(2*np.pi*x[:,1])[None,:,None])
-  data = data.repeat(3,axis=2)
-  data[:,:,[0,1]] = 0.0
-
-  network_viewer(t,x,z=[data[:,:,2],data[:,:,0]],vmin=-1,vmax=1)
-  quit()

@@ -150,4 +150,9 @@ class Quiver(_Quiver):
       sv = sigma[1]
       rho = sigma[2]
       self._update_ellipsoids(su,sv,rho)
+      
+  def remove(self):  
+    # remove the quiver and ellipsoid collection
+    _Quiver.remove(self)    
+    self.ellipsoids.remove()
 
