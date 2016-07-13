@@ -79,10 +79,10 @@ Controls
         forward 10 and 100 respectively)
 
     Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10
-      and 100 respectively)
+        and 100 respectively)
           
     Down : move back 1 station (Ctrl-Right and Alt-Right move forward 
-      10 and 100 respectively)
+        10 and 100 respectively)
           
     R : redraw figures
         

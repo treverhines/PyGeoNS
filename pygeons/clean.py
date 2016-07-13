@@ -502,6 +502,13 @@ Controls
         right by desired time interval. Release *j* to remove the 
         jump.
         
+    A : automatically detect and remove outliers for the entire 
+        network
+    
+    C : remove common mode errors for the entire network
+    
+    Z : zero displacements to a common time for all stations 
+        
 Notes
 -----
     Stations may also be selected by clicking on them 
@@ -513,21 +520,50 @@ Notes
 
 ---------------------------------------------------------------------     
   '''
-  def __init__(self,data,t,x,sigma=None,**kwargs):
+  def __init__(self,data,t,x,sigma=None,jumps=None,
+               time_scale=None,zero_idx=None,**kwargs):
+    if jumps is None:
+      jumps = []
+                     
     old_data = np.copy(data)
     if sigma is None:
       sigma = np.zeros(data.shape)
 
     old_sigma = np.copy(sigma)
-    
+
     data_sets = [data,old_data]
     sigma_sets = [sigma,old_sigma]
     InteractiveViewer.__init__(self,data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
-    
+
+    self.config['jumps'] = jumps
+    self.config['time_scale'] = time_scale
+    self.config['zero_idx'] = zero_idx
+
+
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_release_event',self._onkey)
     InteractiveViewer.connect(self)
         
+  def _remove_baseline(self):
+    time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
+    for i in range(3):
+      base,sigma = baseline(self.data_sets[0].data[:,:,i],
+                            self.t,self.x,
+                            sigma=self.sigma_sets[0].data[:,:,i],
+                            time_scale=self.config['time_scale'],
+                            zero_idx=self.config['zero_idx'],
+                            time_cuts=time_cuts,
+                            perts=20)
+      self.data_sets[0].data[:,:,i] -= base
+      self.sigma_sets[0].data[:,:,i] = np.sqrt(self.sigma_sets[0].data[:,:,i]**2 + sigma**2)
+
+
+    data_set,sigma_set = _make_masked_array(self.data_sets[0].data,
+                                            self.sigma_sets[0].data)
+    self.data_sets[0] = data_set
+    self.sigma_sets[0] = sigma_set
+  
+  
   def _remove_jump(self,jump_time,radius):
     xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t > jump_time) & (self.t <= (jump_time+radius)))
@@ -613,6 +649,10 @@ Notes
           
   def _onkey(self,event):
     if event.name == 'key_press_event':
+      if event.key == 'z':
+        self._remove_baseline()
+        self._update()   
+        
       if event.key == 'c':
         # disable C
         return
