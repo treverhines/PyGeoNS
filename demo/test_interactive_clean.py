@@ -5,8 +5,7 @@ import rbf.halton
 import rbf.basis
 import modest
 import gps.plot
-from pygeons.view import network_viewer
-from pygeons.clean import InteractiveCleaner
+from pygeons.clean import interactive_cleaner
 
 t = np.linspace(0,1,100) # form observation times
 x = np.random.normal(0.0,1.0,(20,2)) # form observation positions
@@ -45,10 +44,9 @@ data_set[50:,:,0] += 5.0
 data_set[50:,:,1] += 10.0
 data_set[50:,:,2] += 7.0
 
-ic = InteractiveCleaner(data_set,t,x,sigma=sigma_set,map_ax=ax,jumps=[t[50]])
-ic.connect()
-plt.show()
-print(ic.data_sets[0].shape)
+interactive_cleaner(t,x,
+                        data_set[:,:,0],data_set[:,:,1],data_set[:,:,2],
+                        sigma_set[:,:,0],sigma_set[:,:,1],sigma_set[:,:,2])
 #network_viewer(data_set,t,x,u=[u1,u2],v=[v1,v2],z=[z1,z2],su=[su,su],sv=[sv,sv],
 #               map_ax=ax) 
 #network_viewer(t,x,u=[u1],v=[v1],z=[z1],su=[su],sv=[sv],sz=[sz],

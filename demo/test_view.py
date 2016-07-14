@@ -5,7 +5,7 @@ import rbf.halton
 import rbf.basis
 import modest
 import gps.plot
-from pygeons.view import network_viewer
+from pygeons.view import interactive_viewer
 
 t = np.linspace(0,1,100) # form observation times
 x = np.random.normal(0.0,1.0,(20,2)) # form observation positions
@@ -30,8 +30,8 @@ su = 1.0 + 0*u1
 sv = 1.0 + 0*u1
 sz = 1.0 + 0*u1
 
-network_viewer(t,x,u=[u1,u2],v=[v1,v2],z=[z1,z2],su=[su,su],sv=[sv,sv],
-               map_ax=ax) 
+interactive_viewer(t,x,u=[u1,u2],v=[v1,v2],z=[z1,z2],su=[su,su],sv=[sv,sv],
+                   map_ax=ax) 
 #network_viewer(t,x,u=[u1],v=[v1],z=[z1],su=[su],sv=[sv],sz=[sz],
 #               map_ax=ax) 
 #network_viewer(t,pos,u=[u1,u2],v=[v1,v2],z=[z1,z2],map_ax=ax,quiver_scale=0.00001) 

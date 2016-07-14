@@ -23,9 +23,9 @@ def _roll(lst):
   return out
 
 def _grid_interp_data(u,pnts,x,y):
-  if np.ma.isMaskedArray(u):
-    pnts = pnts[~u.mask]
-    u = u[~u.mask] 
+  # u must be a masked array
+  pnts = pnts[~u.mask]
+  u = u[~u.mask] 
 
   u = np.asarray(u)
   pnts = np.asarray(pnts)
@@ -105,8 +105,9 @@ Notes
 
 ---------------------------------------------------------------------
   '''
-  def __init__(self,data_sets,t,x,
-               sigma_sets=None,
+  def __init__(self,t,x,
+               u=None,v=None,z=None,
+               su=None,sv=None,sz=None, 
                quiver_key_label=None,
                quiver_key_length=1.0,
                quiver_scale=10.0,
@@ -200,6 +201,57 @@ Notes
         color bar label  
       
     '''
+    # time and space arrays
+    self.t = np.asarray(t)
+    self.x = np.asarray(x)
+    Nt = self.t.shape[0]
+    Nx = self.x.shape[0]
+    
+    # find out how many data sets were provided
+    if u is not None:
+      S = len(u)
+    elif v is not None:
+      S = len(v)       
+    elif z is not None:
+      S = len(z)       
+    else:
+      raise ValueError('must provide either u, v, or z')  
+    
+    if u is None:
+      u = [np.zeros((Nt,Nx)) for i in range(S)]
+    if v is None:
+      v = [np.zeros((Nt,Nx)) for i in range(S)]
+    if z is None:
+      z = [np.zeros((Nt,Nx)) for i in range(S)]
+    if su is None:
+      su = [np.zeros((Nt,Nx)) for i in range(S)]
+    if sv is None:
+      sv = [np.zeros((Nt,Nx)) for i in range(S)]
+    if sz is None:
+      sz = [np.zeros((Nt,Nx)) for i in range(S)]
+  
+    if ((len(u)  != S) | (len(v)  != S) |
+        (len(z)  != S) | (len(su) != S) |
+        (len(sv) != S) | (len(sz) != S)):
+      raise ValueError('provided values of u, v, z, su, sv, and sz must have the same length')
+
+    # merge u,v,z and su,sv,sz into data_sets and sigma_sets for 
+    # compactness
+    self.data_sets = []
+    for i,j,k in zip(u,v,z):
+      i,j,k = np.asarray(i),np.asarray(j),np.asarray(k)
+      tpl = (i[:,:,None],j[:,:,None],k[:,:,None])
+      self.data_sets += [np.concatenate(tpl,axis=2)]
+
+    self.sigma_sets = []
+    for i,j,k in zip(su,sv,sz):
+      i,j,k = np.asarray(i),np.asarray(j),np.asarray(k)
+      tpl = (i[:,:,None],j[:,:,None],k[:,:,None])
+      self.sigma_sets += [np.concatenate(tpl,axis=2)]
+    
+    # convert data and uncertainty to masked arrays
+    self.update_data()
+    
     # map view axis and figure
     if map_ax is None:
       map_fig,map_ax = plt.subplots()
@@ -216,19 +268,6 @@ Notes
       
     # colorbar axis
     self.cax = None
-    
-    # time and space arrays
-    self.t = t
-    self.x = x
-
-    # use uncertainties of zero if none are given
-    if sigma_sets is None:
-      sigma_sets = [np.zeros(d.shape) for d in data_sets]
-
-    # convert data and uncertainty to masked arrays
-    self.data_sets = data_sets
-    self.sigma_sets = sigma_sets
-    self.update_data_sigma_mask()
       
     # station names used for the time series plots
     if station_names is None:
@@ -277,40 +316,53 @@ Notes
     disable_default_key_bindings()
     print(self.__doc__)
 
-  def update_data_sigma_mask(self):
+  def _set_common_infs(self):
     ''' 
-    Makes sure that self.data_sets and self.sigma_sets contain masked 
-    arrays. If an entry in sigma_sets is np.inf then it receives a 
-    mask for all components at that time and station
-
-    All masked data get set to zero in addition to being masked
-
-    All masked uncertainties get set to np.inf in addition to being masked
+    if one component in sigma_sets is inf then set the other 
+    components to inf. For example, if an easting component is inf 
+    then set the northing and vertical component to inf. Set the 
+    corresponding values in data_sets to zero
     '''
     new_data_sets = []
     new_sigma_sets = []
     for d,s in zip(self.data_sets,self.sigma_sets):      
-      if np.ma.isMA(d):
-        d = d.data
-
-      if np.ma.isMA(s):
-        s = s.data
-  
       d = np.asarray(d)  
       s = np.asarray(s)  
       # find if sigma is inf for any component
-      mask = np.any(np.isinf(s),axis=2)
-      # extend the shape back to the size of d and s
-      mask = mask[:,:,None].repeat(3,axis=2)
-      d[mask] = 0.0
-      s[mask] = np.inf
-      d = np.ma.masked_array(d,mask=mask)
-      s = np.ma.masked_array(s,mask=mask)
-      new_data_sets += [d]
-      new_sigma_sets += [s]
-  
-    self.data_sets = new_data_sets  
-    self.sigma_sets = new_sigma_sets  
+      anyinfs = np.any(np.isinf(s),axis=2)
+      anyinfs = anyinfs[:,:,None].repeat(3,axis=2)
+      d[anyinfs] = 0.0
+      s[anyinfs] = np.inf
+      new_data_sets += [d]       
+      new_sigma_sets += [s]       
+    
+    self.data_sets = new_data_sets
+    self.sigma_sets = new_sigma_sets
+
+  def _set_masked_arrays(self):
+    ''' 
+    make corresponding masked arrays for sigma_sets and data_sets. 
+    These arrays should only be used for plotting purposes, since the 
+    plotting function have special functionality for masked arrays
+    '''
+    masked_data_sets = []
+    masked_sigma_sets = []
+    for d,s in zip(self.data_sets,self.sigma_sets):      
+      mask = np.isinf(s)
+      masked_data_sets += [np.ma.masked_array(d,mask=mask)]       
+      masked_sigma_sets += [np.ma.masked_array(s,mask=mask)]
+      
+    self._masked_data_sets = masked_data_sets  
+    self._masked_sigma_sets = masked_sigma_sets  
+    
+  def update_data(self):
+    ''' 
+    calls _set_common_infs followed by _set_masked_arrays. This should 
+    be called after any modification to self.data_sets or 
+    self.sigma_sets
+    '''
+    self._set_common_infs()
+    self._set_masked_arrays()
   
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_press_event',self._onkey)
@@ -423,7 +475,7 @@ Notes
     # call after _init_map_ax    
     self.x_itp = [np.linspace(self.config['map_xlim'][0],self.config['map_xlim'][1],100),
                   np.linspace(self.config['map_ylim'][0],self.config['map_ylim'][1],100)]
-    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
+    data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
     if self.config['image_vmin'] is None:
       # if vmin and vmax are None then the color bounds will be 
@@ -460,7 +512,7 @@ Notes
     #   tidx
     #   image_vmin
     #   image_vmax  
-    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
+    data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
                                  self.x,
                                  self.x_itp[0],
                                  self.x_itp[1])
@@ -494,7 +546,7 @@ Notes
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
     # use scatter points to show z for second data set 
-    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
+    colors = sm.to_rgba(self._masked_data_sets[1][self.config['tidx'],:,2])
     self.scatter = self.map_ax.scatter(
                      self.x[:,0],self.x[:,1],
                      c=colors,
@@ -513,7 +565,7 @@ Notes
       return
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
-    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
+    colors = sm.to_rgba(self._masked_data_sets[1][self.config['tidx'],:,2])
     self.scatter.set_facecolors(colors)
 
   def _init_marker(self):
@@ -534,13 +586,13 @@ Notes
     for si in range(len(self.data_sets)):
       self.quiver += [self.map_ax.quiver(
                         self.x[:,0],self.x[:,1],
-                        self.data_sets[si][self.config['tidx'],:,0],
-                        self.data_sets[si][self.config['tidx'],:,1],
+                        self._masked_data_sets[si][self.config['tidx'],:,0],
+                        self._masked_data_sets[si][self.config['tidx'],:,1],
                         scale=self.config['quiver_scale'],  
                         width=self.config['quiver_width'],
-                        sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
-                               self.sigma_sets[si][self.config['tidx'],:,1],
-                               0.0*self.sigma_sets[si][self.config['tidx'],:,0]),
+                        sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
+                               self._masked_sigma_sets[si][self.config['tidx'],:,1],
+                               0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]),
                         color=COLOR_CYCLE[si],
                         ellipse_kwargs={'edgecolors':'k','zorder':1+si},
                         zorder=2+si)]
@@ -561,11 +613,11 @@ Notes
     #   tidx
     for si in range(len(self.data_sets)):
       self.quiver[si].set_UVC(
-                        self.data_sets[si][self.config['tidx'],:,0],
-                        self.data_sets[si][self.config['tidx'],:,1],
-                        sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
-                               self.sigma_sets[si][self.config['tidx'],:,1],
-                               0.0*self.sigma_sets[si][self.config['tidx'],:,0]))
+                        self._masked_data_sets[si][self.config['tidx'],:,0],
+                        self._masked_data_sets[si][self.config['tidx'],:,1],
+                        sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
+                               self._masked_sigma_sets[si][self.config['tidx'],:,1],
+                               0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]))
 
   def _init_pickers(self):
     # pickable artists
@@ -580,33 +632,33 @@ Notes
     for si in range(len(self.data_sets)):
       self.L1 += self.ts_ax[0].plot(
                    self.t,
-                   self.data_sets[si][:,self.config['xidx'],0],
+                   self._masked_data_sets[si][:,self.config['xidx'],0],
                    color=COLOR_CYCLE[si],
                    label=self.data_set_names[si])
       self.L2 += self.ts_ax[1].plot(
                    self.t,
-                   self.data_sets[si][:,self.config['xidx'],1],
+                   self._masked_data_sets[si][:,self.config['xidx'],1],
                    color=COLOR_CYCLE[si],
                    label=self.data_set_names[si])
       self.L3 += self.ts_ax[2].plot(
                    self.t,
-                   self.data_sets[si][:,self.config['xidx'],2],
+                   self._masked_data_sets[si][:,self.config['xidx'],2],
                    color=COLOR_CYCLE[si],
                    label=self.data_set_names[si])
     
   def _update_lines(self):
     # updates for:
     #   xidx
-    for si in range(len(self.data_sets)):
+    for si in range(len(self._masked_data_sets)):
       self.L1[si].set_data(self.t,
-                           self.data_sets[si][:,self.config['xidx'],0])
+                           self._masked_data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
       self.L1[si].set_label(self.data_set_names[si])                     
       self.L2[si].set_data(self.t,
-                           self.data_sets[si][:,self.config['xidx'],1])
+                           self._masked_data_sets[si][:,self.config['xidx'],1])
       self.L2[si].set_label(self.data_set_names[si])                     
       self.L3[si].set_data(self.t,
-                           self.data_sets[si][:,self.config['xidx'],2])
+                           self._masked_data_sets[si][:,self.config['xidx'],2])
       self.L3[si].set_label(self.data_set_names[si])                     
   
   def _init_fill(self):
@@ -614,26 +666,26 @@ Notes
     for si in range(len(self.data_sets)):
       self.F1 += [self.ts_ax[0].fill_between(
                     self.t,
-                    self.data_sets[si][:,self.config['xidx'],0] -
-                    self.sigma_sets[si][:,self.config['xidx'],0],
-                    self.data_sets[si][:,self.config['xidx'],0] +
-                    self.sigma_sets[si][:,self.config['xidx'],0],
+                    self._masked_data_sets[si][:,self.config['xidx'],0] -
+                    self._masked_sigma_sets[si][:,self.config['xidx'],0],
+                    self._masked_data_sets[si][:,self.config['xidx'],0] +
+                    self._masked_sigma_sets[si][:,self.config['xidx'],0],
                     edgecolor='none',
                     color=COLOR_CYCLE[si],alpha=0.5)]
       self.F2 += [self.ts_ax[1].fill_between(
                     self.t,
-                    self.data_sets[si][:,self.config['xidx'],1] -
-                    self.sigma_sets[si][:,self.config['xidx'],1],
-                    self.data_sets[si][:,self.config['xidx'],1] +
-                    self.sigma_sets[si][:,self.config['xidx'],1],
+                    self._masked_data_sets[si][:,self.config['xidx'],1] -
+                    self._masked_sigma_sets[si][:,self.config['xidx'],1],
+                    self._masked_data_sets[si][:,self.config['xidx'],1] +
+                    self._masked_sigma_sets[si][:,self.config['xidx'],1],
                     edgecolor='none',
                     color=COLOR_CYCLE[si],alpha=0.5)]
       self.F3 += [self.ts_ax[2].fill_between(
                     self.t,
-                    self.data_sets[si][:,self.config['xidx'],2] -
-                    self.sigma_sets[si][:,self.config['xidx'],2],
-                    self.data_sets[si][:,self.config['xidx'],2] +
-                    self.sigma_sets[si][:,self.config['xidx'],2],
+                    self._masked_data_sets[si][:,self.config['xidx'],2] -
+                    self._masked_sigma_sets[si][:,self.config['xidx'],2],
+                    self._masked_data_sets[si][:,self.config['xidx'],2] +
+                    self._masked_sigma_sets[si][:,self.config['xidx'],2],
                     edgecolor='none',
                     color=COLOR_CYCLE[si],alpha=0.5)]
   
@@ -813,6 +865,7 @@ Notes
       self.data_sets = _roll(self.data_sets)
       self.data_set_names = _roll(self.data_set_names)
       self.sigma_sets = _roll(self.sigma_sets)
+      self.update_data()
       self.update()
       
     elif event.key == 'r':
@@ -828,118 +881,11 @@ Notes
       return
 
 
-def network_viewer(t,x,u=None,v=None,z=None,
-                   su=None,sv=None,sz=None,
-                   **kwargs):
+def interactive_viewer(*args,**kwargs):
   ''' 
-  makes an interactive plot of a three-component vector field which is 
-  a function of time and two-dimensional space.  Produces two figures, one
-  is a map view of the vector field at some time, the other is a time series 
-  of the vector components for some position.   
-  
-  Parameters
-  ----------
-    t : (Nt,) array
-
-    x : (Nx,2) array
-    
-    u,v,z : (Ns,) list of (Nt,Nx) arrays
-      vector components all value must be finite
-    
-    su,sv,sz : (Ns,) list of (Nt,Nx) array
-      uncertainties in u,v, and z. data with uncertainties of np.inf 
-      will be treated as masked data. using zero effectively hides any 
-      error ellipses or uncertainty intervals
-    
-    **kwargs : arguments passed to InteractiveViewer  
-  
-  Usage
-  -----
-    Interaction is done entirely with the map view figure
-
-      right : move forward 1 time step
-      ctrl-right : move forward 10 time step
-      alt-right : move forward 100 time step
-
-      right : move back 1 time step
-      ctrl-right : move back 10 time step
-      alt-right : move back 100 time step
-
-      up : move up 1 station
-      ctrl-up : move up 10 station
-      alt-up : move up 100 station
-
-      down : move down 1 station
-      ctrl-down : move down 10 station
-      alt-down : move down 100 station
-      
-      c : hide/reveal station marker
-      
-      r : rotate data_sets      
-  
-  Example
-  -------
-    >>> t = np.linspace(0,1,100) # form observation times
-    >>> x = np.random.random((20,2)) # form observation positions
-    >>> u,v,z = np.cumsum(np.random.normal(0.0,0.1,(3,100,20)),axis=1)
-    >>> network_viewer(t,x,u=[u],v=[v],z=[z])    
+  wrapper to initiate and show an InteractiveViewer
   '''
-  x = np.asarray(x)
-  t = np.asarray(t)
-  Nx = x.shape[0]
-  Nt = t.shape[0]
-  # find the number of data sets
-  if u is not None:
-    Ns = len(u)
-  elif v is not None:
-    Ns = len(v)
-  elif z is not None:
-    Ns = len(z)
-  else:
-    raise ValueError('one of u,v, or z must be specified')  
-      
-  if u is None:
-    u = Ns*[np.zeros((Nt,Nx))]
-  if v is None:
-    v = Ns*[np.zeros((Nt,Nx))]
-  if z is None:
-    z = Ns*[np.zeros((Nt,Nx))]
-  if su is None:
-    su = Ns*[np.zeros((Nt,Nx))]
-  if sv is None:
-    sv = Ns*[np.zeros((Nt,Nx))]
-  if sz is None:
-    sz = Ns*[np.zeros((Nt,Nx))]
-    
-  u = [np.asarray(i) for i in u]
-  v = [np.asarray(i) for i in v]
-  z = [np.asarray(i) for i in z]
-  su = [np.asarray(i) for i in su]
-  sv = [np.asarray(i) for i in sv]
-  sz = [np.asarray(i) for i in sz]
-  
-  if ((not all([np.isfinite(i).all() for i in u])) |
-      (not all([np.isfinite(i).all() for i in v])) |
-      (not all([np.isfinite(i).all() for i in z]))):
-    raise ValueError('u, v, and z must all have finite values')
-     
-  if (any([np.isnan(i).any() for i in su]) |
-      any([np.isnan(i).any() for i in sv]) |
-      any([np.isnan(i).any() for i in sz])):
-    raise ValueError('su, sv, and sz cannot be nan. Mask data by setting uncertainty to inf')
-  
-  if ((len(u) != Ns) | (len(v) != Ns) |
-      (len(z) != Ns) | (len(su) != Ns) |
-      (len(sv) != Ns) | (len(sz) != Ns)):
-    raise ValueError('provided values of u, v, z, su, sv, or sz must have the same length')
-      
-  data_sets = []
-  sigma_sets = []
-  for i in range(Ns):
-    data_sets += [np.concatenate((u[i][:,:,None],v[i][:,:,None],z[i][:,:,None]),axis=2)]
-    sigma_sets += [np.concatenate((su[i][:,:,None],sv[i][:,:,None],sz[i][:,:,None]),axis=2)]
-  
-  iv = InteractiveViewer(data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
+  iv = InteractiveViewer(*args,**kwargs)
   iv.connect()
   plt.show()
     
