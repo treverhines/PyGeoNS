@@ -21,7 +21,10 @@ tc = pygeons.cuts.TimeCuts([1.6])
 ds = pygeons.diff.acc()
 ds['time']['cuts'] = tc
 sigma[t > 1.5] = np.inf
-us,perts = pygeons.smooth.network_smoother(u,t,x,sigma=sigma,time_scale=0.01,diff_specs=[ds])
+us,perts = pygeons.smooth.network_smoother(t,x,
+                                           u=u[:,:,0],v=u[:,:,1],z=u[:,:,2],
+                                           su=sigma[:,:,0],sv=sigma[:,:,1],sz=sigma[:,:,2]) 
+                                           sigma=sigma,time_scale=0.01,diff_specs=[ds])
 
 plt.plot(t,u[:,0],'ko')
 plt.plot(t,us[:,0],'b-')

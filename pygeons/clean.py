@@ -382,13 +382,6 @@ Controls
         right by desired time interval. Release *j* to remove the 
         jump.
         
-    A : automatically detect and remove outliers for the entire 
-        network
-    
-    C : remove common mode errors for the entire network
-    
-    Z : zero displacements to a common time for all stations 
-        
     K : keep new changes
     
     U : undo new changes
@@ -406,29 +399,27 @@ Notes
 
 ---------------------------------------------------------------------     
   '''
-  def __init__(self,data,t,x,sigma=None,jumps=None,
-               time_scale=None,zero_time=None,tol=4.0,
+  def __init__(self,t,x,
+               u=None,v=None,z=None,
+               su=None,sv=None,sz=None,
                **kwargs):
-    if jumps is None:
-      jumps = []
-                     
-    data = np.copy(data)
-    new_data = np.copy(data)
-
-    if sigma is None:
-      sigma = np.ones(data.shape)
-
-    sigma = np.copy(sigma)
-    new_sigma = np.copy(sigma)
-
-    data_sets = [new_data,data]
-    sigma_sets = [new_sigma,sigma]
-    InteractiveViewer.__init__(self,data_sets,t,x,sigma_sets=sigma_sets,**kwargs)
-
-    self.config['jumps'] = jumps
-    self.config['time_scale'] = time_scale
-    self.config['outlier_tol'] = tol
-    self.config['zero_time'] = zero_time
+    if u is not None:
+      u = [u,np.copy(u)]                
+    if v is not None:
+      v = [v,np.copy(v)]                
+    if z is not None:
+      z = [z,np.copy(z)]                
+    if su is not None:
+      su = [su,np.copy(su)]                
+    if sv is not None:
+      sv = [sv,np.copy(sv)]                
+    if sz is not None:
+      sz = [sz,np.copy(sz)]                
+      
+    InteractiveViewer.__init__(self,t,x,
+                               u=u,v=v,z=z,
+                               su=su,sv=sv,sz=sz,
+                               **kwargs)
 
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_release_event',self._onkey)
@@ -438,13 +429,13 @@ Notes
     print('keeping changes\n')
     self.data_sets[1] = np.copy(self.data_sets[0])
     self.sigma_sets[1] = np.copy(self.sigma_sets[0])
-    self.update_data_sigma_mask()
+    self.update_data()
 
   def undo_changes(self):
     print('undoing changes\n')
     self.data_sets[0] = np.copy(self.data_sets[1])
     self.sigma_sets[0] = np.copy(self.sigma_sets[1])
-    self.update_data_sigma_mask()
+    self.update_data()
 
   @without_interactivity
   def write_to_file(self):
@@ -455,8 +446,8 @@ Notes
     if file_name == 'exit':
       return
     
-    data = self.data_sets[0].data
-    sigma = self.sigma_sets[0].data
+    data = self.data_sets[0]
+    sigma = self.sigma_sets[0]
 
     f = h5py.File(file_name,'w')     
     f['time'] = self.t 
@@ -468,78 +459,13 @@ Notes
     f['easting_sigma'] = np.nan_to_num(sigma[:,:,0])
     f['northing_sigma'] = np.nan_to_num(sigma[:,:,1])
     f['vertical_sigma'] = np.nan_to_num(sigma[:,:,2])
-    f['mask'] = self.data_sets[0].mask[:,:,0]
+    f['mask'] = np.any(np.isinf(sigma),axis=2)
     f.close()
     return
   
-  def remove_baseline(self):
-    print('zeroing all time series ...')
-    data = self.data_sets[0].data
-    sigma = self.sigma_sets[0].data
-    time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
-    for i in range(3):
-      base,base_sigma = baseline(
-                          data[:,:,i],
-                          self.t,self.x,
-                          sigma=sigma[:,:,i],
-                          time_scale=self.config['time_scale'],
-                          time_cuts=time_cuts,
-                          zero_time=self.config['zero_time'],
-                          perts=20)
-                     
-      self.data_sets[0].data[:,:,i] = data[:,:,i] - base
-      self.sigma_sets[0].data[:,:,i] = np.sqrt(sigma[:,:,i]**2 + base_sigma**2)
-
-    # turn the new data sets into masked arrays
-    self.update_data_sigma_mask()
-    print('done\n')
-  
-  def auto_remove_outliers(self):  
-    print('automatically detecting and removing outliers ...')
-    data = self.data_sets[0].data
-    sigma = self.sigma_sets[0].data
-    time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
-    xidx = [self.config['xidx']]
-    for i in range(3):
-      ridx,cidx = outliers(
-                    data[:,xidx,i],
-                    self.t,self.x[xidx],
-                    sigma=sigma[:,xidx,i],
-                    time_scale=self.config['time_scale'],
-                    time_cuts=time_cuts,
-                    tol=self.config['outlier_tol'])
-                           
-      self.data_sets[0].data[ridx,xidx,i] = 0.0
-      self.sigma_sets[0].data[ridx,xidx,i] = np.inf
-
-    # turn the new data sets into masked arrays
-    self.update_data_sigma_mask()
-    print('done\n')
-
-  def remove_common_mode(self):
-    print('removing common mode error ...')
-    data = self.data_sets[0].data
-    sigma = self.sigma_sets[0].data
-    time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
-    
-    for i in range(3):
-      comm,comm_sigma = common_mode(
-                          data[:,:,i],
-                          self.t,self.x,
-                          sigma=sigma[:,:,i],
-                          time_cuts=time_cuts,
-                          time_scale=self.config['time_scale'])
-
-      self.data_sets[0].data[:,:,i] = data[:,:,i] - comm
-      self.sigma_sets[0].data[:,:,i] = np.sqrt(sigma[:,:,i]**2 + comm_sigma**2)
-
-    # turn the new data sets into masked arrays
-    self.update_data_sigma_mask()
-    print('done\n')
-
   def remove_jump(self,jump_time,radius):
-    data = self.data_sets[0].data
-    sigma = self.sigma_sets[0].data
+    data = self.data_sets[0]
+    sigma = self.sigma_sets[0]
 
     xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t > jump_time) & 
@@ -568,22 +494,22 @@ Notes
     new_var = sigma[all_tidx_right,xidx,:]**2 + jump_sigma**2
     new_sigma = np.sqrt(new_var)
     
-    self.data_sets[0].data[all_tidx_right,xidx,:] = new_pos
-    self.sigma_sets[0].data[all_tidx_right,xidx,:] = new_sigma
+    self.data_sets[0][all_tidx_right,xidx,:] = new_pos
+    self.sigma_sets[0][all_tidx_right,xidx,:] = new_sigma
     
     # turn the new data sets into masked arrays
-    self.update_data_sigma_mask()
+    self.update_data()
       
   def remove_outliers(self,start_time,end_time):
     # this function masks data for the current station which ranges 
     # from start_time to end_time
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
-    self.data_sets[0].data[tidx,xidx] = 0.0
-    self.sigma_sets[0].data[tidx,xidx] = np.inf
+    self.data_sets[0][tidx,xidx] = 0.0
+    self.sigma_sets[0][tidx,xidx] = np.inf
 
     # turn the new data sets into masked arrays
-    self.update_data_sigma_mask()
+    self.update_data()
 
   def _on_d_press(self,event):
     self._d_pressed_in_ax = False
@@ -625,19 +551,11 @@ Notes
           
   def _onkey(self,event):
     if event.name == 'key_press_event':
+      # disable c
       if event.key == 'c':
-        self.remove_common_mode()
-        self.update()   
-
-      elif event.key == 'z':
-        self.remove_baseline()
-        self.update()   
-
-      elif event.key == 'a':
-        self.auto_remove_outliers()
-        self.update()   
-        
-      elif event.key == 'k':
+        return
+              
+      if event.key == 'k':
         self.keep_changes()
         self.update()   
 
@@ -666,35 +584,11 @@ Notes
         self._on_j_release(event)
       
   
-def network_cleaner(t,x,u=None,v=None,z=None,
-                    su=None,sv=None,sz=None,
-                    **kwargs):
+def interactive_cleaner(*args,**kwargs):
   ''' 
   interactively clean GPS data
   '''
-  x = np.asarray(x)
-  t = np.asarray(t)
-  Nx = x.shape[0]
-  Nt = t.shape[0]
-  if u is None:
-    u = np.zeros((Nx,Nt))
-  if v is None:
-    v = np.zeros((Nx,Nt))
-  if z is None:
-    z = np.zeros((Nx,Nt))
-
-  if su is None:
-    su = np.ones((Nx,Nt))
-  if sv is None:
-    sv = np.ones((Nx,Nt))
-  if sz is None:
-    sz = np.ones((Nx,Nt))
-
-  data = np.concatenate((u[:,:,None],v[:,:,None],z[:,:,None]),axis=2)
-  sigma = np.concatenate((su[:,:,None],sv[:,:,None],sz[:,:,None]),axis=2)
-  print(data.shape)
-  print(sigma.shape)
-  ic = InteractiveCleaner(data,t,x,sigma=sigma,**kwargs)
+  ic = InteractiveCleaner(*args,**kwargs)
   ic.connect()
   plt.show()
                                       
