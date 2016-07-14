@@ -21,19 +21,6 @@ def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
   out = [lst[-1]] + lst[:-1]
   return out
-  
-def _make_masked_array(data_set,sigma_set):
-  ''' 
-  returns masked array for data_set and sigma_set. The mask is true if 
-  the uncertainty for any component (su,sv,sz) is np.inf.
-  '''
-  data_set = np.asarray(data_set)  
-  sigma_set = np.asarray(sigma_set)  
-  mask = np.any(np.isinf(sigma_set),axis=2)[:,None].repeat(3)
-  data_set = np.ma.masked_array(data_set,mask=mask)
-  sigma_set = np.ma.masked_array(sigma_set,mask=mask)
-  return data_set,sigma_set
-
 
 def _grid_interp_data(u,pnts,x,y):
   if np.ma.isMaskedArray(u):
@@ -54,12 +41,29 @@ def _grid_interp_data(u,pnts,x,y):
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
   
-def _disable_default_key_bindings():
+def disable_default_key_bindings():
+  ''' 
+  removes the default matplotlib key bindings
+  '''
   for k in plt.rcParams.keys():
     if 'keymap' in k:
       plt.rcParams[k] = []
 
+def without_interactivity(fin):
+  ''' 
+  wrapper which turns figure interactivity off during the function 
+  call
+  '''
+  def fout(*args,**kwargs):
+    print('temporarily disabling figure interactivity\n')
+    pyqtRemoveInputHook()
+    out = fin(*args,**kwargs)
+    pyqtRestoreInputHook()
+    print('figure interactivity has been restored\n')
+    return out
 
+  return fout
+    
 class InteractiveViewer:
   ''' 
                --------------------------------
@@ -101,7 +105,6 @@ Notes
 
 ---------------------------------------------------------------------
   '''
-
   def __init__(self,data_sets,t,x,
                sigma_sets=None,
                quiver_key_label=None,
@@ -223,12 +226,9 @@ Notes
       sigma_sets = [np.zeros(d.shape) for d in data_sets]
 
     # convert data and uncertainty to masked arrays
-    self.data_sets = []
-    self.sigma_sets = []
-    for d,s in zip(data_sets,sigma_sets):      
-      dout,sout = _make_masked_array(d,s)
-      self.data_sets += [dout]
-      self.sigma_sets += [sout]
+    self.data_sets = data_sets
+    self.sigma_sets = sigma_sets
+    self.update_data_sigma_mask()
       
     # station names used for the time series plots
     if station_names is None:
@@ -240,7 +240,6 @@ Notes
 
     self.station_names = list(station_names)
     self.data_set_names = list(data_set_names)
-
 
     # position and length of the scale vector 
     if quiver_key_pos is None:
@@ -275,9 +274,44 @@ Notes
     self.config['map_ylim'] = map_ylim
     self.config['fontsize'] = fontsize
     self._init()
-    _disable_default_key_bindings()
+    disable_default_key_bindings()
     print(self.__doc__)
 
+  def update_data_sigma_mask(self):
+    ''' 
+    Makes sure that self.data_sets and self.sigma_sets contain masked 
+    arrays. If an entry in sigma_sets is np.inf then it receives a 
+    mask for all components at that time and station
+
+    All masked data get set to zero in addition to being masked
+
+    All masked uncertainties get set to np.inf in addition to being masked
+    '''
+    new_data_sets = []
+    new_sigma_sets = []
+    for d,s in zip(self.data_sets,self.sigma_sets):      
+      if np.ma.isMA(d):
+        d = d.data
+
+      if np.ma.isMA(s):
+        s = s.data
+  
+      d = np.asarray(d)  
+      s = np.asarray(s)  
+      # find if sigma is inf for any component
+      mask = np.any(np.isinf(s),axis=2)
+      # extend the shape back to the size of d and s
+      mask = mask[:,:,None].repeat(3,axis=2)
+      d[mask] = 0.0
+      s[mask] = np.inf
+      d = np.ma.masked_array(d,mask=mask)
+      s = np.ma.masked_array(s,mask=mask)
+      new_data_sets += [d]
+      new_sigma_sets += [s]
+  
+    self.data_sets = new_data_sets  
+    self.sigma_sets = new_sigma_sets  
+  
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_press_event',self._onkey)
     self.ts_fig.canvas.mpl_connect('pick_event',self._onpick)
@@ -626,7 +660,7 @@ Notes
     self.ts_fig.tight_layout()
     self.ts_fig.canvas.draw()
 
-  def _update(self):
+  def update(self):
     self._update_marker()
     self._update_map_ax()
     self._update_quiver()
@@ -639,9 +673,8 @@ Notes
     self.map_fig.canvas.draw()
 
 
-  def _hard_update(self):
+  def hard_update(self):
     # clears all axes and redraws everything
-    logger.debug('refreshing figures')
     [f.remove() for f in self.F1]
     [f.remove() for f in self.F2]
     [f.remove() for f in self.F3]
@@ -658,121 +691,142 @@ Notes
     self.cax.clear()
     self._init()
     
+  @without_interactivity
+  def command_line_configure(self):
+    while True:
+      try:
+        key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
+        print('')
+        val = self.config[key]
+        break
+      except KeyError:  
+        if key == 'exit':
+          return
+          
+        if key != 'help':
+          print('"%s" is not a configurable parameter\n' % key)
 
+        print('select from one of the following')
+        for k in self.config.keys():
+          print('    %s' % k)
+        print('')
+
+    print('current value is %s\n' % repr(val))
+    try:
+      new_val = restricted_input('new value >>> ')
+      print('')
+        
+    except Exception as err:
+      print('')
+      print('the following error was raised when evaluating the above expression:\n    %s\n' % repr(err))
+      new_val = val
+        
+    self.config[key] = new_val
+  
   def _onpick(self,event):
-    logger.debug('detected pick event')
     for i,v in enumerate(self.pickers):
       if event.artist == v:
         self.config['xidx'] = i
         break
 
-    self._update()    
-
+    self.update()    
 
   def _onkey(self,event):
-    logger.debug('detected key event')
-    hard_update = False
-
     if event.key == 'right':
       self.config['tidx'] += 1
+      Nt = self.data_sets[0].shape[0]
+      self.config['tidx'] = self.config['tidx']%Nt
+      self.update()
 
     elif event.key == 'ctrl+right':
       self.config['tidx'] += 10
+      Nt = self.data_sets[0].shape[0]
+      self.config['tidx'] = self.config['tidx']%Nt
+      self.update()
 
     elif event.key == 'alt+right':
       self.config['tidx'] += 100
+      Nt = self.data_sets[0].shape[0]
+      self.config['tidx'] = self.config['tidx']%Nt
+      self.update()
 
     elif event.key == 'left':
       self.config['tidx'] -= 1
+      Nt = self.data_sets[0].shape[0]
+      self.config['tidx'] = self.config['tidx']%Nt
+      self.update()
 
     elif event.key == 'ctrl+left':
       self.config['tidx'] -= 10
+      Nt = self.data_sets[0].shape[0]
+      self.config['tidx'] = self.config['tidx']%Nt
+      self.update()
 
     elif event.key == 'alt+left':
       self.config['tidx'] -= 100
+      Nt = self.data_sets[0].shape[0]
+      self.config['tidx'] = self.config['tidx']%Nt
+      self.update()
 
     elif event.key == 'up':
       self.config['xidx'] += 1
+      Nx = self.data_sets[0].shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
 
     elif event.key == 'ctrl+up':
       self.config['xidx'] += 10
+      Nx = self.data_sets[0].shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
 
     elif event.key == 'alt+up':
       self.config['xidx'] += 100
+      Nx = self.data_sets[0].shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
 
     elif event.key == 'down':
       self.config['xidx'] -= 1
+      Nx = self.data_sets[0].shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
 
     elif event.key == 'ctrl+down':
       self.config['xidx'] -= 10
+      Nx = self.data_sets[0].shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
 
     elif event.key == 'alt+down':
       self.config['xidx'] -= 100
+      Nx = self.data_sets[0].shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
 
     elif event.key == 'h':
       self.config['highlight'] = not self.config['highlight']
+      self.update()
 
     elif event.key == 'c':
       # cycle data arrays 
       self.data_sets = _roll(self.data_sets)
       self.data_set_names = _roll(self.data_set_names)
       self.sigma_sets = _roll(self.sigma_sets)
+      self.update()
       
     elif event.key == 'r':
       # refresh  
-      hard_update = True
-      pass
+      self.hard_update()
       
     elif event.key == 'enter':
-      hard_update = True
-      print('temporarily disabling figure interactivity to allow for command line configuration\n')
-      pyqtRemoveInputHook()
-      while True:
-        try:
-          key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
-          print('')
-          val = self.config[key]
-          break
-        except KeyError:  
-          if key == 'exit':
-            pyqtRestoreInputHook()
-            print('figure interactivity has been restored\n')
-            return
-          
-          if key != 'help':
-            print('"%s" is not a configurable parameter\n' % key)
-
-          print('select from one of the following')
-          for k in self.config.keys():
-            print('    %s' % k)
-          print('')
-
-      print('current value is %s\n' % repr(val))
-      try:
-        new_val = restricted_input('new value >>> ')
-        print('')
-        
-      except Exception as err:
-        print('')
-        print('the following error was raised when evaluating the above expression:\n    %s\n' % repr(err))
-        new_val = val
-        
-      self.config[key] = new_val
-      pyqtRestoreInputHook()
-      print('figure interactivity has been restored\n')
+      self.command_line_configure()
+      self.hard_update()
       
     else:
       # do nothing
       return
 
-    self.config['tidx'] = self.config['tidx']%self.data_sets[0].shape[0]
-    self.config['xidx'] = self.config['xidx']%self.data_sets[0].shape[1]
-    
-    if hard_update:
-      self._hard_update()    
-    else:  
-      self._update()    
-    
 
 def network_viewer(t,x,u=None,v=None,z=None,
                    su=None,sv=None,sz=None,

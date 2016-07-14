@@ -138,12 +138,6 @@ def network_smoother(u,t,x,
   
   else:
     sigma = np.asarray(sigma)
-    # replace any infinite uncertainties with 1e10. This does not 
-    # seem to introduce any numerical instability and seems to be 
-    # sufficient in all cases. Infs need to be replaced in order to 
-    # keep the LHS matrix positive definite
-    # sigma = np.array(sigma,copy=True)
-    # sigma[sigma==np.inf] = 1e10
     
   if sigma.shape != (Nt,Nx):
     raise TypeError('sigma must have shape (Nt,Nx)')
@@ -151,9 +145,7 @@ def network_smoother(u,t,x,
   u_flat = u.ravel()
   sigma_flat = sigma.ravel()
 
-  logger.info('building regularization matrix...')
   reg_matrices = [pygeons.diff.diff_matrix(t,x,d,procs=procs) for d in diff_specs]
-  logger.info('done')
 
   # estimate length scale and time scale if not given
   default_time_scale,default_length_scale = _estimate_scales(t,x)
@@ -180,11 +172,11 @@ def network_smoother(u,t,x,
   L = scipy.sparse.vstack(p*r for p,r in zip(penalties,reg_matrices))
   L.eliminate_zeros()
   
-  logger.info('solving for predicted displacements...')
+  logger.debug('solving for predicted displacements')
   u_pred = _solve(G,L,u_flat)
-  logger.info('done')
+  logger.debug('done')
 
-  logger.info('computing perturbed predicted displacements...')
+  logger.debug('computing perturbed predicted displacements')
   u_pert = np.zeros((perts,G.shape[0]))
   # perturbed displacements will be computed in parallel and so this 
   # needs to be turned into a mappable function
@@ -201,7 +193,7 @@ def network_smoother(u,t,x,
   u_pert = np.reshape(u_pert,(perts,(Nt*Nx)))
   u_pert += u_pred[None,:]
 
-  logger.info('done')
+  logger.debug('done')
 
   u_pred = u_pred.reshape((Nt,Nx))
   u_pert = u_pert.reshape((perts,Nt,Nx))
