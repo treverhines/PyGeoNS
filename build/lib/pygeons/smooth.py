@@ -11,7 +11,6 @@ import modest.mp
 import pygeons.diff
 logger = logging.getLogger(__name__)
 
-@modest.funtime
 def _solve(A,L,data):
   ''' 
   solves the sparse regularized least squares problem
@@ -38,7 +37,7 @@ def _solve(A,L,data):
   if np.any(np.isnan(soln)):
     # spsolve fills the solution vector with nans when the matrix is 
     # singular
-    raise ValueError('Singular matrix. This results from having too '
+    raise ValueError('Singular matrix. This may result from having too '
                      'many masked observations. Check for stations '
                      'or time periods where all observations are masked')
   return soln
@@ -67,8 +66,8 @@ def _average_shortest_distance(x):
 def _estimate_scales(t,x):
   ''' 
   returns a time and spatial scale which is 10x the average shortest 
-  distance between times. If the average distance cannot be computed 
-  due to a lack of points then 1.0 is returned
+  distance between observations. If the average distance cannot be 
+  computed due to a lack of points then 1.0 is returned
   '''
   dt = _average_shortest_distance(t[:,None])
   dl = _average_shortest_distance(x)
@@ -113,7 +112,6 @@ def _penalty(T,L,sigma,diff_specs):
   return out  
   
 
-@modest.funtime
 def network_smoother(u,t,x,
                      sigma=None,
                      diff_specs=None,

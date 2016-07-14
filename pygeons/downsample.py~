@@ -33,15 +33,19 @@ def weighted_mean(x,sigma,axis=None):
     
   '''
   # values less than this are considered zero
-  min_sigma = 1e-10
+  min_sigma = 1e-20
 
   x = np.asarray(x)
   sigma = np.asarray(sigma)
-  sigma[sigma <= min_sigma] = 1e-10
+  # replace any zeros or near zeros with min_sigma
+  sigma[sigma < min_sigma] = min_sigma
+
+  numer = np.sum(x/sigma**2,axis=axis)
+  denom = np.sum(1.0/sigma**2,axis=axis)
   with warnings.catch_warnings():
     warnings.simplefilter('ignore')
-    numer = np.sum(x/sigma**2,axis=axis)
-    denom = np.sum(1.0/sigma**2,axis=axis)
+    # out_value can be nan if the arrays have zero length along axis 
+    # or if sigma is inf. out_sigma will be inf in that case 
     out_value = numer/denom
     out_sigma = np.sqrt(1.0/denom)
   
@@ -147,7 +151,9 @@ class MeanInterpolant:
     out_value = np.zeros((xitp.shape[0],)+self.value_shape)
     out_sigma = np.zeros((xitp.shape[0],)+self.value_shape)
     for i,idx in enumerate(idx_arr):
-      out_value[i],out_sigma[i] = weighted_mean(self.value[idx],self.sigma[idx],axis=0)
+      out_value[i],out_sigma[i] = weighted_mean(self.value[idx],
+                                                self.sigma[idx],
+                                                axis=0)
     
     return out_value,out_sigma
 

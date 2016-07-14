@@ -101,7 +101,6 @@ Notes
 
 ---------------------------------------------------------------------
   '''
-
   def __init__(self,data_sets,t,x,
                sigma_sets=None,
                quiver_key_label=None,
