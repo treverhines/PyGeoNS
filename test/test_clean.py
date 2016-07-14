@@ -21,7 +21,8 @@ u += np.random.normal(0.0,2*S,(Nt,1))
 #u[5000,0] = 100
 sigma = S*np.ones((Nt,Nx))
 #sigma[t<=2.0,1] = np.inf
-un,sigman = pygeons.clean.network_cleaner(u,t,x,sigma=sigma,plot=False,zero_idx=0)
+un,sigman = pygeons.clean.common_mode(u,t,x,sigma=sigma,plot=True)
+#un,sigman = pygeons.clean.network_cleaner(
 #u_out,sigma_out = pygeons.smooth.network_smoother(u,t,x,sigma=sigma,perts=100)
 #ubl,sigmabl = pygeons.clean.baseline(u,t,x,sigma=sigma,perts=100,zero_idx=0)
 

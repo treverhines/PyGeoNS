@@ -13,7 +13,6 @@ import logging
 import warnings
 logger = logging.getLogger(__name__)
 
-
 def most(a,axis=None,cutoff=0.5):
   ''' 
   behaves like np.all but returns True if the percentage of Trues
@@ -31,7 +30,7 @@ def most(a,axis=None,cutoff=0.5):
 
 def outliers(u,t,x,sigma=None,
              time_scale=None,time_cuts=None,tol=3.0,
-             plot=True,**kwargs):
+             **kwargs):
   ''' 
   returns indices of time series outliers
   
@@ -59,13 +58,13 @@ def outliers(u,t,x,sigma=None,
     
     tol : float, optional
     
-    plot : bool, optional
-    
   Returns
   -------
-    row_idx : row indices of outliers 
+    row_idx : (K,) int array
+      row indices of outliers 
     
-    col_idx : column indices of outliers
+    col_idx : (L,) int array
+      column indices of outliers
 
   Note
   ----
@@ -93,7 +92,7 @@ def outliers(u,t,x,sigma=None,
   while True:
     ri,ci = _outliers(u,t,x,sigma,
                       time_scale,time_cuts,tol,
-                      plot,**kwargs)
+                      **kwargs)
     logger.info('removed %s outliers on iteration %s' % (ri.shape[0],itr))
     if ri.shape[0] == 0:
       break
@@ -109,7 +108,7 @@ def outliers(u,t,x,sigma=None,
 
 def _outliers(u,t,x,sigma,
               time_scale,time_cuts,tol,
-              plot,**kwargs):
+              **kwargs):
   ''' 
   single iteration of outliers 
   '''
@@ -151,40 +150,12 @@ def _outliers(u,t,x,sigma,
   idx_row,idx_col = np.nonzero((absres > tol*std) & 
                                (absres == np.max(absres,axis=0)))
 
-  if plot:
-    # plot each time series where an outlier as been identified
-    for r,c in zip(idx_row,idx_col):
-      fig,ax = plt.subplots(2,1,sharex=True)      
-      has_finite_sigma, = np.nonzero(~np.isinf(sigma[:,c]))
-      ax[0].plot(t[has_finite_sigma],
-                 u[has_finite_sigma,c],
-                 'k.')
-      ax[0].plot(t[has_finite_sigma],
-                 upred[has_finite_sigma,c],'b-')  
-      ax[0].plot(t[r],u[r,c],'ro')
-      ax[0].grid() 
-      ax[0].set_xlabel('time')
-      ax[0].set_ylabel('displacement')
-      ax[0].set_title('outliers detected for station %s' % c)
-      ax[0].legend(['observed','predicted','outliers'],frameon=False)
-
-      ax[1].fill_between(t,-tol*std[:,c],tol*std[:,c],color='b',alpha=0.2)  
-      ax[1].plot(t[has_finite_sigma],
-                 res[has_finite_sigma,c],'k.')  
-      ax[1].plot(t[r],res[r,c],'ro')
-      ax[1].plot(t,0*t,'b-')
-      ax[1].grid() 
-      ax[1].set_xlabel('time')
-      ax[1].set_ylabel('weighted residual')
-      fig.tight_layout()
-      plt.show()        
-      
   return idx_row,idx_col
 
 
 def common_mode(u,t,x,sigma=None,
                time_scale=None,time_cuts=None,
-               plot=True,**kwargs):  
+               **kwargs):  
   ''' 
   returns common mode time series. Common mode is a weighted mean 
   residual time series between all stations
@@ -229,27 +200,7 @@ def common_mode(u,t,x,sigma=None,
                   time_scale=time_scale,
                   perts=0,**kwargs)
   res = u - upred
-    
-  with warnings.catch_warnings():
-    warnings.simplefilter('ignore')
-    numer = np.sum(res/sigma**2,axis=1)
-    denom = np.sum(1.0/sigma**2,axis=1)
-    u_comm = numer/denom
-    sigma_comm = np.sqrt(1.0/denom)
-
-  #comm = np.ma.average(res,axis=1,weights=1.0/sigma)
-  # if a time has no observations then make its common mode zero
-  u_comm[np.isnan(u_comm)] = 0.0
-  if plot:
-    fig,ax = plt.subplots()
-    masked_res = np.ma.masked_array(res,mask=np.isinf(sigma))
-    ax.plot(t,u_comm,'ro',zorder=1)
-    ax.plot(t,masked_res,'k.',zorder=0)
-    ax.set_xlabel('time')
-    ax.set_ylabel('residual')
-    ax.legend(['common mode','residuals'],frameon=False)
-    fig.tight_layout()
-    plt.show()  
+  u_comm,sigma_comm = weighted_mean(res,sigma,axis=1)    
                           
   u_comm = u_comm[:,None]
   sigma_comm = sigma_comm[:,None]
@@ -259,9 +210,7 @@ def common_mode(u,t,x,sigma=None,
 def baseline(u,t,x,sigma=None,time_scale=None,
              zero_idx=None,time_cuts=None,perts=20,**kwargs):
   ''' 
-  Estimates the displacements at t_zero for each station. 
-  Estimates of displacement are made with a weighted mean of 
-  displacements within some time interval of t_zero
+  Estimates the displacements at t[zero_dx] for each station. 
 
   Parameters
   ----------
@@ -279,9 +228,9 @@ def baseline(u,t,x,sigma=None,time_scale=None,
 
   Returns 
   -------
-    u_out : (Nt,Nx) array
+    u_out : (1,Nx) array
 
-    sigma_out : (Nt,Nx) array
+    sigma_out : (1,Nx) array
   '''
   u = np.asarray(u)
   t = np.asarray(t)
@@ -309,66 +258,6 @@ def baseline(u,t,x,sigma=None,time_scale=None,
   return u_out,sigma_out
 
 
-def network_cleaner(u,t,x,sigma=None,time_cuts=None,
-                    tol=3.0,zero_idx=None,time_scale=None,plot=True,
-                    perts=20,**kwargs):
-  ''' 
-  Parameters
-  ----------
-    u : (Nt,Nx) array
-    
-    t : (Nt,) array
-
-    x : (Nx,2) array
-    
-    sigma : (Nt,Nx) array
-    
-    time_cuts : TimeCutCollection 
-    
-    tol : scalar
-    
-    time_scale : scalar    
-    
-  '''
-  u = np.asarray(u)
-  t = np.asarray(t)
-  x = np.asarray(x)
-  if sigma is None:
-    sigma = np.ones(u.shape)
-  else:
-    sigma = np.array(sigma,copy=True)  
-    
-  # identify outliers
-  ridx,cidx = outliers(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                       tol=tol,time_scale=time_scale,plot=plot,
-                       **kwargs)
-                       
-  sigma[ridx,cidx] = np.inf
-  # u[ridx,cidx] = 0.0
-
-  # remove common mode
-  u_comm,sigma_comm = common_mode(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                        time_scale=time_scale,plot=plot,
-                        **kwargs)
-  u = u - u_comm                     
-  sigma = np.sqrt(sigma**2 + sigma_comm**2)
-
-  # remove baseline
-  u_base,sigma_base = baseline(u,t,x,sigma=sigma,time_cuts=time_cuts,
-                               time_scale=time_scale,zero_idx=zero_idx,
-                               perts=perts)
-  u = u - u_base
-  sigma = np.sqrt(sigma**2 + sigma_base**2)
-
-  # stations which have anomalously large uncertainties are given inf 
-  # uncertainty so that they can be treated as masked data
-  mean_sigma = np.mean(sigma[np.isfinite(sigma)])
-  std_sigma = np.std(sigma[np.isfinite(sigma)])
-  sigma[sigma > (mean_sigma + tol*std_sigma)] = np.inf
-
-  return u,sigma
-                     
-
 def time_lacks_data(sigma,cutoff=0.5):
   ''' 
   returns true for each time where sigma is np.inf for most of the stations.
@@ -387,7 +276,7 @@ def station_lacks_data(sigma,cutoff=0.5):
   return out
 
 
-def station_is_duplicate(sigma,x,tol=4.0,plot=True):
+def station_is_duplicate(sigma,x,tol=4.0):
   ''' 
   returns the indices for a set of nonduplicate stations. if duplicate 
   stations are found then the one that has the most observations is 
@@ -408,24 +297,6 @@ def station_is_duplicate(sigma,x,tol=4.0,plot=True):
       logger.info('identified station %s as a duplicate' % global_idx)
       is_duplicate[global_idx] = True
 
-  if plot:
-    # get nearest neighbors
-    T = cKDTree(x)
-    dist,idx = T.query(x,2)
-    rbefore = dist[:,1]
-    T = cKDTree(x[~is_duplicate])
-    dist,idx = T.query(x[~is_duplicate],2)
-    rafter = dist[:,1]
-    fig,ax = plt.subplots()
-    bin_count = max(len(x)//10,10)
-    out,bins,patches = ax.hist(np.log10(rbefore),bin_count,color='r',edgecolor='none')
-    ax.hist(np.log10(rafter),bins,color='k',edgecolor='none')
-    ax.set_xlabel('log10 distance to nearest neighbor')
-    ax.set_ylabel('count')
-    ax.legend(['outliers'],loc=2,frameon=False)
-    ax.grid()
-    plt.show()
-    
   return is_duplicate      
 
 
@@ -521,7 +392,8 @@ Notes
 ---------------------------------------------------------------------     
   '''
   def __init__(self,data,t,x,sigma=None,jumps=None,
-               time_scale=None,zero_idx=None,**kwargs):
+               time_scale=None,zero_idx=None,tol=4.0,
+               **kwargs):
     if jumps is None:
       jumps = []
                      
@@ -538,31 +410,71 @@ Notes
     self.config['jumps'] = jumps
     self.config['time_scale'] = time_scale
     self.config['zero_idx'] = zero_idx
-
+    self.config['tol'] = tol
 
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_release_event',self._onkey)
     InteractiveViewer.connect(self)
         
   def _remove_baseline(self):
+    logger.debug('removing baseline')
     time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
     for i in range(3):
-      base,sigma = baseline(self.data_sets[0].data[:,:,i],
-                            self.t,self.x,
-                            sigma=self.sigma_sets[0].data[:,:,i],
-                            time_scale=self.config['time_scale'],
-                            zero_idx=self.config['zero_idx'],
-                            time_cuts=time_cuts,
-                            perts=20)
-      self.data_sets[0].data[:,:,i] -= base
+      base,sigma = baseline(
+                     self.data_sets[0].data[:,:,i],
+                     self.t,self.x,
+                     sigma=self.sigma_sets[0].data[:,:,i],
+                     time_scale=self.config['time_scale'],
+                     time_cuts=time_cuts,
+                     zero_idx=self.config['zero_idx'],
+                     perts=20)
+                     
+      self.data_sets[0].data[:,:,i] = self.data_sets[0].data[:,:,i] - base
       self.sigma_sets[0].data[:,:,i] = np.sqrt(self.sigma_sets[0].data[:,:,i]**2 + sigma**2)
-
 
     data_set,sigma_set = _make_masked_array(self.data_sets[0].data,
                                             self.sigma_sets[0].data)
     self.data_sets[0] = data_set
     self.sigma_sets[0] = sigma_set
   
+  def _auto_remove_outliers(self):  
+    logger.debug('removing outliers')
+    time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
+    for i in range(3):
+      ridx,cidx = outliers(
+                    self.data_sets[0].data[:,:,i],
+                    self.t,self.x,
+                    sigma=self.sigma_sets[0].data[:,:,i],
+                    time_scale=self.config['time_scale'],
+                    time_cuts=time_cuts,
+                    tol=self.config['tol'])
+                           
+      self.data_sets[0].data[ridx,cidx,i] = 0.0
+      self.sigma_sets[0].data[ridx,cidx,i] = np.inf
+
+    data_set,sigma_set = _make_masked_array(self.data_sets[0].data,
+                                            self.sigma_sets[0].data)
+    self.data_sets[0] = data_set
+    self.sigma_sets[0] = sigma_set
+    
+  def _remove_common_mode(self):
+    logger.debug('removing common mode')
+    time_cuts = pygeons.cuts.TimeCuts(self.config['jumps'])
+    for i in range(3):
+      comm,sigma = common_mode(
+                     self.data_sets[0].data[:,:,i],
+                     self.t,self.x,
+                     sigma=self.sigma_sets[0].data[:,:,i],
+                     time_cuts=time_cuts,
+                     time_scale=self.config['time_scale'])
+
+      self.data_sets[0].data[:,:,i] = self.data_sets[0].data[:,:,i] - comm
+      self.sigma_sets[0].data[:,:,i] = np.sqrt(self.sigma_sets[0].data[:,:,i]**2 + sigma**2)
+
+    data_set,sigma_set = _make_masked_array(self.data_sets[0].data,
+                                            self.sigma_sets[0].data)
+    self.data_sets[0] = data_set
+    self.sigma_sets[0] = sigma_set
   
   def _remove_jump(self,jump_time,radius):
     xidx = self.config['xidx']
@@ -649,20 +561,26 @@ Notes
           
   def _onkey(self,event):
     if event.name == 'key_press_event':
-      if event.key == 'z':
+      if event.key == 'c':
+        self._remove_common_mode()
+        self._update()   
+
+      elif event.key == 'z':
         self._remove_baseline()
         self._update()   
+
+      elif event.key == 'a':
+        self._auto_remove_outliers()
+        self._update()   
         
-      if event.key == 'c':
-        # disable C
-        return
-        
-      InteractiveViewer._onkey(self,event)
-      if event.key == 'd':
+      elif event.key == 'd':
         self._on_d_press(event)
 
       elif event.key == 'j':
         self._on_j_press(event)
+
+      else:
+        InteractiveViewer._onkey(self,event)
         
     elif event.name == 'key_release_event':   
       if event.key == 'd':
