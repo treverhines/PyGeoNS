@@ -6,6 +6,7 @@ from pygeons.view import InteractiveViewer
 from pygeons.view import without_interactivity
 from pygeons.downsample import weighted_mean
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import pygeons.diff
 import pygeons.cuts
 from scipy.spatial import cKDTree
@@ -368,23 +369,18 @@ Controls
 
     H : hide station marker
 
-    D : remove data within a time interval for the current station. On 
-        the time series figure, press *d* with the cursor over the 
-        start of the time interval. With d still pressed down, move 
-        the cursor to the end of the time interval.  Release *d* to 
-        remove the data
+    D : enables outlier removal mode while pressed.  Click and drag on 
+        the time series axes to remove outliers within a time interval
 
-    J : estimate and remove time series jumps for the current station. 
-        The jump is estimated by taking a weighted mean of the data 
-        over some time interval before and after the jump. On the time 
-        series fugure, press *j* with the cursor over the jump time. 
-        With j still pressed down, move the cursor to the left or 
-        right by desired time interval. Release *j* to remove the 
-        jump.
+    J : enables jump removal mode while pressed. Jumps are estimated 
+        by taking a weighted mean of the data over a time interval 
+        before and after the jump. Click on the time series axes to 
+        identify a jump and drag the cursor over the desired time 
+        interval.
         
-    K : keep new changes
+    K : keep edited data
     
-    U : undo new changes
+    U : undo edits since data was last kept
     
     W : write kept changes to an hdf5 file
     
@@ -416,13 +412,23 @@ Notes
     if sz is not None:
       sz = [sz,np.copy(sz)]                
       
+    data_set_names = kwargs.pop('data_set_names',['edited data','kept data'])
+    color_cycle = kwargs.pop('color_cycle',['c','m'])
     InteractiveViewer.__init__(self,t,x,
                                u=u,v=v,z=z,
                                su=su,sv=sv,sz=sz,
+                               color_cycle=color_cycle,
+                               data_set_names=data_set_names,
                                **kwargs)
+    self._mode = None
+    self._is_pressed = False
 
   def connect(self):
-    self.ts_fig.canvas.mpl_connect('key_release_event',self._onkey)
+    self.ts_fig.canvas.mpl_connect('button_press_event',self.on_mouse_press)
+    self.ts_fig.canvas.mpl_connect('motion_notify_event',self.on_mouse_move)
+    self.ts_fig.canvas.mpl_connect('button_release_event',self.on_mouse_release)
+    self.ts_fig.canvas.mpl_connect('key_release_event',self.on_key_release)
+    self.map_fig.canvas.mpl_connect('key_release_event',self.on_key_release)
     InteractiveViewer.connect(self)
         
   def keep_changes(self):
@@ -510,78 +516,135 @@ Notes
 
     # turn the new data sets into masked arrays
     self.update_data()
-
-  def _on_d_press(self,event):
-    self._d_pressed_in_ax = False
-    if event.inaxes is not None:
-      if event.inaxes.figure is self.ts_fig:
-        self._d_pressed_in_ax = True
-        self._d_start = event.xdata
-        print('drag cursor over the time interval containing the outliers\n') 
-  
-  def _on_d_release(self,event):
-    # in order for anything to happen, the key press and release need 
-    # to have been in a ts_ax
-    if self._d_pressed_in_ax:
-      if event.inaxes is not None:
-        if event.inaxes.figure is self.ts_fig:
-          d_start = self._d_start 
-          d_stop = event.xdata
-          print('removing data over the time interval %s - %s\n' % (d_start,d_stop))
-          self.remove_outliers(d_start,d_stop) 
-          self.update()   
-
-  def _on_j_press(self,event):
-    self._j_pressed_in_ax = False
-    if event.inaxes is not None:
-      if event.inaxes.figure is self.ts_fig:
-        self._j_pressed_in_ax = True
-        self._j_start = event.xdata        
-        print('drag cursor over the time radius used to estimate the jump\n') 
-
-  def _on_j_release(self,event):
-    if self._j_pressed_in_ax:
-      if event.inaxes is not None:
-        if event.inaxes.figure is self.ts_fig:
-          j_start = self._j_start
-          j_stop = event.xdata
-          print('removing jump at time %s with time radius %s\n' % (j_start,abs(j_stop-j_start)))
-          self.remove_jump(j_start,abs(j_stop-j_start))
-          self.update()   
           
-  def _onkey(self,event):
-    if event.name == 'key_press_event':
-      # disable c
-      if event.key == 'c':
-        return
-              
-      if event.key == 'k':
-        self.keep_changes()
-        self.update()   
+  def on_mouse_press(self,event):
+    # ignore if not the left button
+    if event.button != 1: return
+    # ignore if the event was not in an axis
+    if event.inaxes is None: return
+    # ignore if the event was not in the time series figure
+    if not event.inaxes.figure is self.ts_fig: return
 
-      elif event.key == 'u':
-        self.undo_changes()
-        self.update()   
-
-      elif event.key == 'w':
-        self.write_to_file()
-        self.update()   
+    self._is_pressed = True
+    self._t1 = event.xdata
+    self.rects = []
+    self.vlines = []
+    for ax in self.ts_ax:
+      ymin,ymax = ax.get_ylim()
+      r = Rectangle((self._t1,ymin),0.0,ymax-ymin,color='none',alpha=0.5,edgecolor=None)
+      self.rects += [r]
+      self.vlines += [ax.vlines(self._t1,ymin,ymax,color='none')]
+      ax.add_patch(r)
+          
+    self.ts_fig.canvas.draw()  
         
-      elif event.key == 'd':
-        self._on_d_press(event)
+  def on_mouse_move(self,event):
+    # do nothing is a mouse button is not being held down
+    if not self._is_pressed: return
+    # ignore if the event was not in an axis
+    if event.inaxes is None: return
+    # ignore if the event was not in the time series figure
+    if not event.inaxes.figure is self.ts_fig: return
 
-      elif event.key == 'j':
-        self._on_j_press(event)
-
+    self._t2 = event.xdata
+    for r,v in zip(self.rects,self.vlines):
+      if self._mode == 'outlier removal':
+        r.set_width(self._t2 - self._t1) 
+        r.set_x(self._t1)
+        r.set_color('r')
+        v.set_color('k')
+        
+      elif self._mode == 'jump removal':
+        r.set_width(2*(self._t2 - self._t1))
+        r.set_x(self._t1 - (self._t2 - self._t1))
+        r.set_color('b')
+        v.set_color('k')
+       
       else:
-        InteractiveViewer._onkey(self,event)
-        
-    elif event.name == 'key_release_event':   
-      if event.key == 'd':
-        self._on_d_release(event)
+        r.set_width(0.0)
+        r.set_color('none')
+        v.set_color('none')
+            
+    self.ts_fig.canvas.draw()  
 
-      elif event.key == 'j':
-        self._on_j_release(event)
+  def on_mouse_release(self,event):
+    # ignore if not the left button
+    if event.button != 1: return
+    # do nothing is a mouse button was not clicked in the axis
+    if not self._is_pressed: return
+
+    self._is_pressed = False
+    # remove the rectangles no matter where the button was released
+    for r,v in zip(self.rects,self.vlines):
+      r.remove()
+      v.remove()
+
+    self.ts_fig.canvas.draw()  
+
+    # only act on this event if the following conditions are met
+    # ignore if the event was not in an axis
+    if event.inaxes is None: return
+    # ignore if the event was not in the time series figure
+    if not event.inaxes.figure is self.ts_fig: return
+
+    # act according to the self._mode at the time of release
+    if self._mode == 'outlier removal':
+      mint = min(self._t1,self._t2)
+      maxt = max(self._t1,self._t2)
+      print('removing data over the time interval %g - %g\n' % (mint,maxt))
+      self.remove_outliers(mint,maxt) 
+      self.update()   
+
+    elif self._mode == 'jump removal':
+      print('removing jump at time %g with time radius %g\n' % (self._t1,abs(self._t2 - self._t1)))
+      self.remove_jump(self._t1,abs(self._t2-self._t1))
+      self.update()   
+    
+    else: 
+      return
+
+  def on_key_press(self,event):
+    # disable c
+    if event.key == 'c':
+      return
+              
+    if event.key == 'k':
+      self.keep_changes()
+      self.update()   
+
+    elif event.key == 'u':
+      self.undo_changes()
+      self.update()   
+
+    elif event.key == 'w':
+      self.write_to_file()
+      self.update()   
+        
+    elif event.key == 'd':
+      # cannot change mode unless current mode is None
+      if self._mode is None:
+        self._mode = 'outlier removal'
+        print('enabled outlier removal mode\n') 
+
+    elif event.key == 'j':
+      # cannot change mode unless current mode is None
+      if self._mode is None:
+        self._mode = 'jump removal'
+        print('enabled jump removal mode\n') 
+
+    else:
+      InteractiveViewer.on_key_press(self,event)
+        
+  def on_key_release(self,event):
+    if event.key == 'd':
+      if self._mode == 'outlier removal':
+        self._mode = None
+        print('disabled outlier removal mode\n') 
+
+    elif event.key == 'j':
+      if self._mode == 'jump removal':
+        self._mode = None
+        print('disabled jump removal mode\n') 
       
   
 def interactive_cleaner(*args,**kwargs):
