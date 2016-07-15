@@ -11,8 +11,6 @@ from logging import getLogger
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 logger = getLogger(__name__)
 
-COLOR_CYCLE = ['k',(0.0,0.7,0.0),'r','g','c','m','y']
-
 # change behavior of mpl.quiver. this is necessary for error 
 # ellipses but may lead to insidious bugs... 
 matplotlib.quiver.Quiver = _Quiver
@@ -129,6 +127,7 @@ Notes
                map_title=None,
                map_ylim=None,
                map_xlim=None,
+               color_cycle=None,
                map_clabel='vertical displacement [m]'):
     ''' 
     interactively views vector valued data which is time and space 
@@ -234,6 +233,11 @@ Notes
         (len(z)  != S) | (len(su) != S) |
         (len(sv) != S) | (len(sz) != S)):
       raise ValueError('provided values of u, v, z, su, sv, and sz must have the same length')
+
+    if color_cycle is None:
+      self.color_cycle = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
+    else:
+      self.color_cycle = color_cycle
 
     # merge u,v,z and su,sv,sz into data_sets and sigma_sets for 
     # compactness
@@ -365,10 +369,10 @@ Notes
     self._set_masked_arrays()
   
   def connect(self):
-    self.ts_fig.canvas.mpl_connect('key_press_event',self._onkey)
-    self.ts_fig.canvas.mpl_connect('pick_event',self._onpick)
-    self.map_fig.canvas.mpl_connect('key_press_event',self._onkey)
-    self.map_fig.canvas.mpl_connect('pick_event',self._onpick)
+    self.ts_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
+    self.ts_fig.canvas.mpl_connect('pick_event',self.on_pick)
+    self.map_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
+    self.map_fig.canvas.mpl_connect('pick_event',self.on_pick)
 
   def _init_ts_ax(self):
     # call after _init_lines
@@ -499,8 +503,13 @@ Notes
                    zorder=0)
 
     # make colorbar     
-    self.cbar = self.map_fig.colorbar(self.image,cax=self.cax)  
-    self.cax = self.cbar.ax
+    # if a color bar axis has not already been made then make one
+    if self.cax is None:
+      self.cbar = self.map_fig.colorbar(self.image,ax=self.map_ax)  
+      self.cax = self.cbar.ax
+    else:
+      self.cbar = self.map_fig.colorbar(self.image,cax=self.cax)  
+      
     self.cbar.set_clim((image_vmin,image_vmax))
     self.cbar.set_label(self.config['map_clabel'],
                         fontsize=self.config['fontsize'])
@@ -552,7 +561,7 @@ Notes
                      c=colors,
                      s=self.config['scatter_size'],
                      zorder=1,
-                     edgecolor=COLOR_CYCLE[1])
+                     edgecolor=self.color_cycle[1])
 
   def _update_scatter(self):
     # call after _update_image
@@ -593,7 +602,7 @@ Notes
                         sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
                                self._masked_sigma_sets[si][self.config['tidx'],:,1],
                                0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]),
-                        color=COLOR_CYCLE[si],
+                        color=self.color_cycle[si],
                         ellipse_kwargs={'edgecolors':'k','zorder':1+si},
                         zorder=2+si)]
       if si == 0:
@@ -633,17 +642,17 @@ Notes
       self.L1 += self.ts_ax[0].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],0],
-                   color=COLOR_CYCLE[si],
+                   color=self.color_cycle[si],
                    label=self.data_set_names[si])
       self.L2 += self.ts_ax[1].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],1],
-                   color=COLOR_CYCLE[si],
+                   color=self.color_cycle[si],
                    label=self.data_set_names[si])
       self.L3 += self.ts_ax[2].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],2],
-                   color=COLOR_CYCLE[si],
+                   color=self.color_cycle[si],
                    label=self.data_set_names[si])
     
   def _update_lines(self):
@@ -671,7 +680,7 @@ Notes
                     self._masked_data_sets[si][:,self.config['xidx'],0] +
                     self._masked_sigma_sets[si][:,self.config['xidx'],0],
                     edgecolor='none',
-                    color=COLOR_CYCLE[si],alpha=0.5)]
+                    color=self.color_cycle[si],alpha=0.5)]
       self.F2 += [self.ts_ax[1].fill_between(
                     self.t,
                     self._masked_data_sets[si][:,self.config['xidx'],1] -
@@ -679,7 +688,7 @@ Notes
                     self._masked_data_sets[si][:,self.config['xidx'],1] +
                     self._masked_sigma_sets[si][:,self.config['xidx'],1],
                     edgecolor='none',
-                    color=COLOR_CYCLE[si],alpha=0.5)]
+                    color=self.color_cycle[si],alpha=0.5)]
       self.F3 += [self.ts_ax[2].fill_between(
                     self.t,
                     self._masked_data_sets[si][:,self.config['xidx'],2] -
@@ -687,7 +696,7 @@ Notes
                     self._masked_data_sets[si][:,self.config['xidx'],2] +
                     self._masked_sigma_sets[si][:,self.config['xidx'],2],
                     edgecolor='none',
-                    color=COLOR_CYCLE[si],alpha=0.5)]
+                    color=self.color_cycle[si],alpha=0.5)]
   
   def _update_fill(self):
     # updates for:
@@ -775,7 +784,7 @@ Notes
         
     self.config[key] = new_val
   
-  def _onpick(self,event):
+  def on_pick(self,event):
     for i,v in enumerate(self.pickers):
       if event.artist == v:
         self.config['xidx'] = i
@@ -783,7 +792,7 @@ Notes
 
     self.update()    
 
-  def _onkey(self,event):
+  def on_key_press(self,event):
     if event.key == 'right':
       self.config['tidx'] += 1
       Nt = self.data_sets[0].shape[0]
