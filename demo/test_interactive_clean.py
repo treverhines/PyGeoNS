@@ -47,8 +47,8 @@ data_set[50:,:,1] += 10.0
 data_set[50:,:,2] += 7.0
 
 interactive_cleaner(t,x,
-                        data_set[:,:,0],data_set[:,:,1],data_set[:,:,2],
-                        sigma_set[:,:,0],sigma_set[:,:,1],sigma_set[:,:,2])
+                    data_set[:,:,0],data_set[:,:,1],data_set[:,:,2],
+                    sigma_set[:,:,0],sigma_set[:,:,1],sigma_set[:,:,2],quiver_scale=0.00001)
 #network_viewer(data_set,t,x,u=[u1,u2],v=[v1,v2],z=[z1,z2],su=[su,su],sv=[sv,sv],
 #               map_ax=ax) 
 #network_viewer(t,x,u=[u1],v=[v1],z=[z1],su=[su],sv=[sv],sz=[sz],

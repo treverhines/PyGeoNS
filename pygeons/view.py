@@ -4,15 +4,12 @@ import numpy as np
 import matplotlib
 from rbf.interpolate import RBFInterpolant
 from pygeons._input import restricted_input
-from pygeons.quiver import Quiver as _Quiver
+from pygeons.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
 from logging import getLogger
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 logger = getLogger(__name__)
-# change behavior of mpl.quiver. this is necessary for error 
-# ellipses but may lead to insidious bugs... 
-matplotlib.quiver.Quiver = _Quiver
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
@@ -578,18 +575,20 @@ Notes
   def _init_quiver(self):
     self.quiver = []
     for si in range(len(self.data_sets)):
-      self.quiver += [self.map_ax.quiver(
-                        self.x[:,0],self.x[:,1],
-                        self._masked_data_sets[si][self.config['tidx'],:,0],
-                        self._masked_data_sets[si][self.config['tidx'],:,1],
-                        scale=self.config['quiver_scale'],  
-                        width=self.config['quiver_width'],
-                        sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
-                               self._masked_sigma_sets[si][self.config['tidx'],:,1],
-                               0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]),
-                        color=self.color_cycle[si],
-                        ellipse_kwargs={'edgecolors':'k','zorder':1+si},
-                        zorder=2+si)]
+      q = Quiver(self.map_ax,self.x[:,0],self.x[:,1],
+                 self._masked_data_sets[si][self.config['tidx'],:,0],
+                 self._masked_data_sets[si][self.config['tidx'],:,1],
+                 scale=self.config['quiver_scale'],  
+                 width=self.config['quiver_width'],
+                 sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
+                        self._masked_sigma_sets[si][self.config['tidx'],:,1],
+                        0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]),
+                 color=self.color_cycle[si],
+                 ellipse_kwargs={'edgecolors':'k','zorder':1+si},
+                 zorder=2+si)
+      self.map_ax.add_collection(q,autolim=True)
+      self.map_ax.autoscale_view()                 
+      self.quiver += [q]                        
       if si == 0:
         # plot quiver key for the first data set
         self.key = self.map_ax.quiverkey(
