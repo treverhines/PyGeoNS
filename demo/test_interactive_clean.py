@@ -6,6 +6,8 @@ import rbf.basis
 import modest
 import gps.plot
 from pygeons.clean import interactive_cleaner
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 t = np.linspace(0,1,100) # form observation times
 x = np.random.normal(0.0,1.0,(20,2)) # form observation positions

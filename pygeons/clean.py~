@@ -12,6 +12,9 @@ import pygeons.cuts
 from scipy.spatial import cKDTree
 import warnings
 import h5py
+import os
+import logging
+logger = logging.getLogger(__name__)
 
 def most(a,axis=None,cutoff=0.5):
   ''' 
@@ -398,7 +401,46 @@ Notes
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None,
+               converter=None,
                **kwargs):
+    ''' 
+    Parameters
+    ----------
+      t : (Nt,) array
+        observation times
+        
+      x : (Nx,2) array
+        observation positions
+        
+      u : (Nt,Nx) array
+        east component
+
+      v : (Nt,Nx) array
+        north component
+
+      z : (Nt,Nx) array
+        vertical component
+
+      su : (Nt,Nx) array, optional
+        standard deviation of east component
+
+      sv : (Nt,Nx) array, optional
+        standard deviation of north component
+
+      sz : (Nt,Nx) array, optional
+        standard deviation of vertical component
+      
+      converter : callable, optional  
+        function which maps the position coordinates to longitude and 
+        latitude (e.g. lon,lat = converter(x[:,0],x[:,1]) ). This can 
+        be a basemap instance. This is only used when writing the 
+        output. If this is not provided then the output values for 
+        longitude and latitude with be x[:,0] and x[:,1] respectively
+        
+    Note
+    ----
+      only one of u, v, and z need to be specified
+    '''
     if u is not None:
       u = [u,np.copy(u)]                
     if v is not None:
@@ -420,8 +462,10 @@ Notes
                                color_cycle=color_cycle,
                                data_set_names=data_set_names,
                                **kwargs)
+    self.converter = converter
     self._mode = None
     self._is_pressed = False
+    self._default_file_name = None
 
   def connect(self):
     self.ts_fig.canvas.mpl_connect('button_press_event',self.on_mouse_press)
@@ -436,37 +480,68 @@ Notes
     self.data_sets[1] = np.copy(self.data_sets[0])
     self.sigma_sets[1] = np.copy(self.sigma_sets[0])
     self.update_data()
+    logger.info('kept changes to data\n')
 
   def undo_changes(self):
     print('undoing changes\n')
     self.data_sets[0] = np.copy(self.data_sets[1])
     self.sigma_sets[0] = np.copy(self.sigma_sets[1])
     self.update_data()
+    logger.info('discarded changes to data\n')
 
   @without_interactivity
   def write_to_file(self):
-    self.keep_changes()
-    print('writing data to file\n')
-    file_name = raw_input('output file name ["exit" to cancel] >>> ')
-    print('')
-    if file_name == 'exit':
-      return
+    if self._default_file_name is None:
+      file_name = raw_input('output file name ["exit" to cancel] >>> ')
+      print('')
+      if file_name == 'exit':
+        return
+      
+      if os.path.exists(file_name):
+        overwrite = raw_input('"%s" already exits. overwrite it? ["y"/"n"] >>> ' % file_name)  
+        print('')
+        if overwrite != 'y':
+          return
+                
+    else:
+      file_name = raw_input('output file name ["exit" to cancel, defaults to "%s"] >>> ' % self._default_file_name)
+      print('')
+      if file_name == 'exit':
+        return
+      
+      # if nothing was provided then use the default
+      if file_name == '':
+        file_name = self._default_file_name
     
     data = self.data_sets[0]
     sigma = self.sigma_sets[0]
 
+    # convert to longitude and latitude if a converter is provided
+    if self.converter is not None:
+      lon,lat = converter(self.x[:,0],self.x[:,1])
+    else:
+      lon,lat = self.x[:,0],self.x[:,1]
+        
     f = h5py.File(file_name,'w')     
     f['time'] = self.t 
-    f['position'] = self.x
-    f['names'] = self.station_names
-    f['easting'] = data[:,:,0]
-    f['northing'] = data[:,:,1]
+    f['longitude'] = lon
+    f['latitude'] = lat
+    f['name'] = self.station_names
+    f['east'] = data[:,:,0]
+    f['north'] = data[:,:,1]
     f['vertical'] = data[:,:,2]
-    f['easting_sigma'] = np.nan_to_num(sigma[:,:,0])
-    f['northing_sigma'] = np.nan_to_num(sigma[:,:,1])
-    f['vertical_sigma'] = np.nan_to_num(sigma[:,:,2])
+    f['east_std'] = np.nan_to_num(sigma[:,:,0])
+    f['north_std'] = np.nan_to_num(sigma[:,:,1])
+    f['vertical_std'] = np.nan_to_num(sigma[:,:,2])
     f['mask'] = np.any(np.isinf(sigma),axis=2)
     f.close()
+    
+    logger.info('wrote kept data to "%s"\n' % file_name)
+    
+    # if everything ran properly then set the current output file name 
+    # to the default output file name 
+    self._default_file_name = file_name
+    
     return
   
   def remove_jump(self,jump_time,radius):
@@ -505,6 +580,10 @@ Notes
     
     # turn the new data sets into masked arrays
     self.update_data()
+
+    name = self.station_names[xidx]
+    logger.info('removed jump at time %g for station %s using data from time %g to %g\n' % 
+                (jump_time,name,jump_time-radius,jump_time+radius))
       
   def remove_outliers(self,start_time,end_time):
     # this function masks data for the current station which ranges 
@@ -516,6 +595,9 @@ Notes
 
     # turn the new data sets into masked arrays
     self.update_data()
+
+    name = self.station_names[xidx]
+    logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
           
   def on_mouse_press(self,event):
     # ignore if not the left button
@@ -591,12 +673,10 @@ Notes
     if self._mode == 'outlier removal':
       mint = min(self._t1,self._t2)
       maxt = max(self._t1,self._t2)
-      print('removing data over the time interval %g - %g\n' % (mint,maxt))
       self.remove_outliers(mint,maxt) 
       self.update()   
 
     elif self._mode == 'jump removal':
-      print('removing jump at time %g with time radius %g\n' % (self._t1,abs(self._t2 - self._t1)))
       self.remove_jump(self._t1,abs(self._t2-self._t1))
       self.update()   
     
@@ -625,12 +705,18 @@ Notes
       if self._mode is None:
         self._mode = 'outlier removal'
         print('enabled outlier removal mode\n') 
+        # this ensures that the fill region gets updated if there is a 
+        # mouse drag in progress
+        self.on_mouse_move(event)
 
     elif event.key == 'j':
       # cannot change mode unless current mode is None
       if self._mode is None:
         self._mode = 'jump removal'
         print('enabled jump removal mode\n') 
+        # this ensures that the fill region gets updated if there is a 
+        # mouse drag in progress
+        self.on_mouse_move(event)
 
     else:
       InteractiveViewer.on_key_press(self,event)
@@ -640,11 +726,17 @@ Notes
       if self._mode == 'outlier removal':
         self._mode = None
         print('disabled outlier removal mode\n') 
+        # this ensures that the fill region gets updated if there is a 
+        # mouse drag in progress
+        self.on_mouse_move(event)
 
     elif event.key == 'j':
       if self._mode == 'jump removal':
         self._mode = None
         print('disabled jump removal mode\n') 
+        # this ensures that the fill region gets updated if there is a 
+        # mouse drag in progress
+        self.on_mouse_move(event)
       
   
 def interactive_cleaner(*args,**kwargs):

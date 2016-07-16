@@ -5,7 +5,7 @@ import rbf.halton
 import rbf.basis
 import modest
 import gps.plot
-from pygeons.clean import InteractiveCleaner
+from pygeons.clean import interactive_cleaner
 
 t = np.linspace(0,1,100) # form observation times
 x = np.random.normal(0.0,1.0,(20,2)) # form observation positions
