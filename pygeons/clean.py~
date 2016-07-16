@@ -669,6 +669,7 @@ Notes
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
 
+    self._t2 = event.xdata
     # act according to the self._mode at the time of release
     if self._mode == 'outlier removal':
       mint = min(self._t1,self._t2)
