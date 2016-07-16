@@ -10,7 +10,6 @@ from rbf.basis import phs1
 from logging import getLogger
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 logger = getLogger(__name__)
-
 # change behavior of mpl.quiver. this is necessary for error 
 # ellipses but may lead to insidious bugs... 
 matplotlib.quiver.Quiver = _Quiver
@@ -112,23 +111,22 @@ Notes
                quiver_width=0.005,
                quiver_key_pos=None,
                scatter_size=100,
-               image_vmin=None,
-               image_vmax=None,
+               image_clim=None,
                image_cmap=None,
                station_names=None,
                data_set_names=None,
                ts_title=None,
-               ts_ylabel_0='easting [m]',
-               ts_ylabel_1='northing [m]',
-               ts_ylabel_2='vertical [m]',
-               ts_xlabel='time [years]',
+               ts_ylabel_0='east',
+               ts_ylabel_1='north',
+               ts_ylabel_2='vertical',
+               ts_xlabel='time',
                fontsize=10,
                map_ax=None,
                map_title=None,
                map_ylim=None,
                map_xlim=None,
                color_cycle=None,
-               map_clabel='vertical displacement [m]'):
+               image_clabel='vertical'):
     ''' 
     interactively views vector valued data which is time and space 
     dependent
@@ -145,9 +143,6 @@ Notes
         if an entry is np.inf then all components for that station at 
         that time will be masked
         
-      image_cmap : Colormap instance
-        colormap for vertical deformation
-
       quiver_key_label : str
         label above the quiver key
         
@@ -167,12 +162,21 @@ Notes
       
       data_set_names : (Ns,) str array
       
-      image_vmin : float
-        minimum vertical color value      
+      image_clim : float
+        minimum and maximum vertical color value      
 
-      image_vmax : float
-        mmaximum vertical color value      
-              
+      image_cmap : Colormap instance
+        colormap for vertical deformation
+
+      image_clabel : str
+        color bar label  
+
+      map_ax : Axis instance
+        axis where map view will be plotted
+      
+      map_title : str
+        replaces the default title for the map view plot
+
       map_ylim : (2,) array
         ylim for the map view plot
       
@@ -182,23 +186,15 @@ Notes
       ts_title : str
         title for time series plot
       
-      ax : Axis instance
-        axis where map view will be plotted
-      
-      map_title : str
-        replaces the default title for the map view plot
-      
-      fontsize : float
-        
       ts_ylabel : str
         time series y label
       
       ts_xlabel : str
         time series x label
         
-      map_clabel : str
-        color bar label  
-      
+      fontsize : float
+        controls all fontsizes
+        
     '''
     # time and space arrays
     self.t = np.asarray(t)
@@ -258,15 +254,17 @@ Notes
     
     # map view axis and figure
     if map_ax is None:
-      map_fig,map_ax = plt.subplots()
+      # gives a white background and a higher dpi
+      map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
       self.map_fig = map_fig
       self.map_ax = map_ax
     else:
-      self.map_fig = map_ax.get_figure()  
+      # gives a white background and a higher dpi
+      self.map_fig = map_ax.get_figure(num='Map View',facecolor='white')  
       self.map_ax = map_ax
 
     # make figure and axis for the time series 
-    ts_fig,ts_ax = plt.subplots(3,1,sharex=True)
+    ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
     self.ts_fig = ts_fig
     self.ts_ax = ts_ax
       
@@ -298,8 +296,7 @@ Notes
     self.config['tidx'] = 0
     self.config['xidx'] = 0
     self.config['image_cmap'] = image_cmap
-    self.config['image_vmin'] = image_vmin        
-    self.config['image_vmax'] = image_vmax
+    self.config['image_clim'] = image_clim
     self.config['quiver_scale'] = quiver_scale
     self.config['quiver_width'] = quiver_width
     self.config['quiver_key_pos'] = quiver_key_pos        
@@ -312,7 +309,7 @@ Notes
     self.config['ts_ylabel_2'] = ts_ylabel_2
     self.config['ts_title'] = ts_title
     self.config['map_title'] = map_title
-    self.config['map_clabel'] = map_clabel
+    self.config['image_clabel'] = image_clabel
     self.config['map_xlim'] = map_xlim
     self.config['map_ylim'] = map_ylim
     self.config['fontsize'] = fontsize
@@ -396,7 +393,7 @@ Notes
     self.ts_ax[2].tick_params(labelsize=self.config['fontsize'])
     if self.config['ts_title'] is None:
       name = self.station_names[self.config['xidx']]
-      self.ts_ax[0].set_title('station %s' % name,
+      self.ts_ax[0].set_title('station : %s' % name,
                               fontsize=self.config['fontsize'])
     else:
       self.ts_ax[0].set_title(self.config['ts_title'],
@@ -423,7 +420,7 @@ Notes
     #   ts_title
     if self.config['ts_title'] is None:
       name = self.station_names[self.config['xidx']]
-      self.ts_ax[0].set_title('station %s' % name,
+      self.ts_ax[0].set_title('station : %s' % name,
                               fontsize=self.config['fontsize'])
     else:
       self.ts_ax[0].set_title(self.config['ts_title'],
@@ -481,24 +478,19 @@ Notes
                   np.linspace(self.config['map_ylim'][0],self.config['map_ylim'][1],100)]
     data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
-    if self.config['image_vmin'] is None:
+    if self.config['image_clim'] is None:
       # if vmin and vmax are None then the color bounds will be 
       # updated each time the artists are redrawn
-      image_vmin = data_itp.min()
+      image_clim = data_itp.min(),data_itp.max()
     else:  
-      image_vmin = self.config['image_vmin']
+      image_clim = self.config['image_clim']
 
-    if self.config['image_vmax'] is None:
-      image_vmax = data_itp.max()
-    else:
-      image_vmax = self.config['image_vmax']
-          
     self.image = self.map_ax.imshow(
                    data_itp,
                    extent=(self.config['map_xlim']+self.config['map_ylim']),
                    interpolation='bicubic',
                    origin='lower',
-                   vmin=image_vmin,vmax=image_vmax,
+                   vmin=image_clim[0],vmax=image_clim[1],
                    cmap=self.config['image_cmap'],
                    zorder=0)
 
@@ -510,8 +502,8 @@ Notes
     else:
       self.cbar = self.map_fig.colorbar(self.image,cax=self.cax)  
       
-    self.cbar.set_clim((image_vmin,image_vmax))
-    self.cbar.set_label(self.config['map_clabel'],
+    self.cbar.set_clim(image_clim)
+    self.cbar.set_label(self.config['image_clabel'],
                         fontsize=self.config['fontsize'])
     self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
     self.cbar.solids.set_rasterized(True)
@@ -519,30 +511,24 @@ Notes
   def _update_image(self):
     # updates for:
     #   tidx
-    #   image_vmin
-    #   image_vmax  
+    #   image_clim
     data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
                                  self.x,
                                  self.x_itp[0],
                                  self.x_itp[1])
     self.image.set_data(data_itp)
     
-    if self.config['image_vmin'] is None:
-      # self.image_vmin and self.image_vmax are the user specified color 
-      # bounds. if they are None then the color bounds will be 
-      # updated each time the artists are redrawn
-      image_vmin = data_itp.min()
+    if self.config['image_clim'] is None:
+      # self.image_clim are the user specified color bounds. if they 
+      # are None then the color bounds will be updated each time the 
+      # artists are redrawn
+      image_clim = data_itp.min(),data_itp.max()
     else:  
-      image_vmin = self.config['image_vmin']
+      image_clim = self.config['image_clim']
 
-    if self.config['image_vmax'] is None:
-      image_vmax = data_itp.max()
-    else:
-      image_vmax = self.config['image_vmax']
-
-    self.image.set_clim((image_vmin,image_vmax))
-    self.cbar.set_clim((image_vmin,image_vmax))
-    self.cbar.set_label(self.config['map_clabel'],
+    self.image.set_clim(image_clim)
+    self.cbar.set_clim(image_clim)
+    self.cbar.set_label(self.config['image_clabel'],
                         fontsize=self.config['fontsize'])
     self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
     self.cbar.solids.set_rasterized(True)
@@ -568,8 +554,7 @@ Notes
     # 
     # updates for:
     #   tidx
-    #   image_vmin
-    #   image_vmax
+    #   image_clim
     if len(self.data_sets) < 2:
       return
 
