@@ -7,9 +7,9 @@ from pygeons._input import restricted_input
 from pygeons.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
-from logging import getLogger
+import logging
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
@@ -621,19 +621,19 @@ Notes
                                        markersize=0)
 
   def _init_lines(self):
-    self.L1,self.L2,self.L3 = [],[],[]
+    self.line1,self.line2,self.line3 = [],[],[]
     for si in range(len(self.data_sets)):
-      self.L1 += self.ts_ax[0].plot(
+      self.line1 += self.ts_ax[0].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],0],
                    color=self.color_cycle[si],
                    label=self.data_set_names[si])
-      self.L2 += self.ts_ax[1].plot(
+      self.line2 += self.ts_ax[1].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],1],
                    color=self.color_cycle[si],
                    label=self.data_set_names[si])
-      self.L3 += self.ts_ax[2].plot(
+      self.line3 += self.ts_ax[2].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],2],
                    color=self.color_cycle[si],
@@ -643,21 +643,21 @@ Notes
     # updates for:
     #   xidx
     for si in range(len(self._masked_data_sets)):
-      self.L1[si].set_data(self.t,
+      self.line1[si].set_data(self.t,
                            self._masked_data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
-      self.L1[si].set_label(self.data_set_names[si])                     
-      self.L2[si].set_data(self.t,
+      self.line1[si].set_label(self.data_set_names[si])                     
+      self.line2[si].set_data(self.t,
                            self._masked_data_sets[si][:,self.config['xidx'],1])
-      self.L2[si].set_label(self.data_set_names[si])                     
-      self.L3[si].set_data(self.t,
+      self.line2[si].set_label(self.data_set_names[si])                     
+      self.line3[si].set_data(self.t,
                            self._masked_data_sets[si][:,self.config['xidx'],2])
-      self.L3[si].set_label(self.data_set_names[si])                     
+      self.line3[si].set_label(self.data_set_names[si])                     
   
   def _init_fill(self):
-    self.F1,self.F2,self.F3 = [],[],[]
+    self.fill1,self.fill2,self.fill3 = [],[],[]
     for si in range(len(self.data_sets)):
-      self.F1 += [self.ts_ax[0].fill_between(
+      self.fill1 += [self.ts_ax[0].fill_between(
                     self.t,
                     self._masked_data_sets[si][:,self.config['xidx'],0] -
                     self._masked_sigma_sets[si][:,self.config['xidx'],0],
@@ -665,7 +665,7 @@ Notes
                     self._masked_sigma_sets[si][:,self.config['xidx'],0],
                     edgecolor='none',
                     color=self.color_cycle[si],alpha=0.5)]
-      self.F2 += [self.ts_ax[1].fill_between(
+      self.fill2 += [self.ts_ax[1].fill_between(
                     self.t,
                     self._masked_data_sets[si][:,self.config['xidx'],1] -
                     self._masked_sigma_sets[si][:,self.config['xidx'],1],
@@ -673,7 +673,7 @@ Notes
                     self._masked_sigma_sets[si][:,self.config['xidx'],1],
                     edgecolor='none',
                     color=self.color_cycle[si],alpha=0.5)]
-      self.F3 += [self.ts_ax[2].fill_between(
+      self.fill3 += [self.ts_ax[2].fill_between(
                     self.t,
                     self._masked_data_sets[si][:,self.config['xidx'],2] -
                     self._masked_sigma_sets[si][:,self.config['xidx'],2],
@@ -685,9 +685,9 @@ Notes
   def _update_fill(self):
     # updates for:
     #   xidx
-    [f.remove() for f in self.F1]
-    [f.remove() for f in self.F2]
-    [f.remove() for f in self.F3]
+    [f.remove() for f in self.fill1]
+    [f.remove() for f in self.fill2]
+    [f.remove() for f in self.fill3]
     self._init_fill()
 
   def _init(self):
@@ -720,13 +720,14 @@ Notes
 
   def hard_update(self):
     # clears all axes and redraws everything
-    [f.remove() for f in self.F1]
-    [f.remove() for f in self.F2]
-    [f.remove() for f in self.F3]
-    [l.remove() for l in self.L1]
-    [l.remove() for l in self.L2]
-    [l.remove() for l in self.L3]
+    [f.remove() for f in self.fill1]
+    [f.remove() for f in self.fill2]
+    [f.remove() for f in self.fill3]
+    [l.remove() for l in self.line1]
+    [l.remove() for l in self.line2]
+    [l.remove() for l in self.line3]
     [q.remove() for q in self.quiver]
+    [p.remove() for p in self.pickers]
     self.key.remove()
     self.marker.remove()
     self.image.remove()
