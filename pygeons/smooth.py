@@ -129,14 +129,14 @@ def _collapse_sparse_matrix(A,idx):
   return out
 
 
-def network_smoother(u,t,x,
-                     sigma=None,
-                     diff_specs=None,
-                     length_scale=None,                      
-                     time_scale=None,
-                     procs=None,
-                     fill=False):
-                       
+def smooth(t,x,u,
+           sigma=None,
+           diff_specs=None,
+           length_scale=None,                      
+           time_scale=None,
+           procs=None,
+           fill=False):
+                      
   u,t,x = np.asarray(u),np.asarray(t),np.asarray(x)
   Nx,Nt = x.shape[0],t.shape[0]
 
