@@ -155,6 +155,6 @@ class Quiver(_Quiver):
   def remove(self):  
     # remove the quiver and ellipsoid collection
     _Quiver.remove(self)    
-    if self.ellipsoids is not None:
+    if self.ellipsoid is not None:
       self.ellipsoids.remove()
 

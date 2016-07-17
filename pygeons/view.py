@@ -8,6 +8,7 @@ from pygeons.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
 import logging
+import scipy.interpolate
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ def _roll(lst):
 
 def _grid_interp_data(u,pnts,x,y):
   # u must be a masked array
+  print('starting interp') 
   pnts = pnts[~u.mask]
   u = u[~u.mask] 
 
@@ -29,10 +31,12 @@ def _grid_interp_data(u,pnts,x,y):
   xg,yg = np.meshgrid(x,y)
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
-  I = RBFInterpolant(pnts,u,penalty=0.0,
-                     order=1,basis=phs1)
+  I = scipy.interpolate.NearestNDInterpolator(pnts,u)
+  #I = RBFInterpolant(pnts,u,penalty=0.0,
+  #                   order=1,basis=phs1)
   uitp = I(pnts_itp)
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
+  print('done') 
   return uitp
   
 def disable_default_key_bindings():
@@ -284,7 +288,7 @@ Notes
       quiver_key_pos = (0.2,0.1)
 
     if quiver_key_label is None:   
-      quiver_key_label = str(quiver_key_length) + ' [m]'
+      quiver_key_label = str(quiver_key_length)
 
     # this dictionary contains plot configuration parameters which may 
     # be interactively changed
@@ -485,7 +489,7 @@ Notes
     self.image = self.map_ax.imshow(
                    data_itp,
                    extent=(self.config['map_xlim']+self.config['map_ylim']),
-                   interpolation='bicubic',
+                   interpolation='nearest',
                    origin='lower',
                    vmin=image_clim[0],vmax=image_clim[1],
                    cmap=self.config['image_cmap'],
