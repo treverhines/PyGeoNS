@@ -51,12 +51,7 @@ class DiffSpecs(dict):
     elements in a DiffSpecs instance can be modified just like 
     elements in a dictionary.  When using a DiffSpecs instance as an 
     argument to diff_matrix, diff, or network_smooth, it must contain 
-    a 'time' and 'space' dictionary and each dictionary must have 
-    entries for 'diffs' and 'coeffs'
-
-    value which default to None do not need to be specified. If left 
-    as None they will be assigned values during lower level function 
-    calls
+    a 'time' and 'space' dictionary 
     
   '''
   def __init__(self,time=None,space=None):  
@@ -93,8 +88,8 @@ class DiffSpecs(dict):
                      'coeffs':None,
                      'diff_type':None} 
 
-    self['time'].update(time)                     
-    self['space'].update(time)                     
+    self['time'].update(time)
+    self['space'].update(space)
 
   def __str__(self):
     out = 'DiffSpecs instance\n'
@@ -107,18 +102,10 @@ class DiffSpecs(dict):
   def __repr__(self):
     return self.__str__()    
 
-  def fill(self,t,x):
+  def fill(self):
     ''' 
-    uses the x and t values to fill in any Nones
-
-    Parameters
-    ----------
-      t : (Nt,) array
-
-      x : (Nx,2) array
-    '''    
-    Nt = t.shape[0]
-    Nx = x.shape[0]
+    replaces Nones with default values
+    '''
     T = self['time']
     X = self['space']
 
@@ -132,7 +119,7 @@ class DiffSpecs(dict):
       T['coeffs'] = [1.0 for d in T['diffs']]
       
     if T['stencil_size'] is None:
-      T['stencil_size'] = rbf.fd._default_stencil_size(Nt,1,diffs=T['diffs'])
+      T['stencil_size'] = rbf.fd._default_stencil_size(1,diffs=T['diffs'])
 
     if T['order'] is None:
       T['order'] = rbf.fd._default_poly_order(T['stencil_size'],1)
@@ -153,7 +140,7 @@ class DiffSpecs(dict):
       X['coeffs'] = [1.0 for d in X['diffs']]
       
     if X['stencil_size'] is None:
-      X['stencil_size'] = rbf.fd._default_stencil_size(Nx,2,diffs=X['diffs'])
+      X['stencil_size'] = rbf.fd._default_stencil_size(2,diffs=X['diffs'])
 
     if X['order'] is None:
       X['order'] = rbf.fd._default_poly_order(X['stencil_size'],2)
@@ -268,7 +255,7 @@ def acc_dy():
 def disp():
   ''' 
   returns displacement DiffSpecs instance
-  '''  
+  '''
   out = DiffSpecs()
   out['time']['diffs'] = [[0]]
   out['time']['coeffs'] = [1.0]
@@ -279,7 +266,7 @@ def disp():
 def vel():
   ''' 
   returns velocity DiffSpecs instance
-  '''  
+  '''
   out = DiffSpecs()
   out['time']['diffs'] = [[1]]
   out['time']['coeffs'] = [1.0]
@@ -290,7 +277,7 @@ def vel():
 def acc():
   ''' 
   returns acceleration DiffSpecs instance
-  '''  
+  '''
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
   out['time']['coeffs'] = [1.0]
@@ -299,7 +286,7 @@ def acc():
   return out
 
 
-def diff_matrix(t,x,ds,procs=None):
+def diff_matrix(t,x,ds,procs=None,mask=None):
   ''' 
   returns a matrix that performs the specified differentiation of 
   displacement. A differentiation matrix is generated for both time 
@@ -321,16 +308,26 @@ def diff_matrix(t,x,ds,procs=None):
     
     procs : int, optional
     
+    mask : (Nt,Nx) bool array, optional
+      If provided then the times and positions where the mask is True 
+      will be ignored 
+      
   '''
   t = np.asarray(t)
   x = np.asarray(x)
-  ds.fill(t,x)
+  ds.fill()
   
+  if mask is None:
+    mask = np.zeros((t.shape[0],x.shape[0]),dtype=bool)
+  else:
+    mask = np.asarray(mask,dtype=bool)
+      
   logger.debug('creating differentiation matrix : \n' + str(ds))
-  Dt = _time_diff_matrix(t,x,procs=procs,**ds['time'])
-  Dx = _space_diff_matrix(t,x,procs=procs,**ds['space'])
+  Dt = _time_diff_matrix(t,x,procs=procs,mask=mask,**ds['time'])
+  Dx = _space_diff_matrix(t,x,procs=procs,mask=mask,**ds['space'])
   D = Dt.dot(Dx)
   logger.debug('done')
+  
   return D
 
 
@@ -342,60 +339,68 @@ def _time_diff_matrix(t,x,
                       procs=None,
                       diffs=None,
                       coeffs=None,
-                      diff_type=None):
+                      diff_type=None,
+                      mask=None):
   # fill in missing arguments
   Nt = t.shape[0]
   Nx = x.shape[0]
     
-  # diff matrices for a given collection of time cuts are stored in 
-  # this dictionary and then recalled if another matrix is to be 
-  # generated with the the same time cuts
-  memo_dict = {}
+  # A time differentiation matrix is created for each station in this 
+  # loop. If two stations have the same mask and the same time cuts 
+  # then reused the matrix. 
+  cache = {}
   Lsubs = []
-  for xi in x:
-    cut_indices = tuple(cuts.get_indices(xi))
-    if cut_indices in memo_dict:
-      Lsubs += [memo_dict[cut_indices]]
+  for i,xi in enumerate(x):
+    # create a tuple identifying the time cut and mask for this station 
+    cut_indices_tpl = tuple(cuts.get_indices(xi))
+    mask_tpl = tuple(mask[:,i])
+    key = cut_indices_tpl + mask_tpl
+    if key in cache:
+      Lsubs += [cache[key]]
       continue
-    
+
+    # find the indices of unmasked times for this station
+    sub_idx, = np.nonzero(~mask[:,i])
+
     vert,smp = cuts.get_vert_and_smp(xi)
     if diff_type == 'rbf': 
       Li = rbf.fd.diff_matrix(
-             t[:,None],N=stencil_size,
+             t[sub_idx,None],N=stencil_size,
              diffs=diffs,coeffs=coeffs,
              basis=basis,order=order,
              vert=vert,smp=smp)
-      memo_dict[cut_indices] = Li             
-      Lsubs += [Li]
 
     elif diff_type == 'poly':               
       Li = rbf.fd.poly_diff_matrix(
-             t[:,None],N=stencil_size,
+             t[sub_idx,None],N=stencil_size,
              diffs=diffs,coeffs=coeffs,
              vert=vert,smp=smp)
-      memo_dict[cut_indices] = Li             
-      Lsubs += [Li]
 
     else:
-      raise ValueError('diff_type must be rbf or poly')
+      raise ValueError('diff_type must be "rbf" or "poly"')
       
-  
+    # convert to coo to get row and col indices for each entry
+    Li = Li.tocoo()
+    ri,ci,vi = Li.row,Li.col,Li.data
+    # changes the coordinates to correspond with the t vector rather 
+    # than t[sub_idx]
+    Li = scipy.sparse.csr_matrix((vi,(sub_idx[ri],sub_idx[ci])),shape=(Nt,Nt))
+
+    cache[key] = Li             
+    Lsubs += [Li]
+    
   # combine submatrices into the master matrix
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
-
-  rows = np.zeros((stencil_size*Nt,Nx))
-  cols = np.zeros((stencil_size*Nt,Nx))
-  vals = np.zeros((stencil_size*Nt,Nx))
+  
+  rows = np.zeros((0,),dtype=int)
+  cols = np.zeros((0,),dtype=int)
+  vals = np.zeros((0,),dtype=float)
   for i,Li in enumerate(Lsubs):
     Li = Li.tocoo()
     ri,ci,vi = Li.row,Li.col,Li.data
-    rows[:,i] = wrapped_indices[ri,i]
-    cols[:,i] = wrapped_indices[ci,i]
-    vals[:,i] = vi
-
-  rows = rows.ravel()
-  cols = cols.ravel()
-  vals = vals.ravel()
+    rows = np.concatenate((rows,wrapped_indices[ri,i]))
+    cols = np.concatenate((cols,wrapped_indices[ci,i]))
+    vals = np.concatenate((vals,vi))
 
   # form sparse time regularization matrix
   Lmaster = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
@@ -410,106 +415,104 @@ def _space_diff_matrix(t,x,
                        procs=None,
                        diffs=None,
                        coeffs=None,
-                       diff_type=None):
+                       diff_type=None,
+                       mask=None):
   # fill in missing arguments
   Nt = t.shape[0]
   Nx = x.shape[0]
     
-  # diff matrices for a given collection of time cuts are stored in 
+  # diff matrices for a collection of space cuts are stored in 
   # this dictionary and then recalled if another matrix is to be 
-  # generated with the the same time cuts
-  memo_dict = {}
+  # generated with the the same space cuts
+  cache = {}
   Lsubs = []
-  for ti in t:
-    cut_indices = tuple(cuts.get_indices(ti))
-    if cut_indices in memo_dict:
-      Lsubs += [memo_dict[cut_indices]]
+  for i,ti in enumerate(t):
+    cut_indices_tpl = tuple(cuts.get_indices(ti))
+    mask_tpl = tuple(mask[i,:])
+    key = cut_indices_tpl + mask_tpl
+    if key in cache:
+      Lsubs += [cache[key]]
       continue
       
+    # find the indices of unmasked stations for this time
+    sub_idx, = np.nonzero(~mask[i,:])
+
     vert,smp = cuts.get_vert_and_smp(ti)
     if diff_type == 'rbf': 
       Li = rbf.fd.diff_matrix(
-             x,N=stencil_size,
+             x[sub_idx],N=stencil_size,
              diffs=diffs,coeffs=coeffs,
              basis=basis,order=order,
              vert=vert,smp=smp)
-      memo_dict[cut_indices] = Li
-      Lsubs += [Li]
       
     elif diff_type == 'poly':               
       Li = rbf.fd.poly_diff_matrix(
-             x,N=stencil_size,
+             x[sub_idx],N=stencil_size,
              diffs=diffs,coeffs=coeffs,
              vert=vert,smp=smp)
-      memo_dict[cut_indices] = Li
-      Lsubs += [Li]
              
     else:
       raise ValueError('diff_type must be rbf or poly')               
 
+    # convert to coo to get row and col indices for each entry
+    Li = Li.tocoo()
+    ri,ci,vi = Li.row,Li.col,Li.data
+    # changes the coordinates to correspond with the x vector rather 
+    # than x[sub_idx]
+    Li = scipy.sparse.csr_matrix((vi,(sub_idx[ri],sub_idx[ci])),shape=(Nx,Nx))
+
+    cache[key] = Li
+    Lsubs += [Li]
+             
   # combine submatrices into the master matrix
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
 
-  rows = np.zeros((stencil_size*Nx,Nt))
-  cols = np.zeros((stencil_size*Nx,Nt))
-  vals = np.zeros((stencil_size*Nx,Nt))
+  rows = np.zeros((0,),dtype=int)
+  cols = np.zeros((0,),dtype=int)
+  vals = np.zeros((0,),dtype=float)
   for i,Li in enumerate(Lsubs):
     Li = Li.tocoo()
     ri,ci,vi = Li.row,Li.col,Li.data
-    rows[:,i] = wrapped_indices[i,ri]
-    cols[:,i] = wrapped_indices[i,ci]
-    vals[:,i] = vi
-
-  rows = rows.ravel()
-  cols = cols.ravel()
-  vals = vals.ravel()
+    rows = np.concatenate((rows,wrapped_indices[i,ri]))
+    cols = np.concatenate((cols,wrapped_indices[i,ci]))
+    vals = np.concatenate((vals,vi))
 
   # form sparse time regularization matrix
   Lmaster = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
   return Lmaster
 
 
-def diff(u,t,x,ds,procs=None):
+def diff(u,t,x,ds,procs=None,mask=None):
   ''' 
   differentiates u
   
   Parameters
   ----------
-    u : (Nt,Nx) array or (K,Nt,Nx) array
+    u : (Nt,Nx) array 
 
     t : (Nt,) array
     
     x : (Nx,2) array
     
-    ds: DiffSpec instance
+    ds : DiffSpec instance
+    
+    mask : (Nt,Nx) array
+      Identifies which elements of u to ignore. This is incase there 
+      are outliers or missing data. The returned diffentiated array 
+      will have zeros where the mask is True
+      
+  Returns
+  -------
+    u_diff : (Nt,Nx) array
     
   '''
-  t = np.asarray(t)
-  x = np.asarray(x)
-  u = np.asarray(u)
+  t,x,u = np.asarray(t),np.asarray(x),np.asarray(u)
+  Nt,Nx = t.shape[0],x.shape[0]
 
-  Nt = t.shape[0]
-  Nx = x.shape[0]
-
-  input2d = False
-  if u.ndim == 2:
-    input2d = True
-    if u.shape != (Nt,Nx):
-      raise ValueError('u must either be a (Nt,Nx) or (K,Nt,Nx) array')
-
-    u = u.reshape((1,Nt,Nx))
-
-  if u.shape[1:] != (Nt,Nx):
-    raise ValueError('u must either be a (Nt,Nx) or (K,Nt,Nx) array')
-
-  D = diff_matrix(t,x,ds,procs=procs)
-  u_flat = u.reshape((u.shape[0],Nt*Nx))
-  u_diff_flat = D.dot(u_flat.T).T
-
-  if input2d:
-    u_diff = u_diff_flat.reshape((Nt,Nx))
-  else:
-    u_diff = u_diff_flat.reshape((u.shape[0],Nt,Nx))
+  D = diff_matrix(t,x,ds,procs=procs,mask=mask)
+  u_flat = u.reshape(Nt*Nx)
+  u_diff_flat = D.dot(u_flat)
+  u_diff = u_diff_flat.reshape((Nt,Nx))
 
   return u_diff
 

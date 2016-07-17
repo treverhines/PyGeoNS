@@ -59,7 +59,7 @@ u = u_true + np.random.normal(0.0,S,(Nt,Nx))
 sigma = S*np.ones((Nt,Nx))
 
 start_time = time.time()
-u_smooth,u_pert = network_smoother(
+u_smooth = network_smoother(
                     u,t,x,
                     time_scale=0.1,
                     sigma=sigma)
@@ -68,7 +68,7 @@ end_time = time.time()
 print('total run time for network_smoother: %s milliseconds' % 
       np.round((end_time - start_time)*1000,3))
       
-u_std = np.std(u_pert,axis=0)
+#u_std = np.std(u_pert,axis=0)
 
 
 fig,ax = plt.subplots()
@@ -78,8 +78,8 @@ ax.plot(t,u_true[:,0],'r--')
 ax.set_xlabel('time')
 ax.set_ylabel('displacement')
 ax.grid()
-ax.fill_between(t,u_smooth[:,0]-u_std[:,0],u_smooth[:,0]+u_std[:,0],color='b',alpha=0.2)
-ax.legend(['observed','smoothed','true'],frameon=False)
+#ax.fill_between(t,u_smooth[:,0]-u_std[:,0],u_smooth[:,0]+u_std[:,0],color='b',alpha=0.2)
+#ax.legend(['observed','smoothed','true'],frameon=False)
 fig.tight_layout()
 plt.show()
 
@@ -98,7 +98,7 @@ sigma = S*np.ones((Nt,Nx))
 u = u_true + np.random.normal(0.0,sigma)
 
 start_time = time.time()
-u_smooth,u_pert = network_smoother(
+u_smooth = network_smoother(
                     u,t,x,
                     length_scale=L,
                     sigma=sigma)
@@ -107,7 +107,7 @@ end_time = time.time()
 print('total run time for network_smoother: %s milliseconds' % 
       np.round((end_time - start_time)*1000,3))
 
-u_std = np.std(u_pert,axis=0)
+#u_std = np.std(u_pert,axis=0)
 
 fig,ax = plt.subplots()
 c =ax.scatter(x[:,0],x[:,1],s=200,c=u_smooth[0,:],vmin=-1.2,vmax=1.2)
@@ -141,11 +141,11 @@ sigma = S*np.ones((Nt,Nx))
 u = u_true + np.random.normal(0.0,sigma)
 
 start_time = time.time()
-u_smooth,u_pert = network_smoother(
+u_smooth = network_smoother(
                     u,t,x,
                     length_scale=L,
                     time_scale=T,
-                    sigma=sigma,perts=0,
+                    sigma=sigma,
                     diff_specs=[pygeons.diff.acc(),
                                 pygeons.diff.disp_laplacian()])
 end_time = time.time()       
