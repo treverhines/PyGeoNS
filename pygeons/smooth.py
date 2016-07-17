@@ -27,9 +27,10 @@ def _solve(A,L,data):
     L : (P,M) csr sparse matrix
     
     d : (N,) array
-  '''  
+  '''
   lhs = A.T.dot(A) + L.T.dot(L)
   rhs = A.T.dot(data)
+
   # do not use umfpack because it raises an error when the memory 
   # usage exceeds ~4GB. It is also not easy to catch when umfpack 
   # fails due to a singular matrix
@@ -37,9 +38,11 @@ def _solve(A,L,data):
   if np.any(np.isnan(soln)):
     # spsolve fills the solution vector with nans when the matrix is 
     # singular
-    raise ValueError('Singular matrix. This may result from having too '
-                     'many masked observations. Check for stations '
-                     'or time periods where all observations are masked')
+    raise ValueError(
+      'Singular matrix. If "fill" is True then this may be the result '
+      'of having too many masked observations. Check for stations '
+      'or time periods where all observations are masked')
+
   return soln
   
 def _average_shortest_distance(x):
@@ -112,19 +115,30 @@ def _penalty(T,L,sigma,diff_specs):
   return out  
   
 
+def _collapse_sparse_matrix(A,idx):
+  ''' 
+  collapse A so that only rows idx and columns idx remain
+  '''
+  A.eliminate_zeros()
+  A = A.tocoo()
+  N = len(idx)
+  full_index_to_collapsed_index = dict(zip(idx,range(N)))    
+  rnew = [full_index_to_collapsed_index[i] for i in A.row]
+  cnew = [full_index_to_collapsed_index[i] for i in A.col]
+  out = scipy.sparse.csr_matrix((A.data,(rnew,cnew)),(len(idx),len(idx)))
+  return out
+
+
 def network_smoother(u,t,x,
                      sigma=None,
                      diff_specs=None,
                      length_scale=None,                      
                      time_scale=None,
                      procs=None,
-                     perts=10):
-  u = np.asarray(u)
-  t = np.asarray(t)
-  x = np.asarray(x)
-
-  Nx = x.shape[0]
-  Nt = t.shape[0]
+                     fill=False):
+                       
+  u,t,x = np.asarray(u),np.asarray(t),np.asarray(x)
+  Nx,Nt = x.shape[0],t.shape[0]
 
   if diff_specs is None:
     diff_specs = [pygeons.diff.acc(),
@@ -142,10 +156,16 @@ def network_smoother(u,t,x,
   if sigma.shape != (Nt,Nx):
     raise TypeError('sigma must have shape (Nt,Nx)')
 
-  u_flat = u.ravel()
-  sigma_flat = sigma.ravel()
-
-  reg_matrices = [pygeons.diff.diff_matrix(t,x,d,procs=procs) for d in diff_specs]
+  if fill:
+    # if fill==True a solution will be estimated for all positions 
+    # and times 
+    mask = np.zeros((Nt,Nx),dtype=bool)  
+  else:
+    # if fill==False the solution will only be estimated at unmasked 
+    # positions and times. This is less likely to result in a singular 
+    # matrix and is thus the default. A datum is considered masked if 
+    # its uncertainty is np.inf
+    mask = np.isinf(sigma)
 
   # estimate length scale and time scale if not given
   default_time_scale,default_length_scale = _estimate_scales(t,x)
@@ -154,50 +174,46 @@ def network_smoother(u,t,x,
 
   if time_scale is None:
     time_scale = default_time_scale
-    
-  # create regularization penalty parameters
-  penalties = [_penalty(time_scale,length_scale,sigma,d) for d in diff_specs]
 
-  # system matrix is the identity matrix scaled by data weight
-  Gdata = 1.0/sigma_flat
-  Grow = range(Nt*Nx)
-  Gcol = range(Nt*Nx)
-  Gsize = (Nt*Nx,Nt*Nx)
-  G = scipy.sparse.csr_matrix((Gdata,(Grow,Gcol)),Gsize)
-  
+  u_flat = u.ravel()
+  sigma_flat = sigma.ravel()
+  mask_flat = mask.ravel()
+
+  # get rid of masked entries in u_flat and sigma_flat
+  keep_idx, = np.nonzero(~mask_flat)
+  u_flat = u_flat[keep_idx]
+  sigma_flat = sigma_flat[keep_idx]
+
   # weigh u by the inverse of data uncertainty.
   u_flat = u_flat/sigma_flat
 
-  # this makes matrix copies
-  L = scipy.sparse.vstack(p*r for p,r in zip(penalties,reg_matrices))
+  # system matrix is the identity matrix scaled by data weight
+  K = len(keep_idx)
+  Gdata = 1.0/sigma_flat
+  Grow,Gcol = range(K),range(K)
+  G = scipy.sparse.csr_matrix((Gdata,(Grow,Gcol)),(K,K))
+
+  # create a regularization matrix for each diff_spec
+  Lsubs = [pygeons.diff.diff_matrix(t,x,d,procs=procs,mask=mask) for d in diff_specs]
+  # create regularization penalty parameters
+  penalties = [_penalty(time_scale,length_scale,sigma,d) for d in diff_specs]
+
+  # Collapse the regularization matrices on the masked rows 
+  logger.debug('collapsing regularization matrices ...')
+  Lsubs = [_collapse_sparse_matrix(Li,keep_idx) for Li in Lsubs]
+  logger.debug('done')
+
+  # stack the regularization matrices
+  L = scipy.sparse.vstack(p*r for p,r in zip(penalties,Lsubs))
   L.eliminate_zeros()
   
-  logger.debug('solving for predicted displacements')
+  logger.debug('solving for predicted displacements ...')
   u_pred = _solve(G,L,u_flat)
   logger.debug('done')
 
-  logger.debug('computing perturbed predicted displacements')
-  u_pert = np.zeros((perts,G.shape[0]))
-  # perturbed displacements will be computed in parallel and so this 
-  # needs to be turned into a mappable function
-  def mappable_dsolve(args):
-    G = args[0]
-    L = args[1]
-    d = args[2]
-    return _solve(G,L,d)
-
-  # generator for arguments that will be passed to calculate_pert
-  args = ((G,L,np.random.normal(0.0,1.0,G.shape[0]))
-           for i in range(perts))
-  u_pert = modest.mp.parmap(mappable_dsolve,args,workers=procs)
-  u_pert = np.reshape(u_pert,(perts,(Nt*Nx)))
-  u_pert += u_pred[None,:]
-
-  logger.debug('done')
-
-  u_pred = u_pred.reshape((Nt,Nx))
-  u_pert = u_pert.reshape((perts,Nt,Nx))
-
-  return u_pred,u_pert
-
+  # expand the solution to the original size
+  out = np.zeros(Nt*Nx)
+  out[keep_idx] = u_pred
+  out = out.reshape((Nt,Nx))
+  return out
 
