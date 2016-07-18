@@ -286,7 +286,7 @@ def acc():
   return out
 
 
-def diff_matrix(t,x,ds,procs=None,mask=None):
+def diff_matrix(t,x,ds,mask=None):
   ''' 
   returns a matrix that performs the specified differentiation of 
   displacement. A differentiation matrix is generated for both time 
@@ -306,8 +306,6 @@ def diff_matrix(t,x,ds,procs=None,mask=None):
     
     ds : DiffSpecs instance
     
-    procs : int, optional
-    
     mask : (Nt,Nx) bool array, optional
       If provided then the times and positions where the mask is True 
       will be ignored 
@@ -323,8 +321,8 @@ def diff_matrix(t,x,ds,procs=None,mask=None):
     mask = np.asarray(mask,dtype=bool)
       
   logger.debug('creating differentiation matrix : \n' + str(ds))
-  Dt = _time_diff_matrix(t,x,procs=procs,mask=mask,**ds['time'])
-  Dx = _space_diff_matrix(t,x,procs=procs,mask=mask,**ds['space'])
+  Dt = _time_diff_matrix(t,x,mask=mask,**ds['time'])
+  Dx = _space_diff_matrix(t,x,mask=mask,**ds['space'])
   D = Dt.dot(Dx)
   logger.debug('done')
   
@@ -336,7 +334,6 @@ def _time_diff_matrix(t,x,
                       stencil_size=None,
                       order=None,
                       cuts=None,
-                      procs=None,
                       diffs=None,
                       coeffs=None,
                       diff_type=None,
@@ -412,7 +409,6 @@ def _space_diff_matrix(t,x,
                        stencil_size=None,
                        order=None,
                        cuts=None,
-                       procs=None,
                        diffs=None,
                        coeffs=None,
                        diff_type=None,
@@ -482,7 +478,7 @@ def _space_diff_matrix(t,x,
   return Lmaster
 
 
-def diff(u,t,x,ds,procs=None,mask=None):
+def diff(t,x,u,ds,mask=None):
   ''' 
   differentiates u
   
@@ -509,7 +505,7 @@ def diff(u,t,x,ds,procs=None,mask=None):
   t,x,u = np.asarray(t),np.asarray(x),np.asarray(u)
   Nt,Nx = t.shape[0],x.shape[0]
 
-  D = diff_matrix(t,x,ds,procs=procs,mask=mask)
+  D = diff_matrix(t,x,ds,mask=mask)
   u_flat = u.reshape(Nt*Nx)
   u_diff_flat = D.dot(u_flat)
   u_diff = u_diff_flat.reshape((Nt,Nx))
