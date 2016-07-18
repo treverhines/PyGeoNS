@@ -19,7 +19,6 @@ def _roll(lst):
 
 def _grid_interp_data(u,pnts,x,y):
   # u must be a masked array
-  print('starting interp') 
   pnts = pnts[~u.mask]
   u = u[~u.mask] 
 
@@ -32,11 +31,11 @@ def _grid_interp_data(u,pnts,x,y):
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
   I = scipy.interpolate.NearestNDInterpolator(pnts,u)
+  # uncomment to use a smooth interpolator
   #I = RBFInterpolant(pnts,u,penalty=0.0,
   #                   order=1,basis=phs1)
   uitp = I(pnts_itp)
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
-  print('done') 
   return uitp
   
 def disable_default_key_bindings():
@@ -111,9 +110,12 @@ Notes
                quiver_scale=10.0,
                quiver_width=0.005,
                quiver_key_pos=None,
+               scatter_show=True,
                scatter_size=100,
                image_clim=None,
                image_cmap=None,
+               image_array_size=200,
+               image_clabel='vertical',
                station_names=None,
                data_set_names=None,
                ts_title=None,
@@ -126,8 +128,7 @@ Notes
                map_title=None,
                map_ylim=None,
                map_xlim=None,
-               color_cycle=None,
-               image_clabel='vertical'):
+               color_cycle=None):
     ''' 
     interactively views vector valued data which is time and space 
     dependent
@@ -158,6 +159,10 @@ Notes
         
       scatter_size : float
         size of the vertical deformation dots
+
+      scatter_show : bool
+        whether to show the vertical deformation for the second data 
+        set as scatter points
         
       station_names : (Nx,) str array
       
@@ -171,6 +176,10 @@ Notes
 
       image_clabel : str
         color bar label  
+
+      image_array_size : int
+        number of columns and rows in the matrix passed to plt.imshow. 
+        Larger number produces crisper Voronoi cells
 
       map_ax : Axis instance
         axis where map view will be plotted
@@ -298,19 +307,21 @@ Notes
     self.config['xidx'] = 0
     self.config['image_cmap'] = image_cmap
     self.config['image_clim'] = image_clim
+    self.config['image_clabel'] = image_clabel
+    self.config['image_array_size'] = image_array_size
     self.config['quiver_scale'] = quiver_scale
     self.config['quiver_width'] = quiver_width
     self.config['quiver_key_pos'] = quiver_key_pos        
     self.config['quiver_key_label'] = quiver_key_label
     self.config['quiver_key_length'] = quiver_key_length
     self.config['scatter_size'] = scatter_size
+    self.config['scatter_show'] = scatter_show
     self.config['ts_xlabel'] = ts_xlabel
     self.config['ts_ylabel_0'] = ts_ylabel_0
     self.config['ts_ylabel_1'] = ts_ylabel_1
     self.config['ts_ylabel_2'] = ts_ylabel_2
     self.config['ts_title'] = ts_title
     self.config['map_title'] = map_title
-    self.config['image_clabel'] = image_clabel
     self.config['map_xlim'] = map_xlim
     self.config['map_ylim'] = map_ylim
     self.config['fontsize'] = fontsize
@@ -475,8 +486,13 @@ Notes
 
   def _init_image(self):
     # call after _init_map_ax    
-    self.x_itp = [np.linspace(self.config['map_xlim'][0],self.config['map_xlim'][1],100),
-                  np.linspace(self.config['map_ylim'][0],self.config['map_ylim'][1],100)]
+    self.x_itp = [np.linspace(self.config['map_xlim'][0],
+                              self.config['map_xlim'][1],
+                              self.config['image_array_size']),
+                  np.linspace(self.config['map_ylim'][0],
+                              self.config['map_ylim'][1],
+                              self.config['image_array_size'])]
+                              
     data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
     if self.config['image_clim'] is None:
@@ -489,7 +505,7 @@ Notes
     self.image = self.map_ax.imshow(
                    data_itp,
                    extent=(self.config['map_xlim']+self.config['map_ylim']),
-                   interpolation='nearest',
+                   interpolation='bicubic',
                    origin='lower',
                    vmin=image_clim[0],vmax=image_clim[1],
                    cmap=self.config['image_cmap'],
@@ -536,8 +552,8 @@ Notes
     
   def _init_scatter(self):
     # call after _init_image
-    if len(self.data_sets) < 2:
-      self.scatter = None
+    if (len(self.data_sets) < 2) | (not self.config['scatter_show']):
+      self.scatter = None 
       return
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
@@ -556,7 +572,7 @@ Notes
     # updates for:
     #   tidx
     #   image_clim
-    if len(self.data_sets) < 2:
+    if (len(self.data_sets) < 2) | (not self.config['scatter_show']):
       return
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())

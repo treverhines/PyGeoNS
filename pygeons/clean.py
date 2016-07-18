@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 import numpy as np
-from pygeons.smooth import network_smoother
+from pygeons.smooth import smooth
 from pygeons.view import InteractiveViewer
 from pygeons.view import without_interactivity
 from pygeons.downsample import weighted_mean
