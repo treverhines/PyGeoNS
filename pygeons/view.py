@@ -895,11 +895,11 @@ Notes
       return
 
 
-def interactive_viewer(*args,**kwargs):
+def view(*args,**kwargs):
   ''' 
   wrapper to initiate and show an InteractiveViewer
   '''
   iv = InteractiveViewer(*args,**kwargs)
   iv.connect()
   plt.show()
-    
+  return   

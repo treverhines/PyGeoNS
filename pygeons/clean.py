@@ -526,7 +526,7 @@ Notes
     f['time'] = self.t 
     f['longitude'] = lon
     f['latitude'] = lat
-    f['name'] = self.station_names
+    f['id'] = self.station_names
     f['east'] = data[:,:,0]
     f['north'] = data[:,:,1]
     f['vertical'] = data[:,:,2]
@@ -740,11 +740,19 @@ Notes
         self.on_mouse_move(event)
       
   
-def interactive_cleaner(*args,**kwargs):
+def clean(*args,**kwargs):
   ''' 
-  interactively clean GPS data
+  Runs InteractiveCleaner and returns the kept data
   '''
   ic = InteractiveCleaner(*args,**kwargs)
   ic.connect()
   plt.show()
+  u = ic.data_sets[1][:,:,0]
+  v = ic.data_sets[1][:,:,1]
+  z = ic.data_sets[1][:,:,2]
+  su = ic.sigma_sets[1][:,:,0]
+  sv = ic.sigma_sets[1][:,:,1]
+  sz = ic.sigma_sets[1][:,:,2]
+  return (u,v,z,su,sv,sz)
+  
                                       
