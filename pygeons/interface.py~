@@ -26,8 +26,10 @@ contains the following items
 '''
 import pygeons.smooth
 import pygeons.diff
+import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
+
 
 def _make_basemap(lon,lat,resolution=None):
   ''' 
@@ -50,6 +52,7 @@ def _make_basemap(lon,lat,resolution=None):
                  llcrnrlat = llcrnrlat,
                  urcrnrlon = urcrnrlon,
                  urcrnrlat = urcrnrlat)
+
 
 def smooth_space(data,length_scale=None,fill=False,
                  cut_endpoint1_lons=None,
@@ -91,6 +94,7 @@ def smooth_space(data,length_scale=None,fill=False,
 
   return out
 
+
 def smooth_time(data,time_scale=None,fill=False,
                 cut_times=None):
 
@@ -122,6 +126,7 @@ def smooth_time(data,time_scale=None,fill=False,
 
   return out
   
+
 def smooth(data,time_scale=None,length_scale=None,fill=False,
            cut_endpoint1_lons=None,
            cut_endpoint1_lats=None,
@@ -169,6 +174,7 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
 
   return out
            
+
 def diff(data,time_diff=None,space_diff=None,
          cut_endpoint1_lons=None,
          cut_endpoint1_lats=None,
@@ -211,11 +217,70 @@ def diff(data,time_diff=None,space_diff=None,
 
   return out
   
-def clean(data,**kwargs):
-  return
+
+def clean(data,resolution='i',**kwargs):
+  out = {}
+  out['time'] = data['time']
+  out['logitude'] = data['longitude']
+  out['latitude'] = data['latitude'] 
+  out['id'] = data['id']
+  
+  fig,ax = plt.sub_plots()
+  bm = _make_basemap(data['longitude'],data['latitude'],
+                     resolution=resolution,ax=ax)
+  bm.drawcountries()
+  bm.drawstates() 
+  bm.drawcoastlines()
+  
+  x,y = bm(data['longitude'],data['latitude'])
+  pos = np.array([x,y]).T
+  t = data['time']
+  u = data['east']
+  v = data['north']
+  z = data['vertical']
+  su = data['east_std']
+  sv = data['north_std']
+  sz = data['vertical_std']
+  
+  out = pygeons.clean.clean(
+          t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
+          converter=bm,map_ax=ax,**kwargs)
+
+  out['east'] = out[0]          
+  out['north'] = out[1]          
+  out['vertical'] = out[2]          
+  out['east_std'] = out[3]   
+  out['north_std'] = out[4]          
+  out['vertical_std'] = out[5]   
+
+  return out
+
 
 def zero(data,**kwargs):
   return
 
-def view(data_list,**kwargs):
+def view(data_list,resolution='i',**kwargs):
+  t = data_list[0]['time']
+  lon = data_list[0]['longitude']
+  lat = data_list[0]['latitude']
+  u = [d['east'] for d in data_list]
+  v = [d['north'] for d in data_list]
+  z = [d['vertical'] for d in data_list]
+  su = [d['east_std'] for d in data_list]
+  sv = [d['north_std'] for d in data_list]
+  sz = [d['vertical_std'] for d in data_list]
+
+  fig,ax = plt.sub_plots()
+  bm = _make_basemap(lon,lat,
+                     resolution=resolution,ax=ax)
+  bm.drawcountries()
+  bm.drawstates() 
+  bm.drawcoastlines()
+  x,y = bm(lon,lat)
+  pos = np.array([x,y]).T
+  
+  pygeons.view.view(
+    t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
+    converter=bm,map_ax=ax,**kwargs)
+
   return

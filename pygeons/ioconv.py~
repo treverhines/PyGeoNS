@@ -1,5 +1,34 @@
 ''' 
 module for converting between the three input/output data formats
+
+TODO
+
+memoize decyear and decyear_inv
+
+make the following functions:
+  stack_csv # concatenates csv files and separates them by '***'
+  parse_csv # read individual csv file
+  parse_pos # read individual pos file
+  dict_from_pos # takes sampling_period argument
+  dict_from_csv # takes sampling_period argument
+  dict_from_hdf5 # takes sampling_period argument
+  csv_from_dict 
+  hdf5_from_dict 
+  file_from_dict # infer if the file is csv or hdf5
+  dict_from_file # takes sampling_period argument
+  file_from_file # takes sampling_period argument
+  same_time_and_stations # (dict1,dict2), sets dict2 data to have the 
+                         # same time and stations as dict1. 
+  decyear_range # returns list of decyear times where each time is 
+                # incrementally larger by N days. This requires its own function 
+                # because the length of a day in decimal years changes on leap years
+
+
+  Of these functions the following will have executables calling them
+    stack_csv (executable "pygeons-stack")
+    file_from_file (executable "pygeons-convert")
+    same_time_and_stations (executable "pygeons-same")
+    
 '''
 import time as timemod
 import datetime
