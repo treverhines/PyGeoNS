@@ -159,13 +159,17 @@ class MeanInterpolant:
     return out_value,out_sigma
 
 
-def downsample(t,t_itp,x,u,sigma=None,time_cuts=None):
+def downsample(t,tnew,x,u,sigma=None,time_cuts=None):
   ''' 
+  Downsamples the data from times *t* to *tnew*. This is done by 
+  applying a weighted mean over each new time interval. The weighted 
+  mean does not run over any specified time cuts
+  
   Parameters
   ---------- 
     t : (Nt,) array
     
-    t_itp : (Nitp,) array
+    tnew : (Nitp,) array
 
     x : (Nx,2) array
 
@@ -177,24 +181,24 @@ def downsample(t,t_itp,x,u,sigma=None,time_cuts=None):
 
   Returns
   -------
-    u_out : (Nout,Nx) array
+    u_out : (Nitp,Nx) array
 
-    sigma_out :(Nout,Nx) array
+    sigma_out :(Nitp,Nx) array
   
   '''
   u = np.asarray(u)
   t = np.asarray(t)
-  t_itp = np.asarray(t_itp)
+  tnew = np.asarray(tnew)
   x = np.asarray(x)
   if time_cuts is None:
     time_cuts = pygeons.cuts.TimeCuts()
 
-  u_out = np.zeros((t_itp.shape[0],x.shape[0]))
-  sigma_out = np.zeros((t_itp.shape[0],x.shape[0]))
+  u_out = np.zeros((tnew.shape[0],x.shape[0]))
+  sigma_out = np.zeros((tnew.shape[0],x.shape[0]))
   for i,xi in enumerate(x):
     vert,smp = time_cuts.get_vert_and_smp(xi)
     I = MeanInterpolant(t[:,None],u[:,i],sigma=sigma[:,i],vert=vert,smp=smp)
-    u_out[:,i],sigma_out[:,i] = I(t_itp[:,None])
+    u_out[:,i],sigma_out[:,i] = I(tnew[:,None])
 
   return u_out,sigma_out
 

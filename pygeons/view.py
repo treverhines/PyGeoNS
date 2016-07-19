@@ -725,7 +725,7 @@ Notes
     self._init_image()
     self._init_scatter()
     self._init_ts_ax()
-    self.map_fig.tight_layout()
+    #self.map_fig.tight_layout()
     self.map_fig.canvas.draw()
     self.ts_fig.tight_layout()
     self.ts_fig.canvas.draw()

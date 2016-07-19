@@ -8,6 +8,7 @@ import logging
 import h5py
 logger = logging.getLogger(__name__)
   
+
 def _get_line_with(sub,master):
   ''' 
   gets line with the first occurrence of sub
@@ -16,7 +17,6 @@ def _get_line_with(sub,master):
   if idx == -1:
     raise ValueError('Cannot find substring "%s"' % sub)
 
-  #print(str[0:idx])
   line_start = master.rfind('\n',0,idx)
   if line_start == -1:
     # this is if sub is on the first line
@@ -193,23 +193,23 @@ def _dict_from_text(infile,file_type,sample_period=None):
       
   if sample_period is None:
     # spacing in integer days
-    sample_period = int(np.round(min_spacing*365.25))
-    print(sample_period)
+    sample_period = np.round(min_spacing*365.25)
+  
+  # the sample_period must be an integer number of days. This is 
+  # because the csv file cannot record smaller time increments
+  sample_period = int(sample_period)
   
   # find the start and end date, rounding to the day with the closest 
   # midnight
-  start_time += 0.5/365.25
-  stop_time += 0.5/365.25
-  start_date = decyear_inv(start_time,'%Y-%m-%d')
-  stop_date = decyear_inv(stop_time,'%Y-%m-%d')
+  start_date = decyear_inv(start_time+0.5/365.25,'%Y-%m-%d')
+  stop_date = decyear_inv(stop_time+0.5/365.25,'%Y-%m-%d')
     
   # interpolation times
   time = decyear_range(start_date,stop_date,sample_period,'%Y-%m-%d')
   longitude = np.array([d['longitude'] for d in dicts])
   latitude = np.array([d['latitude'] for d in dicts])
   id = np.array([d['id'] for d in dicts])
-  Nt = len(time)
-  Nx = len(id)
+  Nt,Nx = len(time),len(id)
   east = np.zeros((Nt,Nx))
   north = np.zeros((Nt,Nx))
   vertical = np.zeros((Nt,Nx))
@@ -298,6 +298,7 @@ def csv_from_dict(outfile,data_dict):
   fout.close()
   return
   
+
 def dict_from_hdf5(infile):
   ''' 
   loads a data dictionary from an hdf5 file
