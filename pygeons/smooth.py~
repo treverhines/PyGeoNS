@@ -193,7 +193,7 @@ def smooth(t,x,u,
   G = scipy.sparse.csr_matrix((Gdata,(Grow,Gcol)),(K,K))
 
   # create a regularization matrix for each diff_spec
-  Lsubs = [pygeons.diff.diff_matrix(t,x,d,procs=procs,mask=mask) for d in diff_specs]
+  Lsubs = [pygeons.diff.diff_matrix(t,x,d,mask=mask) for d in diff_specs]
   # create regularization penalty parameters
   penalties = [_penalty(time_scale,length_scale,sigma,d) for d in diff_specs]
 

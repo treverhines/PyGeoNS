@@ -27,6 +27,11 @@ def _grid_interp_data(u,pnts,x,y):
   x = np.asarray(x)  
   y = np.asarray(y)
   
+  # return an array of zeros if all data is masked or if there is no 
+  # data
+  if pnts.shape[0] == 0:
+    return np.zeros((x.shape[0],y.shape[0]))
+        
   xg,yg = np.meshgrid(x,y)
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
@@ -270,7 +275,7 @@ Notes
       self.map_ax = map_ax
     else:
       # gives a white background and a higher dpi
-      self.map_fig = map_ax.get_figure(num='Map View',facecolor='white')  
+      self.map_fig = map_ax.get_figure()  
       self.map_ax = map_ax
 
     # make figure and axis for the time series 
@@ -895,11 +900,11 @@ Notes
       return
 
 
-def interactive_viewer(*args,**kwargs):
+def view(*args,**kwargs):
   ''' 
   wrapper to initiate and show an InteractiveViewer
   '''
   iv = InteractiveViewer(*args,**kwargs)
   iv.connect()
   plt.show()
-    
+  return   

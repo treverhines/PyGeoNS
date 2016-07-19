@@ -530,10 +530,9 @@ Notes
     f['east'] = data[:,:,0]
     f['north'] = data[:,:,1]
     f['vertical'] = data[:,:,2]
-    f['east_std'] = np.nan_to_num(sigma[:,:,0])
-    f['north_std'] = np.nan_to_num(sigma[:,:,1])
-    f['vertical_std'] = np.nan_to_num(sigma[:,:,2])
-    f['mask'] = np.any(np.isinf(sigma),axis=2)
+    f['east_std'] = sigma[:,:,0]
+    f['north_std'] = sigma[:,:,1]
+    f['vertical_std'] = sigma[:,:,2]
     f.close()
     
     logger.info('wrote kept data to "%s"\n' % file_name)

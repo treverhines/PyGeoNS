@@ -140,14 +140,15 @@ class MeanInterpolant:
     idx_arr = Titp.query_ball_tree(self.Tobs,radius)
     # make sure that the line segments connecting the observation 
     # points to the interpolation point do not intersect a boundary
-    for i in range(Nitp):
-      idx = idx_arr[i]
-      xitp_ext = np.repeat(xitp[[i]],len(idx),axis=0)
-      count = rbf.geometry.intersection_count(self.x[idx],xitp_ext,
-                                              self.vert,self.smp)
-      # throw out observation points that cross a boundary
-      idx_arr[i] = [j for j,c in zip(idx,count) if c == 0]
-
+    if self.smp.shape[0] != 0:
+      for i in range(Nitp):
+        idx = idx_arr[i]
+        xitp_ext = np.repeat(xitp[[i]],len(idx),axis=0)
+        count = rbf.geometry.intersection_count(self.x[idx],xitp_ext,
+                                                self.vert,self.smp)
+        # throw out observation points that cross a boundary
+        idx_arr[i] = [j for j,c in zip(idx,count) if c == 0]
+        
     out_value = np.zeros((xitp.shape[0],)+self.value_shape)
     out_sigma = np.zeros((xitp.shape[0],)+self.value_shape)
     for i,idx in enumerate(idx_arr):
@@ -158,19 +159,19 @@ class MeanInterpolant:
     return out_value,out_sigma
 
 
-def network_downsampler(u,t,t_itp,x,sigma=None,time_cuts=None):
+def downsample(t,t_itp,x,u,sigma=None,time_cuts=None):
   ''' 
   Parameters
   ---------- 
-    u : (Nt,Nx) array
-    
     t : (Nt,) array
     
     t_itp : (Nitp,) array
 
     x : (Nx,2) array
 
-    sigma : (Nin,Nx) array, optional
+    u : (Nt,Nx) array
+
+    sigma : (Nt,Nx) array, optional
     
     time_cuts : TimeCuts, optional
 

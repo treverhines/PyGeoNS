@@ -142,6 +142,9 @@ class Quiver(_Quiver):
 
       self.ax.add_collection(self.ellipsoids)
 
+    else:
+      self.ellipsoids = None      
+
   def set_UVC(self,u,v,C=None,sigma=None):
     if C is None:
       _Quiver.set_UVC(self,u,v)
