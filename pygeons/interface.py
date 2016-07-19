@@ -24,6 +24,7 @@ contains the following items
   vertical_std : (Nt,Nx) array
 
 '''
+from __future__ import division
 import pygeons.smooth
 import pygeons.diff
 import pygeons.view
@@ -35,6 +36,25 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 
+def _get_meridians_and_parallels(bm,ticks):
+  ''' 
+  returns the meridians and parallels that should be plotted.
+  '''
+  diff_lon = (bm.urcrnrlon-bm.llcrnrlon)
+  round_digit = int(np.ceil(np.log10(ticks/diff_lon)))
+  dlon = np.round(diff_lon/ticks,round_digit)
+
+  diff_lat = (bm.urcrnrlat-bm.llcrnrlat)
+  round_digit = int(np.ceil(np.log10(ticks/diff_lat)))
+  dlat = np.round(diff_lat/ticks,round_digit)
+
+  meridians = np.arange(np.floor(bm.llcrnrlon),
+                        np.ceil(bm.urcrnrlon),dlon)
+  parallels = np.arange(np.floor(bm.llcrnrlat),
+                        np.ceil(bm.urcrnrlat),dlat)
+
+  return meridians,parallels
+  
 
 def _check_compatibility(data_list):
   ''' 
@@ -309,20 +329,11 @@ def clean(data,resolution='i',**kwargs):
   bm.drawcountries()
   bm.drawstates() 
   bm.drawcoastlines()
-  dlon = (bm.urcrnrlon-bm.llcrnrlon)/4.0
-  if not np.round(dlon*10)/10.0 == 0.0:
-    dlon = np.round(dlon*10)/10.0
-  
-  dlat = (bm.urcrnrlat-bm.llcrnrlat)/4.0
-  if not np.round(dlat*10)/10.0 == 0.0:
-    dlat = np.round(dlat*10)/10.0
-    
-  bm.drawmeridians(np.arange(np.floor(bm.llcrnrlon),
-                   np.ceil(bm.urcrnrlon),dlon),
+  mer,par =  _get_meridians_and_parallels(bm,3)
+  bm.drawmeridians(mer,
                    labels=[0,0,0,1],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
-  bm.drawparallels(np.arange(np.floor(bm.llcrnrlat),
-                   np.ceil(bm.urcrnrlat),dlat),
+  bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
 
@@ -371,20 +382,11 @@ def view(data_list,resolution='i',**kwargs):
   bm.drawcountries(ax=ax)
   bm.drawstates(ax=ax) 
   bm.drawcoastlines(ax=ax)
-  dlon = (bm.urcrnrlon-bm.llcrnrlon)/4.0
-  if not np.round(dlon*10)/10.0 == 0.0:
-    dlon = np.round(dlon*10)/10.0
-  
-  dlat = (bm.urcrnrlat-bm.llcrnrlat)/4.0
-  if not np.round(dlat*10)/10.0 == 0.0:
-    dlat = np.round(dlat*10)/10.0
-    
-  bm.drawmeridians(np.arange(np.floor(bm.llcrnrlon),
-                   np.ceil(bm.urcrnrlon),dlon),
+  mer,par =  _get_meridians_and_parallels(bm,3)
+  bm.drawmeridians(mer,
                    labels=[0,0,0,1],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
-  bm.drawparallels(np.arange(np.floor(bm.llcrnrlat),
-                   np.ceil(bm.urcrnrlat),dlat),
+  bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
   
