@@ -36,6 +36,36 @@ from mpl_toolkits.basemap import Basemap
 import numpy as np
 
 
+def _check_compatibility(data_list):
+  ''' 
+  make sure that each data set contains the same stations and times
+  '''
+  # compare agains the first data set
+  time = data_list[0]['time']  
+  id = data_list[0]['id']  
+  lon = data_list[0]['longitude']  
+  lat = data_list[0]['latitude']  
+  for d in data_list[1:]:
+    if len(time) != len(d['time']):
+      raise ValueError('data sets have inconsistent number of time epochs')
+    if len(id) != len(d['id']):
+      raise ValueError('data sets have inconsistent number of stations')
+    if len(lon) != len(d['longitude']):
+      raise ValueError('data sets have inconsistent number of stations')
+    if len(lat) != len(d['latitude']):
+      raise ValueError('data sets have inconsistent number of stations')
+    if not np.all(np.isclose(time,d['time'],atol=1e-3)):
+      raise ValueError('data sets do not have the same times epochs')
+    if not np.all(id==d['id']):
+      raise ValueError('data sets do not have the same stations')
+    if not np.all(np.isclose(lon,d['longitude'],atol=1e-3)):
+      raise ValueError('data sets do not have the same station positions')
+    if not np.all(np.isclose(lat,d['latitude'],atol=1e-3)): 
+      raise ValueError('data sets do not have the same station positions')
+    
+  return  
+
+
 def _make_basemap(lon,lat,resolution=None):
   ''' 
   creates a transverse mercator projection which is centered about the 
@@ -245,6 +275,11 @@ def downsample(data,period,start=None,stop=None,cut_times=None):
   if stop is None:
     stop = decyear_inv(data['time'].max()+0.5/365.25,'%Y-%m-%d')
   
+  # make sure that the sample period is an integer multiple of days. 
+  # This is needed to be able to write to csv files without any data 
+  # loss.
+  period = int(period)
+  
   time_itp = decyear_range(start,stop,period,'%Y-%m-%d')
 
   out = {}
@@ -267,35 +302,6 @@ def downsample(data,period,start=None,stop=None,cut_times=None):
 def zero(data,**kwargs):
   return
 
-def check_compatability(data_list):
-  ''' 
-  make sure that each data set contains the same stations and times
-  '''
-  # compare agains the first data set
-  time = data_list[0]['time']  
-  id = data_list[0]['id']  
-  lon = data_list[0]['longitude']  
-  lat = data_list[0]['latitude']  
-  for d in data_list[1:]:
-    if len(time) != len(d['time']):
-      raise ValueError('data sets have inconsistent number of time epochs')
-    if len(id) != len(d['id']):
-      raise ValueError('data sets have inconsistent number of stations')
-    if len(lon) != len(d['longitude']):
-      raise ValueError('data sets have inconsistent number of stations')
-    if len(lat) != len(d['latitude']):
-      raise ValueError('data sets have inconsistent number of stations')
-    if not np.all(np.isclose(time,d['time'],atol=1e-3)):
-      raise ValueError('data sets do not have the same times epochs')
-    if not np.all(id==d['id']):
-      raise ValueError('data sets do not have the same stations')
-    if not np.all(np.isclose(lon,d['longitude'],atol=1e-3)):
-      raise ValueError('data sets do not have the same station positions')
-    if not np.all(np.isclose(lat,d['latitude'],atol=1e-3)): 
-      raise ValueError('data sets do not have the same station positions')
-    
-  return  
-
 def clean(data,resolution='i',**kwargs):
   fig,ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(data['longitude'],data['latitude'],
@@ -303,6 +309,23 @@ def clean(data,resolution='i',**kwargs):
   bm.drawcountries()
   bm.drawstates() 
   bm.drawcoastlines()
+  dlon = (bm.urcrnrlon-bm.llcrnrlon)/4.0
+  if not np.round(dlon*10)/10.0 == 0.0:
+    dlon = np.round(dlon*10)/10.0
+  
+  dlat = (bm.urcrnrlat-bm.llcrnrlat)/4.0
+  if not np.round(dlat*10)/10.0 == 0.0:
+    dlat = np.round(dlat*10)/10.0
+    
+  bm.drawmeridians(np.arange(np.floor(bm.llcrnrlon),
+                   np.ceil(bm.urcrnrlon),dlon),
+                   labels=[0,0,0,1],dashes=[2,2],
+                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  bm.drawparallels(np.arange(np.floor(bm.llcrnrlat),
+                   np.ceil(bm.urcrnrlat),dlat),
+                   labels=[1,0,0,0],dashes=[2,2],
+                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
@@ -329,6 +352,7 @@ def clean(data,resolution='i',**kwargs):
 
 
 def view(data_list,resolution='i',**kwargs):
+  _check_compatibility(data_list)
   t = data_list[0]['time']
   lon = data_list[0]['longitude']
   lat = data_list[0]['latitude']
@@ -347,6 +371,23 @@ def view(data_list,resolution='i',**kwargs):
   bm.drawcountries(ax=ax)
   bm.drawstates(ax=ax) 
   bm.drawcoastlines(ax=ax)
+  dlon = (bm.urcrnrlon-bm.llcrnrlon)/4.0
+  if not np.round(dlon*10)/10.0 == 0.0:
+    dlon = np.round(dlon*10)/10.0
+  
+  dlat = (bm.urcrnrlat-bm.llcrnrlat)/4.0
+  if not np.round(dlat*10)/10.0 == 0.0:
+    dlat = np.round(dlat*10)/10.0
+    
+  bm.drawmeridians(np.arange(np.floor(bm.llcrnrlon),
+                   np.ceil(bm.urcrnrlon),dlon),
+                   labels=[0,0,0,1],dashes=[2,2],
+                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  bm.drawparallels(np.arange(np.floor(bm.llcrnrlat),
+                   np.ceil(bm.urcrnrlat),dlat),
+                   labels=[1,0,0,0],dashes=[2,2],
+                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   

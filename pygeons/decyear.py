@@ -53,7 +53,7 @@ def _decyear_from_datetime(d):
                            (time_year_end - time_year_start))
   return decimal_time
 
-def _datetime_from_decyear(f,round=None):
+def _datetime_from_decyear(f):
   ''' 
   converts to a datetime object from decimal year. 
   '''

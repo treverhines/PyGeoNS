@@ -53,7 +53,7 @@ def _decyear_from_datetime(d):
                            (time_year_end - time_year_start))
   return decimal_time
 
-def _datetime_from_decyear(f,round=None):
+def _datetime_from_decyear(f):
   ''' 
   converts to a datetime object from decimal year. 
   '''
@@ -140,7 +140,7 @@ def decyear_range(start,stop,days,fmt):
 
   '''
   if days <= 0.0:
-    raise ValueError('*days* must be positive')
+    raise ValueError('*days* must be positive and non-zero')
 
   start_datetime = datetime.datetime.strptime(start,fmt)
   stop_datetime = datetime.datetime.strptime(stop,fmt)
