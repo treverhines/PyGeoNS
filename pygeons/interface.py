@@ -26,6 +26,11 @@ contains the following items
 '''
 import pygeons.smooth
 import pygeons.diff
+import pygeons.view
+import pygeons.clean
+import pygeons.downsample
+from pygeons.decyear import decyear_range
+from pygeons.decyear import decyear_inv
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
@@ -65,13 +70,6 @@ def smooth_space(data,length_scale=None,fill=False,
   if cut_endpoint2_lons is None: cut_endpoint2_lons = []
   if cut_endpoint2_lats is None: cut_endpoint2_lats = []
 
-  out = {}
-  out['time'] = data['time']
-  out['logitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
-
-
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
@@ -82,29 +80,32 @@ def smooth_space(data,length_scale=None,fill=False,
   ds['space']['cuts'] = pygeons.cuts.SpaceCuts(cut_endpoints1,cut_endpoints2)
   ds = [ds]
 
+  out = {}
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
-    out[dir] = pygeons.smooth.smooth(data['time'],pos,u,
-                                     sigma=sigma,diff_specs=ds,
-                                     length_scale=length_scale,
+    u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
+                                     sigma=sigma,
+                                     diff_specs=ds,
                                      time_scale=0.0,
+                                     length_scale=length_scale,
                                      fill=fill)
-    out[dir+'_std'] = np.zeros(u.shape)    
+    sigma_smooth = np.zeros(u.shape)
+    if not fill:
+      sigma_smooth[np.isinf(sigma)] = np.inf
 
+    out[dir] = u_smooth
+    out[dir+'_std'] = sigma_smooth
+
+  out['time'] = data['time']
+  out['longitude'] = data['longitude']
+  out['latitude'] = data['latitude'] 
+  out['id'] = data['id']
   return out
 
 
 def smooth_time(data,time_scale=None,fill=False,
                 cut_times=None):
-
-  if cut_times is None: cut_times = []
-
-  out = {}
-  out['time'] = data['time']
-  out['logitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
 
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -114,15 +115,27 @@ def smooth_time(data,time_scale=None,fill=False,
   ds['time']['cuts'] = pygeons.cuts.TimeCuts(cut_times)
   ds = [ds]
 
+  out = {}
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
-    out[dir] = pygeons.smooth.smooth(data['time'],pos,u,
-                                     sigma=sigma,diff_specs=ds,
-                                     length_scale=0.0,
+    u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
+                                     sigma=sigma,
+                                     diff_specs=ds,
                                      time_scale=time_scale,
+                                     length_scale=0.0,
                                      fill=fill)
-    out[dir+'_std'] = np.zeros(u.shape)    
+    sigma_smooth = np.zeros(u.shape)
+    if not fill:
+      sigma_smooth[np.isinf(sigma)] = np.inf
+
+    out[dir] = u_smooth
+    out[dir+'_std'] = sigma_smooth
+
+  out['time'] = data['time']
+  out['longitude'] = data['longitude']
+  out['latitude'] = data['latitude'] 
+  out['id'] = data['id']
 
   return out
   
@@ -138,17 +151,6 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
   if cut_endpoint1_lats is None: cut_endpoint1_lats = []
   if cut_endpoint2_lons is None: cut_endpoint2_lons = []
   if cut_endpoint2_lats is None: cut_endpoint2_lats = []
-  if cut_times is None: cut_times = []
-
-  ds1 = pygeons.diff.acc()  
-  ds2 = pygeons.diff.disp_laplacian()
-  ds = [ds1,ds2]
-
-  out = {}
-  out['time'] = data['time']
-  out['logitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
 
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -156,26 +158,38 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
 
   cut_endpoints1 = [bm(*i) for i,j in zip(cut_endpoint1_lons,cut_endpoint1_lats)]
   cut_endpoints2 = [bm(*i) for i,j in zip(cut_endpoint2_lons,cut_endpoint2_lats)]
-  ds1 = pygeons.diff.acc()
+  ds1 = pygeons.diff.acc()  
   ds1['time']['cuts'] = pygeons.cuts.TimeCuts(cut_times)
   ds2 = pygeons.diff.disp_laplacian()
   ds2['space']['cuts'] = pygeons.cuts.SpaceCuts(cut_endpoints1,cut_endpoints2)
   ds = [ds1,ds2]
 
+  out = {}
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
-    out[dir] = pygeons.smooth.smooth(data['time'],pos,u,
-                                     sigma=sigma,diff_specs=ds,
+    u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
+                                     sigma=sigma,
+                                     diff_specs=ds,
                                      time_scale=time_scale,
                                      length_scale=length_scale,
                                      fill=fill)
-    out[dir+'_std'] = np.zeros(u.shape)    
+    sigma_smooth = np.zeros(u.shape)
+    if not fill:
+      sigma_smooth[np.isinf(sigma)] = np.inf
+
+    out[dir] = u_smooth
+    out[dir+'_std'] = sigma_smooth
+
+  out['time'] = data['time']
+  out['longitude'] = data['longitude']
+  out['latitude'] = data['latitude'] 
+  out['id'] = data['id']
 
   return out
            
 
-def diff(data,time_diff=None,space_diff=None,
+def diff(data,dt=0,dx=0,dy=0,
          cut_endpoint1_lons=None,
          cut_endpoint1_lats=None,
          cut_endpoint2_lons=None,
@@ -186,18 +200,6 @@ def diff(data,time_diff=None,space_diff=None,
   if cut_endpoint1_lats is None: cut_endpoint1_lats = []
   if cut_endpoint2_lons is None: cut_endpoint2_lons = []
   if cut_endpoint2_lats is None: cut_endpoint2_lats = []
-  if cut_times is None: cut_times = []
-  
-  out = {}
-  out['time'] = data['time']
-  out['logitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
-
-  # form DiffSpecs instance
-  ds = pygeons.diff.DiffSpecs()
-  ds['time']['diffs'] = [time_diff]
-  ds['space']['diffs'] = [space_diff]
 
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -205,64 +207,133 @@ def diff(data,time_diff=None,space_diff=None,
 
   cut_endpoints1 = [bm(*i) for i,j in zip(cut_endpoint1_lons,cut_endpoint1_lats)]
   cut_endpoints2 = [bm(*i) for i,j in zip(cut_endpoint2_lons,cut_endpoint2_lats)]
+
+  # form DiffSpecs instance
   ds = pygeons.diff.DiffSpecs()
+  ds['time']['diffs'] = [(dt,)]
   ds['time']['cuts'] = pygeons.cuts.TimeCuts(cut_times)
+  ds['space']['diffs'] = [(dx,dy)]
   ds['space']['cuts'] = pygeons.cuts.SpaceCuts(cut_endpoints1,cut_endpoints2)
 
+  out = {}
   for dir in ['east','north','vertical']:
     u = data[dir]
     mask = np.isinf(data[dir+'_std'])
-    out[dir] = pygeons.diff.diff(data['time'],pos,u,ds,mask=mask)
-    out[dir+'_std'] = np.zeros(u.shape)    
+    u_diff = pygeons.diff.diff(data['time'],pos,u,ds,mask=mask)
+    sigma_diff = np.zeros(u.shape)
+    sigma_diff[mask] = np.inf
+    out[dir] = u_diff
+    out[dir+'_std'] = sigma_diff
 
-  return out
-  
-
-def clean(data,resolution='i',**kwargs):
-  out = {}
   out['time'] = data['time']
-  out['logitude'] = data['longitude']
+  out['longitude'] = data['longitude']
   out['latitude'] = data['latitude'] 
   out['id'] = data['id']
   
-  fig,ax = plt.sub_plots()
-  bm = _make_basemap(data['longitude'],data['latitude'],
-                     resolution=resolution,ax=ax)
-  bm.drawcountries()
-  bm.drawstates() 
-  bm.drawcoastlines()
+  return out
   
+
+def downsample(data,period,start=None,stop=None,cut_times=None):
+  # if the start and stop time are now specified then use the min and 
+  # max times
+  bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
-  t = data['time']
-  u = data['east']
-  v = data['north']
-  z = data['vertical']
-  su = data['east_std']
-  sv = data['north_std']
-  sz = data['vertical_std']
+
+  if start is None:
+    start = decyear_inv(data['time'].min()+0.5/365.25,'%Y-%m-%d')
+  if stop is None:
+    stop = decyear_inv(data['time'].max()+0.5/365.25,'%Y-%m-%d')
   
-  out = pygeons.clean.clean(
-          t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-          converter=bm,map_ax=ax,**kwargs)
+  time_itp = decyear_range(start,stop,period,'%Y-%m-%d')
 
-  out['east'] = out[0]          
-  out['north'] = out[1]          
-  out['vertical'] = out[2]          
-  out['east_std'] = out[3]   
-  out['north_std'] = out[4]          
-  out['vertical_std'] = out[5]   
+  out = {}
+  for dir in ['east','north','vertical']:
+    u = data[dir]
+    sigma = data[dir+'_std']
+    u_ds,sigma_ds = pygeons.downsample.downsample(
+                      data['time'],time_itp,
+                      pos,u,sigma,cut_times)
+               
+    out[dir] = u_ds
+    out[dir+'_std'] = sigma_ds
 
+  out['time'] = time_itp
+  out['longitude'] = data['longitude']
+  out['latitude'] = data['latitude'] 
+  out['id'] = data['id']
   return out
-
 
 def zero(data,**kwargs):
   return
+
+def check_compatability(data_list):
+  ''' 
+  make sure that each data set contains the same stations and times
+  '''
+  # compare agains the first data set
+  time = data_list[0]['time']  
+  id = data_list[0]['id']  
+  lon = data_list[0]['longitude']  
+  lat = data_list[0]['latitude']  
+  for d in data_list[1:]:
+    if len(time) != len(d['time']):
+      raise ValueError('data sets have inconsistent number of time epochs')
+    if len(id) != len(d['id']):
+      raise ValueError('data sets have inconsistent number of stations')
+    if len(lon) != len(d['longitude']):
+      raise ValueError('data sets have inconsistent number of stations')
+    if len(lat) != len(d['latitude']):
+      raise ValueError('data sets have inconsistent number of stations')
+    if not np.all(np.isclose(time,d['time'],atol=1e-3)):
+      raise ValueError('data sets do not have the same times epochs')
+    if not np.all(id==d['id']):
+      raise ValueError('data sets do not have the same stations')
+    if not np.all(np.isclose(lon,d['longitude'],atol=1e-3)):
+      raise ValueError('data sets do not have the same station positions')
+    if not np.all(np.isclose(lat,d['latitude'],atol=1e-3)): 
+      raise ValueError('data sets do not have the same station positions')
+    
+  return  
+
+def clean(data,resolution='i',**kwargs):
+  fig,ax = plt.subplots(num='Map View',facecolor='white')
+  bm = _make_basemap(data['longitude'],data['latitude'],
+                     resolution=resolution)
+  bm.drawcountries()
+  bm.drawstates() 
+  bm.drawcoastlines()
+  x,y = bm(data['longitude'],data['latitude'])
+  pos = np.array([x,y]).T
+
+  t = data['time']
+  u,v,z = data['east'],data['north'],data['vertical']
+  su,sv,sz = data['east_std'],data['north_std'],data['vertical_std']
+  clean_data = pygeons.clean.clean(
+                 t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
+                 converter=bm,map_ax=ax,**kwargs)
+
+  out = {}
+  out['time'] = data['time']
+  out['longitude'] = data['longitude']
+  out['latitude'] = data['latitude'] 
+  out['id'] = data['id']
+  out['east'] = clean_data[0]          
+  out['north'] = clean_data[1]          
+  out['vertical'] = clean_data[2]          
+  out['east_std'] = clean_data[3]   
+  out['north_std'] = clean_data[4]          
+  out['vertical_std'] = clean_data[5]   
+
+  return out
+
 
 def view(data_list,resolution='i',**kwargs):
   t = data_list[0]['time']
   lon = data_list[0]['longitude']
   lat = data_list[0]['latitude']
+  id = data_list[0]['id']
+
   u = [d['east'] for d in data_list]
   v = [d['north'] for d in data_list]
   z = [d['vertical'] for d in data_list]
@@ -270,17 +341,17 @@ def view(data_list,resolution='i',**kwargs):
   sv = [d['north_std'] for d in data_list]
   sz = [d['vertical_std'] for d in data_list]
 
-  fig,ax = plt.sub_plots()
+  fig,ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
-                     resolution=resolution,ax=ax)
-  bm.drawcountries()
-  bm.drawstates() 
-  bm.drawcoastlines()
+                     resolution=resolution)
+  bm.drawcountries(ax=ax)
+  bm.drawstates(ax=ax) 
+  bm.drawcoastlines(ax=ax)
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
   pygeons.view.view(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-    converter=bm,map_ax=ax,**kwargs)
+    map_ax=ax,station_names=id,**kwargs)
 
   return
