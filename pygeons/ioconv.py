@@ -218,7 +218,7 @@ def _dict_from_text(infile,file_type,sample_period=None):
   vertical_std = np.zeros((Nt,Nx))
   # interpolate data onto the interpolation times for each station
   for i,d in enumerate(dicts):
-    logger.debug('interpolation data for station %s onto grid times' % d['id']) 
+    logger.debug('interpolating data for station %s onto grid times' % d['id']) 
     data_i = np.concatenate((d['east'][:,None],
                              d['north'][:,None],
                              d['vertical'][:,None]),axis=1)
