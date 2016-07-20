@@ -19,7 +19,7 @@
 # active window and then you can use the arrow keys to scroll through
 # stations and time epochs
 
-pygeons-view data/synthetic.csv
+#pygeons-view data/synthetic.csv
 
 # This script will wait until the figure windows have been closed.
 
@@ -29,7 +29,7 @@ pygeons-view data/synthetic.csv
 # dataset to synthetic.downsample.csv. The new values are computed
 # with a weighted mean over the new sampling period.
 
-pygeons-downsample data/synthetic.csv 7 --output_file data/synthetic.downsample.csv
+#pygeons-downsample data/synthetic.csv 7 --output_file data/synthetic.downsample.csv
 
 # Lets look at the new downsampled dataset. This time we will add some
 # plotting arguments. This changes the colormap to viridis, which is
@@ -37,7 +37,7 @@ pygeons-downsample data/synthetic.csv 7 --output_file data/synthetic.downsample.
 # colormap range from -100 to 100, as opposed to letting it update
 # dynamically.
 
-pygeons-view data/synthetic.downsample.csv --image_cmap viridis --image_clim -100.0 100.0
+#pygeons-view data/synthetic.downsample.csv --image_cmap viridis --image_clim -100.0 100.0
 
 # All of the plotting arguments are listed in the help documentation
 # for pygeons.view.view.  You can also change the plotting arguments
@@ -51,7 +51,7 @@ pygeons-view data/synthetic.downsample.csv --image_cmap viridis --image_clim -10
 # with the least exciting time differentiation example. We will
 # compute the first derivative of our downsampled dataset
 
-pygeons-diff data/synthetic.downsample.csv --dt 1 --output_file data/synthetic.downsample.diff.h5
+#pygeons-diff data/synthetic.downsample.csv --dt 1 --output_file data/synthetic.downsample.diff.h5
 
 # Note that we added a .h5 extension to the output file. Pygeons
 # recognizes the standard hdf5 extensions and writes to a hdf5 file
@@ -71,11 +71,11 @@ pygeons-diff data/synthetic.downsample.csv --dt 1 --output_file data/synthetic.d
 # call to view and it will raise an error if data dimensions are
 # inconsistent
 
-pygeons-view data/synthetic.downsample.csv data/synthetic.downsample.diff.h5
+#pygeons-view data/synthetic.downsample.csv data/synthetic.downsample.diff.h5
 
 # lets differentiate the velocities along the x direction
 
-pygeons-diff data/synthetic.downsample.diff.h5 --dx 1
+#pygeons-diff data/synthetic.downsample.diff.h5 --dx 1
 
 # We did not specify an output location and pygeons will output to a
 # file with the same name as the input except the extension will be
@@ -85,7 +85,7 @@ pygeons-diff data/synthetic.downsample.diff.h5 --dx 1
 # Lets view the x derivative of velocities and compare them to the
 # velocities.
 
-pygeons-view data/synthetic.downsample.diff.h5 data/synthetic.downsample.diff.diff.h5
+#pygeons-view data/synthetic.downsample.diff.h5 data/synthetic.downsample.diff.diff.h5
 
 # Note that the x derivative is several orders of magnitude smaller
 # than the undifferentiated dataset. This is because x is in units of
@@ -104,7 +104,7 @@ pygeons-view data/synthetic.downsample.diff.h5 data/synthetic.downsample.diff.di
 # *write_synthetic.py* and the data file is called
 # *synthetic.noise.csv*. Lets now view the noisy data with the PIC
 
-pygeons-clean data/synthetic.noise.csv
+#pygeons-clean data/synthetic.noise.csv
 
 # The PIC offers all the features of the PIV and it allows you to
 # interactively remove outliers and jumps in the time series. Outliers
@@ -132,10 +132,15 @@ pygeons-clean data/synthetic.noise.csv
 # the disk.
 
 # smooth the cleaned data
-pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 20000
+#pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 100000
 
-pygeons-view data/synthetic.csv data/synthetic.noise.clean.h5 data/synthetic.noise.clean.smooth.h5 --data_set_names true noisy smooth
+#pygeons-view data/synthetic.csv data/synthetic.noise.clean.h5 data/synthetic.noise.clean.smooth.h5 --data_set_names true noisy smooth
 
+# smooth the clean data but do not allow smoothing across the middle
+pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 1000000 \
+  --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
+  --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
 
+pygeons-view data/synthetic.csv data/synthetic.noise.clean.h5 data/synthetic.noise.clean.smooth.h5 --data_set_names true noisy smooth -vv
 
 
