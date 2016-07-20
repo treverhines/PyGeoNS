@@ -35,6 +35,8 @@ from pygeons.decyear import decyear
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
+import logging
+logger = logging.getLogger(__name__)
 
 
 def _make_time_cuts(cut_times,cut_dates):
@@ -55,8 +57,8 @@ def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   if end1_lats is None: end1_lats = []
   if end2_lons is None: end2_lons = []
   if end2_lats is None: end2_lats = []
-  end1 = [bm(*i) for i,j in zip(end1_lons,end1_lats)]
-  end2 = [bm(*i) for i,j in zip(end2_lons,end2_lats)]
+  end1 = [bm(i,j) for i,j in zip(end1_lons,end1_lats)]
+  end2 = [bm(i,j) for i,j in zip(end2_lons,end2_lats)]
   out = pygeons.cuts.SpaceCuts(end1,end2)
   return out
 
@@ -134,6 +136,26 @@ def _check_io(fin):
 
   return fout  
 
+def _log_call(fin):
+  ''' 
+  Notifies the user of calls to a function and prints all but the 
+  first positional input argument, which is the data dictionary
+  '''
+  @wraps(fin)
+  def fout(data,*args,**kwargs):
+    str = 'calling function %s :\n' % fin.__name__
+    str += '    positional arguments following data :\n'
+    for a in args:
+      str += '        %s\n' % a
+    str += '    key word arguments :\n'
+    for k,v in kwargs.iteritems():
+      str += '        %s : %s\n' % (k,v)
+
+    logger.debug(str)
+    return fin(data,*args,**kwargs)
+
+  return fout
+      
 
 def _check_compatibility(data_list):
   ''' 
@@ -192,6 +214,7 @@ def _make_basemap(lon,lat,resolution=None):
 
 
 @_check_io
+@_log_call
 def smooth_space(data,length_scale=None,fill=False,
                  cut_endpoint1_lons=None,cut_endpoint1_lats=None,
                  cut_endpoint2_lons=None,cut_endpoint2_lats=None):
@@ -258,6 +281,7 @@ def smooth_space(data,length_scale=None,fill=False,
 
 
 @_check_io
+@_log_call
 def smooth_time(data,time_scale=None,fill=False,
                 cut_times=None,cut_dates=None):
   ''' 
@@ -329,6 +353,7 @@ def smooth_time(data,time_scale=None,fill=False,
   
 
 @_check_io
+@_log_call
 def smooth(data,time_scale=None,length_scale=None,fill=False,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
@@ -414,6 +439,7 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
            
 
 @_check_io
+@_log_call
 def diff(data,dt=0,dx=0,dy=0,
          cut_endpoint1_lons=None,cut_endpoint1_lats=None,
          cut_endpoint2_lons=None,cut_endpoint2_lats=None,
@@ -490,6 +516,7 @@ def diff(data,dt=0,dx=0,dy=0,
   
 
 @_check_io
+@_log_call
 def downsample(data,sample_period,start_date=None,stop_date=None,
                cut_times=None,cut_dates=None):
   ''' 
@@ -565,6 +592,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
 
 @_check_io
+@_log_call
 def zero(data,zero_time,radius,cut_times=None,cut_dates=None):
   ''' 
   Estimates and removes the displacements at the indicated time. The 
@@ -619,6 +647,7 @@ def zero(data,zero_time,radius,cut_times=None,cut_dates=None):
 
 
 @_check_io
+@_log_call
 def clean(data,resolution='i',**kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
@@ -679,6 +708,7 @@ def clean(data,resolution='i',**kwargs):
   return out
 
 
+@_log_call
 def view(data_list,resolution='i',**kwargs):
   ''' 
   runs the PyGeoNS interactive Viewer
