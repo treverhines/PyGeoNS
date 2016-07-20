@@ -9,6 +9,15 @@ if __name__ == '__main__':
         author='Trever Hines',
         author_email='treverhines@gmail.com',
         url='www.github.com/treverhines/PyGeoNS',
+        scripts=['exec/pygeons-smooth',
+                 'exec/pygeons-tsmooth',
+                 'exec/pygeons-ssmooth',
+                 'exec/pygeons-diff',
+                 'exec/pygeons-clean',
+                 'exec/pygeons-view',
+                 'exec/pygeons-convert',
+                 'exec/pygeons-zero',
+                 'exec/pygeons-downsample'],
         packages=['pygeons'],
         license='MIT')
 

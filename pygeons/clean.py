@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import pygeons.diff
 import pygeons.cuts
+import pygeons.ioconv
 from scipy.spatial import cKDTree
 import warnings
 import h5py
@@ -513,27 +514,27 @@ Notes
       if file_name == '':
         file_name = self._default_file_name
     
-    data = self.data_sets[0]
-    sigma = self.sigma_sets[0]
+    data = self.data_sets[1]
+    sigma = self.sigma_sets[1]
 
     # convert to longitude and latitude if a converter is provided
     if self.converter is not None:
-      lon,lat = converter(self.x[:,0],self.x[:,1])
+      lon,lat = self.converter(self.x[:,0],self.x[:,1],inverse=True)
     else:
       lon,lat = self.x[:,0],self.x[:,1]
         
-    f = h5py.File(file_name,'w')     
-    f['time'] = self.t 
-    f['longitude'] = lon
-    f['latitude'] = lat
-    f['id'] = self.station_names
-    f['east'] = data[:,:,0]
-    f['north'] = data[:,:,1]
-    f['vertical'] = data[:,:,2]
-    f['east_std'] = sigma[:,:,0]
-    f['north_std'] = sigma[:,:,1]
-    f['vertical_std'] = sigma[:,:,2]
-    f.close()
+    out_dict = {}    
+    out_dict['time'] = self.t 
+    out_dict['longitude'] = lon
+    out_dict['latitude'] = lat
+    out_dict['id'] = self.station_names
+    out_dict['east'] = data[:,:,0]
+    out_dict['north'] = data[:,:,1]
+    out_dict['vertical'] = data[:,:,2]
+    out_dict['east_std'] = sigma[:,:,0]
+    out_dict['north_std'] = sigma[:,:,1]
+    out_dict['vertical_std'] = sigma[:,:,2]
+    pygeons.ioconv.file_from_dict(file_name,out_dict)
     
     logger.info('wrote kept data to "%s"\n' % file_name)
     
