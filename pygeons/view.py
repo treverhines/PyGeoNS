@@ -9,6 +9,7 @@ from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
 import logging
 import scipy.interpolate
+from scipy.spatial import cKDTree
 from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 logger = logging.getLogger(__name__)
 
@@ -111,8 +112,8 @@ Notes
                u=None,v=None,z=None,
                su=None,sv=None,sz=None, 
                quiver_key_label=None,
-               quiver_key_length=1.0,
-               quiver_scale=10.0,
+               quiver_key_length=None,
+               quiver_scale=None,
                quiver_width=0.005,
                quiver_key_pos=None,
                scatter_show=True,
@@ -301,8 +302,31 @@ Notes
     if quiver_key_pos is None:
       quiver_key_pos = (0.2,0.1)
 
+    if quiver_key_length is None: 
+      # find the average length of unmasked data
+      average_length = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
+                                       self._masked_data_sets[0][:,:,1]**2))
+      # prevents division by zero issues
+      average_length = max(average_length,1e-5) 
+      # round to leading sigfig
+      quiver_key_length = np.round(average_length,-int(np.floor(np.log10(average_length))))
+      
+    if quiver_scale is None:
+      average_length = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
+                                       self._masked_data_sets[0][:,:,1]**2))
+      # prevents division by zero issues
+      average_length = max(average_length,1e-5) 
+      
+      T = cKDTree(self.x)
+      if Nx <= 1:
+        average_dist = 1.0
+      else:  
+        average_dist = np.mean(T.query(self.x,2)[0][:,1])
+
+      quiver_scale = average_length/average_dist
+      
     if quiver_key_label is None:   
-      quiver_key_label = str(quiver_key_length)
+      quiver_key_label = 'scale : ' + str(quiver_key_length)
 
     # this dictionary contains plot configuration parameters which may 
     # be interactively changed
@@ -652,17 +676,20 @@ Notes
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],0],
                    color=self.color_cycle[si],
-                   label=self.data_set_names[si])
+                   label=self.data_set_names[si],
+                   marker='.')
       self.line2 += self.ts_ax[1].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],1],
                    color=self.color_cycle[si],
-                   label=self.data_set_names[si])
+                   label=self.data_set_names[si],
+                   marker='.')
       self.line3 += self.ts_ax[2].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],2],
                    color=self.color_cycle[si],
-                   label=self.data_set_names[si])
+                   label=self.data_set_names[si],
+                   marker='.')
     
   def _update_lines(self):
     # updates for:

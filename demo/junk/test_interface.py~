@@ -35,8 +35,8 @@ data['vertical_std'] = sz
 data1 = pygeons.interface.downsample(data,50,'2005-01-01','2010-01-01')
 data2 = pygeons.interface.smooth(data1,time_scale=1.0,length_scale=1000000)
 data3 = pygeons.interface.diff(data2,dt=1,dx=1)
+pygeons.interface.view([data2],resolution='c')
 #data_diff = pygeons.interface.diff(data,dt=1)
 #pygeons.ioconv.file_from_dict('test_data.csv',data)
 #data2 = pygeons.ioconv.dict_from_file('test_data.csv')
 
-pygeons.interface.view([data2],resolution='c')

@@ -356,15 +356,6 @@ def dict_from_file(infile):
   
   return out
   
-
-def convert_file(infile,outfile):
-  ''' 
-  file type converison. The input and output file types are inferred 
-  from the extensions
-  '''
-  data = dict_from_file(infile)
-  file_from_dict(outfile,data)
-  return
     
                   
 
