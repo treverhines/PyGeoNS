@@ -7,8 +7,21 @@ from matplotlib.collections import EllipseCollection
 from matplotlib.backends import pylab_setup
 from matplotlib.pyplot import sci
 from matplotlib.pyplot import gca
+from scipy.spatial import cKDTree
 import warnings
 _backend_mod, new_figure_manager, draw_if_interactive, _show = pylab_setup()
+
+
+def _estimate_scale(x,y,u,v):
+  pos = np.array([x,y]).T
+  # return a scale of 1 if there is only one datum
+  if pos.shape[0] == 0:
+    return 1.0
+                                
+  T = cKDTree(pos)
+  average_dist = np.mean(T.query(pos,2)[0][:,1])
+  average_length = np.mean(np.sqrt(u**2 + v**2))
+  return average_length/average_dist   
 
 
 def compute_abphi(sigma_x,sigma_y,rho):
@@ -77,29 +90,28 @@ class Quiver(_Quiver):
       kwargs['angles'] = angles
       if kwargs['angles'] != 'xy':
         raise ValueError('angles must be "xy" when sigma is given')
-               
-      if not kwargs.has_key('scale'):
-        kwargs['scale'] = 1.0
 
     sigma = kwargs.pop('sigma',None)
-        
+
+    ellipse_kwargs = kwargs.pop('ellipse_kwargs',{})
+    if ellipse_kwargs.has_key('offsets'):
+      raise ValueError('cannot specify ellipse offsets')
+    if ellipse_kwargs.has_key('units'):
+      raise ValueError('cannot specify ellipse units')
+    
     self.ellipse_kwargs = {'edgecolors':'k',
                            'facecolors':'none',
                            'linewidths':1.0}
-    user_ellipse_kwargs = kwargs.pop('ellipse_kwargs',{})
-    if user_ellipse_kwargs.has_key('offsets'):
-      raise ValueError('cannot specify ellipse offsets')
-    if user_ellipse_kwargs.has_key('units'):
-      raise ValueError('cannot specify ellipse units')
+    self.ellipse_kwargs.update(ellipse_kwargs)
     
-    self.ellipse_kwargs.update(user_ellipse_kwargs)
-    _Quiver.__init__(self,
-                     ax,
-                     *args,
-                     **kwargs)
-
     self.ellipsoids = None
+
+    _Quiver.__init__(self,ax,*args,**kwargs)
+
     if sigma is not None:
+      if self.scale is None:
+        self.scale = _estimate_scale(self.X,self.Y,self.U,self.V)
+        
       su,sv,rho = sigma[0],sigma[1],sigma[2]
       self._update_ellipsoids(su,sv,rho)
 

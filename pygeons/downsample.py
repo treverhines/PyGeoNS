@@ -37,6 +37,9 @@ def weighted_mean(x,sigma,axis=None):
 
   x = np.asarray(x)
   sigma = np.asarray(sigma)
+  # make sure there are no negative uncertainties
+  if np.any(sigma < 0.0):
+    raise ValueError('uncertainty cannot be negative') 
   # replace any zeros or near zeros with min_sigma
   sigma[sigma < min_sigma] = min_sigma
 
