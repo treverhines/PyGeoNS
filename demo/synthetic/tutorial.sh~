@@ -141,6 +141,11 @@ pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 1000000 \
   --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
   --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
 
-pygeons-view data/synthetic.csv data/synthetic.noise.clean.h5 data/synthetic.noise.clean.smooth.h5 --data_set_names true noisy smooth -vv
+pygeons-view data/synthetic.csv \
+  data/synthetic.noise.clean.h5 \
+  data/synthetic.noise.clean.smooth.h5 \
+  --data_set_names true noisy smooth \
+  --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
+  --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
 
 
