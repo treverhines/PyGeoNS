@@ -648,7 +648,10 @@ def zero(data,zero_time,radius,cut_times=None,cut_dates=None):
 
 @_check_io
 @_log_call
-def clean(data,resolution='i',**kwargs):
+def clean(data,resolution='i',
+         cut_endpoint1_lons=None,cut_endpoint1_lats=None,
+         cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+         **kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
   
@@ -683,6 +686,13 @@ def clean(data,resolution='i',**kwargs):
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
 
+  # draw cuts if there are any
+  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
+                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
+  vert,smp = space_cuts.get_vert_and_smp(0.0)
+  for s in smp:
+    ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
@@ -709,7 +719,10 @@ def clean(data,resolution='i',**kwargs):
 
 
 @_log_call
-def view(data_list,resolution='i',**kwargs):
+def view(data_list,resolution='i',
+         cut_endpoint1_lons=None,cut_endpoint1_lats=None,
+         cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+         **kwargs):
   ''' 
   runs the PyGeoNS interactive Viewer
   
@@ -751,7 +764,13 @@ def view(data_list,resolution='i',**kwargs):
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
-  
+  # draw cuts if there are any
+  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
+                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
+  vert,smp = space_cuts.get_vert_and_smp(0.0)
+  for s in smp:
+    ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+    
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
