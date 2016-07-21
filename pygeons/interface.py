@@ -672,26 +672,45 @@ def clean(data,resolution='i',
       output data dictionary 
     
   '''
-  fig,ax = plt.subplots(num='Map View',facecolor='white')
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+  # display time in decyear and date on time series plot
+  def ts_coord_string(x,y):                         
+    str = 'time : %g  ' % x
+    str += '(date : %s)' % decyear_inv(x,'%Y-%m-%d')
+    return str 
+
+  ts_ax[0].format_coord = ts_coord_string
+  ts_ax[1].format_coord = ts_coord_string
+  ts_ax[2].format_coord = ts_coord_string
+
+  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(data['longitude'],data['latitude'],
                      resolution=resolution)
-  bm.drawcountries()
-  bm.drawstates() 
-  bm.drawcoastlines()
+  # function to produce coordinate display on bottom left corner of 
+  # the figure
+  def coord_string(x,y):                         
+    str = 'x : %g m  y : %g m  ' % (x,y)
+    str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
+    return str 
+
+  map_ax.format_coord = coord_string
+  bm.drawcountries(ax=map_ax)
+  bm.drawstates(ax=map_ax) 
+  bm.drawcoastlines(ax=map_ax)
   mer,par =  _get_meridians_and_parallels(bm,3)
   bm.drawmeridians(mer,
                    labels=[0,0,0,1],dashes=[2,2],
-                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
-                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
 
   # draw cuts if there are any
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
                                 cut_endpoint2_lons,cut_endpoint2_lats,bm)
   vert,smp = space_cuts.get_vert_and_smp(0.0)
   for s in smp:
-    ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
@@ -701,7 +720,8 @@ def clean(data,resolution='i',
   su,sv,sz = data['east_std'],data['north_std'],data['vertical_std']
   clean_data = pygeons.clean.clean(
                  t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-                 converter=bm,map_ax=ax,**kwargs)
+                 converter=bm,map_ax=map_ax,ts_ax=ts_ax,
+                 station_names=data['id'],**kwargs)
 
   out = {}
   out['time'] = data['time']
@@ -751,31 +771,50 @@ def view(data_list,resolution='i',
   sv = [d['north_std'] for d in data_list]
   sz = [d['vertical_std'] for d in data_list]
 
-  fig,ax = plt.subplots(num='Map View',facecolor='white')
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+  # display time in decyear and date on time series plot
+  def ts_coord_string(x,y):                         
+    str = 'time : %g  ' % x
+    str += '(date : %s)' % decyear_inv(x,'%Y-%m-%d')
+    return str 
+
+  ts_ax[0].format_coord = ts_coord_string
+  ts_ax[1].format_coord = ts_coord_string
+  ts_ax[2].format_coord = ts_coord_string
+   
+  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
                      resolution=resolution)
-  bm.drawcountries(ax=ax)
-  bm.drawstates(ax=ax) 
-  bm.drawcoastlines(ax=ax)
+  # function to produce coordinate display on bottom left corner of 
+  # the figure
+  def map_coord_string(x,y):                         
+    str = 'x : %g m  y : %g m  ' % (x,y)
+    str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
+    return str 
+
+  map_ax.format_coord = map_coord_string
+  bm.drawcountries(ax=map_ax)
+  bm.drawstates(ax=map_ax) 
+  bm.drawcoastlines(ax=map_ax)
   mer,par =  _get_meridians_and_parallels(bm,3)
   bm.drawmeridians(mer,
                    labels=[0,0,0,1],dashes=[2,2],
-                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
-                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
   # draw cuts if there are any
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
                                 cut_endpoint2_lons,cut_endpoint2_lats,bm)
   vert,smp = space_cuts.get_vert_and_smp(0.0)
   for s in smp:
-    ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
-    
+    map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
   pygeons.view.view(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-    map_ax=ax,station_names=id,**kwargs)
+    ts_ax=ts_ax,map_ax=map_ax,station_names=id,**kwargs)
 
   return
