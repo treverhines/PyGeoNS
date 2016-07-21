@@ -132,20 +132,30 @@
 # the disk.
 
 # smooth the cleaned data
-#pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 100000
+pygeons-ssmooth data/synthetic.noise.clean.h5 --length_scale 100000
 
-#pygeons-view data/synthetic.csv data/synthetic.noise.clean.h5 data/synthetic.noise.clean.smooth.h5 --data_set_names true noisy smooth
+# compute x derivative of the smoothed and unsmoothed data
+pygeons-diff --dx 1 data/synthetic.noise.clean.h5 
+pygeons-diff --dx 1 data/synthetic.noise.clean.ssmooth.h5 
+
+pygeons-view data/synthetic.noise.clean.h5 \
+             data/synthetic.noise.clean.ssmooth.h5 \
+             --data_set_names noisy smooth
+
+pygeons-view data/synthetic.noise.clean.diff.h5 \
+             data/synthetic.noise.clean.ssmooth.diff.h5 \
+             --data_set_names noisy smooth
 
 # smooth the clean data but do not allow smoothing across the middle
-pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 1000000 \
-  --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
-  --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
+#pygeons-smooth data/synthetic.noise.clean.h5 --length_scale 1000000 \
+#  --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
+#  --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
 
-pygeons-view data/synthetic.csv \
-  data/synthetic.noise.clean.h5 \
-  data/synthetic.noise.clean.smooth.h5 \
-  --data_set_names true noisy smooth \
-  --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
-  --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
+#pygeons-view data/synthetic.csv \
+#  data/synthetic.noise.clean.h5 \
+#  data/synthetic.noise.clean.smooth.h5 \
+#  --data_set_names true noisy smooth \
+#  --cut_endpoint1_lons -80 --cut_endpoint1_lats 43 \
+#  --cut_endpoint2_lons -90 --cut_endpoint2_lats 43 -vv
 
 

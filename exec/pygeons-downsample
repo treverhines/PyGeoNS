@@ -55,7 +55,7 @@ out_dict = pygeons.interface.downsample(
              data_dict,
              p['sample_period'],
              start_date=p['start_date'],
-             stop_date=p['start_date'],
+             stop_date=p['stop_date'],
              cut_times=p['cut_times'],
              cut_dates=p['cut_dates'])
 pygeons.ioconv.file_from_dict(output_file,out_dict)                         
