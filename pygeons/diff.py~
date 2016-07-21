@@ -353,6 +353,7 @@ def _time_diff_matrix(t,x,
     mask_tpl = tuple(mask[:,i])
     key = cut_indices_tpl + mask_tpl
     if key in cache:
+      print('reusing!!!')
       Lsubs += [cache[key]]
       continue
 
@@ -427,6 +428,7 @@ def _space_diff_matrix(t,x,
     mask_tpl = tuple(mask[i,:])
     key = cut_indices_tpl + mask_tpl
     if key in cache:
+      print('reusing!!!')
       Lsubs += [cache[key]]
       continue
       
