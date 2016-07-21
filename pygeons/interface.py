@@ -46,7 +46,9 @@ def _make_time_cuts(cut_times,cut_dates):
     cut_times = list(cut_times)  
 
   if cut_dates is not None:
-    cut_times += [decyear(d,'%Y-%m-%d') for d in cut_dates]   
+    # subtract half a day to ensure that the jump is observed at the 
+    # indicated day
+    cut_times += [decyear(d,'%Y-%m-%d') - 0.5/365.25 for d in cut_dates]   
 
   out = pygeons.cuts.TimeCuts(cut_times)
   return out
@@ -62,26 +64,6 @@ def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   out = pygeons.cuts.SpaceCuts(end1,end2)
   return out
 
-
-def _get_meridians_and_parallels(bm,ticks):
-  ''' 
-  returns the meridians and parallels that should be plotted.
-  '''
-  diff_lon = (bm.urcrnrlon-bm.llcrnrlon)
-  round_digit = int(np.ceil(np.log10(ticks/diff_lon)))
-  dlon = np.round(diff_lon/ticks,round_digit)
-
-  diff_lat = (bm.urcrnrlat-bm.llcrnrlat)
-  round_digit = int(np.ceil(np.log10(ticks/diff_lat)))
-  dlat = np.round(diff_lat/ticks,round_digit)
-
-  meridians = np.arange(np.floor(bm.llcrnrlon),
-                        np.ceil(bm.urcrnrlon),dlon)
-  parallels = np.arange(np.floor(bm.llcrnrlat),
-                        np.ceil(bm.urcrnrlat),dlat)
-
-  return meridians,parallels
-  
 
 def _check_data(data):
   ''' 
@@ -178,10 +160,16 @@ def _check_compatibility(data_list):
       raise ValueError('data sets have inconsistent number of stations')
     if len(lat) != len(d['latitude']):
       raise ValueError('data sets have inconsistent number of stations')
+
+    # this makes sure that times are within ~12 hours of eachother
     if not np.all(np.isclose(time,d['time'],atol=1e-3)):
       raise ValueError('data sets do not have the same times epochs')
+
+    # make sure the stations have the same names
     if not np.all(id==d['id']):
       raise ValueError('data sets do not have the same stations')
+
+    # this makes sure the stations are within a few hundred meters of eachother
     if not np.all(np.isclose(lon,d['longitude'],atol=1e-3)):
       raise ValueError('data sets do not have the same station positions')
     if not np.all(np.isclose(lat,d['latitude'],atol=1e-3)): 
@@ -211,6 +199,61 @@ def _make_basemap(lon,lat,resolution=None):
                  llcrnrlat = llcrnrlat,
                  urcrnrlon = urcrnrlon,
                  urcrnrlat = urcrnrlat)
+
+
+def _get_meridians_and_parallels(bm,ticks):
+  ''' 
+  returns the meridians and parallels that should be plotted.
+  '''
+  diff_lon = (bm.urcrnrlon-bm.llcrnrlon)
+  round_digit = int(np.ceil(np.log10(ticks/diff_lon)))
+  dlon = np.round(diff_lon/ticks,round_digit)
+
+  diff_lat = (bm.urcrnrlat-bm.llcrnrlat)
+  round_digit = int(np.ceil(np.log10(ticks/diff_lat)))
+  dlat = np.round(diff_lat/ticks,round_digit)
+
+  meridians = np.arange(np.floor(bm.llcrnrlon),
+                        np.ceil(bm.urcrnrlon),dlon)
+  parallels = np.arange(np.floor(bm.llcrnrlat),
+                        np.ceil(bm.urcrnrlat),dlat)
+
+  return meridians,parallels
+  
+
+def _setup_map_ax(bm,ax):
+  # function which prints out the coordinates on the bottom left 
+  # corner of the figure
+  def coord_string(x,y):                         
+    str = 'x : %g m  y : %g m  ' % (x,y)
+    str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
+    return str 
+
+  ax.format_coord = coord_string
+  bm.drawcountries(ax=ax)
+  bm.drawstates(ax=ax) 
+  bm.drawcoastlines(ax=ax)
+  mer,par =  _get_meridians_and_parallels(bm,3)
+  bm.drawmeridians(mer,
+                   labels=[0,0,0,1],dashes=[2,2],
+                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  bm.drawparallels(par,
+                   labels=[1,0,0,0],dashes=[2,2],
+                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  return
+                     
+
+def _setup_ts_ax(ax_lst):
+  # display time in decyear and date on time series plot
+  def ts_coord_string(x,y):                         
+    str = 'time : %g  ' % x
+    str += '(date : %s)' % decyear_inv(x,'%Y-%m-%d')
+    return str 
+
+  ax_lst[0].format_coord = ts_coord_string
+  ax_lst[1].format_coord = ts_coord_string
+  ax_lst[2].format_coord = ts_coord_string
+  return
 
 
 @_check_io
@@ -475,7 +518,8 @@ def diff(data,dt=0,dx=0,dy=0,
     cut_dates : lst, optional
       list of time discontinuities in YYYY-MM-DD. These 
       discontinuities get converted to decimal year and then appended 
-      to *cut_times*
+      to *cut_times*. The date should be the first day when the jump 
+      in the time series is observed
       
   Returns 
   -------
@@ -563,6 +607,8 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   pos = np.array([x,y]).T
 
   if start_date is None:
+    # make sure the start and end date are rounded to the date with the 
+    # closest midnight
     start_date = decyear_inv(data['time'].min()+0.5/365.25,'%Y-%m-%d')
   if stop_date is None:
     stop_date = decyear_inv(data['time'].max()+0.5/365.25,'%Y-%m-%d')
@@ -593,7 +639,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
 @_check_io
 @_log_call
-def zero(data,zero_time,radius,cut_times=None,cut_dates=None):
+def zero(data,zero_date,radius,cut_times=None,cut_dates=None):
   ''' 
   Estimates and removes the displacements at the indicated time. The 
   offset is calculated with a weighted mean centered about the 
@@ -604,11 +650,11 @@ def zero(data,zero_time,radius,cut_times=None,cut_dates=None):
   ----------
     data : dict
     
-    zero_time : float
-      Zero displacements at this time which is specified in decimal years
+    zero_date : str
+      Zero displacements at this date which is specified in YYYY-MM-DD
       
-    radius : float
-      Length of time before and after *zero_time* used in computing 
+    radius : int
+      number of days before and after *zero_date* used in computing 
       the offsets
         
     cut_times : lst, optional
@@ -625,6 +671,11 @@ def zero(data,zero_time,radius,cut_times=None,cut_dates=None):
       Output data dictionary
 
   '''
+  zero_time = decyear(zero_date,'%Y-%m-%d')
+  
+  # add half a day to prevent any rounding errors
+  radius = int(radius) + 0.5/365.25
+  
   time_cuts = _make_time_cuts(cut_times,cut_dates)
   vert,smp = time_cuts.get_vert_and_smp([0.0,0.0])
   
@@ -673,37 +724,12 @@ def clean(data,resolution='i',
     
   '''
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
-  # display time in decyear and date on time series plot
-  def ts_coord_string(x,y):                         
-    str = 'time : %g  ' % x
-    str += '(date : %s)' % decyear_inv(x,'%Y-%m-%d')
-    return str 
-
-  ts_ax[0].format_coord = ts_coord_string
-  ts_ax[1].format_coord = ts_coord_string
-  ts_ax[2].format_coord = ts_coord_string
+  _setup_ts_ax(ts_ax)
 
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(data['longitude'],data['latitude'],
                      resolution=resolution)
-  # function to produce coordinate display on bottom left corner of 
-  # the figure
-  def coord_string(x,y):                         
-    str = 'x : %g m  y : %g m  ' % (x,y)
-    str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
-    return str 
-
-  map_ax.format_coord = coord_string
-  bm.drawcountries(ax=map_ax)
-  bm.drawstates(ax=map_ax) 
-  bm.drawcoastlines(ax=map_ax)
-  mer,par =  _get_meridians_and_parallels(bm,3)
-  bm.drawmeridians(mer,
-                   labels=[0,0,0,1],dashes=[2,2],
-                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
-  bm.drawparallels(par,
-                   labels=[1,0,0,0],dashes=[2,2],
-                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  _setup_map_ax(bm,map_ax)
 
   # draw cuts if there are any
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
@@ -772,37 +798,13 @@ def view(data_list,resolution='i',
   sz = [d['vertical_std'] for d in data_list]
 
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
-  # display time in decyear and date on time series plot
-  def ts_coord_string(x,y):                         
-    str = 'time : %g  ' % x
-    str += '(date : %s)' % decyear_inv(x,'%Y-%m-%d')
-    return str 
-
-  ts_ax[0].format_coord = ts_coord_string
-  ts_ax[1].format_coord = ts_coord_string
-  ts_ax[2].format_coord = ts_coord_string
+  _setup_ts_ax(ts_ax)
    
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
                      resolution=resolution)
-  # function to produce coordinate display on bottom left corner of 
-  # the figure
-  def map_coord_string(x,y):                         
-    str = 'x : %g m  y : %g m  ' % (x,y)
-    str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
-    return str 
+  _setup_map_ax(bm,map_ax)
 
-  map_ax.format_coord = map_coord_string
-  bm.drawcountries(ax=map_ax)
-  bm.drawstates(ax=map_ax) 
-  bm.drawcoastlines(ax=map_ax)
-  mer,par =  _get_meridians_and_parallels(bm,3)
-  bm.drawmeridians(mer,
-                   labels=[0,0,0,1],dashes=[2,2],
-                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
-  bm.drawparallels(par,
-                   labels=[1,0,0,0],dashes=[2,2],
-                   ax=map_ax,zorder=1,color=(0.3,0.3,0.3,1.0))
   # draw cuts if there are any
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
                                 cut_endpoint2_lons,cut_endpoint2_lats,bm)

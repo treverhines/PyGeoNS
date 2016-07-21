@@ -111,7 +111,10 @@ def _penalty(T,L,sigma,diff_specs):
 
   xord = xords[0]
   tord = tords[0]
-  out = (T/2.0)**tord*(L/2.0)**xord/S
+  #out = (T/2.0)**tord*(L/2.0)**xord/S
+  # XXXXXXXXX
+  out = (T)**tord*(L)**xord/S
+  # XXXXXXXXX
   return out  
   
 
