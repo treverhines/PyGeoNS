@@ -124,6 +124,7 @@ Notes
                image_clabel='vertical',
                station_names=None,
                data_set_names=None,
+               ts_ax=None,
                ts_title=None,
                ts_ylabel_0='east',
                ts_ylabel_1='north',
@@ -199,6 +200,11 @@ Notes
       map_xlim : (2,) array
         xlim for the map view plot
       
+      ts_ax : Axis instance
+        list of three axes where the time series components will be 
+        plotted. They must all be on the same figure in order for 
+        interactivity to work
+
       ts_title : str
         title for time series plot
       
@@ -270,19 +276,22 @@ Notes
     
     # map view axis and figure
     if map_ax is None:
-      # gives a white background and a higher dpi
+      # gives a white background 
       map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
       self.map_fig = map_fig
       self.map_ax = map_ax
     else:
-      # gives a white background and a higher dpi
       self.map_fig = map_ax.get_figure()  
       self.map_ax = map_ax
 
     # make figure and axis for the time series 
-    ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
-    self.ts_fig = ts_fig
-    self.ts_ax = ts_ax
+    if ts_ax is None:
+      ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+      self.ts_fig = ts_fig
+      self.ts_ax = ts_ax
+    else:
+      self.ts_fig = ts_ax[0].get_figure()
+      self.ts_ax = ts_ax   
       
     # colorbar axis
     self.cax = None
