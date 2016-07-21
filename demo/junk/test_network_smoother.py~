@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import myplot.cm
 import pygeons.diff
-from pygeons.smooth import network_smoother
+from pygeons.smooth import smooth
 import time
 import logging
 logger = logging.basicConfig(level=logging.INFO)
@@ -59,10 +59,9 @@ u = u_true + np.random.normal(0.0,S,(Nt,Nx))
 sigma = S*np.ones((Nt,Nx))
 
 start_time = time.time()
-u_smooth = network_smoother(
-                    u,t,x,
-                    time_scale=0.1,
-                    sigma=sigma)
+u_smooth = smooth(t,x,u,
+                  time_scale=0.1,
+                  sigma=sigma)
 end_time = time.time()       
 
 print('total run time for network_smoother: %s milliseconds' % 
@@ -82,7 +81,7 @@ ax.grid()
 #ax.legend(['observed','smoothed','true'],frameon=False)
 fig.tight_layout()
 plt.show()
-
+quit()
 ## test network smoother for Nt=1
 #####################################################################
 L = 0.1
@@ -107,7 +106,7 @@ end_time = time.time()
 print('total run time for network_smoother: %s milliseconds' % 
       np.round((end_time - start_time)*1000,3))
 
-u_std = np.std(u_pert,axis=0)
+#u_std = np.std(u_pert,axis=0)
 
 fig,ax = plt.subplots()
 c =ax.scatter(x[:,0],x[:,1],s=200,c=u_smooth[0,:],vmin=-1.2,vmax=1.2)

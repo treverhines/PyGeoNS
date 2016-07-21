@@ -9,9 +9,9 @@ import rbf.integrate
 import logging
 import myplot.cm
 import scipy.signal
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 np.random.seed(1)
-''' 
+
 ## SCALING FOR TIME SMOOTHING 
 #####################################################################
 # length scale
@@ -25,7 +25,7 @@ N = 201
 
 # number of perturbations to use when computing correlation. Should be 
 # about 10000 for a good plots
-PERTS = 10000
+PERTS = 2000
 
 # observation points
 t = np.linspace(-10*T,10*T,N)
@@ -39,11 +39,19 @@ fig1,ax1 = plt.subplots()
 fig2,ax2 = plt.subplots()
 fig3,ax3 = plt.subplots()
 ax2.plot(t/T,data/S,'k.')
-smooth,perts = pygeons.smooth.network_smoother(
-                 data,t,x,sigma=sigma,
+smooth = pygeons.smooth.smooth(
+                 t,x,data,sigma=sigma,
                  diff_specs=[pygeons.diff.acc()],
-                 time_scale=T,
-                 perts=PERTS,procs=6)
+                 time_scale=T)
+pert_lst = []
+ds = pygeons.diff.vel()
+ds['time']['diffs'] = [[10]]
+for i in range(PERTS):
+  pert_lst += [pygeons.smooth.smooth(t,x,data+np.random.normal(sigma),
+                                     sigma,diff_specs=[ds],
+                                     time_scale=T)]
+
+perts = np.array(pert_lst)
 
 # remove x axis
 smooth = smooth[:,0]
@@ -164,7 +172,6 @@ ax.grid()
 cbar = plt.colorbar(c,ax=ax)
 cbar.set_label('correlation')
 plt.show()
-'''
 ## SCALING FOR SPACE VELOCITY SMOOTHING 
 #####################################################################
 
@@ -207,7 +214,7 @@ data = np.random.normal(0.0,sigma)
 smooth,perts = pygeons.smooth.network_smoother(
                    data,t,x,sigma=sigma,
                    diff_specs=[pygeons.diff.acc(),pygeons.diff.disp_laplacian()],
-                   length_scale=L,use_umfpack=True,
+                   length_scale=L,
                    time_scale=T,
                    perts=PERTS,procs=0)
                    
