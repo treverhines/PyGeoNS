@@ -91,8 +91,9 @@ pygeons.ioconv.file_from_dict(output_file,out_dict)
 # check to see if there is an associated pert directory
 input_pert_dir = '.'.join(input_file.split('.')[:-1] + ['pert'])
 output_pert_dir = '.'.join(output_file.split('.')[:-1] + ['pert'])
-# make output perturbation directory
+
 if os.path.exists(input_pert_dir):
+  # make output perturbation directory
   if not os.path.exists(output_pert_dir):
     os.mkdir(output_pert_dir)
 
