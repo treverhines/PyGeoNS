@@ -19,12 +19,12 @@ p.add_argument('input_file',type=str,
                        ".hdf5", ".he5" are interpretted as HDF5, 
                        ".pos" is interpretted as PBO pos, anything 
                        else is assumed to be a PBO csv file.''')                       
-p.add_argument('zero_time',type=float,
-               help='''Zero displacements at this time which is specified 
-                       in decimal years''')
-p.add_argument('radius',type=float,
-               help='''Length of time before and after *zero_time* used in computing 
-                       the offsets''')
+p.add_argument('zero_date',type=str,
+               help='''Zero displacements at this date which is specified 
+                       in YYYY-MM-DD''')
+p.add_argument('radius',type=int,
+               help='''number of days before and after *zero_time* to 
+                       use when calculating the offset''')
 p.add_argument('--output_file',type=str,
                help='''If not provided then the input file extension 
                        is removed and replaced with smooth.h5. The
@@ -61,7 +61,7 @@ if output_file is None:
 data_dict = pygeons.ioconv.dict_from_file(input_file)
 out_dict = pygeons.interface.zero(
              data_dict,
-             p['zero_time'],
+             p['zero_date'],
              p['radius'],
              cut_times=p['cut_times'],
              cut_dates=p['cut_dates'])
