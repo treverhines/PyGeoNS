@@ -2,6 +2,7 @@
 import argparse
 import json
 import sys
+import os
 import pygeons.ioconv
 import pygeons.interface
 import logging
@@ -25,10 +26,10 @@ p.add_argument('-v','--verbose',action='count',default=0,
 p.add_argument('--dt',type=int,default=0)
 p.add_argument('--dx',type=int,default=0)
 p.add_argument('--dy',type=int,default=0)
-p.add_argument('--cut_times',nargs='+',type=float,
-               help='''time discontinuities in decimal year''')
 p.add_argument('--cut_dates',nargs='+',type=str,
-               help='''time discontinuities in YYYY-MM-DD''')
+               help='''list of time discontinuities in YYYY-MM-DD. 
+                       This date should be when the discontinuity is 
+                       first observed''') 
 p.add_argument('--cut_endpoint1_lons',nargs='+',type=float,
                help='''longitude coordinate for the first endpoint 
                        of spatial discontinuities''')
@@ -45,27 +46,45 @@ p.add_argument('--cut_endpoint2_lats',nargs='+',type=float,
 p = vars(p.parse_args())
 
 # set logger
-if p['verbose'] == 0:
+verbose = p.pop('verbose')
+if verbose == 0:
   logging.basicConfig(level=logging.WARNING)
-elif p['verbose'] == 1:
+elif verbose == 1:
   logging.basicConfig(level=logging.INFO)
 else:
   logging.basicConfig(level=logging.DEBUG)
 
-input_file = p['input_file']
-output_file = p['output_file']
+input_file = p.pop('input_file')
+output_file = p.pop('output_file')
+
+# throw out any Nones and let the lower level functions determine the defaults
+for k in p.keys():
+  if p[k] is None:
+    p.pop(k)
+
 if output_file is None:
   input_file_split = input_file.split('.')
   output_file_split = input_file_split[:-1] + ['diff.h5']
   output_file = '.'.join(output_file_split)
 
 data_dict = pygeons.ioconv.dict_from_file(input_file)
-out_dict = pygeons.interface.diff(
-             data_dict,dt=p['dt'],dx=p['dx'],dy=p['dy'],
-             cut_endpoint1_lons=p['cut_endpoint1_lons'],
-             cut_endpoint1_lats=p['cut_endpoint1_lats'],
-             cut_endpoint2_lons=p['cut_endpoint2_lons'],
-             cut_endpoint2_lats=p['cut_endpoint2_lats'],
-             cut_times=p['cut_times'],
-             cut_dates=p['cut_dates'])
-pygeons.ioconv.file_from_dict(output_file,out_dict)                         
+out_dict = pygeons.interface.diff(data_dict,**p)
+pygeons.ioconv.file_from_dict(output_file,out_dict)
+
+# check to see if there is an associated pert directory
+input_pert_dir = '.'.join(input_file.split('.')[:-1] + ['pert'])
+output_pert_dir = '.'.join(output_file.split('.')[:-1] + ['pert'])
+
+if os.path.exists(input_pert_dir):
+  # make output perturbation directory
+  if not os.path.exists(output_pert_dir):
+    os.mkdir(output_pert_dir)
+
+  input_pert_files = os.listdir(input_pert_dir)
+  input_pert_paths = ['/'.join([input_pert_dir,f]) for f in input_pert_files]
+  output_pert_paths = ['/'.join([output_pert_dir,f]) for f in input_pert_files]
+
+  for fin,fout in zip(input_pert_paths,output_pert_paths):
+    data_dict = pygeons.ioconv.dict_from_file(fin)
+    out_dict = pygeons.interface.diff(data_dict,**p)
+    pygeons.ioconv.file_from_dict(fout,out_dict)
