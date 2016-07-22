@@ -39,18 +39,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _make_time_cuts(cut_times,cut_dates):
-  if cut_times is None:
-    cut_times = []
-  else:
-    cut_times = list(cut_times)  
-
+def _make_time_cuts(cut_dates):
+  times = []
   if cut_dates is not None:
     # subtract half a day to ensure that the jump is observed at the 
-    # indicated day
-    cut_times += [decyear(d,'%Y-%m-%d') - 0.5/365.25 for d in cut_dates]   
+    # indicated date
+    times += [decyear(d,'%Y-%m-%d') - 0.5/365.25 for d in cut_dates]   
 
-  out = pygeons.cuts.TimeCuts(cut_times)
+  out = pygeons.cuts.TimeCuts(times)
   return out
   
 
@@ -326,7 +322,7 @@ def smooth_space(data,length_scale=None,fill=False,
 @_check_io
 @_log_call
 def smooth_time(data,time_scale=None,fill=False,
-                cut_times=None,cut_dates=None):
+                cut_dates=None):
   ''' 
   Temporally smooths the data set. The data is modeled as a stochastic 
   variables where its second time derivative is white noise (i.e. 
@@ -346,14 +342,9 @@ def smooth_time(data,time_scale=None,fill=False,
       can make this function slower and more likely to encounter a 
       singular matrix. Defaults to False.
     
-    cut_times : lst, optional
-      list of time discontinuities in decimal year. Smoothness is not 
-      enforced across these discontinuities
-
     cut_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. These 
-      discontinuities get converted to decimal year and then appended 
-      to *cut_times*
+      list of time discontinuities in YYYY-MM-DD. This date should be 
+      when the discontinuity is first observed 
     
   Returns
   -------
@@ -365,7 +356,7 @@ def smooth_time(data,time_scale=None,fill=False,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  time_cuts = _make_time_cuts(cut_times,cut_dates)
+  time_cuts = _make_time_cuts(cut_dates)
   ds = pygeons.diff.acc()
   ds['time']['cuts'] = time_cuts
   ds = [ds]
@@ -400,7 +391,7 @@ def smooth_time(data,time_scale=None,fill=False,
 def smooth(data,time_scale=None,length_scale=None,fill=False,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
-           cut_times=None,cut_dates=None):
+           cut_dates=None):
   ''' 
   Spatially and temporally smooths the data set. Data is treated as a 
   stochastic variable where its second time derivative is white noise 
@@ -424,18 +415,9 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
       can make this function slower and more likely to encounter a 
       singular matrix. Defaults to False.
     
-    cut_endpoints{1,2}_{lons,lat} :  lst, optional
-      Coordinates of the spatial discontinuty line segments. 
-      Smoothness is not enforced across these discontinuities
-  
-    cut_times : lst, optional
-      List of time discontinuities in decimal year. Smoothness is not 
-      enforced across these discontinuities
-
     cut_dates : lst, optional
-      List of time discontinuities in YYYY-MM-DD. These 
-      discontinuities get converted to decimal year and then appended 
-      to *cut_times*
+      list of time discontinuities in YYYY-MM-DD. This date should be 
+      when the discontinuity is first observed 
     
   Returns
   -------
@@ -449,7 +431,7 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
 
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
                                 cut_endpoint2_lons,cut_endpoint2_lats,bm)
-  time_cuts = _make_time_cuts(cut_times,cut_dates)
+  time_cuts = _make_time_cuts(cut_dates)
   ds1 = pygeons.diff.acc()  
   ds1['time']['cuts'] = time_cuts
   ds2 = pygeons.diff.disp_laplacian()
@@ -486,7 +468,7 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
 def diff(data,dt=0,dx=0,dy=0,
          cut_endpoint1_lons=None,cut_endpoint1_lats=None,
          cut_endpoint2_lons=None,cut_endpoint2_lats=None,
-         cut_times=None,cut_dates=None):
+         cut_dates=None):
   ''' 
   Calculates a mixed partial derivative of the data set. The spatial 
   coordinates are in units of meters and time is in years. The output 
@@ -512,14 +494,9 @@ def diff(data,dt=0,dx=0,dy=0,
     cut_endpoints{1,2}_{lons,lat} :  lst, optional
       coordinates of the spatial discontinuty line segments
   
-    cut_times : lst, optional
-      list of time discontinuities in decimal year
-
     cut_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. These 
-      discontinuities get converted to decimal year and then appended 
-      to *cut_times*. The date should be the first day when the jump 
-      in the time series is observed
+      list of time discontinuities in YYYY-MM-DD. This date should be 
+      when the discontinuity is first observed
       
   Returns 
   -------
@@ -533,7 +510,7 @@ def diff(data,dt=0,dx=0,dy=0,
 
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
                                 cut_endpoint2_lons,cut_endpoint2_lats,bm)
-  time_cuts = _make_time_cuts(cut_times,cut_dates)
+  time_cuts = _make_time_cuts(cut_dates)
   # form DiffSpecs instance
   ds = pygeons.diff.DiffSpecs()
   ds['time']['diffs'] = [(dt,)]
@@ -562,7 +539,7 @@ def diff(data,dt=0,dx=0,dy=0,
 @_check_io
 @_log_call
 def downsample(data,sample_period,start_date=None,stop_date=None,
-               cut_times=None,cut_dates=None):
+               cut_dates=None):
   ''' 
   downsamples the data set 
   
@@ -585,13 +562,9 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
       stop date of output data set in YYYY-MM-DD. Uses the stop date 
       of *data* if not provided
 
-    cut_times : lst, optional
-      list of time discontinuities in decimal year
-
     cut_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. These 
-      discontinuities get converted to decimal year and then appended 
-      to *cut_times*
+      list of time discontinuities in YYYY-MM-DD. This date should be 
+      when the discontinuity is first observed
       
   Returns
   -------
@@ -599,7 +572,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
       output data dictionary
 
   '''
-  time_cuts = _make_time_cuts(cut_times,cut_dates)
+  time_cuts = _make_time_cuts(cut_dates)
   
   # if the start and stop time are now specified then use the min and 
   # max times
@@ -608,8 +581,8 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   pos = np.array([x,y]).T
 
   if start_date is None:
-    # make sure the start and end date are rounded to the date with the 
-    # closest midnight
+    # make sure the start and end date are rounded the nearest start 
+    # of the day
     start_date = decyear_inv(data['time'].min()+0.5/365.25,'%Y-%m-%d')
   if stop_date is None:
     stop_date = decyear_inv(data['time'].max()+0.5/365.25,'%Y-%m-%d')
@@ -640,7 +613,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
 @_check_io
 @_log_call
-def zero(data,zero_date,radius,cut_times=None,cut_dates=None):
+def zero(data,zero_date,radius,cut_dates=None):
   ''' 
   Estimates and removes the displacements at the indicated time. The 
   offset is calculated with a weighted mean centered about the 
@@ -656,15 +629,11 @@ def zero(data,zero_date,radius,cut_times=None,cut_dates=None):
       
     radius : int
       number of days before and after *zero_date* to use in 
-      calculating the offset
+      calculating the offset. 
         
-    cut_times : lst, optional
-      List of time discontinuities in decimal year
-
     cut_dates : lst, optional
-      List of time discontinuities in YYYY-MM-DD. These 
-      discontinuities get converted to decimal year and then appended 
-      to *cut_times*
+      list of time discontinuities in YYYY-MM-DD. This date should be 
+      when the discontinuity is first observed
 
   Returns
   -------
@@ -678,7 +647,7 @@ def zero(data,zero_date,radius,cut_times=None,cut_dates=None):
   # years
   radius = (int(radius) + 0.5)/365.25
   
-  time_cuts = _make_time_cuts(cut_times,cut_dates)
+  time_cuts = _make_time_cuts(cut_dates)
   vert,smp = time_cuts.get_vert_and_smp([0.0,0.0])
   
   out = {}

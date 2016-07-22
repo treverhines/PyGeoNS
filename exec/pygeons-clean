@@ -2,6 +2,7 @@
 import argparse
 import json
 import sys
+import os
 import pygeons.ioconv
 import pygeons.interface
 import logging
@@ -61,19 +62,37 @@ else:
   logging.basicConfig(level=logging.DEBUG)
 
 input_file = p.pop('input_file')
-output_file = p['output_file']
-if output_file is None:
-  input_file_split = input_file.split('.')
-  output_file_split = input_file_split[:-1] + ['clean.h5']
-  output_file = '.'.join(output_file_split)
-
-data_dict = pygeons.ioconv.dict_from_file(input_file) 
+output_file = p.pop('output_file')
 
 # throw out any Nones and let the lower level functions determine the defaults
 for k in p.keys(): 
   if p[k] is None: 
     p.pop(k)
 
+if output_file is None:
+  input_file_split = input_file.split('.')
+  output_file_split = input_file_split[:-1] + ['clean.h5']
+  output_file = '.'.join(output_file_split)
+
+data_dict = pygeons.ioconv.dict_from_file(input_file) 
 out_dict = pygeons.interface.clean(data_dict,**p)
 pygeons.ioconv.file_from_dict(output_file,out_dict)
+
+# check to see if there is an associated pert directory
+input_pert_dir = '.'.join(input_file.split('.')[:-1] + ['pert'])
+output_pert_dir = '.'.join(output_file.split('.')[:-1] + ['pert'])
+
+if os.path.exists(input_pert_dir):
+  # make output perturbation directory
+  if not os.path.exists(output_pert_dir):
+    os.mkdir(output_pert_dir)
+    
+  input_pert_files = os.listdir(input_pert_dir)
+  input_pert_paths = ['/'.join([input_pert_dir,f]) for f in input_pert_files]
+  output_pert_paths = ['/'.join([output_pert_dir,f]) for f in input_pert_files]
+
+  for fin,fout in zip(input_pert_paths,output_pert_paths):
+    data_dict = pygeons.ioconv.dict_from_file(fin)
+    out_dict = pygeons.interface.clean(data_dict,**p)
+    pygeons.ioconv.file_from_dict(fout,out_dict)
 

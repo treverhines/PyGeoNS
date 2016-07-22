@@ -4,8 +4,8 @@ import pygeons.ioconv
 import pygeons.decyear
 import rbf.halton
 
-Nx = 100
-time = pygeons.decyear.decyear_range('2000-01-01','2002-01-01',1,'%Y-%m-%d')
+Nx = 10
+time = pygeons.decyear.decyear_range('2000-01-01','2002-01-01',5,'%Y-%m-%d')
 Nt = len(time)
 pos = 2*np.pi*(rbf.halton.halton(Nx,2) - 0.5)
 lon = pos[:,0] - 84.5
@@ -34,9 +34,9 @@ noisy_data = {'time':time,
         'longitude':lon,
         'latitude':lat,
         'id':id,
-        'east':east + np.random.normal(0.0,10.0,(Nt,Nx)),
-        'north':north + np.random.normal(0.0,10.0,(Nt,Nx)),
-        'vertical':vertical + np.random.normal(0.0,10.0,(Nt,Nx)),
+        'east':east + 0*np.random.normal(0.0,10.0,(Nt,Nx)),
+        'north':north + 0*np.random.normal(0.0,10.0,(Nt,Nx)),
+        'vertical':vertical + 0*np.random.normal(0.0,10.0,(Nt,Nx)),
         'east_std':east_std + 10,
         'north_std':north_std + 10,
         'vertical_std':vertical_std + 10}
