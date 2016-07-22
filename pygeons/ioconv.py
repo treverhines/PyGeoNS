@@ -280,6 +280,10 @@ def csv_from_dict(outfile,data_dict):
     # create a subdictionary for each station
     dict_i = {}
     mask = np.isinf(data_dict['north_std'][:,i])
+    # do not write data for this station if the station has no data
+    if np.all(mask):
+      continue
+
     dict_i['id'] = data_dict['id'][i]
     dict_i['longitude'] = data_dict['longitude'][i]
     dict_i['latitude'] = data_dict['latitude'][i]
