@@ -573,8 +573,9 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
       
     sample_period : int
       sample period of the output data set in days. Output data is 
-      computed using a running mean which has a width equal to this 
-      period
+      computed using a running mean with this width. This should be an 
+      odd integer in order to avoid double counting the observations 
+      at some days
       
     start_date : str, optional
       start date of output data set in YYYY-MM-DD. Uses the start date 
@@ -654,8 +655,8 @@ def zero(data,zero_date,radius,cut_times=None,cut_dates=None):
       Zero displacements at this date which is specified in YYYY-MM-DD
       
     radius : int
-      number of days before and after *zero_date* used in computing 
-      the offsets
+      number of days before and after *zero_date* to use in 
+      calculating the offset
         
     cut_times : lst, optional
       List of time discontinuities in decimal year
@@ -673,15 +674,15 @@ def zero(data,zero_date,radius,cut_times=None,cut_dates=None):
   '''
   zero_time = decyear(zero_date,'%Y-%m-%d')
   
-  # add half a day to prevent any rounding errors
-  radius = int(radius) + 0.5/365.25
+  # add half a day to prevent any rounding errors and then convert to 
+  # years
+  radius = (int(radius) + 0.5)/365.25
   
   time_cuts = _make_time_cuts(cut_times,cut_dates)
   vert,smp = time_cuts.get_vert_and_smp([0.0,0.0])
   
   out = {}
   for dir in ['east','north','vertical']:
-    # compute a running mean and then
     itp = pygeons.downsample.MeanInterpolant(
             data['time'][:,None],data[dir],
             sigma=data[dir +'_std'],
