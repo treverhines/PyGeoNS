@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 import pygeons.smooth
 import pygeons.diff
 import rbf.halton
-import rbf.nodegen
+import rbf.nodes
 import rbf.integrate
 import logging
 import myplot.cm
 import scipy.signal
 logging.basicConfig(level=logging.DEBUG)
 np.random.seed(1)
-
+''' 
 ## SCALING FOR TIME SMOOTHING 
 #####################################################################
 # length scale
@@ -62,6 +62,7 @@ C = np.corrcoef(perts.T)
 corr = C[N//2,:]
 
 ax1.plot(t/T,corr,'-',lw=2)
+ax1.plot(t/T,np.sinc(t/T),'r-')
 ax2.plot(t/T,smooth/S,'-',lw=2)
 # sample spacing
 dt = (t[1] - t[0])/T
@@ -87,9 +88,11 @@ ax2.set_xlabel('time [T]')
 ax2.set_ylim((-4.0,4.0))
 ax2.grid()
 plt.show()
-
+'''
 ## SCALING FOR SPACE SMOOTHING 
 #####################################################################
+
+T = 5.0
 
 # length scale
 L = 100.0
@@ -105,7 +108,7 @@ N = 400
 
 # number of perturbations to use when computing correlation. Should be 
 # about 1000 for a good plots
-PERTS = 5000
+PERTS = 500
 
 # observation points
 # define bounding circle
@@ -113,20 +116,29 @@ t = np.linspace(0.0,2*np.pi,100)
 vert = 5*L*np.array([np.sin(t),np.cos(t)]).T
 smp = np.array([range(100),np.roll(range(100),-1)]).T
 fix = np.array([[0.0,0.0]])
-x,sid = rbf.nodegen.volume(N-1,vert,smp,fix_nodes=fix,n=5,itr=1000,delta=0.01)
+def rho(x): return 1/(1 + 5*np.linalg.norm(x,axis=1))
+x,sid = rbf.nodes.make_nodes(N-1,vert,smp,rho=rho,fix_nodes=fix,neighbors=5,itr=1000,delta=0.01)
 x = np.vstack((fix,x))
 t = np.array([0.0])
 
 # make data
 data = np.random.normal(0.0,S,(1,N))
 sigma = S*np.ones((1,N))
+ds = pygeons.diff.disp_laplacian()
+ds['space']['stencil_size']=20
 
-smooth,perts = pygeons.smooth.network_smoother(
-                   data,t,x,sigma=sigma,
-                   diff_specs=[pygeons.diff.disp_laplacian()],
+smooth = pygeons.smooth.smooth(
+                   t,x,data,sigma=sigma,
+                   diff_specs=[ds],
                    length_scale=L,
-                   time_scale=T,
-                   perts=PERTS,procs=6)
+                   time_scale=T)
+pert_lst = []
+for i in range(PERTS):
+  pert_lst += [pygeons.smooth.smooth(t,x,data+np.random.normal(sigma),
+                                     sigma,diff_specs=[ds],
+                                     length_scale=L,
+                                     time_scale=T)]
+perts = np.array(pert_lst)
 # remove x axis
 smooth = smooth[0,:]
 perts = perts[:,0,:]

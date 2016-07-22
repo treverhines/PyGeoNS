@@ -152,6 +152,7 @@ class MeanInterpolant:
         # throw out observation points that cross a boundary
         idx_arr[i] = [j for j,c in zip(idx,count) if c == 0]
         
+    print(idx_arr)
     out_value = np.zeros((xitp.shape[0],)+self.value_shape)
     out_sigma = np.zeros((xitp.shape[0],)+self.value_shape)
     for i,idx in enumerate(idx_arr):
