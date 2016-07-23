@@ -29,9 +29,8 @@ import pygeons.diff
 import pygeons.view
 import pygeons.clean
 import pygeons.downsample
-from pygeons.decyear import decyear_range
-from pygeons.decyear import decyear_inv
-from pygeons.decyear import decyear
+from pygeons.dateconv import decday_inv
+from pygeons.dateconv import decday
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
@@ -42,9 +41,9 @@ logger = logging.getLogger(__name__)
 def _make_time_cuts(cut_dates):
   times = []
   if cut_dates is not None:
-    # subtract half a day to ensure that the jump is observed at the 
-    # indicated date
-    times += [decyear(d,'%Y-%m-%d') - 0.5/365.25 for d in cut_dates]   
+    # subtract half a day to get rid of any ambiguity about what day 
+    # the dislocation is observed
+    times += [decday(d,'%Y-%m-%d') - 0.5 for d in cut_dates]   
 
   out = pygeons.cuts.TimeCuts(times)
   return out
@@ -145,32 +144,20 @@ def _check_compatibility(data_list):
   # compare agains the first data set
   time = data_list[0]['time']  
   id = data_list[0]['id']  
-  lon = data_list[0]['longitude']  
-  lat = data_list[0]['latitude']  
   for d in data_list[1:]:
     if len(time) != len(d['time']):
       raise ValueError('data sets have inconsistent number of time epochs')
     if len(id) != len(d['id']):
       raise ValueError('data sets have inconsistent number of stations')
-    if len(lon) != len(d['longitude']):
-      raise ValueError('data sets have inconsistent number of stations')
-    if len(lat) != len(d['latitude']):
-      raise ValueError('data sets have inconsistent number of stations')
 
-    # this makes sure that times are within ~12 hours of eachother
-    if not np.all(np.isclose(time,d['time'],atol=1e-3)):
+    # make sure each data set has the same times
+    if not np.all(time==d['time']):
       raise ValueError('data sets do not have the same times epochs')
 
-    # make sure the stations have the same names
+    # make sure each data set has the same stations
     if not np.all(id==d['id']):
       raise ValueError('data sets do not have the same stations')
 
-    # this makes sure the stations are within a few hundred meters of eachother
-    if not np.all(np.isclose(lon,d['longitude'],atol=1e-3)):
-      raise ValueError('data sets do not have the same station positions')
-    if not np.all(np.isclose(lat,d['latitude'],atol=1e-3)): 
-      raise ValueError('data sets do not have the same station positions')
-    
   return  
 
 
@@ -239,13 +226,18 @@ def _setup_map_ax(bm,ax):
   return
                      
 
-def _setup_ts_ax(ax_lst):
-  # display time in decyear and date on time series plot
+def _setup_ts_ax(ax_lst,times):
+  # display time in decday and date on time series plot
   def ts_coord_string(x,y):                         
     str = 'time : %g  ' % x
-    str += '(date : %s)' % decyear_inv(x,'%Y-%m-%d')
+    str += '(date : %s)' % decday_inv(x,'%Y-%m-%d')
     return str 
 
+  ticks = np.linspace(times.min(),times.max(),13)[1:13:2]
+  ticks = np.round(ticks)
+  tick_labels = [decday_inv(t,'%Y-%m-%d') for t in ticks]
+  ax_lst[2].set_xticks(ticks)
+  ax_lst[2].set_xticklabels(tick_labels)
   ax_lst[0].format_coord = ts_coord_string
   ax_lst[1].format_coord = ts_coord_string
   ax_lst[2].format_coord = ts_coord_string
@@ -581,17 +573,14 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   pos = np.array([x,y]).T
 
   if start_date is None:
-    # make sure the start and end date are rounded the nearest start 
-    # of the day
-    start_date = decyear_inv(data['time'].min()+0.5/365.25,'%Y-%m-%d')
+    start_date = decday_inv(data['time'].min(),'%Y-%m-%d')
   if stop_date is None:
-    stop_date = decyear_inv(data['time'].max()+0.5/365.25,'%Y-%m-%d')
+    stop_date = decday_inv(data['time'].max(),'%Y-%m-%d')
   
-  # make sure that the sample period is an integer multiple of days. 
-  # This is needed to be able to write to csv files without any data 
-  # loss.
+  start_time = int(decday(start_date,'%Y-%m-%d'))
+  stop_time = int(decday(stop_date,'%Y-%m-%d'))
   sample_period = int(sample_period)
-  time_itp = decyear_range(start_date,stop_date,sample_period,'%Y-%m-%d')
+  time_itp = np.arange(start_time,stop_time+1,sample_period)
 
   out = {}
   for dir in ['east','north','vertical']:
@@ -641,12 +630,8 @@ def zero(data,zero_date,radius,cut_dates=None):
       Output data dictionary
 
   '''
-  zero_time = decyear(zero_date,'%Y-%m-%d')
-  
-  # add half a day to prevent any rounding errors and then convert to 
-  # years
-  radius = (int(radius) + 0.5)/365.25
-  
+  radius = int(radius)
+  zero_time = int(decday(zero_date,'%Y-%m-%d'))
   time_cuts = _make_time_cuts(cut_dates)
   vert,smp = time_cuts.get_vert_and_smp([0.0,0.0])
   
@@ -670,9 +655,9 @@ def zero(data,zero_date,radius,cut_dates=None):
 @_check_io
 @_log_call
 def clean(data,resolution='i',
-         cut_endpoint1_lons=None,cut_endpoint1_lats=None,
-         cut_endpoint2_lons=None,cut_endpoint2_lats=None,
-         **kwargs):
+          cut_endpoint1_lons=None,cut_endpoint1_lats=None,
+          cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+          **kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
   
@@ -694,7 +679,7 @@ def clean(data,resolution='i',
     
   '''
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
-  _setup_ts_ax(ts_ax)
+  _setup_ts_ax(ts_ax,data['time'])
 
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(data['longitude'],data['latitude'],
@@ -768,7 +753,7 @@ def view(data_list,resolution='i',
   sz = [d['vertical_std'] for d in data_list]
 
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
-  _setup_ts_ax(ts_ax)
+  _setup_ts_ax(ts_ax,data_list[0]['time'])
    
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
