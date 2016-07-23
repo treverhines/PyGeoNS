@@ -290,7 +290,7 @@ Notes
       self.ts_fig = ts_fig
       self.ts_ax = ts_ax
     else:
-      self.ts_fig = ts_ax.get_figure()
+      self.ts_fig = ts_ax[0].get_figure()
       self.ts_ax = ts_ax   
       
     # colorbar axis
@@ -427,10 +427,6 @@ Notes
     self.ts_ax[0].set_ylabel(self.config['ts_ylabel_0'])
     self.ts_ax[1].set_ylabel(self.config['ts_ylabel_1'])
     self.ts_ax[2].set_ylabel(self.config['ts_ylabel_2'])
-    # dont convert to exponential form
-    self.ts_ax[0].get_xaxis().get_major_formatter().set_useOffset(False)
-    self.ts_ax[1].get_xaxis().get_major_formatter().set_useOffset(False)
-    self.ts_ax[2].get_xaxis().get_major_formatter().set_useOffset(False)
     self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
     self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
     self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])
