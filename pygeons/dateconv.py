@@ -111,6 +111,28 @@ def decyear_inv(f,fmt):
   return d.strftime(fmt)
 
 
+@memoize
+def decday(s,fmt):
+  ''' 
+  converts a date into the number of days since 1970-01-01T00:00:00
+  '''
+  ref = datetime.datetime(1970,1,1)
+  d = datetime.datetime.strptime(s,fmt)
+  f = (d - ref).total_seconds()/(60.0*60.0*24.0)
+  return f
+
+
+@memoize
+def decday_inv(f,fmt):
+  ''' 
+  converts a date into the number of days since 1970-01-01T00:00:00
+  '''
+  ref = datetime.datetime(1970,1,1)
+  d = ref + datetime.timedelta(f)
+  s = d.strftime(fmt)
+  return s
+  
+
 def decyear_range(start,stop,days,fmt):
   ''' 
   Returns the decimal year representation of dates ranging from 
