@@ -375,7 +375,7 @@ def smooth_time(data,time_scale=None,fill=False,
 
 @_check_io
 @_log_call
-def smooth(data,time_scale=None,length_scale=None,fill=False,
+def smooth(data,perts=None,time_scale=None,length_scale=None,fill=False,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
            cut_dates=None):
@@ -429,6 +429,11 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
+    if perts is None:
+      u_perts = None
+    else:  
+      u_perts = [p[dir] for p in perts]
+      
     u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
                                      sigma=sigma,
                                      diff_specs=ds,
