@@ -111,10 +111,7 @@ def _penalty(T,L,sigma,diff_specs):
 
   xord = xords[0]
   tord = tords[0]
-  #out = (T/2.0)**tord*(L/2.0)**xord/S
-  # XXXXXXXXX
   out = (T/4.0)**tord*(L/4.0)**xord/S
-  # XXXXXXXXX
   return out  
   
 
@@ -139,7 +136,9 @@ def smooth(t,x,u,
            time_scale=None,
            fill=False):
                       
-  u,t,x = np.asarray(u),np.asarray(t),np.asarray(x)
+  u = np.asarray(u,dtype=float)
+  t = np.asarray(t,dtype=float)
+  x = np.asarray(x,dtype=float)
   Nx,Nt = x.shape[0],t.shape[0]
 
   if diff_specs is None:
