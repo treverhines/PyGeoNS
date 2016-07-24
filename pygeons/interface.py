@@ -10,7 +10,7 @@ interest of usability.
 Each of these function take a data dictionary as input. The data 
 dictionary contains the following items:
 
-  time : (Nt,) array      # observation time in decimal years
+  time : (Nt,) array      # observation time in days since 1970-01-01
   longitude : (Nx,) array
   latitude : (Nx,) array
   id : (Nx,) array        # station ID
@@ -35,6 +35,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 import logging
+import sys
+import os
+import shutil
+import copy
 logger = logging.getLogger(__name__)
 
 
@@ -208,7 +212,7 @@ def _setup_map_ax(bm,ax):
   # function which prints out the coordinates on the bottom left 
   # corner of the figure
   def coord_string(x,y):                         
-    str = 'x : %g m  y : %g m  ' % (x,y)
+    str = 'x : %g  y : %g  ' % (x,y)
     str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
     return str 
 
@@ -233,7 +237,7 @@ def _setup_ts_ax(ax_lst,times):
     str += '(date : %s)' % decday_inv(x,'%Y-%m-%d')
     return str 
 
-  ticks = np.linspace(times.min(),times.max(),13)[1:13:2]
+  ticks = np.linspace(times.min(),times.max(),13)[1:-1:2]
   ticks = np.round(ticks)
   tick_labels = [decday_inv(t,'%Y-%m-%d') for t in ticks]
   ax_lst[2].set_xticks(ticks)
@@ -287,7 +291,7 @@ def smooth_space(data,length_scale=None,fill=False,
   ds['space']['cuts'] = space_cuts
   ds = [ds]
 
-  out = {}
+  out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
@@ -304,10 +308,6 @@ def smooth_space(data,length_scale=None,fill=False,
     out[dir] = u_smooth
     out[dir+'_std'] = sigma_smooth
 
-  out['time'] = data['time']
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
   return out
 
 
@@ -327,7 +327,7 @@ def smooth_time(data,time_scale=None,fill=False,
       
     time_scale : float, optional
       time scale of the smoothed data. Defaults to 10X the time sample 
-      period. This is specified in years
+      period. This is specified in days
 
     fill : bool, optional
       whether to make an estimate at masked data. Filling masked data 
@@ -353,7 +353,7 @@ def smooth_time(data,time_scale=None,fill=False,
   ds['time']['cuts'] = time_cuts
   ds = [ds]
 
-  out = {}
+  out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
@@ -369,11 +369,6 @@ def smooth_time(data,time_scale=None,fill=False,
 
     out[dir] = u_smooth
     out[dir+'_std'] = sigma_smooth
-
-  out['time'] = data['time']
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
 
   return out
   
@@ -396,7 +391,7 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
       
     time_scale : float, optional
       Time scale of the smoothed data. Defaults to 10X the time sample 
-      period. This is specified in years
+      period. This is specified in days
 
     length_scale : float, optional
       Length scale of the smoothed data. Defaults to 10X the average 
@@ -430,7 +425,7 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
   ds2['space']['cuts'] = space_cuts
   ds = [ds1,ds2]
 
-  out = {}
+  out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
@@ -446,11 +441,6 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
 
     out[dir] = u_smooth
     out[dir+'_std'] = sigma_smooth
-
-  out['time'] = data['time']
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
 
   return out
            
@@ -510,7 +500,7 @@ def diff(data,dt=0,dx=0,dy=0,
   ds['space']['diffs'] = [(dx,dy)]
   ds['space']['cuts'] = space_cuts
 
-  out = {}
+  out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     mask = np.isinf(data[dir+'_std'])
@@ -520,11 +510,6 @@ def diff(data,dt=0,dx=0,dy=0,
     out[dir] = u_diff
     out[dir+'_std'] = sigma_diff
 
-  out['time'] = data['time']
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
-  
   return out
   
 
@@ -582,7 +567,8 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   sample_period = int(sample_period)
   time_itp = np.arange(start_time,stop_time+1,sample_period)
 
-  out = {}
+  out = copy.deepcopy(data)
+  out['time'] = time_itp
   for dir in ['east','north','vertical']:
     u = data[dir]
     sigma = data[dir+'_std']
@@ -593,10 +579,6 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
     out[dir] = u_ds
     out[dir+'_std'] = sigma_ds
 
-  out['time'] = time_itp
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
   return out
 
 
@@ -635,7 +617,7 @@ def zero(data,zero_date,radius,cut_dates=None):
   time_cuts = _make_time_cuts(cut_dates)
   vert,smp = time_cuts.get_vert_and_smp([0.0,0.0])
   
-  out = {}
+  out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     itp = pygeons.downsample.MeanInterpolant(
             data['time'][:,None],data[dir],
@@ -645,12 +627,41 @@ def zero(data,zero_date,radius,cut_dates=None):
     out[dir] = data[dir] - u_zero
     out[dir + '_std'] = np.sqrt(data[dir + '_std']**2 + sigma_zero**2)
   
-  out['time'] = data['time']
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude']
-  out['id'] = data['id']
   return out
 
+
+@_log_call
+def perturb(data,N):
+  ''' 
+  returns N data dictionaries where noise is added to the 
+  displacements in each one
+  
+  Parameters
+  ----------
+    data : dict
+    
+    N : int
+      number of perturbations
+
+  Returns
+  -------
+    out_lst : lst
+      perturbed data dictionaries
+
+  '''
+  _check_data(data)
+  out_lst = []
+  for i in range(N):  
+    d = copy.deepcopy(data)
+    for dir in ['east','north','vertical']:
+      sigma = d[dir+'_std']
+      # make sure that sigma is greater than zero
+      sigma[sigma<1e-20] = 1e-20
+      d[dir] += np.random.normal(0.0,sigma)
+
+    out_lst += [d]
+    
+  return out_lst
 
 @_check_io
 @_log_call
@@ -704,11 +715,7 @@ def clean(data,resolution='i',
                  converter=bm,map_ax=map_ax,ts_ax=ts_ax,
                  station_names=data['id'],**kwargs)
 
-  out = {}
-  out['time'] = data['time']
-  out['longitude'] = data['longitude']
-  out['latitude'] = data['latitude'] 
-  out['id'] = data['id']
+  out = copy.deepcopy(data)
   out['east'] = clean_data[0]          
   out['north'] = clean_data[1]          
   out['vertical'] = clean_data[2]          

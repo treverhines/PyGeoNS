@@ -121,6 +121,7 @@ def decday(s,fmt):
   f = (d - ref).total_seconds()/(60.0*60.0*24.0)
   return f
 
+
 @memoize
 def decday_inv(f,fmt):
   ''' 

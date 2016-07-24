@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import numpy as np
 import pygeons.ioconv
-import pygeons.decyear
+import pygeons.dateconv
 import rbf.halton
 
 Nx = 10
-time = pygeons.decyear.decyear_range('2000-01-01','2002-01-01',5,'%Y-%m-%d')
+start_time = pygeons.dateconv.decday('2000-01-01','%Y-%m-%d')
+stop_time = pygeons.dateconv.decday('2001-01-01','%Y-%m-%d')
+time = np.arange(start_time,stop_time+1)
+
 Nt = len(time)
 pos = 2*np.pi*(rbf.halton.halton(Nx,2) - 0.5)
 lon = pos[:,0] - 84.5
