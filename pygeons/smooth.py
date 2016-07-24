@@ -26,8 +26,14 @@ def _solve(A,L,data):
     
     L : (P,M) csr sparse matrix
     
-    d : (N,) array
+    data : (...,N) array
   '''
+  N = data.shape[-1]
+  bcast_shape = data.shape[:-1] 
+  M = np.prod(bcast_shape)
+  data = data.reshape((M,N))
+  data = data.T  
+
   lhs = A.T.dot(A) + L.T.dot(L)
   rhs = A.T.dot(data)
 
@@ -43,6 +49,9 @@ def _solve(A,L,data):
       'of having too many masked observations. Check for stations '
       'or time periods where all observations are masked')
 
+  # reshape the solution to the original dimension
+  soln = soln.T
+  soln = soln.reshape(bcast_shape+(N,))
   return soln
   
 def _average_shortest_distance(x):
@@ -135,18 +144,39 @@ def smooth(t,x,u,
            length_scale=None,                      
            time_scale=None,
            fill=False):
+  ''' 
+  Parameters
+  ----------
+    t : (Nt,) array
+    
+    x : (Nx,2) array
+    
+    u : (...,Nt,Nx) array
+    
+    sigma : (Nt,Nx) array
+    
+    diff_specs : list of DiffSpecs isntances
+    
+    length_scale : float
+    
+    time_scale : float
+    
+    fill : bool
+  
+  '''           
                       
   u = np.asarray(u,dtype=float)
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
   Nx,Nt = x.shape[0],t.shape[0]
+  bcast_shape = u.shape[:-2]
 
   if diff_specs is None:
     diff_specs = [pygeons.diff.acc(),
                   pygeons.diff.disp_laplacian()]
-
-  if u.shape != (Nt,Nx):
-    raise TypeError('u must have shape (Nt,Nx)')
+ 
+  if u.shape[-2:] != (Nt,Nx):
+    raise TypeError('u must have shape (...,Nt,Nx)')
 
   if sigma is None:
     sigma = np.ones((Nt,Nx))
@@ -176,18 +206,19 @@ def smooth(t,x,u,
   if time_scale is None:
     time_scale = default_time_scale
 
-  u_flat = u.ravel()
-  sigma_flat = sigma.ravel()
-  mask_flat = mask.ravel()
+  # flatten only the last two axes
+  u_flat = u.reshape(bcast_shape+(Nt*Nx,))
+  sigma_flat = sigma.reshape(Nt*Nx)
+  mask_flat = mask.reshape(Nt*Nx)
 
   # get rid of masked entries in u_flat and sigma_flat
   keep_idx, = np.nonzero(~mask_flat)
-  u_flat = u_flat[keep_idx]
+  u_flat = u_flat[...,keep_idx]
   sigma_flat = sigma_flat[keep_idx]
 
   # weigh u by the inverse of data uncertainty.
   u_flat = u_flat/sigma_flat
-
+  
   # system matrix is the identity matrix scaled by data weight
   K = len(keep_idx)
   Gdata = 1.0/sigma_flat
@@ -213,8 +244,10 @@ def smooth(t,x,u,
   logger.debug('done')
 
   # expand the solution to the original size
-  out = np.zeros(Nt*Nx)
-  out[keep_idx] = u_pred
-  out = out.reshape((Nt,Nx))
+  out = np.zeros(bcast_shape+(Nt*Nx,))
+  out[...,keep_idx] = u_pred
+  out = out.reshape(bcast_shape+(Nt,Nx))
+  
   return out
+  
 

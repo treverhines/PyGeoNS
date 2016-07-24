@@ -11,7 +11,7 @@ import myplot.cm
 import scipy.signal
 logging.basicConfig(level=logging.DEBUG)
 np.random.seed(1)
-''' 
+
 ## SCALING FOR TIME SMOOTHING 
 #####################################################################
 # length scale
@@ -43,16 +43,16 @@ smooth = pygeons.smooth.smooth(
                  t,x,data,sigma=sigma,
                  diff_specs=[pygeons.diff.acc()],
                  time_scale=T)
-pert_lst = []
+
+data_pert = np.random.normal(0.0,S,(PERTS,N,1))
+data_pert += data
 ds = pygeons.diff.vel()
-ds['time']['diffs'] = [[10]]
-for i in range(PERTS):
-  pert_lst += [pygeons.smooth.smooth(t,x,data+np.random.normal(sigma),
-                                     sigma,diff_specs=[ds],
-                                     time_scale=T)]
+ds['time']['diffs'] = [[3]]
+perts = pygeons.smooth.smooth(t,x,data_pert,
+                              sigma,diff_specs=[ds],
+                              time_scale=T)
 
-perts = np.array(pert_lst)
-
+print(perts.shape)
 # remove x axis
 smooth = smooth[:,0]
 perts = perts[:,:,0]
@@ -88,7 +88,7 @@ ax2.set_xlabel('time [T]')
 ax2.set_ylim((-4.0,4.0))
 ax2.grid()
 plt.show()
-'''
+
 ## SCALING FOR SPACE SMOOTHING 
 #####################################################################
 
@@ -108,7 +108,7 @@ N = 400
 
 # number of perturbations to use when computing correlation. Should be 
 # about 1000 for a good plots
-PERTS = 500
+PERTS = 5000
 
 # observation points
 # define bounding circle
@@ -132,13 +132,11 @@ smooth = pygeons.smooth.smooth(
                    diff_specs=[ds],
                    length_scale=L,
                    time_scale=T)
-pert_lst = []
-for i in range(PERTS):
-  pert_lst += [pygeons.smooth.smooth(t,x,data+np.random.normal(sigma),
-                                     sigma,diff_specs=[ds],
-                                     length_scale=L,
-                                     time_scale=T)]
-perts = np.array(pert_lst)
+
+perts = pygeons.smooth.smooth(t,x,data+np.random.normal(0.0,S,(PERTS,1,N)),
+                              sigma,diff_specs=[ds],
+                              length_scale=L,
+                              time_scale=T)
 # remove x axis
 smooth = smooth[0,:]
 perts = perts[:,0,:]
