@@ -3,9 +3,16 @@ import argparse
 import json
 import sys
 import os
+import shutil
 import pygeons.ioconv
 import pygeons.interface
 import logging
+
+def get_extension(f):
+  return f.split('.')[-1]
+
+def change_extension(f,ext):
+  return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
       description='''Spatially and temporally smooths the data set. 
@@ -80,30 +87,33 @@ for k in p.keys():
     p.pop(k)
 
 if output_file is None:
-  input_file_split = input_file.split('.')
-  output_file_split = input_file_split[:-1] + ['smooth.h5']
-  output_file = '.'.join(output_file_split)
+  output_file = change_extension(input_file,'smooth.h5')
 
 data_dict = pygeons.ioconv.dict_from_file(input_file)
 out_dict = pygeons.interface.smooth(data_dict,**p)
-pygeons.ioconv.file_from_dict(output_file,out_dict)                         
+pygeons.ioconv.file_from_dict(output_file,out_dict)
 
 # check to see if there is an associated pert directory
-input_pert_dir = '.'.join(input_file.split('.')[:-1] + ['pert'])
-output_pert_dir = '.'.join(output_file.split('.')[:-1] + ['pert'])
-
+input_pert_dir = input_file+'.pert'
 if os.path.exists(input_pert_dir):
+  input_ext = get_extension(input_file)
+  output_ext = get_extension(output_file)
+  output_pert_dir = output_file+'.pert'
   # make output perturbation directory
-  if not os.path.exists(output_pert_dir):
-    os.mkdir(output_pert_dir)
+  if os.path.exists(output_pert_dir):
+    shutil.rmtree(output_pert_dir)
 
+  os.mkdir(output_pert_dir)
   input_pert_files = os.listdir(input_pert_dir)
-  input_pert_paths = ['/'.join([input_pert_dir,f]) for f in input_pert_files]
-  output_pert_paths = ['/'.join([output_pert_dir,f]) for f in input_pert_files]
-    
+  # output pert files have the same name but with the appropriate 
+  # extension
+  output_pert_files = [change_extension(i,output_ext) for i in input_pert_files]
+
+  input_pert_paths = [input_pert_dir+'/'+f for f in input_pert_files]
+  output_pert_paths = [output_pert_dir+'/'+f for f in output_pert_files]
+
   for fin,fout in zip(input_pert_paths,output_pert_paths):
     data_dict = pygeons.ioconv.dict_from_file(fin)
     out_dict = pygeons.interface.smooth(data_dict,**p)
-    pygeons.ioconv.file_from_dict(fout,out_dict)                         
-  
-    
+    pygeons.ioconv.file_from_dict(fout,out_dict)
+
