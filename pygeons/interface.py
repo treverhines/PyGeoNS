@@ -38,9 +38,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 import logging
-import sys
-import os
-import shutil
 import copy
 logger = logging.getLogger(__name__)
 
