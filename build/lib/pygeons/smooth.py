@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 from __future__ import division
 import numpy as np
-import modest.cv
-import modest
 import scipy.sparse
 from scipy.spatial import cKDTree
 import logging
 import pygeons.cuts
-import modest.mp
 import pygeons.diff
 logger = logging.getLogger(__name__)
 
