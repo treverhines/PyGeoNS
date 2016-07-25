@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import numpy as np
-import matplotlib.axes
-import matplotlib.patches
 from matplotlib.quiver import Quiver as _Quiver
 from matplotlib.collections import EllipseCollection
 from matplotlib.backends import pylab_setup

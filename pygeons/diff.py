@@ -5,8 +5,6 @@ import rbf.fd
 import rbf.poly
 import rbf.basis
 import pygeons.cuts
-import modest.mp
-import modest
 import scipy.sparse
 import logging
 logger = logging.getLogger(__name__)

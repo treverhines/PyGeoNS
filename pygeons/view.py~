@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib
 from rbf.interpolate import RBFInterpolant
 from pygeons._input import restricted_input
 from pygeons.quiver import Quiver
