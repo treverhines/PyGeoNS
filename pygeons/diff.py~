@@ -353,7 +353,6 @@ def _time_diff_matrix(t,x,
     mask_tpl = tuple(mask[:,i])
     key = cut_indices_tpl + mask_tpl
     if key in cache:
-      print('reusing!!!')
       Lsubs += [cache[key]]
       continue
 
@@ -428,7 +427,6 @@ def _space_diff_matrix(t,x,
     mask_tpl = tuple(mask[i,:])
     key = cut_indices_tpl + mask_tpl
     if key in cache:
-      print('reusing!!!')
       Lsubs += [cache[key]]
       continue
       
@@ -486,12 +484,12 @@ def diff(t,x,u,ds,mask=None):
   
   Parameters
   ----------
-    u : (Nt,Nx) array 
-
     t : (Nt,) array
     
     x : (Nx,2) array
     
+    u : (...,Nt,Nx) array 
+
     ds : DiffSpec instance
     
     mask : (Nt,Nx) array
@@ -504,13 +502,17 @@ def diff(t,x,u,ds,mask=None):
     u_diff : (Nt,Nx) array
     
   '''
-  t,x,u = np.asarray(t),np.asarray(x),np.asarray(u)
+  t = np.asarray(t,dtype=float)
+  x = np.asarray(x,dtype=float)
+  u = np.asarray(u,dtype=float)
   Nt,Nx = t.shape[0],x.shape[0]
+  bcast_shape = u.shape[:-2]
+  M = np.prod(bcast_shape)
 
   D = diff_matrix(t,x,ds,mask=mask)
-  u_flat = u.reshape(Nt*Nx)
-  u_diff_flat = D.dot(u_flat)
-  u_diff = u_diff_flat.reshape((Nt,Nx))
+  u_flat = u.reshape((M,Nt*Nx))
+  u_diff_flat = D.dot(u_flat.T).T
+  u_diff = u_diff_flat.reshape(bcast_shape + (Nt,Nx))
 
   return u_diff
 

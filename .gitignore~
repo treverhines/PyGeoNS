@@ -1,2 +1,3 @@
 build
-demo/synthetic/data
+demo/synthetic/data/*
+demo/parkfield/data/*

@@ -163,8 +163,7 @@ def smooth(t,x,u,
     
     fill : bool
   
-  '''           
-                      
+  '''                                 
   u = np.asarray(u,dtype=float)
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)

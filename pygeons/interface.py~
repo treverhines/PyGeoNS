@@ -89,6 +89,12 @@ def _check_data(data):
     if data[d].shape != (Nt,Nx): 
       raise ValueError('"%s" has shape %s but was expecting %s' % (d,data[d].shape,(Nt,Nx)))
      
+  pert_keys = ['east_pert','north_pert','vertical_pert']
+  for p in pert_keys:
+    if p in data:
+      if data[p].shape[1:] != (Nt,Nx): 
+        raise ValueError('"%s" has shape %s but was expecting (...,%s,%s)' % (d,data[p].shape,Nt,Nx))
+
   # verify that all the uncertainties have infs at the same component
   if np.any(np.isinf(data['east_std']) != np.isinf(data['north_std'])):
     raise ValueError('data with infinite uncertainty must have infinite uncertainty in all three directions') 
@@ -117,6 +123,7 @@ def _check_io(fin):
 
   return fout  
 
+
 def _log_call(fin):
   ''' 
   Notifies the user of calls to a function and prints all but the 
@@ -138,6 +145,27 @@ def _log_call(fin):
   return fout
       
 
+def _perturbed_uncertainty(fin):
+  ''' 
+  set sigma equal to the standard deviation of the perturbations
+  '''
+  @wraps(fin)
+  def fout(data,*args,**kwargs):
+    out = fin(data,*args,**kwargs)
+    for dir in ['east','north','vertical']:
+      # only use the perturbations for uncertainty if there are more 
+      # than zero
+      if out[dir+'_pert'].shape[0] > 0:
+        sigma = np.std(out[dir+'_pert'],axis=0)
+        mask = np.isinf(out[dir+'_std'])
+        sigma[mask] = np.inf
+        out[dir+'_std'] = sigma
+
+    return out
+
+  return fout
+
+  
 def _check_compatibility(data_list):
   ''' 
   make sure that each data set contains the same stations and times
@@ -250,132 +278,9 @@ def _setup_ts_ax(ax_lst,times):
 
 @_check_io
 @_log_call
-def smooth_space(data,length_scale=None,fill=False,
-                 cut_endpoint1_lons=None,cut_endpoint1_lats=None,
-                 cut_endpoint2_lons=None,cut_endpoint2_lats=None):
-  ''' 
-  Spatially smooths the data set. Data is treated as a stochastic 
-  variable where its Laplacian is modeled as white noise.
-  
-  Parameters
-  ----------
-    data : dict
-      data dictionary
-      
-    length_scale : float, optional
-      length scale of the smoothed data. Defaults to 10X the average 
-      shortest distance between stations. This is specified in meters.
-       
-    fill : bool, optional
-      whether to make an estimate at masked data. Filling masked data 
-      can make this function slower and more likely to encounter a 
-      singular matrix. Defaults to False.
-    
-    cut_endpoints{1,2}_{lons,lat} :  lst, optional
-      coordinates of the spatial discontinuty line segments. 
-      Smoothness is not enforced across these discontinuities
-  
-  Returns
-  -------
-    out : dict
-      output data dictionary
-      
-  '''
-  bm = _make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  pos = np.array([x,y]).T
-  
-  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
-                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
-  ds = pygeons.diff.disp_laplacian()
-  ds['space']['cuts'] = space_cuts
-  ds = [ds]
-
-  out = copy.deepcopy(data)
-  for dir in ['east','north','vertical']:
-    u = data[dir]
-    sigma = data[dir+'_std']
-    u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
-                                     sigma=sigma,
-                                     diff_specs=ds,
-                                     time_scale=0.0,
-                                     length_scale=length_scale,
-                                     fill=fill)
-    sigma_smooth = np.zeros(u.shape)
-    if not fill:
-      sigma_smooth[np.isinf(sigma)] = np.inf
-
-    out[dir] = u_smooth
-    out[dir+'_std'] = sigma_smooth
-
-  return out
-
-
-@_check_io
-@_log_call
-def smooth_time(data,time_scale=None,fill=False,
-                cut_dates=None):
-  ''' 
-  Temporally smooths the data set. The data is modeled as a stochastic 
-  variables where its second time derivative is white noise (i.e. 
-  integrated Brownain motion).  
-  
-  Parameters
-  ----------
-    data : dict
-      data dictionary
-      
-    time_scale : float, optional
-      time scale of the smoothed data. Defaults to 10X the time sample 
-      period. This is specified in days
-
-    fill : bool, optional
-      whether to make an estimate at masked data. Filling masked data 
-      can make this function slower and more likely to encounter a 
-      singular matrix. Defaults to False.
-    
-    cut_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. This date should be 
-      when the discontinuity is first observed 
-    
-  Returns
-  -------
-    out : dict
-      output data dictionary
-
-  '''
-  bm = _make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  pos = np.array([x,y]).T
-
-  time_cuts = _make_time_cuts(cut_dates)
-  ds = pygeons.diff.acc()
-  ds['time']['cuts'] = time_cuts
-  ds = [ds]
-
-  out = copy.deepcopy(data)
-  for dir in ['east','north','vertical']:
-    u = data[dir]
-    sigma = data[dir+'_std']
-    u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
-                                     sigma=sigma,
-                                     diff_specs=ds,
-                                     time_scale=time_scale,
-                                     length_scale=0.0,
-                                     fill=fill)
-    sigma_smooth = np.zeros(u.shape)
-    if not fill:
-      sigma_smooth[np.isinf(sigma)] = np.inf
-
-    out[dir] = u_smooth
-    out[dir+'_std'] = sigma_smooth
-
-  return out
-  
-
-@_check_io
-@_log_call
-def smooth(data,perts=None,time_scale=None,length_scale=None,fill=False,
+@_perturbed_uncertainty
+def smooth(data,time_scale=None,length_scale=None,fill=False,
+           stencil_size=10,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
            cut_dates=None):
@@ -423,36 +328,43 @@ def smooth(data,perts=None,time_scale=None,length_scale=None,fill=False,
   ds1['time']['cuts'] = time_cuts
   ds2 = pygeons.diff.disp_laplacian()
   ds2['space']['cuts'] = space_cuts
+  ds2['space']['stencil_size'] = stencil_size
   ds = [ds1,ds2]
 
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
+    p = data[dir+'_pert']
     sigma = data[dir+'_std']
-    if perts is None:
-      u_perts = None
-    else:  
-      u_perts = [p[dir] for p in perts]
       
-    u_smooth = pygeons.smooth.smooth(data['time'],pos,u,
-                                     sigma=sigma,
-                                     diff_specs=ds,
-                                     time_scale=time_scale,
-                                     length_scale=length_scale,
-                                     fill=fill)
-    sigma_smooth = np.zeros(u.shape)
+    up = np.concatenate((u[None,:,:],p),axis=0)
+    up_smooth = pygeons.smooth.smooth(
+                  data['time'],pos,up,
+                  sigma=sigma,
+                  diff_specs=ds,
+                  time_scale=time_scale,
+                  length_scale=length_scale,
+                  fill=fill)
+
+    sigma_smooth = np.zeros(sigma.shape)
+    u_smooth = up_smooth[0,:,:]
+    p_smooth = up_smooth[1:,:,:]
+
     if not fill:
       sigma_smooth[np.isinf(sigma)] = np.inf
 
     out[dir] = u_smooth
+    out[dir+'_pert'] = p_smooth
     out[dir+'_std'] = sigma_smooth
-
+    
   return out
            
 
 @_check_io
 @_log_call
+@_perturbed_uncertainty
 def diff(data,dt=0,dx=0,dy=0,
+         stencil_size=10,
          cut_endpoint1_lons=None,cut_endpoint1_lats=None,
          cut_endpoint2_lons=None,cut_endpoint2_lats=None,
          cut_dates=None):
@@ -504,15 +416,23 @@ def diff(data,dt=0,dx=0,dy=0,
   ds['time']['cuts'] = time_cuts
   ds['space']['diffs'] = [(dx,dy)]
   ds['space']['cuts'] = space_cuts
+  ds['space']['stencil_size'] = stencil_size
 
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
+    p = data[dir+'_pert']
     mask = np.isinf(data[dir+'_std'])
-    u_diff = pygeons.diff.diff(data['time'],pos,u,ds,mask=mask)
+
+    up = np.concatenate((u[None,:,:],p),axis=0)
+    up_diff = pygeons.diff.diff(data['time'],pos,up,ds,mask=mask)
+
+    u_diff = up_diff[0,:,:]
+    p_diff = up_diff[1:,:,:]
     sigma_diff = np.zeros(u.shape)
     sigma_diff[mask] = np.inf
     out[dir] = u_diff
+    out[dir+'_pert'] = p_diff
     out[dir+'_std'] = sigma_diff
 
   return out
@@ -520,6 +440,7 @@ def diff(data,dt=0,dx=0,dy=0,
 
 @_check_io
 @_log_call
+@_perturbed_uncertainty
 def downsample(data,sample_period,start_date=None,stop_date=None,
                cut_dates=None):
   ''' 
@@ -576,12 +497,21 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   out['time'] = time_itp
   for dir in ['east','north','vertical']:
     u = data[dir]
+    p = data[dir+'_pert']
     sigma = data[dir+'_std']
     u_ds,sigma_ds = pygeons.downsample.downsample(
                       data['time'],time_itp,pos,u,
                       sigma=sigma,time_cuts=time_cuts)
+    # downsample each perturbation the same way
+    p_ds = np.zeros((len(p),len(time_itp),len(pos)))
+    for i,pi in enumerate(p):
+      p_dsi,dummy = pygeons.downsample.downsample(
+                      data['time'],time_itp,pos,pi,
+                      sigma=sigma,time_cuts=time_cuts)
+      p_ds[i,:,:] = p_dsi
                
     out[dir] = u_ds
+    out[dir+'_pert'] = p_ds
     out[dir+'_std'] = sigma_ds
 
   return out
@@ -589,6 +519,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
 @_check_io
 @_log_call
+@_perturbed_uncertainty
 def zero(data,zero_date,radius,cut_dates=None):
   ''' 
   Estimates and removes the displacements at the indicated time. The 
@@ -624,18 +555,36 @@ def zero(data,zero_date,radius,cut_dates=None):
   
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
+    u = data[dir]
+    p = data[dir + '_pert']
+    sigma = data[dir+'_std']
     itp = pygeons.downsample.MeanInterpolant(
-            data['time'][:,None],data[dir],
-            sigma=data[dir +'_std'],
+            data['time'][:,None],u,
+            sigma=sigma,
             vert=vert,smp=smp)    
-    u_zero,sigma_zero = itp([[zero_time]],radius=radius) 
-    out[dir] = data[dir] - u_zero
-    out[dir + '_std'] = np.sqrt(data[dir + '_std']**2 + sigma_zero**2)
+    # shape (1,Nx)
+    offset,sigma_offset = itp([[zero_time]],radius=radius) 
+    u_zero = u - offset
+    sigma_zero = np.sqrt(sigma_offset**2 + sigma**2)
+    p_zero = np.zeros(p.shape)
+    for i,pi in enumerate(p):     
+      itp = pygeons.downsample.MeanInterpolant(
+              data['time'][:,None],pi,
+              sigma=sigma,
+              vert=vert,smp=smp)    
+      offset,dummy = itp([[zero_time]],radius=radius) 
+      p_zero[i,:,:] = pi - offset
+           
+    out[dir] = u_zero
+    out[dir+'_pert'] = p_zero
+    out[dir + '_std'] = sigma_zero
   
   return out
 
 
+@_check_io
 @_log_call
+@_perturbed_uncertainty
 def perturb(data,N):
   ''' 
   returns N data dictionaries where noise is added to the 
@@ -650,23 +599,21 @@ def perturb(data,N):
 
   Returns
   -------
-    out_lst : lst
-      perturbed data dictionaries
+    out : dict
+      data dict with *pert* entries
 
   '''
   _check_data(data)
-  out_lst = []
-  for i in range(N):  
-    d = copy.deepcopy(data)
-    for dir in ['east','north','vertical']:
-      sigma = d[dir+'_std']
-      # make sure that sigma is greater than zero
-      sigma[sigma<1e-20] = 1e-20
-      d[dir] += np.random.normal(0.0,sigma)
+  out = copy.deepcopy(data)
+  for dir in ['east','north','vertical']:
+    sigma = data[dir+'_std']
+    # make sure that sigma is greater than zero
+    sigma[sigma<1e-20] = 1e-20
+    sigma = sigma[None,:,:].repeat(N,axis=0)
+    out[dir+'_pert'] = data[dir] + np.random.normal(0.0,sigma)
 
-    out_lst += [d]
-    
-  return out_lst
+  return out
+
 
 @_check_io
 @_log_call
