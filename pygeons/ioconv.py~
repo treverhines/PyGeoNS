@@ -226,6 +226,9 @@ def _dict_from_text(infile,file_type):
   out['east_std'] = east_std
   out['north_std'] = north_std
   out['vertical_std'] = vertical_std
+  out['east_pert'] = np.zeros((0,len(time),len(id)))
+  out['north_pert'] = np.zeros((0,len(time),len(id)))
+  out['vertical_pert'] = np.zeros((0,len(time),len(id)))
   return out
   
 
@@ -318,9 +321,12 @@ def file_from_dict(outfile,data_dict):
   if ext in ['hdf','h5','hdf5','he5']: 
     hdf5_from_dict(outfile,data_dict)
 
-  else:
+  elif ext in ['csv']:
     csv_from_dict(outfile,data_dict)
       
+  else:
+    raise ValueError('cannot infer file type with extension *%s*' % ext)
+
   return
 
 
@@ -335,9 +341,12 @@ def dict_from_file(infile):
 
   elif ext in ['pos']:
     out = dict_from_pos(infile)
+
+  elif ext in ['csv']:
+    out = dict_from_csv(infile)
     
   else:
-    out = dict_from_csv(infile)
+    raise ValueError('cannot infer file type with extension *%s*' % ext)
   
   return out
   

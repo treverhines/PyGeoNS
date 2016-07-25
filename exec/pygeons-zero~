@@ -3,14 +3,10 @@ import argparse
 import json
 import sys
 import os
-import shutil
 import pygeons.ioconv
 import pygeons.interface
 import logging
 
-def get_extension(f):
-  return f.split('.')[-1]
-  
 def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
     

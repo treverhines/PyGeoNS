@@ -17,6 +17,7 @@ if __name__ == '__main__':
                  'exec/pygeons-view',
                  'exec/pygeons-convert',
                  'exec/pygeons-zero',
+                 'exec/pygeons-perturb',
                  'exec/pygeons-downsample'],
         packages=['pygeons'],
         license='MIT')

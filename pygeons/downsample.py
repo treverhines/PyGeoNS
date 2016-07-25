@@ -12,9 +12,9 @@ def weighted_mean(x,sigma,axis=None):
   
   Parameters
   ----------
-    x : (N,...) array
+    x : (..., N,...) array
     
-    sigma : (N,...) array
+    sigma : (..., N,...) array
       
     axis : int, optional
     

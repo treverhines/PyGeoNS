@@ -3,13 +3,9 @@ import argparse
 import json
 import sys
 import os
-import shutil
 import pygeons.ioconv
 import pygeons.interface
 import logging
-
-def get_extension(f):
-  return f.split('.')[-1]
 
 def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
@@ -23,6 +19,13 @@ p.add_argument('input_file',type=str,
                        ".pos" is interpretted as PBO pos, anything 
                        else is assumed to be a PBO csv file.''')
 p.add_argument('N',type=int)
+p.add_argument('--output_file',type=str,
+               help='''if not provided then the input file extension 
+                       is removed and replaced with smooth.h5. The 
+                       output file type is inferred from the 
+                       extension. Currently, can only output to HDF5 
+                       files or PBO csv files.''')
+
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''controls verbosity''')
                
@@ -38,24 +41,16 @@ else:
   logging.basicConfig(level=logging.DEBUG)
 
 input_file = p.pop('input_file')
+output_file = p.pop('output_file')
 
 # throw out any Nones and let the lower level functions determine the defaults
 for k in p.keys():
   if p[k] is None:
     p.pop(k)
 
+if output_file is None:
+  output_file = change_extension(input_file,'perturb.h5')
+
 data_dict = pygeons.ioconv.dict_from_file(input_file)
-out_dict_lst = pygeons.interface.perturb(data_dict,**p)
-
-# save to file with the same extension
-ext = get_extension(input_file)
-pert_dir = input_file+'.pert'
-if os.path.exists(pert_dir):
-  shutil.rmtree(pert_dir)
-
-os.mkdir(pert_dir)
-
-for idx,out_dict in enumerate(out_dict_lst):
-  file_name = pert_dir + '/%s.%s' % (idx,ext)
-  pygeons.ioconv.file_from_dict(file_name,out_dict)
-
+out_dict = pygeons.interface.perturb(data_dict,**p)
+pygeons.ioconv.file_from_dict(output_file,out_dict)
