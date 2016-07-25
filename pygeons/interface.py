@@ -20,6 +20,9 @@ dictionary contains the following items:
   east_std : (Nt,Nx) array
   north_std : (Nt,Nx) array
   vertical_std : (Nt,Nx) array
+  east_pert : (Np,Nt,Nx) array
+  north_pert : (Np,Nt,Nx) array
+  vertical_pert : (Np,Nt,Nx) array
 
 '''
 from __future__ import division
@@ -617,6 +620,7 @@ def perturb(data,N):
 
 @_check_io
 @_log_call
+@_perturbed_uncertainty
 def clean(data,resolution='i',
           cut_endpoint1_lons=None,cut_endpoint1_lats=None,
           cut_endpoint2_lons=None,cut_endpoint2_lats=None,
@@ -639,6 +643,15 @@ def clean(data,resolution='i',
   -------
     out : dict
       output data dictionary 
+    
+  Note
+  ----
+    Currently, if clean has been called after perturb, then the 
+    uncertainties resulting from removing jumps will not be added to 
+    the output. This is because during cleaning, the perturbations are 
+    not touched at all and their variances will remain the same. Newly 
+    masked data (due to removing outliers or jumps) will be masked in 
+    the output
     
   '''
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
