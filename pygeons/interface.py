@@ -610,10 +610,12 @@ def perturb(data,N):
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     sigma = data[dir+'_std']
-    # make sure that sigma is greater than zero
-    sigma[sigma<1e-20] = 1e-20
     sigma = sigma[None,:,:].repeat(N,axis=0)
-    out[dir+'_pert'] = data[dir] + np.random.normal(0.0,sigma)
+    # dont add noise for data where sigma is inf or 0.0
+    is_valid = (sigma > 0.0) & ~np.isinf(sigma)
+    noise = np.zeros(sigma.shape)
+    noise[is_valid] = np.random.normal(0.0,sigma[is_valid])
+    out[dir+'_pert'] = data[dir] + noise
 
   return out
 
