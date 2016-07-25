@@ -14,13 +14,13 @@ pos = 2*np.pi*(rbf.halton.halton(Nx,2) - 0.5)
 lon = pos[:,0] - 84.5
 lat = pos[:,1] + 43.0
 
-east = 100*np.sin(lon[None,:])*np.cos(lat[None,:])*np.cos(time[:,None]/365.25)
-north = 100*np.cos(lon[None,:])*np.sin(lat[None,:])*np.cos(time[:,None]/365.25)
-vertical = 100*np.cos(lon[None,:])*np.cos(lat[None,:])*np.sin(time[:,None]/365.25)
+east = 100*np.sin(lon[None,:])*np.cos(lat[None,:]) + 2.0*time[:,None]/365.25
+north = 100*np.cos(lon[None,:])*np.sin(lat[None,:]) + 3.0*time[:,None]/365.25
+vertical = 100*np.cos(lon[None,:])*np.cos(lat[None,:]) + 4.0*time[:,None]/365.25
 
-east_std = 0.0*np.ones((Nt,Nx))
-north_std = 0.0*np.ones((Nt,Nx))
-vertical_std = 0.0*np.ones((Nt,Nx))
+east_std = 0.1*np.ones((Nt,Nx))
+north_std = 0.1*np.ones((Nt,Nx))
+vertical_std = 0.1*np.ones((Nt,Nx))
 id = np.arange(Nx).astype(str)
 
 data = {'time':time,
@@ -37,12 +37,12 @@ noisy_data = {'time':time,
         'longitude':lon,
         'latitude':lat,
         'id':id,
-        'east':east + 0*np.random.normal(0.0,10.0,(Nt,Nx)),
-        'north':north + 0*np.random.normal(0.0,10.0,(Nt,Nx)),
-        'vertical':vertical + 0*np.random.normal(0.0,10.0,(Nt,Nx)),
-        'east_std':east_std + 10,
-        'north_std':north_std + 10,
-        'vertical_std':vertical_std + 10}
+        'east':east + np.random.normal(0.0,0.1,(Nt,Nx)),
+        'north':north + np.random.normal(0.0,0.1,(Nt,Nx)),
+        'vertical':vertical + np.random.normal(0.0,0.1,(Nt,Nx)),
+        'east_std':east_std,
+        'north_std':north_std,
+        'vertical_std':vertical_std}
 
 pygeons.ioconv.file_from_dict('data/synthetic.csv',data)
 pygeons.ioconv.file_from_dict('data/synthetic.noise.csv',noisy_data)
