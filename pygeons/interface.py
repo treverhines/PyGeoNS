@@ -279,7 +279,8 @@ def _setup_ts_ax(ax_lst,times):
 @_check_io
 @_log_call
 @_perturbed_uncertainty
-def smooth(data,time_scale=None,length_scale=None,fill=False,
+def smooth(data,time_scale=None,length_scale=None,
+           kind='both',fill=False,
            stencil_size=10,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
@@ -302,6 +303,9 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
       Length scale of the smoothed data. Defaults to 10X the average 
       shortest distance between stations. This is specified in meters
        
+    kind : str, optional
+      either 'time', 'space', or 'both'
+      
     fill : bool, optional
       Whether to make an estimate at masked data. Filling masked data 
       can make this function slower and more likely to encounter a 
@@ -324,12 +328,23 @@ def smooth(data,time_scale=None,length_scale=None,fill=False,
   space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
                                 cut_endpoint2_lons,cut_endpoint2_lats,bm)
   time_cuts = _make_time_cuts(cut_dates)
+  
   ds1 = pygeons.diff.acc()  
   ds1['time']['cuts'] = time_cuts
   ds2 = pygeons.diff.disp_laplacian()
   ds2['space']['cuts'] = space_cuts
   ds2['space']['stencil_size'] = stencil_size
-  ds = [ds1,ds2]
+  if kind == 'time':
+    ds = [ds1]  
+
+  elif kind == 'space':
+    ds = [ds2]
+      
+  elif kind == 'both':
+    ds = [ds1,ds2]
+  
+  else:
+    raise ValueError('*kind* must be "time", "space", or "both"')  
 
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
@@ -672,12 +687,15 @@ def clean(data,resolution='i',
   pos = np.array([x,y]).T
 
   t = data['time']
+  dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
   u,v,z = data['east'],data['north'],data['vertical']
   su,sv,sz = data['east_std'],data['north_std'],data['vertical_std']
   clean_data = pygeons.clean.clean(
                  t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
                  converter=bm,map_ax=map_ax,ts_ax=ts_ax,
-                 station_names=data['id'],**kwargs)
+                 time_labels=dates,
+                 station_labels=data['id'],
+                 **kwargs)
 
   out = copy.deepcopy(data)
   out['east'] = clean_data[0]          
@@ -715,6 +733,7 @@ def view(data_list,resolution='i',
   lon = data_list[0]['longitude']
   lat = data_list[0]['latitude']
   id = data_list[0]['id']
+  dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
 
   u = [d['east'] for d in data_list]
   v = [d['north'] for d in data_list]
@@ -743,6 +762,9 @@ def view(data_list,resolution='i',
   
   pygeons.view.view(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-    ts_ax=ts_ax,map_ax=map_ax,station_names=id,**kwargs)
+    ts_ax=ts_ax,map_ax=map_ax,
+    station_labels=id,
+    time_labels=dates,
+    **kwargs)
 
   return
