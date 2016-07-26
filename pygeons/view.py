@@ -121,7 +121,8 @@ Notes
                image_cmap=None,
                image_array_size=200,
                image_clabel='vertical',
-               station_names=None,
+               station_labels=None,
+               time_labels=None,
                data_set_names=None,
                ts_ax=None,
                ts_title=None,
@@ -170,7 +171,7 @@ Notes
         whether to show the vertical deformation for the second data 
         set as scatter points
         
-      station_names : (Nx,) str array
+      station_labels : (Nx,) str array
       
       data_set_names : (Ns,) str array
       
@@ -296,14 +297,18 @@ Notes
     self.cax = None
       
     # station names used for the time series plots
-    if station_names is None:
-      station_names = np.arange(len(self.x)).astype(str)
+    if station_labels is None:
+      station_labels = np.arange(len(self.x)).astype(str)
+
+    if time_labels is None:
+      time_labels = np.array(self.t).astype(str)
 
     # data set names used for the legends
     if data_set_names is None:
       data_set_names = np.arange(len(self.data_sets)).astype(str)
 
-    self.station_names = list(station_names)
+    self.station_labels = list(station_labels)
+    self.time_labels = list(time_labels)
     self.data_set_names = list(data_set_names)
 
     # position and length of the scale vector 
@@ -437,7 +442,7 @@ Notes
     self.ts_ax[1].tick_params(labelsize=self.config['fontsize'])
     self.ts_ax[2].tick_params(labelsize=self.config['fontsize'])
     if self.config['ts_title'] is None:
-      name = self.station_names[self.config['xidx']]
+      name = self.station_labels[self.config['xidx']]
       self.ts_ax[0].set_title('station : %s' % name,
                               fontsize=self.config['fontsize'])
     else:
@@ -464,7 +469,7 @@ Notes
     #   xidx
     #   ts_title
     if self.config['ts_title'] is None:
-      name = self.station_names[self.config['xidx']]
+      name = self.station_labels[self.config['xidx']]
       self.ts_ax[0].set_title('station : %s' % name,
                               fontsize=self.config['fontsize'])
     else:
@@ -488,8 +493,8 @@ Notes
     self.map_ax.set_aspect('equal')
     self.map_ax.tick_params(labelsize=self.config['fontsize'])
     if self.config['map_title'] is None:
-      time = self.t[self.config['tidx']]
-      self.map_ax.set_title('time : %g' % time,
+      time_label = self.time_labels[self.config['tidx']]
+      self.map_ax.set_title('time : %s' % time_label,
                             fontsize=self.config['fontsize'])
     else:
       self.map_ax.set_title(self.config['map_title'],
@@ -510,8 +515,8 @@ Notes
     #   map_title
     #   tidx
     if self.config['map_title'] is None:
-      time = self.t[self.config['tidx']]
-      self.map_ax.set_title('time : %g' % time,
+      time_label = self.time_labels[self.config['tidx']]
+      self.map_ax.set_title('time : %s' % time_label,
                             fontsize=self.config['fontsize'])
     else:
       self.map_ax.set_title(self.config['map_title'],

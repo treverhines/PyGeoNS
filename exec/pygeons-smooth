@@ -29,6 +29,7 @@ p.add_argument('--output_file',type=str,
                        extension. Currently, can only output to HDF5 
                        files or PBO csv files.''')
 p.add_argument('--stencil_size',type=int)
+p.add_argument('--kind',type=str)
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''Controls verbosity''')
 p.add_argument('-f','--fill',action='store_true',
