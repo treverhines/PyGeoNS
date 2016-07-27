@@ -101,54 +101,67 @@ class DiffSpecs(dict):
     return self.__str__()    
 
   def fill(self):
-    ''' 
-    replaces Nones with default values
-    '''
+    self._fill_time()
+    self._fill_space()
+    
+  def _fill_time(self):
     T = self['time']
-    X = self['space']
-
-    if T['basis'] is None:
-      T['basis'] = rbf.basis.phs3
-
+    # if diffs was not specified then keep everything as None. This 
+    # indicates that no time derivative should be computed
     if T['diffs'] is None:
-      T['diffs'] = [[0]]
+      return
 
     if T['coeffs'] is None:
       T['coeffs'] = [1.0 for d in T['diffs']]
-      
+
     if T['stencil_size'] is None:
       T['stencil_size'] = rbf.fd._default_stencil_size(1,diffs=T['diffs'])
 
-    if T['order'] is None:
-      T['order'] = rbf.fd._default_poly_order(T['stencil_size'],1)
-      
-    if T['cuts'] is None:
-      T['cuts'] = pygeons.cuts.TimeCuts()  
-      
     if T['diff_type'] is None:
       T['diff_type'] = 'poly'  
 
-    if X['basis'] is None:
-      X['basis'] = rbf.basis.phs3
-
+    if T['diff_type'] == 'poly':
+      # if using polynomial weights then "rbf" and "order" do nothing. 
+      # set these to None
+      T['basis'] = None
+      T['order'] = None
+      
+    else:
+      if T['basis'] is None:
+        T['basis'] = rbf.basis.phs3
+        
+      if T['order'] is None:
+        T['order'] = rbf.fd._default_poly_order(T['stencil_size'],1)
+    
+    if T['cuts'] is None:
+      T['cuts'] = pygeons.cuts.TimeCuts()  
+      
+  def _fill_space(self):
+    ''' 
+    replaces Nones with default values
+    '''
+    X = self['space']
     if X['diffs'] is None:
-      X['diffs'] = [[0,0]]
+      return
 
     if X['coeffs'] is None:
       X['coeffs'] = [1.0 for d in X['diffs']]
-      
+
     if X['stencil_size'] is None:
       X['stencil_size'] = rbf.fd._default_stencil_size(2,diffs=X['diffs'])
 
+    # the weights must be computed using the RBF-FD method. 
+    X['diff_type'] = 'rbf'  
+
+    if X['basis'] is None:
+      X['basis'] = rbf.basis.phs3
+      
     if X['order'] is None:
       X['order'] = rbf.fd._default_poly_order(X['stencil_size'],2)
       
     if X['cuts'] is None:
       X['cuts'] = pygeons.cuts.SpaceCuts()  
       
-    if X['diff_type'] is None:
-      X['diff_type'] = 'rbf'  
-
 
 # make a convenience functions that generate common diff specs
 def disp_laplacian():
@@ -156,8 +169,6 @@ def disp_laplacian():
   returns displacement laplacian DiffSpecs instance
   '''  
   out = DiffSpecs()
-  out['time']['diffs'] = [[0]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[2,0],[0,2]]
   out['space']['coeffs'] = [1.0,1.0]
   return out
@@ -176,7 +187,7 @@ def vel_laplacian():
 def acc_laplacian():
   ''' 
   returns acceleration laplacian DiffSpecs instance
-  '''  
+  '''
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
   out['time']['coeffs'] = [1.0]
@@ -189,8 +200,6 @@ def disp_dx():
   returns displacement x derivative DiffSpecs instance
   '''  
   out = DiffSpecs()
-  out['time']['diffs'] = [[0]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[1,0]]
   out['space']['coeffs'] = [1.0]
   return out
@@ -222,8 +231,6 @@ def disp_dy():
   returns displacement y derivative DiffSpecs instance
   '''  
   out = DiffSpecs()
-  out['time']['diffs'] = [[0]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[0,1]]
   out['space']['coeffs'] = [1.0]
   return out
@@ -255,10 +262,6 @@ def disp():
   returns displacement DiffSpecs instance
   '''
   out = DiffSpecs()
-  out['time']['diffs'] = [[0]]
-  out['time']['coeffs'] = [1.0]
-  out['space']['diffs'] = [[0,0]]
-  out['space']['coeffs'] = [1.0]
   return out
 
 def vel():
@@ -268,8 +271,6 @@ def vel():
   out = DiffSpecs()
   out['time']['diffs'] = [[1]]
   out['time']['coeffs'] = [1.0]
-  out['space']['diffs'] = [[0,0]]
-  out['space']['coeffs'] = [1.0]
   return out
   
 def acc():
@@ -279,8 +280,6 @@ def acc():
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
   out['time']['coeffs'] = [1.0]
-  out['space']['diffs'] = [[0,0]]
-  out['space']['coeffs'] = [1.0]
   return out
 
 
@@ -319,8 +318,22 @@ def diff_matrix(t,x,ds,mask=None):
     mask = np.asarray(mask,dtype=bool)
       
   logger.debug('creating differentiation matrix : \n' + str(ds))
-  Dt = _time_diff_matrix(t,x,mask=mask,**ds['time'])
-  Dx = _space_diff_matrix(t,x,mask=mask,**ds['space'])
+  if ds['time']['diffs'] is None:
+    vals = (~mask).flatten().astype(float)
+    rows = np.arange(len(vals))
+    cols = np.arange(len(vals))
+    Dt = scipy.sparse.csr_matrix((vals,(rows,cols)))
+  else:
+    Dt = _time_diff_matrix(t,x,mask=mask,**ds['time'])
+
+  if ds['space']['diffs'] is None:
+    vals = (~mask).flatten().astype(float)
+    rows = np.arange(len(vals))
+    cols = np.arange(len(vals))
+    Dx = scipy.sparse.csr_matrix((vals,(rows,cols)))
+  else:  
+    Dx = _space_diff_matrix(t,x,mask=mask,**ds['space'])
+
   D = Dt.dot(Dx)
   logger.debug('done')
   
@@ -379,7 +392,7 @@ def _time_diff_matrix(t,x,
     ri,ci,vi = Li.row,Li.col,Li.data
     # changes the coordinates to correspond with the t vector rather 
     # than t[sub_idx]
-    Li = scipy.sparse.csr_matrix((vi,(sub_idx[ri],sub_idx[ci])),shape=(Nt,Nt))
+    Li = scipy.sparse.coo_matrix((vi,(sub_idx[ri],sub_idx[ci])),shape=(Nt,Nt))
 
     cache[key] = Li             
     Lsubs += [Li]
@@ -391,7 +404,6 @@ def _time_diff_matrix(t,x,
   cols = np.zeros((0,),dtype=int)
   vals = np.zeros((0,),dtype=float)
   for i,Li in enumerate(Lsubs):
-    Li = Li.tocoo()
     ri,ci,vi = Li.row,Li.col,Li.data
     rows = np.concatenate((rows,wrapped_indices[ri,i]))
     cols = np.concatenate((cols,wrapped_indices[ci,i]))
@@ -432,28 +444,18 @@ def _space_diff_matrix(t,x,
     sub_idx, = np.nonzero(~mask[i,:])
 
     vert,smp = cuts.get_vert_and_smp(ti)
-    if diff_type == 'rbf': 
-      Li = rbf.fd.diff_matrix(
-             x[sub_idx],N=stencil_size,
-             diffs=diffs,coeffs=coeffs,
-             basis=basis,order=order,
-             vert=vert,smp=smp)
-      
-    elif diff_type == 'poly':               
-      Li = rbf.fd.poly_diff_matrix(
-             x[sub_idx],N=stencil_size,
-             diffs=diffs,coeffs=coeffs,
-             vert=vert,smp=smp)
-             
-    else:
-      raise ValueError('diff_type must be rbf or poly')               
+    Li = rbf.fd.diff_matrix(
+           x[sub_idx],N=stencil_size,
+           diffs=diffs,coeffs=coeffs,
+           basis=basis,order=order,
+           vert=vert,smp=smp)
 
     # convert to coo to get row and col indices for each entry
     Li = Li.tocoo()
     ri,ci,vi = Li.row,Li.col,Li.data
     # changes the coordinates to correspond with the x vector rather 
     # than x[sub_idx]
-    Li = scipy.sparse.csr_matrix((vi,(sub_idx[ri],sub_idx[ci])),shape=(Nx,Nx))
+    Li = scipy.sparse.coo_matrix((vi,(sub_idx[ri],sub_idx[ci])),shape=(Nx,Nx))
 
     cache[key] = Li
     Lsubs += [Li]
@@ -465,7 +467,6 @@ def _space_diff_matrix(t,x,
   cols = np.zeros((0,),dtype=int)
   vals = np.zeros((0,),dtype=float)
   for i,Li in enumerate(Lsubs):
-    Li = Li.tocoo()
     ri,ci,vi = Li.row,Li.col,Li.data
     rows = np.concatenate((rows,wrapped_indices[i,ri]))
     cols = np.concatenate((cols,wrapped_indices[i,ci]))
