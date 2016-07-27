@@ -386,7 +386,7 @@ Notes
       # find if sigma is inf for any component
       anyinfs = np.any(np.isinf(s),axis=2)
       anyinfs = anyinfs[:,:,None].repeat(3,axis=2)
-      d[anyinfs] = 0.0
+      d[anyinfs] = np.nan
       s[anyinfs] = np.inf
       new_data_sets += [d]       
       new_sigma_sets += [s]       

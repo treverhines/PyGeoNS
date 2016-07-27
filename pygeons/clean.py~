@@ -284,7 +284,7 @@ Notes
     out_dict['time'] = self.t 
     out_dict['longitude'] = lon
     out_dict['latitude'] = lat
-    out_dict['id'] = self.station_names
+    out_dict['id'] = self.station_labels
     out_dict['east'] = data[:,:,0]
     out_dict['north'] = data[:,:,1]
     out_dict['vertical'] = data[:,:,2]
@@ -338,7 +338,7 @@ Notes
     # turn the new data sets into masked arrays
     self.update_data()
 
-    name = self.station_names[xidx]
+    name = self.station_labels[xidx]
     logger.info('removed jump at time %g for station %s using data from time %g to %g\n' % 
                 (jump_time,name,jump_time-radius,jump_time+radius))
       
@@ -347,13 +347,13 @@ Notes
     # from start_time to end_time
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
-    self.data_sets[0][tidx,xidx] = 0.0
+    self.data_sets[0][tidx,xidx] = np.nan
     self.sigma_sets[0][tidx,xidx] = np.inf
 
     # turn the new data sets into masked arrays
     self.update_data()
 
-    name = self.station_names[xidx]
+    name = self.station_labels[xidx]
     logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
           
   def on_mouse_press(self,event):

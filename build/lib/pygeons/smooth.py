@@ -135,12 +135,48 @@ def _collapse_sparse_matrix(A,idx):
   return out
 
 
+def _fill_mask(t,x,sigma,kind):
+  ''' 
+  Returns an (Nt,Nx) boolean array identifying when and where a 
+  smoothed estimate should be made. True indicates that the datum 
+  should not be estimated. 
+  
+  kind :
+    0 : output at times and stations where data are not missing
+    
+    1 : In addition to 0, interpolate at times with missing data
+
+    2 : output at all stations and times
+
+  '''
+  data_is_missing = np.isinf(sigma)
+  
+  if kind == 'none':
+    mask = data_is_missing 
+
+  elif kind == 'interpolate':
+    mask = np.ones(sigma.shape,dtype=bool)
+    for i,xi in enumerate(x):
+      active_times = t[~data_is_missing[:,i]]
+      if active_times.shape[0] > 0: 
+        first_time = np.min(active_times)
+        last_time = np.max(active_times)
+        mask[:,i] = (t<first_time) | (t>last_time)
+  
+  elif kind == 'all':
+    mask = np.zeros(sigma.shape,dtype=bool)
+      
+  else:
+    raise ValueError('*kind* must be "none", "interpolate", or "all"')
+
+  return mask
+  
 def smooth(t,x,u,
            sigma=None,
            diff_specs=None,
            length_scale=None,                      
            time_scale=None,
-           fill=False):
+           fill='none'):
   ''' 
   Parameters
   ----------
@@ -158,10 +194,17 @@ def smooth(t,x,u,
     
     time_scale : float
     
-    fill : bool
-  
+    fill : str, {'none', 'interpolate', 'all'}
+      Indicates when and where to make a smoothed estimate. 'none' : 
+      output only where data is not missing. 'interpolate' : output 
+      where data is not missing and where time interpolation is 
+      possible. 'all' : output at all stations and times. Masked data 
+      is returned as np.nan
+      
   '''                                 
-  u = np.asarray(u,dtype=float)
+  u = np.array(u,dtype=float,copy=True)
+  # convert any nans to zeros
+  u[np.isnan(u)] = 0.0
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
   Nx,Nt = x.shape[0],t.shape[0]
@@ -183,16 +226,7 @@ def smooth(t,x,u,
   if sigma.shape != (Nt,Nx):
     raise TypeError('sigma must have shape (Nt,Nx)')
 
-  if fill:
-    # if fill==True a solution will be estimated for all positions 
-    # and times 
-    mask = np.zeros((Nt,Nx),dtype=bool)  
-  else:
-    # if fill==False the solution will only be estimated at unmasked 
-    # positions and times. This is less likely to result in a singular 
-    # matrix and is thus the default. A datum is considered masked if 
-    # its uncertainty is np.inf
-    mask = np.isinf(sigma)
+  mask = _fill_mask(t,x,sigma,fill)
 
   # estimate length scale and time scale if not given
   default_time_scale,default_length_scale = _estimate_scales(t,x)
@@ -243,7 +277,7 @@ def smooth(t,x,u,
   out = np.zeros(bcast_shape+(Nt*Nx,))
   out[...,keep_idx] = u_pred
   out = out.reshape(bcast_shape+(Nt,Nx))
-  
+  out[...,mask] = np.nan    
   return out
   
 
