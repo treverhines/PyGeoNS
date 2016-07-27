@@ -281,7 +281,7 @@ def _setup_ts_ax(ax_lst,times):
 @_perturbed_uncertainty
 def smooth(data,time_scale=None,length_scale=None,
            kind='both',fill='none',
-           stencil_size=10,
+           stencil_size=None,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
            cut_dates=None):
@@ -307,11 +307,11 @@ def smooth(data,time_scale=None,length_scale=None,
       either "time", "space", or "both"
       
     fill : str, optional
-      either "none", "interpolate", or "all". Indicates when and where 
-      to make a smoothed estimate. "none" : output only where data is 
-      not missing. "interpolate" : output where data is not missing 
-      and where time interpolation is possible. "all" : output at all 
-      stations and times. 
+      either "none", "interpolate", or "extrapolate". Indicates when 
+      and where to make a smoothed estimate. "none" : output only 
+      where data is not missing. "interpolate" : output where data is 
+      not missing and where time interpolation is possible. "all" : 
+      output at all stations and times.
     
     cut_dates : lst, optional
       list of time discontinuities in YYYY-MM-DD. This date should be 
@@ -380,8 +380,8 @@ def smooth(data,time_scale=None,length_scale=None,
 @_check_io
 @_log_call
 @_perturbed_uncertainty
-def diff(data,dt=0,dx=0,dy=0,
-         stencil_size=10,
+def diff(data,dt=None,dx=None,dy=None,
+         stencil_size=None,
          cut_endpoint1_lons=None,cut_endpoint1_lats=None,
          cut_endpoint2_lons=None,cut_endpoint2_lats=None,
          cut_dates=None):
@@ -429,11 +429,16 @@ def diff(data,dt=0,dx=0,dy=0,
   time_cuts = _make_time_cuts(cut_dates)
   # form DiffSpecs instance
   ds = pygeons.diff.DiffSpecs()
-  ds['time']['diffs'] = [(dt,)]
-  ds['time']['cuts'] = time_cuts
-  ds['space']['diffs'] = [(dx,dy)]
-  ds['space']['cuts'] = space_cuts
-  ds['space']['stencil_size'] = stencil_size
+  if dt is not None:
+    ds['time']['diffs'] = [(dt,)]
+    ds['time']['cuts'] = time_cuts
+
+  if (dx is not None) | (dy is not None):     
+    if dx is None: dx = 0
+    if dy is None: dy = 0
+    ds['space']['diffs'] = [(dx,dy)]
+    ds['space']['cuts'] = space_cuts
+    ds['space']['stencil_size'] = stencil_size
 
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:

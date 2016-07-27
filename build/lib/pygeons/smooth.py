@@ -107,16 +107,25 @@ def _penalty(T,L,sigma,diff_specs):
   S = 1.0/_rms(1.0/sigma) # characteristic uncertainty 
   
   # make sure all space derivative terms have the same order
-  xords =  [sum(i) for i in diff_specs['space']['diffs']]
-  # make sure all time derivative terms have the same order
-  tords =  [sum(i) for i in diff_specs['time']['diffs']]
-  if not all([i==xords[0] for i in xords]):
-    raise ValueError('all space derivative terms must have the same order')
-  if not all([i==tords[0] for i in tords]):
-    raise ValueError('all time derivative terms must have the same order')
+  if diff_specs['space']['diffs'] is None:
+    xord = 0
+  else:  
+    xords =  [sum(i) for i in diff_specs['space']['diffs']]
+    if not all([i==xords[0] for i in xords]):
+      raise ValueError('all space derivative terms must have the same order')
 
-  xord = xords[0]
-  tord = tords[0]
+    xord = xords[0]
+    
+  # make sure all time derivative terms have the same order
+  if diff_specs['time']['diffs'] is None:
+    tord = 0
+  else:
+    tords =  [sum(i) for i in diff_specs['time']['diffs']]
+    if not all([i==tords[0] for i in tords]):
+      raise ValueError('all time derivative terms must have the same order')
+
+    tord = tords[0]
+    
   out = (T/4.0)**tord*(L/4.0)**xord/S
   return out  
   
