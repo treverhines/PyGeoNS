@@ -32,11 +32,7 @@ p.add_argument('--stencil_size',type=int)
 p.add_argument('--kind',type=str)
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''Controls verbosity''')
-p.add_argument('-f','--fill',action='store_true',
-               help='''Whether to make an estimate at masked data. 
-                       Filling masked data can make this function 
-                       slower and more likely to encounter a singular 
-                       matrix. Defaults to False.''')                      
+p.add_argument('-f','--fill',type=str)
 p.add_argument('--time_scale',type=float,
                help='''Time scale of the smoothed data. Defaults to 
                        10X the time sample period. This is specified 

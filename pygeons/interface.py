@@ -156,8 +156,8 @@ def _perturbed_uncertainty(fin):
       # only use the perturbations for uncertainty if there are more 
       # than zero
       if out[dir+'_pert'].shape[0] > 0:
-        sigma = np.std(out[dir+'_pert'],axis=0)
         mask = np.isinf(out[dir+'_std'])
+        sigma = np.std(out[dir+'_pert'],axis=0)
         sigma[mask] = np.inf
         out[dir+'_std'] = sigma
 
@@ -280,7 +280,7 @@ def _setup_ts_ax(ax_lst,times):
 @_log_call
 @_perturbed_uncertainty
 def smooth(data,time_scale=None,length_scale=None,
-           kind='both',fill=False,
+           kind='both',fill='none',
            stencil_size=10,
            cut_endpoint1_lons=None,cut_endpoint1_lats=None,
            cut_endpoint2_lons=None,cut_endpoint2_lats=None,
@@ -304,12 +304,14 @@ def smooth(data,time_scale=None,length_scale=None,
       shortest distance between stations. This is specified in meters
        
     kind : str, optional
-      either 'time', 'space', or 'both'
+      either "time", "space", or "both"
       
-    fill : bool, optional
-      Whether to make an estimate at masked data. Filling masked data 
-      can make this function slower and more likely to encounter a 
-      singular matrix. Defaults to False.
+    fill : str, optional
+      either "none", "interpolate", or "all". Indicates when and where 
+      to make a smoothed estimate. "none" : output only where data is 
+      not missing. "interpolate" : output where data is not missing 
+      and where time interpolation is possible. "all" : output at all 
+      stations and times. 
     
     cut_dates : lst, optional
       list of time discontinuities in YYYY-MM-DD. This date should be 
@@ -360,13 +362,13 @@ def smooth(data,time_scale=None,length_scale=None,
                   time_scale=time_scale,
                   length_scale=length_scale,
                   fill=fill)
-
+    # if the returned value is np.nan, then it is masked. Make sure 
+    # that the corresponding sigma is np.inf
+    mask = np.isnan(up_smooth[0,:,:])
     sigma_smooth = np.zeros(sigma.shape)
+    sigma_smooth[mask] = np.inf
     u_smooth = up_smooth[0,:,:]
     p_smooth = up_smooth[1:,:,:]
-
-    if not fill:
-      sigma_smooth[np.isinf(sigma)] = np.inf
 
     out[dir] = u_smooth
     out[dir+'_pert'] = p_smooth

@@ -21,10 +21,10 @@ def weighted_mean(x,sigma,axis=None):
   Notes
   -----
     If all uncertainties along the axis are np.inf then then the 
-    returned mean is 0.0 with uncertainty is np.inf
+    returned mean is np.nan with uncertainty is np.inf
     
     If there are 0 entries along the axis then the returned mean is 
-    0.0 with uncertainty np.inf
+    np.nan with uncertainty np.inf
     
     All input uncertainties less than 1e-10 are first set to 1e-10, to 
     prevent division by zero complications. All calculated 
@@ -35,8 +35,14 @@ def weighted_mean(x,sigma,axis=None):
   # values less than this are considered zero
   min_sigma = 1e-20
 
-  x = np.asarray(x)
+  x = np.array(x,copy=True)
+  # convert any nans to zeros
+  x[np.isnan(x)] = 0.0
   sigma = np.asarray(sigma)
+
+  if x.shape != sigma.shape:
+    raise ValueError('x and sigma must have the same shape')
+
   # make sure there are no negative uncertainties
   if np.any(sigma < 0.0):
     raise ValueError('uncertainty cannot be negative') 
@@ -53,12 +59,9 @@ def weighted_mean(x,sigma,axis=None):
     out_sigma = np.sqrt(1.0/denom)
   
   if out_sigma.ndim == 0:
-    if np.isnan(out_value):
-      out_value = 0.0
     if out_sigma <= min_sigma:
       out_sigma = 0.0
   else:
-    out_value[np.isnan(out_value)] = 0.0
     out_sigma[out_sigma <= min_sigma] = 0.0
 
   return out_value,out_sigma
@@ -69,11 +72,10 @@ class MeanInterpolant:
   within some radius of x
   
   If no values are within the radius of a queried position then the
-  returned value is 0.0 with np.inf for its uncertainty
+  returned value is np.nan with np.inf for its uncertainty
   
   If all values within a radius have np.inf for their uncertainty
-  then the returned value is 0.0 with np.inf for its uncertainty
-
+  then the returned value is np.nan with np.inf for its uncertainty
   '''
   def __init__(self,x,value,sigma=None,vert=None,smp=None):
     ''' 

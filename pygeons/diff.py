@@ -493,7 +493,7 @@ def diff(t,x,u,ds,mask=None):
     mask : (Nt,Nx) array
       Identifies which elements of u to ignore. This is incase there 
       are outliers or missing data. The returned diffentiated array 
-      will have zeros where the mask is True
+      will have np.nan where the mask is True
       
   Returns
   -------
@@ -511,6 +511,6 @@ def diff(t,x,u,ds,mask=None):
   u_flat = u.reshape((M,Nt*Nx))
   u_diff_flat = D.dot(u_flat.T).T
   u_diff = u_diff_flat.reshape(bcast_shape + (Nt,Nx))
-
+  u_diff[...,mask] = np.nan
   return u_diff
 
