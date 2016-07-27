@@ -10,7 +10,7 @@ import logging
 import myplot.cm
 import scipy.signal
 logging.basicConfig(level=logging.DEBUG)
-np.random.seed(1)
+np.random.seed(2)
 
 ## SCALING FOR TIME SMOOTHING 
 #####################################################################
@@ -25,7 +25,7 @@ N = 201
 
 # number of perturbations to use when computing correlation. Should be 
 # about 10000 for a good plots
-PERTS = 2000
+PERTS = 10000
 
 # observation points
 t = np.linspace(-10*T,10*T,N)
@@ -56,10 +56,15 @@ print(perts.shape)
 # remove x axis
 smooth = smooth[:,0]
 perts = perts[:,:,0]
-# compute correlation matrix
-C = np.corrcoef(perts.T)
+
+# Compute the power spectrum from the autocovariance using the 
+# Weiner-Khinchin theorem
+
+# compute correlation matrix. This should be the covariance matrix
+C = np.cov(perts.T)
 # extract correlation for just t=0.0
 corr = C[N//2,:]
+corr = corr/np.max(corr)
 
 ax1.plot(t/T,corr,'-',lw=2)
 ax1.plot(t/T,np.sinc(t/T),'r-')

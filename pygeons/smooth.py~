@@ -107,16 +107,25 @@ def _penalty(T,L,sigma,diff_specs):
   S = 1.0/_rms(1.0/sigma) # characteristic uncertainty 
   
   # make sure all space derivative terms have the same order
-  xords =  [sum(i) for i in diff_specs['space']['diffs']]
-  # make sure all time derivative terms have the same order
-  tords =  [sum(i) for i in diff_specs['time']['diffs']]
-  if not all([i==xords[0] for i in xords]):
-    raise ValueError('all space derivative terms must have the same order')
-  if not all([i==tords[0] for i in tords]):
-    raise ValueError('all time derivative terms must have the same order')
+  if diff_specs['space']['diffs'] is None:
+    xord = 0
+  else:  
+    xords =  [sum(i) for i in diff_specs['space']['diffs']]
+    if not all([i==xords[0] for i in xords]):
+      raise ValueError('all space derivative terms must have the same order')
 
-  xord = xords[0]
-  tord = tords[0]
+    xord = xords[0]
+    
+  # make sure all time derivative terms have the same order
+  if diff_specs['time']['diffs'] is None:
+    tord = 0
+  else:
+    tords =  [sum(i) for i in diff_specs['time']['diffs']]
+    if not all([i==tords[0] for i in tords]):
+      raise ValueError('all time derivative terms must have the same order')
+
+    tord = tords[0]
+    
   out = (T/4.0)**tord*(L/4.0)**xord/S
   return out  
   
@@ -142,11 +151,11 @@ def _fill_mask(t,x,sigma,kind):
   should not be estimated. 
   
   kind :
-    0 : output at times and stations where data are not missing
+    'none' : output at times and stations where data are not missing
     
-    1 : In addition to 0, interpolate at times with missing data
+    'interpolate' : interpolate at times with missing data
 
-    2 : output at all stations and times
+    'extrapolate' : output at all stations and times
 
   '''
   data_is_missing = np.isinf(sigma)
@@ -163,11 +172,11 @@ def _fill_mask(t,x,sigma,kind):
         last_time = np.max(active_times)
         mask[:,i] = (t<first_time) | (t>last_time)
   
-  elif kind == 'all':
+  elif kind == 'extrapolate':
     mask = np.zeros(sigma.shape,dtype=bool)
       
   else:
-    raise ValueError('*kind* must be "none", "interpolate", or "all"')
+    raise ValueError('*kind* must be "none", "interpolate", or "extrapolate"')
 
   return mask
   
@@ -194,7 +203,7 @@ def smooth(t,x,u,
     
     time_scale : float
     
-    fill : str, {'none', 'interpolate', 'all'}
+    fill : str, {'none', 'interpolate', 'extrapolate'}
       Indicates when and where to make a smoothed estimate. 'none' : 
       output only where data is not missing. 'interpolate' : output 
       where data is not missing and where time interpolation is 
