@@ -26,15 +26,9 @@ def weighted_mean(x,sigma,axis=None):
     If there are 0 entries along the axis then the returned mean is 
     np.nan with uncertainty np.inf
     
-    All input uncertainties less than 1e-10 are first set to 1e-10, to 
-    prevent division by zero complications. All calculated 
-    uncertainties less than 1e-10 are set to zero before being 
-    returned
+    zero uncertainties will raise an error
     
   '''
-  # values less than this are considered zero
-  min_sigma = 1e-20
-
   x = np.array(x,copy=True)
   # convert any nans to zeros
   x[np.isnan(x)] = 0.0
@@ -43,11 +37,9 @@ def weighted_mean(x,sigma,axis=None):
   if x.shape != sigma.shape:
     raise ValueError('x and sigma must have the same shape')
 
-  # make sure there are no negative uncertainties
-  if np.any(sigma < 0.0):
-    raise ValueError('uncertainty cannot be negative') 
-  # replace any zeros or near zeros with min_sigma
-  sigma[sigma < min_sigma] = min_sigma
+  # make sure uncertainties are positive
+  if np.any(sigma <= 0.0):
+    raise ValueError('uncertainties must be positive and nonzero') 
 
   numer = np.sum(x/sigma**2,axis=axis)
   denom = np.sum(1.0/sigma**2,axis=axis)
@@ -58,13 +50,8 @@ def weighted_mean(x,sigma,axis=None):
     out_value = numer/denom
     out_sigma = np.sqrt(1.0/denom)
   
-  if out_sigma.ndim == 0:
-    if out_sigma <= min_sigma:
-      out_sigma = 0.0
-  else:
-    out_sigma[out_sigma <= min_sigma] = 0.0
-
   return out_value,out_sigma
+
 
 class MeanInterpolant:
   '''   
@@ -83,9 +70,9 @@ class MeanInterpolant:
     ----------
       x : (N,D) array
 
-      value : (N,...) array
+      value : (...,N) array
 
-      sigma : (N,...) array
+      sigma : (...,N) array
 
     '''
     x = np.asarray(x,dtype=float)
@@ -110,7 +97,7 @@ class MeanInterpolant:
     self.x = x
     self.value = value
     self.sigma = sigma
-    self.value_shape = value.shape[1:]
+    self.bcast_shape = value.shape[:-1]
     self.vert = vert
     self.smp = smp
 
@@ -131,9 +118,9 @@ class MeanInterpolant:
       smp : (P,D) int array, optional
     Returns
     -------  
-      out_value : (K,...) array
+      out_value : (...,K) array
 
-      out_sigma : (K,...) array
+      out_sigma : (...,K) array
     '''
     xitp = np.asarray(xitp)
     Nitp = xitp.shape[0]
@@ -154,12 +141,13 @@ class MeanInterpolant:
         # throw out observation points that cross a boundary
         idx_arr[i] = [j for j,c in zip(idx,count) if c == 0]
         
-    out_value = np.zeros((xitp.shape[0],)+self.value_shape)
-    out_sigma = np.zeros((xitp.shape[0],)+self.value_shape)
+    out_value = np.zeros(self.bcast_shape + (xitp.shape[0],))
+    out_sigma = np.zeros(self.bcast_shape + (xitp.shape[0],))
     for i,idx in enumerate(idx_arr):
-      out_value[i],out_sigma[i] = weighted_mean(self.value[idx],
-                                                self.sigma[idx],
-                                                axis=0)
+      out_value[...,i],out_sigma[...,i] = weighted_mean(
+                                            self.value[...,idx],
+                                            self.sigma[...,idx],
+                                            axis=-1)
     
     return out_value,out_sigma
 
@@ -178,15 +166,17 @@ def downsample(t,tnew,x,u,sigma=None,time_cuts=None):
 
     x : (Nx,2) array
 
-    u : (Nt,Nx) array
+    u : (...,Nt,Nx) array
 
     sigma : (Nt,Nx) array, optional
     
+    time_cuts : (Nc,) array
+
     time_cuts : TimeCuts, optional
 
   Returns
   -------
-    u_out : (Nitp,Nx) array
+    u_out : (...,Nitp,Nx) array
 
     sigma_out :(Nitp,Nx) array
   
@@ -196,15 +186,36 @@ def downsample(t,tnew,x,u,sigma=None,time_cuts=None):
   tnew = np.asarray(tnew)
   x = np.asarray(x)
   if time_cuts is None:
-    time_cuts = pygeons.cuts.TimeCuts()
+    vert = None
+    smp = None
+  else:
+    vert = np.array(time_cuts)[:,None]
+    smp = np.arange(vert.shape[0])[:,None]  
 
-  u_out = np.zeros((tnew.shape[0],x.shape[0]))
-  sigma_out = np.zeros((tnew.shape[0],x.shape[0]))
-  for i,xi in enumerate(x):
-    vert,smp = time_cuts.get_vert_and_smp(xi)
-    I = MeanInterpolant(t[:,None],u[:,i],sigma=sigma[:,i],vert=vert,smp=smp)
-    u_out[:,i],sigma_out[:,i] = I(tnew[:,None])
+  if sigma is None:
+    sigma = np.ones(u.shape)
+  else:
+    # broadcast sigma to the shape of u
+    a = np.ones(u.shape)
+    sigma = a*sigma
+    
+  Nitp = tnew.shape[0]
+  Nt = t.shape[0]
+  Nx = x.shape[0]
+  bcast_shape = u.shape[:-2]
+  
+  # reshape u so that time is the last axis
+  u = np.einsum('...ij->...ji',u)
+  sigma = np.einsum('...ij->...ji',sigma)
+  I = MeanInterpolant(t[:,None],u,sigma=sigma,vert=vert,smp=smp)
+  u_out,sigma_out = I(tnew[:,None])
 
+  # reshape the output so that space is the last axis
+  u_out = np.einsum('...ij->...ji',u_out)
+  sigma_out = np.einsum('...ij->...ji',sigma_out)
+  
+  # return just the first sigma_out
+  sigma_out = sigma_out.reshape((-1,Nitp,Nx))[0]
   return u_out,sigma_out
 
 

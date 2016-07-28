@@ -26,24 +26,24 @@ p.add_argument('--output_file',type=str,
                        files or PBO csv files.''')
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''controls verbosity''')
-p.add_argument('--dt',type=int,default=0)
-p.add_argument('--dx',type=int,default=0)
-p.add_argument('--dy',type=int,default=0)
+p.add_argument('--dt',type=int)
+p.add_argument('--dx',type=int)
+p.add_argument('--dy',type=int)
 p.add_argument('--stencil_size',type=int)
 p.add_argument('--cut_dates',nargs='+',type=str,
                help='''list of time discontinuities in YYYY-MM-DD. 
                        This date should be when the discontinuity is 
                        first observed''') 
-p.add_argument('--cut_endpoint1_lons',nargs='+',type=float,
+p.add_argument('--cut_lons1',nargs='+',type=float,
                help='''longitude coordinate for the first endpoint 
                        of spatial discontinuities''')
-p.add_argument('--cut_endpoint2_lons',nargs='+',type=float,
+p.add_argument('--cut_lons2',nargs='+',type=float,
                help='''longitude coordinates for the second endpoint 
                        of spatial discontinuities''')
-p.add_argument('--cut_endpoint1_lats',nargs='+',type=float,
+p.add_argument('--cut_lats1',nargs='+',type=float,
                help='''latitude coordinates for the first endpoint 
                         of spatial discontinuities''')
-p.add_argument('--cut_endpoint2_lats',nargs='+',type=float,
+p.add_argument('--cut_lats2',nargs='+',type=float,
                 help='''latitude coordinates for the second endpoint 
                         of spatial discontinuities''')
                
