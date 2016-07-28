@@ -577,7 +577,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
     sigma = data[dir+'_std']
     up_ds,sigma_ds = pygeons.downsample.downsample(
                        data['time'],time_itp,pos,up,
-                       sigma=sigma,time_cuts=time_cuts)
+                       sigma=sigma,cuts=time_cuts)
                        
     u_ds = up_ds[0,:,:]
     p_ds = up_ds[1:,:,:]
