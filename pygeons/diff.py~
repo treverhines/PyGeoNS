@@ -4,7 +4,6 @@ import numpy as np
 import rbf.fd
 import rbf.poly
 import rbf.basis
-import pygeons.cuts
 import scipy.sparse
 import logging
 logger = logging.getLogger(__name__)
@@ -399,16 +398,18 @@ def _time_diff_matrix(t,x,
     Lsubs += [Li]
     
   # combine submatrices into the master matrix
+  count = 0
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
-  
-  rows = np.zeros((0,),dtype=int)
-  cols = np.zeros((0,),dtype=int)
-  vals = np.zeros((0,),dtype=float)
+  nnz = sum(Li.nnz for Li in Lsubs)
+  rows = np.zeros((nnz,),dtype=int)
+  cols = np.zeros((nnz,),dtype=int)
+  vals = np.zeros((nnz,),dtype=float)
   for i,Li in enumerate(Lsubs):
     ri,ci,vi = Li.row,Li.col,Li.data
-    rows = np.concatenate((rows,wrapped_indices[ri,i]))
-    cols = np.concatenate((cols,wrapped_indices[ci,i]))
-    vals = np.concatenate((vals,vi))
+    rows[count:count+Li.nnz] = wrapped_indices[ri,i]
+    cols[count:count+Li.nnz] = wrapped_indices[ci,i]
+    vals[count:count+Li.nnz] = vi
+    count += Li.nnz
 
   # form sparse time regularization matrix
   Lmaster = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))
@@ -464,16 +465,18 @@ def _space_diff_matrix(t,x,
     Lsubs += [Li]
              
   # combine submatrices into the master matrix
+  count = 0
   wrapped_indices = np.arange(Nt*Nx).reshape((Nt,Nx))
-
-  rows = np.zeros((0,),dtype=int)
-  cols = np.zeros((0,),dtype=int)
-  vals = np.zeros((0,),dtype=float)
+  nnz = sum(Li.nnz for Li in Lsubs)
+  rows = np.zeros((nnz,),dtype=int)
+  cols = np.zeros((nnz,),dtype=int)
+  vals = np.zeros((nnz,),dtype=float)
   for i,Li in enumerate(Lsubs):
     ri,ci,vi = Li.row,Li.col,Li.data
-    rows = np.concatenate((rows,wrapped_indices[i,ri]))
-    cols = np.concatenate((cols,wrapped_indices[i,ci]))
-    vals = np.concatenate((vals,vi))
+    rows[count:count+Li.nnz] = wrapped_indices[i,ri]
+    cols[count:count+Li.nnz] = wrapped_indices[i,ci]
+    vals[count:count+Li.nnz] = vi
+    count += Li.nnz
 
   # form sparse time regularization matrix
   Lmaster = scipy.sparse.csr_matrix((vals,(rows,cols)),(Nx*Nt,Nx*Nt))

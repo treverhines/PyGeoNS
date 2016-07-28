@@ -4,7 +4,6 @@ import numpy as np
 import scipy.sparse
 from scipy.spatial import cKDTree
 import logging
-import pygeons.cuts
 import pygeons.diff
 logger = logging.getLogger(__name__)
 

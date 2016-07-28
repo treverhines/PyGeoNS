@@ -4,7 +4,6 @@ import numpy as np
 from scipy.spatial import cKDTree
 import rbf.geometry
 import warnings
-import pygeons.cuts
 
 def weighted_mean(x,sigma,axis=None):
   ''' 
