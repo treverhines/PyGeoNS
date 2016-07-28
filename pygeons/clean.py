@@ -2,15 +2,10 @@
 from __future__ import division
 import numpy as np
 from pygeons.view import InteractiveViewer
-from pygeons.view import without_interactivity
 from pygeons.downsample import weighted_mean
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-import pygeons.diff
-import pygeons.cuts
-import pygeons.ioconv
 from scipy.spatial import cKDTree
-import os
 import logging
 logger = logging.getLogger(__name__)
 
