@@ -42,9 +42,21 @@ def _solve(A,L,data):
     # spsolve fills the solution vector with nans when the matrix is 
     # singular
     raise ValueError(
-      'Singular matrix. If "fill" is True then this may be the result '
-      'of having too many masked observations. Check for stations '
-      'or time periods where all observations are masked')
+''' 
+Singular matrix. Possible causes include but are not limited to: 
+         
+  - not having enough data for there to be a unique solution
+    at an interpolating/extrapolation point. Try setting *fill* to 
+    "none"
+             
+  - having zeros in the uncertainty array
+
+  - having zero for *time_scale* and/or *length_scale* while also 
+    having *fill* set to "interpolate" or "extrapolate". If the scale 
+    is zero then it is impossible to predict data at times and 
+    positions were data was not provided.
+  
+''')     
 
   # reshape the solution to the original dimension
   soln = soln.T
@@ -151,11 +163,11 @@ def _fill_mask(t,x,sigma,kind):
   should not be estimated. 
   
   kind :
-    0 : output at times and stations where data are not missing
+    'none' : output at times and stations where data are not missing
     
-    1 : In addition to 0, interpolate at times with missing data
+    'interpolate' : interpolate at times with missing data
 
-    2 : output at all stations and times
+    'extrapolate' : output at all stations and times
 
   '''
   data_is_missing = np.isinf(sigma)
@@ -172,11 +184,11 @@ def _fill_mask(t,x,sigma,kind):
         last_time = np.max(active_times)
         mask[:,i] = (t<first_time) | (t>last_time)
   
-  elif kind == 'all':
+  elif kind == 'extrapolate':
     mask = np.zeros(sigma.shape,dtype=bool)
       
   else:
-    raise ValueError('*kind* must be "none", "interpolate", or "all"')
+    raise ValueError('*kind* must be "none", "interpolate", or "extrapolate"')
 
   return mask
   
@@ -203,7 +215,7 @@ def smooth(t,x,u,
     
     time_scale : float
     
-    fill : str, {'none', 'interpolate', 'all'}
+    fill : str, {'none', 'interpolate', 'extrapolate'}
       Indicates when and where to make a smoothed estimate. 'none' : 
       output only where data is not missing. 'interpolate' : output 
       where data is not missing and where time interpolation is 

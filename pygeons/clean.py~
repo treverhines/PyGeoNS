@@ -159,7 +159,6 @@ Notes
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None,
-               converter=None,
                **kwargs):
     ''' 
     Parameters
@@ -170,13 +169,13 @@ Notes
       x : (Nx,2) array
         observation positions
         
-      u : (Nt,Nx) array
+      u : (...,Nt,Nx) array
         east component
 
-      v : (Nt,Nx) array
+      v : (...,Nt,Nx) array
         north component
 
-      z : (Nt,Nx) array
+      z : (...,Nt,Nx) array
         vertical component
 
       su : (Nt,Nx) array, optional
@@ -187,44 +186,72 @@ Notes
 
       sz : (Nt,Nx) array, optional
         standard deviation of vertical component
-      
-      converter : callable, optional  
-        function which maps the position coordinates to longitude and 
-        latitude (e.g. lon,lat = converter(x[:,0],x[:,1]) ). This can 
-        be a basemap instance. This is only used when writing the 
-        output. If this is not provided then the output values for 
-        longitude and latitude with be x[:,0] and x[:,1] respectively
         
     Note
     ----
       only one of u, v, and z need to be specified
     '''
     if u is not None:
-      u = [u,np.copy(u)]                
+      u = np.asarray(u)
+      Nt,Nx = u.shape[-2:]
+      u_view = u.reshape((-1,Nt,Nx))[0]
+      u_view = [u_view,np.copy(u_view)]                
+
     if v is not None:
-      v = [v,np.copy(v)]                
+      v = np.asarray(v)
+      Nt,Nx = v.shape[-2:]
+      v_view = v.reshape((-1,Nt,Nx))[0]
+      v_view = [v_view,np.copy(v_view)]                
+
     if z is not None:
-      z = [z,np.copy(z)]                
+      z = np.asarray(z)
+      Nt,Nx = z.shape[-2:]
+      z_view = z.reshape((-1,Nt,Nx))[0]
+      z_view = [z_view,np.copy(z_view)]                
+
     if su is not None:
+      su = np.asarray(su)
       su = [su,np.copy(su)]                
+
     if sv is not None:
+      sv = np.asarray(sv)
       sv = [sv,np.copy(sv)]                
+
     if sz is not None:
-      sz = [sz,np.copy(sz)]                
+      sz = np.asarray(sz)
+      sz = [sz,np.copy(sz)]  
       
     data_set_names = kwargs.pop('data_set_names',['edited data','kept data'])
     color_cycle = kwargs.pop('color_cycle',['c','m'])
     InteractiveViewer.__init__(self,t,x,
-                               u=u,v=v,z=z,
+                               u=u_view,v=v_view,z=z_view,
                                su=su,sv=sv,sz=sz,
                                color_cycle=color_cycle,
                                data_set_names=data_set_names,
                                **kwargs)
-    self.converter = converter
+
+    # all changes made to the viewed data set should be broadcasted onto 
+    # this one
+    pert = np.concatenate((u[...,None],v[...,None],z[...,None]),axis=-1)
+    # save the shape so that it can be reshaped when the output is 
+    # requested
+    self.pert_shape = pert.shape
+    pert = pert.reshape((-1,Nt,Nx,3))
+    self.pert_sets = [pert,np.copy(pert)]
     self._mode = None
     self._is_pressed = False
-    self._default_file_name = None
 
+  def get_data(self):
+    pert = self.pert_sets[1]
+    pert = pert.reshape(self.pert_shape)
+    u = pert[...,0]
+    v = pert[...,1]
+    z = pert[...,2]
+    su = self.sigma_sets[1][:,:,0]
+    sv = self.sigma_sets[1][:,:,1]
+    sz = self.sigma_sets[1][:,:,2]
+    return (u,v,z,su,sv,sz)
+    
   def connect(self):
     self.ts_fig.canvas.mpl_connect('button_press_event',self.on_mouse_press)
     self.ts_fig.canvas.mpl_connect('motion_notify_event',self.on_mouse_move)
@@ -237,6 +264,7 @@ Notes
     print('keeping changes\n')
     self.data_sets[1] = np.copy(self.data_sets[0])
     self.sigma_sets[1] = np.copy(self.sigma_sets[0])
+    self.pert_sets[1] = np.copy(self.pert_sets[0])
     self.update_data()
     logger.info('kept changes to data\n')
 
@@ -244,66 +272,14 @@ Notes
     print('undoing changes\n')
     self.data_sets[0] = np.copy(self.data_sets[1])
     self.sigma_sets[0] = np.copy(self.sigma_sets[1])
+    self.pert_sets[0] = np.copy(self.pert_sets[1])
     self.update_data()
     logger.info('discarded changes to data\n')
 
-  @without_interactivity
-  def write_to_file(self):
-    if self._default_file_name is None:
-      file_name = raw_input('output file name ["exit" to cancel] >>> ')
-      print('')
-      if file_name == 'exit':
-        return
-      
-      if os.path.exists(file_name):
-        overwrite = raw_input('"%s" already exits. overwrite it? ["y"/"n"] >>> ' % file_name)  
-        print('')
-        if overwrite != 'y':
-          return
-                
-    else:
-      file_name = raw_input('output file name ["exit" to cancel, defaults to "%s"] >>> ' % self._default_file_name)
-      print('')
-      if file_name == 'exit':
-        return
-      
-      # if nothing was provided then use the default
-      if file_name == '':
-        file_name = self._default_file_name
-    
-    data = self.data_sets[1]
-    sigma = self.sigma_sets[1]
-
-    # convert to longitude and latitude if a converter is provided
-    if self.converter is not None:
-      lon,lat = self.converter(self.x[:,0],self.x[:,1],inverse=True)
-    else:
-      lon,lat = self.x[:,0],self.x[:,1]
-        
-    out_dict = {}    
-    out_dict['time'] = self.t 
-    out_dict['longitude'] = lon
-    out_dict['latitude'] = lat
-    out_dict['id'] = self.station_labels
-    out_dict['east'] = data[:,:,0]
-    out_dict['north'] = data[:,:,1]
-    out_dict['vertical'] = data[:,:,2]
-    out_dict['east_std'] = sigma[:,:,0]
-    out_dict['north_std'] = sigma[:,:,1]
-    out_dict['vertical_std'] = sigma[:,:,2]
-    pygeons.ioconv.file_from_dict(file_name,out_dict)
-    
-    logger.info('wrote kept data to "%s"\n' % file_name)
-    
-    # if everything ran properly then set the current output file name 
-    # to the default output file name 
-    self._default_file_name = file_name
-    
-    return
-  
   def remove_jump(self,jump_time,radius):
-    data = self.data_sets[0]
-    sigma = self.sigma_sets[0]
+    data = self.pert_sets[0]
+    # expand sigma to the size of data
+    sigma = self.sigma_sets[0][None,:,:].repeat(data.shape[0],axis=0)
 
     xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t > jump_time) & 
@@ -311,14 +287,15 @@ Notes
     tidx_left, = np.nonzero((self.t < jump_time) & 
                             (self.t >= (jump_time-radius)))
 
-    mean_right,sigma_right = weighted_mean(data[tidx_right,xidx],
-                                           sigma[tidx_right,xidx],
-                                           axis=0)
-    mean_left,sigma_left = weighted_mean(data[tidx_left,xidx],
-                                         sigma[tidx_left,xidx],
-                                         axis=0)
+    mean_right,sigma_right = weighted_mean(data[:,tidx_right,xidx],
+                                           sigma[:,tidx_right,xidx],
+                                           axis=1)
+    mean_left,sigma_left = weighted_mean(data[:,tidx_left,xidx],
+                                         sigma[:,tidx_left,xidx],
+                                         axis=1)
     # jump for each component
     jump = mean_right - mean_left
+    
     # uncertainty in the jump estimate
     jump_sigma = np.sqrt(sigma_right**2 + sigma_left**2)
 
@@ -326,14 +303,15 @@ Notes
     all_tidx_right, = np.nonzero(self.t > jump_time)
     
     # remove jump from values make after the jump 
-    new_pos = data[all_tidx_right,xidx,:] - jump
+    new_pos = data[:,all_tidx_right,xidx,:] - jump[:,None,:]
     
     # increase uncertainty 
-    new_var = sigma[all_tidx_right,xidx,:]**2 + jump_sigma**2
+    new_var = sigma[:,all_tidx_right,xidx,:]**2 + jump_sigma[:,None,:]**2
     new_sigma = np.sqrt(new_var)
     
-    self.data_sets[0][all_tidx_right,xidx,:] = new_pos
-    self.sigma_sets[0][all_tidx_right,xidx,:] = new_sigma
+    self.pert_sets[0][:,all_tidx_right,xidx,:] = new_pos
+    self.data_sets[0][all_tidx_right,xidx,:] = new_pos[0]
+    self.sigma_sets[0][all_tidx_right,xidx,:] = new_sigma[0]
     
     # turn the new data sets into masked arrays
     self.update_data()
@@ -347,6 +325,7 @@ Notes
     # from start_time to end_time
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
+    self.pert_sets[0][:,tidx,xidx] = np.nan
     self.data_sets[0][tidx,xidx] = np.nan
     self.sigma_sets[0][tidx,xidx] = np.inf
 
@@ -454,10 +433,6 @@ Notes
       self.undo_changes()
       self.update()   
 
-    elif event.key == 'w':
-      self.write_to_file()
-      self.update()   
-        
     elif event.key == 'd':
       # cannot change mode unless current mode is None
       if self._mode is None:
@@ -504,12 +479,6 @@ def clean(*args,**kwargs):
   ic = InteractiveCleaner(*args,**kwargs)
   ic.connect()
   plt.show()
-  u = ic.data_sets[1][:,:,0]
-  v = ic.data_sets[1][:,:,1]
-  z = ic.data_sets[1][:,:,2]
-  su = ic.sigma_sets[1][:,:,0]
-  sv = ic.sigma_sets[1][:,:,1]
-  sz = ic.sigma_sets[1][:,:,2]
-  return (u,v,z,su,sv,sz)
+  return ic.get_data()
   
                                       

@@ -134,7 +134,7 @@ class DiffSpecs(dict):
         T['order'] = rbf.fd._default_poly_order(T['stencil_size'],1)
     
     if T['cuts'] is None:
-      T['cuts'] = pygeons.cuts.TimeCuts()  
+      T['cuts'] = []
       
   def _fill_space(self):
     ''' 
@@ -160,7 +160,7 @@ class DiffSpecs(dict):
       X['order'] = rbf.fd._default_poly_order(X['stencil_size'],2)
       
     if X['cuts'] is None:
-      X['cuts'] = pygeons.cuts.SpaceCuts()  
+      X['cuts'] = []
       
 
 # make a convenience functions that generate common diff specs
@@ -358,11 +358,13 @@ def _time_diff_matrix(t,x,
   # then reused the matrix. 
   cache = {}
   Lsubs = []
+
+  # get the cut vertices and simplices
+  vert = np.array(cuts).reshape((-1,1))
+  smp = np.arange(vert.shape[0]).reshape((-1,1))
   for i,xi in enumerate(x):
-    # create a tuple identifying the time cut and mask for this station 
-    cut_indices_tpl = tuple(cuts.get_indices(xi))
-    mask_tpl = tuple(mask[:,i])
-    key = cut_indices_tpl + mask_tpl
+    # create a tuple identifying the mask for this station 
+    key = tuple(mask[:,i])
     if key in cache:
       Lsubs += [cache[key]]
       continue
@@ -370,7 +372,6 @@ def _time_diff_matrix(t,x,
     # find the indices of unmasked times for this station
     sub_idx, = np.nonzero(~mask[:,i])
 
-    vert,smp = cuts.get_vert_and_smp(xi)
     if diff_type == 'rbf': 
       Li = rbf.fd.diff_matrix(
              t[sub_idx,None],N=stencil_size,
@@ -432,10 +433,13 @@ def _space_diff_matrix(t,x,
   # generated with the the same space cuts
   cache = {}
   Lsubs = []
+
+  # make the vertices and simplices for the space cuts. Note that the space cuts have shape
+  # (Nc,2,2) where the last axis are the x,y coordinates
+  vert = np.array(cuts).reshape((-1,2))
+  smp = np.arange(vert.shape[0]).reshape((-1,2))
   for i,ti in enumerate(t):
-    cut_indices_tpl = tuple(cuts.get_indices(ti))
-    mask_tpl = tuple(mask[i,:])
-    key = cut_indices_tpl + mask_tpl
+    key = tuple(mask[i,:])
     if key in cache:
       Lsubs += [cache[key]]
       continue
@@ -443,7 +447,6 @@ def _space_diff_matrix(t,x,
     # find the indices of unmasked stations for this time
     sub_idx, = np.nonzero(~mask[i,:])
 
-    vert,smp = cuts.get_vert_and_smp(ti)
     Li = rbf.fd.diff_matrix(
            x[sub_idx],N=stencil_size,
            diffs=diffs,coeffs=coeffs,

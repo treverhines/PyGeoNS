@@ -42,9 +42,21 @@ def _solve(A,L,data):
     # spsolve fills the solution vector with nans when the matrix is 
     # singular
     raise ValueError(
-      'Singular matrix. If "fill" is True then this may be the result '
-      'of having too many masked observations. Check for stations '
-      'or time periods where all observations are masked')
+''' 
+Singular matrix. Possible causes include but are not limited to: 
+         
+  - not having enough data for there to be a unique solution
+    at an interpolating/extrapolation point. Try setting *fill* to 
+    "none"
+             
+  - having zeros in the uncertainty array
+
+  - having zero for *time_scale* and/or *length_scale* while also 
+    having *fill* set to "interpolate" or "extrapolate". If the scale 
+    is zero then it is impossible to predict data at times and 
+    positions were data was not provided.
+  
+''')     
 
   # reshape the solution to the original dimension
   soln = soln.T
