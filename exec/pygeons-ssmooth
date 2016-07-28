@@ -29,21 +29,13 @@ p.add_argument('--output_file',type=str,
                        extension. Currently, can only output to HDF5 
                        files or PBO csv files.''')
 p.add_argument('--stencil_size',type=int)
-p.add_argument('--kind',type=str)
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''Controls verbosity''')
 p.add_argument('-f','--fill',type=str)
-p.add_argument('--time_scale',type=float,
-               help='''Time scale of the smoothed data. Defaults to 
-                       10X the time sample period. This is specified 
-                       in years''')
 p.add_argument('--length_scale',type=float,
                help='''Length scale of the smoothed data. Defaults to 
                        10X the average shortest distance between 
                        stations. This is specified in meters''')
-p.add_argument('--cut_dates',nargs='+',type=str,
-               help='''list of time discontinuities in YYYY-MM-DD. This date should be 
-                       when the discontinuity is first observed''')
 p.add_argument('--cut_lons1',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
@@ -81,8 +73,8 @@ for k in p.keys():
     p.pop(k)
 
 if output_file is None:
-  output_file = change_extension(input_file,'smooth.h5')
+  output_file = change_extension(input_file,'ssmooth.h5')
 
-data_dict = pygeons.ioconv.dict_from_file(input_file)
-out_dict = pygeons.interface.smooth(data_dict,**p)
-pygeons.ioconv.file_from_dict(output_file,out_dict)
+data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
+out_dict = pygeons.interface.ssmooth(data_dict,**p)
+pygeons.ioconv.hdf5_from_dict(output_file,out_dict)

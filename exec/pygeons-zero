@@ -64,6 +64,6 @@ for k in p.keys():
 if output_file is None:
   output_file = change_extension(input_file,'zero.h5')
 
-data_dict = pygeons.ioconv.dict_from_file(input_file)
+data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
 out_dict = pygeons.interface.zero(data_dict,**p)
-pygeons.ioconv.file_from_dict(output_file,out_dict)
+pygeons.ioconv.hdf5_from_dict(output_file,out_dict)
