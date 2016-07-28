@@ -152,7 +152,7 @@ class MeanInterpolant:
     return out_value,out_sigma
 
 
-def downsample(t,tnew,x,u,sigma=None,time_cuts=None):
+def downsample(t,tnew,x,u,sigma=None,cuts=None):
   ''' 
   Downsamples the data from times *t* to *tnew*. This is done by 
   applying a weighted mean over each new time interval. The weighted 
@@ -170,9 +170,7 @@ def downsample(t,tnew,x,u,sigma=None,time_cuts=None):
 
     sigma : (Nt,Nx) array, optional
     
-    time_cuts : (Nc,) array
-
-    time_cuts : TimeCuts, optional
+    cuts : (Nc,) array
 
   Returns
   -------
@@ -185,12 +183,12 @@ def downsample(t,tnew,x,u,sigma=None,time_cuts=None):
   t = np.asarray(t)
   tnew = np.asarray(tnew)
   x = np.asarray(x)
-  if time_cuts is None:
+  if cuts is None:
     vert = None
     smp = None
   else:
-    vert = np.array(time_cuts)[:,None]
-    smp = np.arange(vert.shape[0])[:,None]  
+    vert = np.array(cuts).reshape((-1,1))
+    smp = np.arange(vert.shape[0]).reshape((-1,1))
 
   if sigma is None:
     sigma = np.ones(u.shape)
