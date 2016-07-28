@@ -193,22 +193,31 @@ Notes
     '''
     if u is not None:
       u = np.asarray(u)
-      Nt,Nx = u.shape[-2:]
+      shape = u.shape
+      Nt,Nx = shape[-2:]
       u_view = u.reshape((-1,Nt,Nx))[0]
       u_view = [u_view,np.copy(u_view)]                
-
+    else:
+      u_view = None
+      
     if v is not None:
       v = np.asarray(v)
-      Nt,Nx = v.shape[-2:]
+      shape = v.shape
+      Nt,Nx = shape[-2:]
       v_view = v.reshape((-1,Nt,Nx))[0]
       v_view = [v_view,np.copy(v_view)]                
-
+    else:
+      v_view = None
+      
     if z is not None:
       z = np.asarray(z)
-      Nt,Nx = z.shape[-2:]
+      shape = z.shape
+      Nt,Nx = shape[-2:]
       z_view = z.reshape((-1,Nt,Nx))[0]
       z_view = [z_view,np.copy(z_view)]                
-
+    else:
+      z_view = None
+      
     if su is not None:
       su = np.asarray(su)
       su = [su,np.copy(su)]                
@@ -229,14 +238,28 @@ Notes
                                color_cycle=color_cycle,
                                data_set_names=data_set_names,
                                **kwargs)
+                               
+    if u is None:
+      u = np.zeros(shape)
+      
+    if v is None:
+      v = np.zeros(shape)
 
+    if z is None:
+      z = np.zeros(shape)
+      
     # all changes made to the viewed data set should be broadcasted onto 
     # this one
     pert = np.concatenate((u[...,None],v[...,None],z[...,None]),axis=-1)
+
     # save the shape so that it can be reshaped when the output is 
     # requested
     self.pert_shape = pert.shape
     pert = pert.reshape((-1,Nt,Nx,3))
+
+    # set any masked data to nan
+    pert[:,np.isinf(self.sigma_sets[0])] = np.nan
+     
     self.pert_sets = [pert,np.copy(pert)]
     self._mode = None
     self._is_pressed = False
