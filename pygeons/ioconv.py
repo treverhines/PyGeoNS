@@ -6,6 +6,7 @@ import numpy as np
 from pygeons.dateconv import decday,decday_inv
 import logging
 import h5py
+import interface
 logger = logging.getLogger(__name__)
   
 
@@ -226,12 +227,7 @@ def _dict_from_text(infile,file_type,perts):
   out['east_std'] = east_std
   out['north_std'] = north_std
   out['vertical_std'] = vertical_std
-  east_noise = np.random.normal(0.0,east_std[None,:,:].repeat(perts,axis=0))
-  out['east_pert'] = east + east_noise
-  north_noise = np.random.normal(0.0,north_std[None,:,:].repeat(perts,axis=0))
-  out['north_pert'] = north + north_noise
-  vertical_noise = np.random.normal(0.0,vertical_std[None,:,:].repeat(perts,axis=0))
-  out['vertical_pert'] = vertical + vertical_noise
+  out = interface.perturb(out,perts)
   return out
   
 

@@ -18,6 +18,8 @@ p.add_argument('input_file',type=str,
                        ".hdf5", ".he5" are interpretted as HDF5, 
                        ".pos" is interpretted as PBO pos, anything 
                        else is assumed to be a PBO csv file.''')
+p.add_argument('dx',type=int)
+p.add_argument('dy',type=int)
 p.add_argument('--output_file',type=str,
                help='''if not provided then the input file extension 
                        is removed and replaced with smooth.h5. The 
@@ -26,14 +28,7 @@ p.add_argument('--output_file',type=str,
                        files or PBO csv files.''')
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''controls verbosity''')
-p.add_argument('--dt',type=int)
-p.add_argument('--dx',type=int)
-p.add_argument('--dy',type=int)
 p.add_argument('--stencil_size',type=int)
-p.add_argument('--cut_dates',nargs='+',type=str,
-               help='''list of time discontinuities in YYYY-MM-DD. 
-                       This date should be when the discontinuity is 
-                       first observed''') 
 p.add_argument('--cut_lons1',nargs='+',type=float,
                help='''longitude coordinate for the first endpoint 
                        of spatial discontinuities''')
@@ -67,8 +62,8 @@ for k in p.keys():
     p.pop(k)
 
 if output_file is None:
-  output_file = change_extension(input_file,'diff.h5')
+  output_file = change_extension(input_file,'sdiff.h5')
 
-data_dict = pygeons.ioconv.dict_from_file(input_file)
-out_dict = pygeons.interface.diff(data_dict,**p)
-pygeons.ioconv.file_from_dict(output_file,out_dict)
+data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
+out_dict = pygeons.interface.sdiff(data_dict,**p)
+pygeons.ioconv.hdf5_from_dict(output_file,out_dict)

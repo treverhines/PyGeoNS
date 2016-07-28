@@ -113,6 +113,33 @@ def _check_data(data):
   return   
   
 
+def _check_compatibility(data_list):
+  ''' 
+  make sure that each data set contains the same stations and times
+  '''
+  for d in data_list:
+    _check_data(d)
+    
+  # compare agains the first data set
+  time = data_list[0]['time']  
+  id = data_list[0]['id']  
+  for d in data_list[1:]:
+    if len(time) != len(d['time']):
+      raise ValueError('data sets have inconsistent number of time epochs')
+    if len(id) != len(d['id']):
+      raise ValueError('data sets have inconsistent number of stations')
+
+    # make sure each data set has the same times
+    if not np.all(time==d['time']):
+      raise ValueError('data sets do not have the same times epochs')
+
+    # make sure each data set has the same stations
+    if not np.all(id==d['id']):
+      raise ValueError('data sets do not have the same stations')
+
+  return  
+
+
 def _check_io(fin):
   ''' 
   checks the input and output for functions that take and return data dictionaries
@@ -167,33 +194,6 @@ def _perturbation_uncertainty(fin):
     return out
 
   return fout
-
-  
-def _check_compatibility(data_list):
-  ''' 
-  make sure that each data set contains the same stations and times
-  '''
-  for d in data_list:
-    _check_data(d)
-    
-  # compare agains the first data set
-  time = data_list[0]['time']  
-  id = data_list[0]['id']  
-  for d in data_list[1:]:
-    if len(time) != len(d['time']):
-      raise ValueError('data sets have inconsistent number of time epochs')
-    if len(id) != len(d['id']):
-      raise ValueError('data sets have inconsistent number of stations')
-
-    # make sure each data set has the same times
-    if not np.all(time==d['time']):
-      raise ValueError('data sets do not have the same times epochs')
-
-    # make sure each data set has the same stations
-    if not np.all(id==d['id']):
-      raise ValueError('data sets do not have the same stations')
-
-  return  
 
 
 def _make_basemap(lon,lat,resolution=None):
@@ -282,7 +282,36 @@ def _setup_ts_ax(ax_lst,times):
 @_check_io
 @_log_call
 @_perturbation_uncertainty
-def smooth(data,time_scale=None,length_scale=None,
+def tsmooth(data,time_scale=None,fill='none',cut_dates=None):
+  ''' 
+  time smoothing
+  '''
+  kind = "time"
+  return _smooth(data,time_scale=time_scale,
+                 length_scale=0.0,
+                 kind=kind,fill=fill,
+                 cut_dates=cut_dates)
+                 
+@_check_io
+@_log_call
+@_perturbation_uncertainty
+def ssmooth(data,length_scale=None,
+            stencil_size=None,fill='none',
+            cut_lons1=None,cut_lats1=None,
+            cut_lons2=None,cut_lats2=None):
+  ''' 
+  space smoothing
+  '''
+  kind = "space"
+  return _smooth(data,time_scale=0.0,
+                 length_scale=length_scale,
+                 kind=kind,fill=fill,
+                 stencil_size=stencil_size,
+                 cut_lons1=cut_lons1,cut_lats1=cut_lats1,
+                 cut_lons2=cut_lons2,cut_lats2=cut_lats2)
+
+
+def _smooth(data,time_scale=None,length_scale=None,
            kind='both',fill='none',
            stencil_size=None,
            cut_lons1=None,cut_lats1=None,
@@ -307,7 +336,7 @@ def smooth(data,time_scale=None,length_scale=None,
       shortest distance between stations. This is specified in meters
        
     kind : str, optional
-      either "time", "space", or "both"
+      either "time" or "space"
       
     fill : str, optional
       either "none", "interpolate", or "extrapolate". Indicates when 
@@ -383,11 +412,32 @@ def smooth(data,time_scale=None,length_scale=None,
 @_check_io
 @_log_call
 @_perturbation_uncertainty
-def diff(data,dt=None,dx=None,dy=None,
-         stencil_size=None,
-         cut_lons1=None,cut_lats1=None,
-         cut_lons2=None,cut_lats2=None,
-         cut_dates=None):
+def tdiff(data,dt,cut_dates=None):
+  ''' 
+  time differentiation
+  '''
+  return _diff(data,dt=dt,cut_dates=cut_dates)   
+
+
+@_check_io
+@_log_call
+@_perturbation_uncertainty
+def sdiff(data,dx,dy,stencil_size=None,
+          cut_lons1=None,cut_lats1=None,
+          cut_lons2=None,cut_lats2=None):
+  ''' 
+  space differentiation
+  '''
+  return _diff(data,dx=dx,dy=dy,stencil_size=stencil_size,
+               cut_lons1=cut_lons1,cut_lats1=cut_lats1,
+               cut_lons2=cut_lons2,cut_lats2=cut_lats2)
+
+
+def _diff(data,dt=None,dx=None,dy=None,
+          stencil_size=None,
+          cut_lons1=None,cut_lats1=None,
+          cut_lons2=None,cut_lats2=None,
+          cut_dates=None):
   ''' 
   Calculates a mixed partial derivative of the data set. The spatial 
   coordinates are in units of meters and time is in years. The output 
@@ -585,7 +635,7 @@ def zero(data,zero_date,radius,cut_dates=None):
 
     up = np.concatenate((u[None,:,:],p),axis=0)
     # expand sigma to the size of up
-    sigma_ext = np.ones(up.shape)*sigma
+    sigma_ext = sigma[None,:,:].repeat(up.shape[0],axis=0)
     
     tidx, = np.nonzero((data['time'] >= (zero_time - radius)) &
                        (data['time'] <= (zero_time + radius)))
@@ -597,7 +647,7 @@ def zero(data,zero_date,radius,cut_dates=None):
     # remove any indices that crossed a boundary
     tidx = tidx[cross==0]
     
-    offset,sigma_offset = weighted_mean(up[:,tidx,:],sigma_ext[:,tidx,:],axis=-2)
+    offset,sigma_offset = weighted_mean(up[:,tidx,:],sigma_ext[:,tidx,:],axis=1)
     # just take the first one
     sigma_offset = sigma_offset[0,:]
     up_zero = up - offset[:,None,:]
