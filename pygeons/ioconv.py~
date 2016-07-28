@@ -161,7 +161,7 @@ def _write_csv(data_dict):
   return out             
   
   
-def _dict_from_text(infile,file_type):
+def _dict_from_text(infile,file_type,perts):
   ''' 
   loads a data dictionary from a text file. 
   '''
@@ -200,20 +200,20 @@ def _dict_from_text(infile,file_type):
   # interpolate data onto the interpolation times for each station
   for i,d in enumerate(dicts):
     logger.debug('interpolating data for station %s onto grid times' % d['id']) 
-    data_i = np.concatenate((d['east'][:,None],
-                             d['north'][:,None],
-                             d['vertical'][:,None]),axis=1)
-    sigma_i = np.concatenate((d['east_std'][:,None],
-                              d['north_std'][:,None],
-                              d['vertical_std'][:,None]),axis=1)
+    data_i = np.concatenate((d['east'][None,:],
+                             d['north'][None,:],
+                             d['vertical'][None,:]),axis=0)
+    sigma_i = np.concatenate((d['east_std'][None,:],
+                              d['north_std'][None,:],
+                              d['vertical_std'][None,:]),axis=0)
     itp = MeanInterpolant(d['time'][:,None],data_i,sigma_i)    
     data_itp,sigma_itp = itp(time[:,None])
-    east[:,i] = data_itp[:,0] 
-    north[:,i] = data_itp[:,1] 
-    vertical[:,i] = data_itp[:,2] 
-    east_std[:,i] = sigma_itp[:,0] 
-    north_std[:,i] = sigma_itp[:,1] 
-    vertical_std[:,i] = sigma_itp[:,2] 
+    east[:,i] = data_itp[0,:] 
+    north[:,i] = data_itp[1,:] 
+    vertical[:,i] = data_itp[2,:] 
+    east_std[:,i] = sigma_itp[0,:] 
+    north_std[:,i] = sigma_itp[1,:] 
+    vertical_std[:,i] = sigma_itp[2,:] 
   
   out = {}
   out['time'] = time
@@ -226,13 +226,16 @@ def _dict_from_text(infile,file_type):
   out['east_std'] = east_std
   out['north_std'] = north_std
   out['vertical_std'] = vertical_std
-  out['east_pert'] = np.zeros((0,len(time),len(id)))
-  out['north_pert'] = np.zeros((0,len(time),len(id)))
-  out['vertical_pert'] = np.zeros((0,len(time),len(id)))
+  east_noise = np.random.normal(0.0,east_std[None,:,:].repeat(perts,axis=0))
+  out['east_pert'] = east + east_noise
+  north_noise = np.random.normal(0.0,north_std[None,:,:].repeat(perts,axis=0))
+  out['north_pert'] = north + north_noise
+  vertical_noise = np.random.normal(0.0,vertical_std[None,:,:].repeat(perts,axis=0))
+  out['vertical_pert'] = vertical + vertical_noise
   return out
   
 
-def dict_from_csv(infile):
+def dict_from_csv(infile,perts=20):
   ''' 
   loads a data dictionary from a csv file. The data in the csv file 
   needs to be resampled with the same frequency and duration for each 
@@ -240,10 +243,10 @@ def dict_from_csv(infile):
   default the data is resampled daily from the earliest to the latest 
   observation time for the network
   '''
-  return _dict_from_text(infile,'csv')
+  return _dict_from_text(infile,'csv',perts)
 
 
-def dict_from_pos(infile):
+def dict_from_pos(infile,perts=20):
   ''' 
   loads a data dictionary from a pos file. The data in the pos file 
   needs to be resampled with the same frequency and duration for each 
@@ -251,7 +254,7 @@ def dict_from_pos(infile):
   default the data is resampled daily from the earliest to the latest 
   observation time for the network
   '''
-  return _dict_from_text(infile,'pos')
+  return _dict_from_text(infile,'pos',perts)
 
 
 def csv_from_dict(outfile,data_dict):
@@ -330,7 +333,7 @@ def file_from_dict(outfile,data_dict):
   return
 
 
-def dict_from_file(infile):  
+def dict_from_file(infile,perts=20):  
   ''' 
   loads a data dictionary from either a pos, csv, or hdf5 file. The file 
   type is inferred from the extension
@@ -340,10 +343,10 @@ def dict_from_file(infile):
     out = dict_from_hdf5(infile)
 
   elif ext in ['pos']:
-    out = dict_from_pos(infile)
+    out = dict_from_pos(infile,perts=perts)
 
   elif ext in ['csv']:
-    out = dict_from_csv(infile)
+    out = dict_from_csv(infile,perts=perts)
     
   else:
     raise ValueError('cannot infer file type with extension *%s*' % ext)

@@ -14,6 +14,8 @@ if __name__ == '__main__':
                  'exec/pygeons-clean',
                  'exec/pygeons-view',
                  'exec/pygeons-convert',
+                 'exec/pygeons-toh5',
+                 'exec/pygeons-tocsv',
                  'exec/pygeons-zero',
                  'exec/pygeons-perturb',
                  'exec/pygeons-downsample'],

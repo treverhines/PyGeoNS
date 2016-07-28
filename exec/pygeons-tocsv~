@@ -24,8 +24,6 @@ p.add_argument('output_file',type=str,
                        only output to HDF5 files or PBO csv files.''')
 p.add_argument('-v','--verbose',action='count',default=0,
                help='''controls verbosity''')
-p.add_argument('--perts',type=int,default=20,
-               help='''number of perturbations if converting from csv to hdf5''')
                
 p = vars(p.parse_args())
 
@@ -40,7 +38,9 @@ else:
 
 input_file = p.pop('input_file')
 output_file = p.pop('output_file')
-
+if output_file is None:
+  output_file = change_extension(input_file,'csv')
+  
 # throw out any Nones and let the lower level functions determine the defaults
 for k in p.keys():
   if p[k] is None:

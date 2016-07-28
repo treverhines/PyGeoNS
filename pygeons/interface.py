@@ -27,11 +27,13 @@ dictionary contains the following items:
 '''
 from __future__ import division
 from functools import wraps
+import rbf.geometry
 import pygeons.smooth
 import pygeons.diff
 import pygeons.view
 import pygeons.clean
 import pygeons.downsample
+from pygeons.downsample import weighted_mean
 from pygeons.dateconv import decday_inv
 from pygeons.dateconv import decday
 import matplotlib.pyplot as plt
@@ -43,14 +45,13 @@ logger = logging.getLogger(__name__)
 
 
 def _make_time_cuts(cut_dates):
-  times = []
+  out = []
   if cut_dates is not None:
     # subtract half a day to get rid of any ambiguity about what day 
     # the dislocation is observed
-    times += [decday(d,'%Y-%m-%d') - 0.5 for d in cut_dates]   
+    out += [decday(d,'%Y-%m-%d') - 0.5 for d in cut_dates]   
 
-  out = pygeons.cuts.TimeCuts(times)
-  return out
+  return np.array(out)
   
 
 def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
@@ -60,7 +61,9 @@ def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   if end2_lats is None: end2_lats = []
   end1 = [bm(i,j) for i,j in zip(end1_lons,end1_lats)]
   end2 = [bm(i,j) for i,j in zip(end2_lons,end2_lats)]
-  out = pygeons.cuts.SpaceCuts(end1,end2)
+  end1 = np.array(end1).reshape((-1,2))
+  end2 = np.array(end2).reshape((-1,2))
+  out = np.concatenate((end1[:,None,:],end2[:,None,:]),axis=1)
   return out
 
 
@@ -145,7 +148,7 @@ def _log_call(fin):
   return fout
       
 
-def _perturbed_uncertainty(fin):
+def _perturbation_uncertainty(fin):
   ''' 
   set sigma equal to the standard deviation of the perturbations
   '''
@@ -278,12 +281,12 @@ def _setup_ts_ax(ax_lst,times):
 
 @_check_io
 @_log_call
-@_perturbed_uncertainty
+@_perturbation_uncertainty
 def smooth(data,time_scale=None,length_scale=None,
            kind='both',fill='none',
            stencil_size=None,
-           cut_endpoint1_lons=None,cut_endpoint1_lats=None,
-           cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+           cut_lons1=None,cut_lats1=None,
+           cut_lons2=None,cut_lats2=None,
            cut_dates=None):
   ''' 
   Spatially and temporally smooths the data set. Data is treated as a 
@@ -327,8 +330,8 @@ def smooth(data,time_scale=None,length_scale=None,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
-                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
   time_cuts = _make_time_cuts(cut_dates)
   
   ds1 = pygeons.diff.acc()  
@@ -379,11 +382,11 @@ def smooth(data,time_scale=None,length_scale=None,
 
 @_check_io
 @_log_call
-@_perturbed_uncertainty
+@_perturbation_uncertainty
 def diff(data,dt=None,dx=None,dy=None,
          stencil_size=None,
-         cut_endpoint1_lons=None,cut_endpoint1_lats=None,
-         cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+         cut_lons1=None,cut_lats1=None,
+         cut_lons2=None,cut_lats2=None,
          cut_dates=None):
   ''' 
   Calculates a mixed partial derivative of the data set. The spatial 
@@ -424,8 +427,8 @@ def diff(data,dt=None,dx=None,dy=None,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
-                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
   time_cuts = _make_time_cuts(cut_dates)
   # form DiffSpecs instance
   ds = pygeons.diff.DiffSpecs()
@@ -462,7 +465,7 @@ def diff(data,dt=None,dx=None,dy=None,
 
 @_check_io
 @_log_call
-@_perturbed_uncertainty
+@_perturbation_uncertainty
 def downsample(data,sample_period,start_date=None,stop_date=None,
                cut_dates=None):
   ''' 
@@ -498,7 +501,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
   '''
   time_cuts = _make_time_cuts(cut_dates)
-  
+      
   # if the start and stop time are now specified then use the min and 
   # max times
   bm = _make_basemap(data['longitude'],data['latitude'])
@@ -520,17 +523,14 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
+    up = np.concatenate((u[None,:,:],p),axis=0)
     sigma = data[dir+'_std']
-    u_ds,sigma_ds = pygeons.downsample.downsample(
-                      data['time'],time_itp,pos,u,
-                      sigma=sigma,time_cuts=time_cuts)
-    # downsample each perturbation the same way
-    p_ds = np.zeros((len(p),len(time_itp),len(pos)))
-    for i,pi in enumerate(p):
-      p_dsi,dummy = pygeons.downsample.downsample(
-                      data['time'],time_itp,pos,pi,
-                      sigma=sigma,time_cuts=time_cuts)
-      p_ds[i,:,:] = p_dsi
+    up_ds,sigma_ds = pygeons.downsample.downsample(
+                       data['time'],time_itp,pos,up,
+                       sigma=sigma,time_cuts=time_cuts)
+                       
+    u_ds = up_ds[0,:,:]
+    p_ds = up_ds[1:,:,:]
                
     out[dir] = u_ds
     out[dir+'_pert'] = p_ds
@@ -541,7 +541,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
 @_check_io
 @_log_call
-@_perturbed_uncertainty
+@_perturbation_uncertainty
 def zero(data,zero_date,radius,cut_dates=None):
   ''' 
   Estimates and removes the displacements at the indicated time. The 
@@ -573,29 +573,37 @@ def zero(data,zero_date,radius,cut_dates=None):
   radius = int(radius)
   zero_time = int(decday(zero_date,'%Y-%m-%d'))
   time_cuts = _make_time_cuts(cut_dates)
-  vert,smp = time_cuts.get_vert_and_smp([0.0,0.0])
+  
+  vert = np.array(time_cuts).reshape((-1,1))
+  smp = np.arange(vert.shape[0]).reshape((-1,1))
   
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir + '_pert']
     sigma = data[dir+'_std']
-    itp = pygeons.downsample.MeanInterpolant(
-            data['time'][:,None],u,
-            sigma=sigma,
-            vert=vert,smp=smp)    
-    # shape (1,Nx)
-    offset,sigma_offset = itp([[zero_time]],radius=radius) 
-    u_zero = u - offset
-    sigma_zero = np.sqrt(sigma_offset**2 + sigma**2)
-    p_zero = np.zeros(p.shape)
-    for i,pi in enumerate(p):     
-      itp = pygeons.downsample.MeanInterpolant(
-              data['time'][:,None],pi,
-              sigma=sigma,
-              vert=vert,smp=smp)    
-      offset,dummy = itp([[zero_time]],radius=radius) 
-      p_zero[i,:,:] = pi - offset
+
+    up = np.concatenate((u[None,:,:],p),axis=0)
+    # expand sigma to the size of up
+    sigma_ext = np.ones(up.shape)*sigma
+    
+    tidx, = np.nonzero((data['time'] >= (zero_time - radius)) &
+                       (data['time'] <= (zero_time + radius)))
+
+    # make sure that there are no intersections
+    time = data['time'][tidx][:,None]
+    zero_ext = np.repeat(zero_time,len(tidx))[:,None]
+    cross = rbf.geometry.intersection_count(time,zero_ext,vert,smp)
+    # remove any indices that crossed a boundary
+    tidx = tidx[cross==0]
+    
+    offset,sigma_offset = weighted_mean(up[:,tidx,:],sigma_ext[:,tidx,:],axis=-2)
+    # just take the first one
+    sigma_offset = sigma_offset[0,:]
+    up_zero = up - offset[:,None,:]
+    u_zero = up_zero[0,:,:]
+    p_zero = up_zero[1:,:,:]
+    sigma_zero = np.sqrt(sigma**2 + sigma_offset[None,:]**2)
            
     out[dir] = u_zero
     out[dir+'_pert'] = p_zero
@@ -606,11 +614,10 @@ def zero(data,zero_date,radius,cut_dates=None):
 
 @_check_io
 @_log_call
-@_perturbed_uncertainty
+@_perturbation_uncertainty
 def perturb(data,N):
   ''' 
-  returns N data dictionaries where noise is added to the 
-  displacements in each one
+  adds a displacement perturbations to the data dictionary
   
   Parameters
   ----------
@@ -625,7 +632,6 @@ def perturb(data,N):
       data dict with *pert* entries
 
   '''
-  _check_data(data)
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     sigma = data[dir+'_std']
@@ -641,10 +647,10 @@ def perturb(data,N):
 
 @_check_io
 @_log_call
-@_perturbed_uncertainty
+@_perturbation_uncertainty
 def clean(data,resolution='i',
-          cut_endpoint1_lons=None,cut_endpoint1_lats=None,
-          cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+          cut_lons1=None,cut_lats1=None,
+          cut_lons2=None,cut_lats2=None,
           **kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
@@ -684,9 +690,11 @@ def clean(data,resolution='i',
   _setup_map_ax(bm,map_ax)
 
   # draw cuts if there are any
-  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
-                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
-  vert,smp = space_cuts.get_vert_and_smp(0.0)
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
+
+  vert = np.array(space_cuts).reshape((-1,2))
+  smp = np.arange(vert.shape[0]).reshape((-1,2))
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
@@ -696,18 +704,25 @@ def clean(data,resolution='i',
   t = data['time']
   dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
   u,v,z = data['east'],data['north'],data['vertical']
+  up,vp,zp = data['east_pert'],data['north_pert'],data['vertical_pert']
+  up = np.concatenate((u[None,:,:],up),axis=0)
+  vp = np.concatenate((v[None,:,:],vp),axis=0)
+  zp = np.concatenate((z[None,:,:],zp),axis=0)
   su,sv,sz = data['east_std'],data['north_std'],data['vertical_std']
   clean_data = pygeons.clean.clean(
-                 t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-                 converter=bm,map_ax=map_ax,ts_ax=ts_ax,
+                 t,pos,u=up,v=vp,z=zp,su=su,sv=sv,sz=sz,
+                 map_ax=map_ax,ts_ax=ts_ax,
                  time_labels=dates,
                  station_labels=data['id'],
                  **kwargs)
 
   out = copy.deepcopy(data)
-  out['east'] = clean_data[0]          
-  out['north'] = clean_data[1]          
-  out['vertical'] = clean_data[2]          
+  out['east'] = clean_data[0][0,:,:]
+  out['north'] = clean_data[1][0,:,:]        
+  out['vertical'] = clean_data[2][0,:,:]          
+  out['east_pert'] = clean_data[0][1:,:,:]
+  out['north_pert'] = clean_data[1][1:,:,:]        
+  out['vertical_pert'] = clean_data[2][1:,:,:]          
   out['east_std'] = clean_data[3]   
   out['north_std'] = clean_data[4]          
   out['vertical_std'] = clean_data[5]   
@@ -717,8 +732,8 @@ def clean(data,resolution='i',
 
 @_log_call
 def view(data_list,resolution='i',
-         cut_endpoint1_lons=None,cut_endpoint1_lats=None,
-         cut_endpoint2_lons=None,cut_endpoint2_lats=None,
+         cut_lons1=None,cut_lats1=None,
+         cut_lons2=None,cut_lats2=None,
          **kwargs):
   ''' 
   runs the PyGeoNS interactive Viewer
@@ -758,9 +773,11 @@ def view(data_list,resolution='i',
   _setup_map_ax(bm,map_ax)
 
   # draw cuts if there are any
-  space_cuts = _make_space_cuts(cut_endpoint1_lons,cut_endpoint1_lats,
-                                cut_endpoint2_lons,cut_endpoint2_lats,bm)
-  vert,smp = space_cuts.get_vert_and_smp(0.0)
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
+
+  vert = np.array(space_cuts).reshape((-1,2))
+  smp = np.arange(vert.shape[0]).reshape((-1,2))
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
