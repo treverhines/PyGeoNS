@@ -40,12 +40,12 @@ class Test(unittest.TestCase):
     self.assertTrue(np.all(np.isclose(out1,out2)))
 
   def test_weighted_mean_zero_length(self):
-    # zero length along the axis should return zero mean and inf 
+    # zero length along the axis should return nan mean and inf 
     # uncertanity
     data = np.zeros((0,))  
     sigma = np.zeros((0,))  
     out = pygeons.downsample.weighted_mean(data,sigma)
-    self.assertTrue(out[0]==0.0)
+    self.assertTrue(np.isnan(out[0]))
     self.assertTrue(np.isinf(out[1]))
 
     data = np.zeros((0,2))  
@@ -59,20 +59,6 @@ class Test(unittest.TestCase):
     out = pygeons.downsample.weighted_mean(data,sigma,axis=1)
     self.assertTrue(np.all(out[0]==0.0))
     self.assertTrue(np.all(np.isinf(out[1])))
-    
-  def test_weighted_mean_zero_sigma(self):
-    # make sure that values with zero sigma have infinite weight
-    data = np.array([3.0,4.0,5.0])
-    sigma = np.array([1.0,1.0,0.0])
-    out = pygeons.downsample.weighted_mean(data,sigma)
-    self.assertTrue(out[0]==5.0)
-    self.assertTrue(out[1]==0.0)
-
-    data = np.array([3.0,4.0,5.0])
-    sigma = np.array([0.0,0.0,1.0])
-    out = pygeons.downsample.weighted_mean(data,sigma)
-    self.assertTrue(out[0]==3.5)
-    self.assertTrue(out[1]==0.0)
 
   def test_weighted_mean_inf_sigma(self):
     # make sure that values with inf sigma have zero weight
