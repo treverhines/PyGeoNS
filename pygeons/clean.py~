@@ -2,15 +2,10 @@
 from __future__ import division
 import numpy as np
 from pygeons.view import InteractiveViewer
-from pygeons.view import without_interactivity
 from pygeons.downsample import weighted_mean
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-import pygeons.diff
-import pygeons.cuts
-import pygeons.ioconv
 from scipy.spatial import cKDTree
-import os
 import logging
 logger = logging.getLogger(__name__)
 
@@ -191,19 +186,18 @@ Notes
     ----
       only one of u, v, and z need to be specified
     '''
+    Nt,Nx = len(t),len(x)
     if u is not None:
       u = np.asarray(u)
-      shape = u.shape
-      Nt,Nx = shape[-2:]
+      input_shape = u.shape
       u_view = u.reshape((-1,Nt,Nx))[0]
-      u_view = [u_view,np.copy(u_view)]                
+      u_view = [u_view,np.copy(u_view)]
     else:
       u_view = None
       
     if v is not None:
       v = np.asarray(v)
-      shape = v.shape
-      Nt,Nx = shape[-2:]
+      input_shape = v.shape
       v_view = v.reshape((-1,Nt,Nx))[0]
       v_view = [v_view,np.copy(v_view)]                
     else:
@@ -211,8 +205,7 @@ Notes
       
     if z is not None:
       z = np.asarray(z)
-      shape = z.shape
-      Nt,Nx = shape[-2:]
+      input_shape = z.shape
       z_view = z.reshape((-1,Nt,Nx))[0]
       z_view = [z_view,np.copy(z_view)]                
     else:
@@ -231,45 +224,48 @@ Notes
       sz = [sz,np.copy(sz)]  
       
     data_set_names = kwargs.pop('data_set_names',['edited data','kept data'])
-    color_cycle = kwargs.pop('color_cycle',['c','m'])
+    color_cycle = kwargs.pop('color_cycle',['k','c'])
     InteractiveViewer.__init__(self,t,x,
                                u=u_view,v=v_view,z=z_view,
                                su=su,sv=sv,sz=sz,
                                color_cycle=color_cycle,
                                data_set_names=data_set_names,
-                               **kwargs)
-                               
+                               **kwargs)                               
+
     if u is None:
-      u = np.zeros(shape)
+      u = np.zeros(input_shape)
       
     if v is None:
-      v = np.zeros(shape)
+      v = np.zeros(input_shape)
 
     if z is None:
-      z = np.zeros(shape)
+      z = np.zeros(input_shape)
       
+    self.input_shape = input_shape
+
     # all changes made to the viewed data set should be broadcasted onto 
     # this one
-    pert = np.concatenate((u[...,None],v[...,None],z[...,None]),axis=-1)
-
-    # save the shape so that it can be reshaped when the output is 
-    # requested
-    self.pert_shape = pert.shape
-    pert = pert.reshape((-1,Nt,Nx,3))
+    all_data = np.concatenate((u[...,None],v[...,None],z[...,None]),axis=-1)
+    # flatten the broadcast dimensions
+    all_data = all_data.reshape((-1,Nt,Nx,3))
 
     # set any masked data to nan
-    pert[:,np.isinf(self.sigma_sets[0])] = np.nan
+    all_data[:,np.isinf(self.sigma_sets[0])] = np.nan
      
-    self.pert_sets = [pert,np.copy(pert)]
+    self.all_data_sets = [all_data,np.copy(all_data)]
     self._mode = None
     self._is_pressed = False
 
   def get_data(self):
-    pert = self.pert_sets[1]
-    pert = pert.reshape(self.pert_shape)
-    u = pert[...,0]
-    v = pert[...,1]
-    z = pert[...,2]
+    all_data = self.all_data_sets[1]
+    # set any masked data to nan. This should already be the case and 
+    # I am probably being to cautious
+    all_data[:,np.isinf(self.sigma_sets[1])] = np.nan
+    
+    all_data = all_data.reshape(self.input_shape+(3,))
+    u = all_data[...,0]
+    v = all_data[...,1]
+    z = all_data[...,2]
     su = self.sigma_sets[1][:,:,0]
     sv = self.sigma_sets[1][:,:,1]
     sz = self.sigma_sets[1][:,:,2]
@@ -285,22 +281,22 @@ Notes
         
   def keep_changes(self):
     print('keeping changes\n')
+    self.all_data_sets[1] = np.copy(self.all_data_sets[0])
     self.data_sets[1] = np.copy(self.data_sets[0])
     self.sigma_sets[1] = np.copy(self.sigma_sets[0])
-    self.pert_sets[1] = np.copy(self.pert_sets[0])
     self.update_data()
     logger.info('kept changes to data\n')
 
   def undo_changes(self):
     print('undoing changes\n')
+    self.all_data_sets[0] = np.copy(self.all_data_sets[1])
     self.data_sets[0] = np.copy(self.data_sets[1])
     self.sigma_sets[0] = np.copy(self.sigma_sets[1])
-    self.pert_sets[0] = np.copy(self.pert_sets[1])
     self.update_data()
     logger.info('discarded changes to data\n')
 
   def remove_jump(self,jump_time,radius):
-    data = self.pert_sets[0]
+    data = self.all_data_sets[0]
     # expand sigma to the size of data
     sigma = self.sigma_sets[0][None,:,:].repeat(data.shape[0],axis=0)
 
@@ -332,7 +328,7 @@ Notes
     new_var = sigma[:,all_tidx_right,xidx,:]**2 + jump_sigma[:,None,:]**2
     new_sigma = np.sqrt(new_var)
     
-    self.pert_sets[0][:,all_tidx_right,xidx,:] = new_pos
+    self.all_data_sets[0][:,all_tidx_right,xidx,:] = new_pos
     self.data_sets[0][all_tidx_right,xidx,:] = new_pos[0]
     self.sigma_sets[0][all_tidx_right,xidx,:] = new_sigma[0]
     
@@ -348,7 +344,7 @@ Notes
     # from start_time to end_time
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
-    self.pert_sets[0][:,tidx,xidx] = np.nan
+    self.all_data_sets[0][:,tidx,xidx] = np.nan
     self.data_sets[0][tidx,xidx] = np.nan
     self.sigma_sets[0][tidx,xidx] = np.inf
 
