@@ -282,15 +282,16 @@ def _setup_ts_ax(ax_lst,times):
 @_check_io
 @_log_call
 @_perturbation_uncertainty
-def tsmooth(data,time_scale=None,fill='none',cut_dates=None):
+def tsmooth(data,time_scale=None,fill='none',
+            cut_dates=None):
   ''' 
   time smoothing
   '''
-  kind = "time"
-  return _smooth(data,time_scale=time_scale,
-                 length_scale=0.0,
-                 kind=kind,fill=fill,
-                 cut_dates=cut_dates)
+  time_cuts = _make_time_cuts(cut_dates)
+  ds = pygeons.diff.acc()  
+  ds['time']['cuts'] = time_cuts
+  return _smooth(data,[ds],time_scale=time_scale,
+                 length_scale=0.0,fill=fill)
                  
 @_check_io
 @_log_call
@@ -302,21 +303,20 @@ def ssmooth(data,length_scale=None,
   ''' 
   space smoothing
   '''
-  kind = "space"
-  return _smooth(data,time_scale=0.0,
+  bm = _make_basemap(data['longitude'],data['latitude'])
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
+  ds = pygeons.diff.disp_laplacian()
+  ds['space']['cuts'] = space_cuts
+  ds['space']['stencil_size'] = stencil_size
+  return _smooth(data,[ds],time_scale=0.0,
                  length_scale=length_scale,
-                 kind=kind,fill=fill,
-                 stencil_size=stencil_size,
-                 cut_lons1=cut_lons1,cut_lats1=cut_lats1,
-                 cut_lons2=cut_lons2,cut_lats2=cut_lats2)
+                 fill=fill)
 
 
-def _smooth(data,time_scale=None,length_scale=None,
-           kind='both',fill='none',
-           stencil_size=None,
-           cut_lons1=None,cut_lats1=None,
-           cut_lons2=None,cut_lats2=None,
-           cut_dates=None):
+def _smooth(data,ds,
+            time_scale=None,length_scale=None,
+            fill='none'):
   ''' 
   Spatially and temporally smooths the data set. Data is treated as a 
   stochastic variable where its second time derivative is white noise 
@@ -359,27 +359,6 @@ def _smooth(data,time_scale=None,length_scale=None,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
-                                cut_lons2,cut_lats2,bm)
-  time_cuts = _make_time_cuts(cut_dates)
-  
-  ds1 = pygeons.diff.acc()  
-  ds1['time']['cuts'] = time_cuts
-  ds2 = pygeons.diff.disp_laplacian()
-  ds2['space']['cuts'] = space_cuts
-  ds2['space']['stencil_size'] = stencil_size
-  if kind == 'time':
-    ds = [ds1]  
-
-  elif kind == 'space':
-    ds = [ds2]
-      
-  elif kind == 'both':
-    ds = [ds1,ds2]
-  
-  else:
-    raise ValueError('*kind* must be "time", "space", or "both"')  
-
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
@@ -416,7 +395,11 @@ def tdiff(data,dt,cut_dates=None):
   ''' 
   time differentiation
   '''
-  return _diff(data,dt=dt,cut_dates=cut_dates)   
+  ds = pygeons.diff.DiffSpecs()
+  time_cuts = _make_time_cuts(cut_dates)
+  ds['time']['diffs'] = [(dt,)]
+  ds['time']['cuts'] = time_cuts
+  return _diff(data,ds)   
 
 
 @_check_io
@@ -428,16 +411,16 @@ def sdiff(data,dx,dy,stencil_size=None,
   ''' 
   space differentiation
   '''
-  return _diff(data,dx=dx,dy=dy,stencil_size=stencil_size,
-               cut_lons1=cut_lons1,cut_lats1=cut_lats1,
-               cut_lons2=cut_lons2,cut_lats2=cut_lats2)
+  ds = pygeons.diff.DiffSpecs()
+  bm = _make_basemap(data['longitude'],data['latitude'])
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
+  ds['space']['diffs'] = [(dx,dy)]
+  ds['space']['cuts'] = space_cuts
+  ds['space']['stencil_size'] = stencil_size
+  return _diff(data,ds)
 
-
-def _diff(data,dt=None,dx=None,dy=None,
-          stencil_size=None,
-          cut_lons1=None,cut_lats1=None,
-          cut_lons2=None,cut_lats2=None,
-          cut_dates=None):
+def _diff(data,ds):
   ''' 
   Calculates a mixed partial derivative of the data set. The spatial 
   coordinates are in units of meters and time is in years. The output 
@@ -449,23 +432,7 @@ def _diff(data,dt=None,dx=None,dy=None,
     data : dict
       data dictionary
     
-    dt : int, optional
-      time derivative order 
-
-    dx : int, optional
-      x derivative order. The x direction depends on the map 
-      projection but is roughly east.
-
-    dy : int, optional
-      y derivative order. The y direction depends on the map 
-      projection but is roughly north
-      
-    cut_endpoints{1,2}_{lons,lat} :  lst, optional
-      coordinates of the spatial discontinuty line segments
-  
-    cut_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. This date should be 
-      when the discontinuity is first observed
+    ds : DiffSpec instance
       
   Returns 
   -------
@@ -476,22 +443,6 @@ def _diff(data,dt=None,dx=None,dy=None,
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
-
-  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
-                                cut_lons2,cut_lats2,bm)
-  time_cuts = _make_time_cuts(cut_dates)
-  # form DiffSpecs instance
-  ds = pygeons.diff.DiffSpecs()
-  if dt is not None:
-    ds['time']['diffs'] = [(dt,)]
-    ds['time']['cuts'] = time_cuts
-
-  if (dx is not None) | (dy is not None):     
-    if dx is None: dx = 0
-    if dy is None: dy = 0
-    ds['space']['diffs'] = [(dx,dy)]
-    ds['space']['cuts'] = space_cuts
-    ds['space']['stencil_size'] = stencil_size
 
   out = copy.deepcopy(data)
   for dir in ['east','north','vertical']:
@@ -577,7 +528,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
     sigma = data[dir+'_std']
     up_ds,sigma_ds = pygeons.downsample.downsample(
                        data['time'],time_itp,pos,up,
-                       sigma=sigma,time_cuts=time_cuts)
+                       sigma=sigma,cuts=time_cuts)
                        
     u_ds = up_ds[0,:,:]
     p_ds = up_ds[1:,:,:]

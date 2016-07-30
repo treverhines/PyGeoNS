@@ -120,7 +120,7 @@ def _parse_pos(file_str):
   # sensitive
   file_str = file_str.lower()
   id = _get_field('4-character id',file_str,delim=':')
-  logger.debug('reading pos data for station %s' % id) 
+  logger.debug('reading pos data for station %s' % id.upper()) 
 
   start = _get_field('first epoch',file_str,delim=':')
   pos = _get_field('neu reference position',file_str,delim=':')
