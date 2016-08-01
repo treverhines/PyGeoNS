@@ -190,48 +190,42 @@ Notes
     if u is not None:
       u = np.asarray(u)
       input_shape = u.shape
-      u_view = u.reshape((-1,Nt,Nx))[0]
-      u_view = [u_view,np.copy(u_view)]
+      u_view = [u.reshape((-1,Nt,Nx))[0]]
     else:
       u_view = None
       
     if v is not None:
       v = np.asarray(v)
       input_shape = v.shape
-      v_view = v.reshape((-1,Nt,Nx))[0]
-      v_view = [v_view,np.copy(v_view)]                
+      v_view = [v.reshape((-1,Nt,Nx))[0]]
     else:
       v_view = None
       
     if z is not None:
       z = np.asarray(z)
       input_shape = z.shape
-      z_view = z.reshape((-1,Nt,Nx))[0]
-      z_view = [z_view,np.copy(z_view)]                
+      z_view = [z.reshape((-1,Nt,Nx))[0]]
     else:
       z_view = None
       
     if su is not None:
-      su = np.asarray(su)
-      su = [su,np.copy(su)]                
+      su = [np.asarray(su)]
 
     if sv is not None:
-      sv = np.asarray(sv)
-      sv = [sv,np.copy(sv)]                
+      sv = [np.asarray(sv)]
 
     if sz is not None:
-      sz = np.asarray(sz)
-      sz = [sz,np.copy(sz)]  
+      sz = [np.asarray(sz)]
       
-    data_set_names = kwargs.pop('data_set_names',['edited data','kept data'])
-    color_cycle = kwargs.pop('color_cycle',['k','c'])
+    data_set_names = kwargs.pop('data_set_names',['edited data'])
+    color_cycle = kwargs.pop('color_cycle',['k'])
     InteractiveViewer.__init__(self,t,x,
                                u=u_view,v=v_view,z=z_view,
                                su=su,sv=sv,sz=sz,
                                color_cycle=color_cycle,
                                data_set_names=data_set_names,
-                               **kwargs)                               
-
+                               **kwargs)
+                               
     if u is None:
       u = np.zeros(input_shape)
       
@@ -244,31 +238,32 @@ Notes
     self.input_shape = input_shape
 
     # all changes made to the viewed data set should be broadcasted onto 
-    # this one
-    all_data = np.concatenate((u[...,None],v[...,None],z[...,None]),axis=-1)
+    # this one. 
+    tpl = (u[...,None],v[...,None],z[...,None])
+    all_data = np.concatenate(tpl,axis=-1)
     # flatten the broadcast dimensions
     all_data = all_data.reshape((-1,Nt,Nx,3))
 
     # set any masked data to nan
     all_data[:,np.isinf(self.sigma_sets[0])] = np.nan
      
-    self.all_data_sets = [all_data,np.copy(all_data)]
+    self.all_data_sets = [all_data]
     self._mode = None
     self._is_pressed = False
 
   def get_data(self):
-    all_data = self.all_data_sets[1]
+    all_data = self.all_data_sets[0]
     # set any masked data to nan. This should already be the case and 
-    # I am probably being to cautious
-    all_data[:,np.isinf(self.sigma_sets[1])] = np.nan
+    # I am probably being too cautious
+    all_data[:,np.isinf(self.sigma_sets[0])] = np.nan
     
     all_data = all_data.reshape(self.input_shape+(3,))
     u = all_data[...,0]
     v = all_data[...,1]
     z = all_data[...,2]
-    su = self.sigma_sets[1][:,:,0]
-    sv = self.sigma_sets[1][:,:,1]
-    sz = self.sigma_sets[1][:,:,2]
+    su = self.sigma_sets[0][:,:,0]
+    sv = self.sigma_sets[0][:,:,1]
+    sz = self.sigma_sets[0][:,:,2]
     return (u,v,z,su,sv,sz)
     
   def connect(self):
@@ -279,22 +274,6 @@ Notes
     self.map_fig.canvas.mpl_connect('key_release_event',self.on_key_release)
     InteractiveViewer.connect(self)
         
-  def keep_changes(self):
-    print('keeping changes\n')
-    self.all_data_sets[1] = np.copy(self.all_data_sets[0])
-    self.data_sets[1] = np.copy(self.data_sets[0])
-    self.sigma_sets[1] = np.copy(self.sigma_sets[0])
-    self.update_data()
-    logger.info('kept changes to data\n')
-
-  def undo_changes(self):
-    print('undoing changes\n')
-    self.all_data_sets[0] = np.copy(self.all_data_sets[1])
-    self.data_sets[0] = np.copy(self.data_sets[1])
-    self.sigma_sets[0] = np.copy(self.sigma_sets[1])
-    self.update_data()
-    logger.info('discarded changes to data\n')
-
   def remove_jump(self,jump_time,radius):
     data = self.all_data_sets[0]
     # expand sigma to the size of data
@@ -430,11 +409,23 @@ Notes
       mint = min(self._t1,self._t2)
       maxt = max(self._t1,self._t2)
       self.remove_outliers(mint,maxt) 
+      # keep the time series axis limits fixed
+      xlims = [i.get_xlim() for i in self.ts_ax]      
+      ylims = [i.get_ylim() for i in self.ts_ax]      
       self.update()   
+      [i.set_xlim(j) for i,j in zip(self.ts_ax,xlims)]
+      [i.set_ylim(j) for i,j in zip(self.ts_ax,ylims)]
+      self.ts_fig.canvas.draw()  
 
     elif self._mode == 'jump removal':
       self.remove_jump(self._t1,abs(self._t2-self._t1))
+      # keep the time series axis limits fixed
+      xlims = [i.get_xlim() for i in self.ts_ax]      
+      ylims = [i.get_ylim() for i in self.ts_ax]      
       self.update()   
+      [i.set_xlim(j) for i,j in zip(self.ts_ax,xlims)]
+      [i.set_ylim(j) for i,j in zip(self.ts_ax,ylims)]
+      self.ts_fig.canvas.draw()  
     
     else: 
       return
@@ -444,14 +435,6 @@ Notes
     if event.key == 'c':
       return
               
-    if event.key == 'k':
-      self.keep_changes()
-      self.update()   
-
-    elif event.key == 'u':
-      self.undo_changes()
-      self.update()   
-
     elif event.key == 'd':
       # cannot change mode unless current mode is None
       if self._mode is None:
