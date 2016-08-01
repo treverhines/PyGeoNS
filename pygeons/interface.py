@@ -40,7 +40,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 import logging
-import copy
 logger = logging.getLogger(__name__)
 
 
@@ -175,27 +174,20 @@ def _log_call(fin):
   return fout
       
 
-def _perturbation_uncertainty(fin):
+def _set_std(data):
   ''' 
-  set sigma equal to the standard deviation of the perturbations
+  set sigma equal to the standard deviation of the perturbations. If 
+  there are any nans then the standard deviation is set to inf. This 
+  performs in place operations on the data dictionary 
   '''
-  @wraps(fin)
-  def fout(data,*args,**kwargs):
-    out = fin(data,*args,**kwargs)
-    for dir in ['east','north','vertical']:
-      # only use the perturbations for uncertainty if there are more 
-      # than zero
-      if out[dir+'_pert'].shape[0] > 0:
-        mask = np.isinf(out[dir+'_std'])
-        sigma = np.std(out[dir+'_pert'],axis=0)
-        sigma[mask] = np.inf
-        out[dir+'_std'] = sigma
+  for dir in ['east','north','vertical']:
+    mask = np.any(np.isnan(data[dir+'_pert']),axis=0)
+    sigma = np.std(data[dir+'_pert'],axis=0)
+    sigma[mask] = np.inf
+    data[dir+'_std'] = sigma
 
-    return out
-
-  return fout
-
-
+  return
+  
 def _make_basemap(lon,lat,resolution=None):
   ''' 
   creates a transverse mercator projection which is centered about the 
@@ -281,7 +273,6 @@ def _setup_ts_ax(ax_lst,times):
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def tsmooth(data,time_scale=None,fill='none',
             cut_dates=None):
   ''' 
@@ -295,7 +286,6 @@ def tsmooth(data,time_scale=None,fill='none',
                  
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def ssmooth(data,length_scale=None,
             stencil_size=None,fill='none',
             cut_lons1=None,cut_lats1=None,
@@ -359,7 +349,11 @@ def _smooth(data,ds,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  out = copy.deepcopy(data)
+  out = {}
+  out['id'] = np.copy(data['id']) 
+  out['longitude'] = np.copy(data['longitude']) 
+  out['latitude'] = np.copy(data['latitude']) 
+  out['time'] = np.copy(data['time'])
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
@@ -373,24 +367,18 @@ def _smooth(data,ds,
                   time_scale=time_scale,
                   length_scale=length_scale,
                   fill=fill)
-    # if the returned value is np.nan, then it is masked. Make sure 
-    # that the corresponding sigma is np.inf
-    mask = np.isnan(up_smooth[0,:,:])
-    sigma_smooth = np.zeros(sigma.shape)
-    sigma_smooth[mask] = np.inf
+
     u_smooth = up_smooth[0,:,:]
     p_smooth = up_smooth[1:,:,:]
-
     out[dir] = u_smooth
     out[dir+'_pert'] = p_smooth
-    out[dir+'_std'] = sigma_smooth
-    
+
+  _set_std(out)
   return out
            
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def tdiff(data,dt,cut_dates=None):
   ''' 
   time differentiation
@@ -404,7 +392,6 @@ def tdiff(data,dt,cut_dates=None):
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def sdiff(data,dx,dy,stencil_size=None,
           cut_lons1=None,cut_lats1=None,
           cut_lons2=None,cut_lats2=None):
@@ -444,29 +431,28 @@ def _diff(data,ds):
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  out = copy.deepcopy(data)
+  out = {}
+  out['id'] = np.copy(data['id']) 
+  out['longitude'] = np.copy(data['longitude']) 
+  out['latitude'] = np.copy(data['latitude']) 
+  out['time'] = np.copy(data['time'])
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
     mask = np.isinf(data[dir+'_std'])
-
     up = np.concatenate((u[None,:,:],p),axis=0)
     up_diff = pygeons.diff.diff(data['time'],pos,up,ds,mask=mask)
-
     u_diff = up_diff[0,:,:]
     p_diff = up_diff[1:,:,:]
-    sigma_diff = np.zeros(u.shape)
-    sigma_diff[mask] = np.inf
     out[dir] = u_diff
     out[dir+'_pert'] = p_diff
-    out[dir+'_std'] = sigma_diff
 
+  _set_std(out)
   return out
   
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def downsample(data,sample_period,start_date=None,stop_date=None,
                cut_dates=None):
   ''' 
@@ -519,30 +505,30 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   sample_period = int(sample_period)
   time_itp = np.arange(start_time,stop_time+1,sample_period)
 
-  out = copy.deepcopy(data)
+  out = {}
+  out['id'] = np.copy(data['id']) 
+  out['longitude'] = np.copy(data['longitude']) 
+  out['latitude'] = np.copy(data['latitude']) 
   out['time'] = time_itp
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
     up = np.concatenate((u[None,:,:],p),axis=0)
     sigma = data[dir+'_std']
-    up_ds,sigma_ds = pygeons.downsample.downsample(
-                       data['time'],time_itp,pos,up,
-                       sigma=sigma,cuts=time_cuts)
-                       
+    up_ds,dummy = pygeons.downsample.downsample(
+                    data['time'],time_itp,pos,up,
+                    sigma=sigma,cuts=time_cuts)
     u_ds = up_ds[0,:,:]
     p_ds = up_ds[1:,:,:]
-               
     out[dir] = u_ds
     out[dir+'_pert'] = p_ds
-    out[dir+'_std'] = sigma_ds
 
+  _set_std(out)
   return out
 
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def zero(data,zero_date,radius,cut_dates=None):
   ''' 
   Estimates and removes the displacements at the indicated time. The 
@@ -578,7 +564,11 @@ def zero(data,zero_date,radius,cut_dates=None):
   vert = np.array(time_cuts).reshape((-1,1))
   smp = np.arange(vert.shape[0]).reshape((-1,1))
   
-  out = copy.deepcopy(data)
+  out = {}
+  out['id'] = np.copy(data['id']) 
+  out['longitude'] = np.copy(data['longitude']) 
+  out['latitude'] = np.copy(data['latitude']) 
+  out['time'] = np.copy(data['time'])
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir + '_pert']
@@ -598,24 +588,20 @@ def zero(data,zero_date,radius,cut_dates=None):
     # remove any indices that crossed a boundary
     tidx = tidx[cross==0]
     
-    offset,sigma_offset = weighted_mean(up[:,tidx,:],sigma_ext[:,tidx,:],axis=1)
+    offset,dummy = weighted_mean(up[:,tidx,:],sigma_ext[:,tidx,:],axis=1)
     # just take the first one
-    sigma_offset = sigma_offset[0,:]
     up_zero = up - offset[:,None,:]
     u_zero = up_zero[0,:,:]
     p_zero = up_zero[1:,:,:]
-    sigma_zero = np.sqrt(sigma**2 + sigma_offset[None,:]**2)
-           
     out[dir] = u_zero
     out[dir+'_pert'] = p_zero
-    out[dir + '_std'] = sigma_zero
   
+  _set_std(out)
   return out
 
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def perturb(data,N):
   ''' 
   adds a displacement perturbations to the data dictionary
@@ -633,7 +619,11 @@ def perturb(data,N):
       data dict with *pert* entries
 
   '''
-  out = copy.deepcopy(data)
+  out = {}
+  out['id'] = np.copy(data['id']) 
+  out['longitude'] = np.copy(data['longitude']) 
+  out['latitude'] = np.copy(data['latitude']) 
+  out['time'] = np.copy(data['time'])
   for dir in ['east','north','vertical']:
     sigma = data[dir+'_std']
     sigma = sigma[None,:,:].repeat(N,axis=0)
@@ -641,14 +631,15 @@ def perturb(data,N):
     is_valid = (sigma > 0.0) & ~np.isinf(sigma)
     noise = np.zeros(sigma.shape)
     noise[is_valid] = np.random.normal(0.0,sigma[is_valid])
+    out[dir] = np.copy(data[dir])
     out[dir+'_pert'] = data[dir] + noise
 
+  _set_std(out)
   return out
 
 
 @_check_io
 @_log_call
-@_perturbation_uncertainty
 def clean(data,resolution='i',
           cut_lons1=None,cut_lats1=None,
           cut_lons2=None,cut_lats2=None,
@@ -717,17 +708,18 @@ def clean(data,resolution='i',
                  station_labels=data['id'],
                  **kwargs)
 
-  out = copy.deepcopy(data)
+  out = {}
+  out['id'] = np.copy(data['id']) 
+  out['longitude'] = np.copy(data['longitude']) 
+  out['latitude'] = np.copy(data['latitude']) 
+  out['time'] = np.copy(data['time'])
   out['east'] = clean_data[0][0,:,:]
   out['north'] = clean_data[1][0,:,:]        
   out['vertical'] = clean_data[2][0,:,:]          
   out['east_pert'] = clean_data[0][1:,:,:]
   out['north_pert'] = clean_data[1][1:,:,:]        
   out['vertical_pert'] = clean_data[2][1:,:,:]          
-  out['east_std'] = clean_data[3]   
-  out['north_std'] = clean_data[4]          
-  out['vertical_std'] = clean_data[5]   
-
+  _set_std(out)
   return out
 
 
