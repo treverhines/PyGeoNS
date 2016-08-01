@@ -114,7 +114,7 @@ class DiffSpecs(dict):
       T['coeffs'] = [1.0 for d in T['diffs']]
 
     if T['stencil_size'] is None:
-      T['stencil_size'] = rbf.fd._default_stencil_size(1,diffs=T['diffs'])
+      T['stencil_size'] = rbf.fd._default_stencil_size(diffs=T['diffs'])
 
     if T['diff_type'] is None:
       T['diff_type'] = 'poly'  
@@ -147,7 +147,7 @@ class DiffSpecs(dict):
       X['coeffs'] = [1.0 for d in X['diffs']]
 
     if X['stencil_size'] is None:
-      X['stencil_size'] = rbf.fd._default_stencil_size(2,diffs=X['diffs'])
+      X['stencil_size'] = rbf.fd._default_stencil_size(diffs=X['diffs'])
 
     # the weights must be computed using the RBF-FD method. 
     X['diff_type'] = 'rbf'  
