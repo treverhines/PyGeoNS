@@ -511,6 +511,11 @@ def diff(t,x,u,ds,mask=None):
   x = np.asarray(x,dtype=float)
   u = np.asarray(u,dtype=float)
   Nt,Nx = t.shape[0],x.shape[0]
+  if mask is None:
+    mask = np.zeros((Nt,Nx),dtype=bool)
+  else:
+    mask = np.asarray(mask,dtype=bool)
+        
   bcast_shape = u.shape[:-2]
   M = np.prod(bcast_shape)
 
