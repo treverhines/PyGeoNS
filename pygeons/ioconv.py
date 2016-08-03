@@ -1,12 +1,13 @@
 ''' 
 module for converting between the three input/output data formats
 '''
-from pygeons.downsample import MeanInterpolant
 import numpy as np
-from pygeons.dateconv import decday,decday_inv
 import logging
 import h5py
 import interface
+from pygeons.downsample import MeanInterpolant
+from pygeons.datadict import DataDict
+from pygeons.dateconv import decday,decday_inv
 logger = logging.getLogger(__name__)
   
 
@@ -79,7 +80,7 @@ def _parse_csv(file_str):
   # sensitive
   file_str = file_str.lower()
   id = _get_field('4-character id',file_str,delim=delim)
-  logger.debug('reading csv data for station %s' % id) 
+  logger.debug('reading csv data for station %s' % id.upper()) 
 
   start = _get_field('begin date',file_str,delim=delim)
   pos = _get_line_with('reference position',file_str)
@@ -131,6 +132,7 @@ def _parse_pos(file_str):
   data = np.genfromtxt(data.split('\n'),
                        converters={0:date_conv},
                        usecols=(0,15,16,17,18,19,20))
+
   output = {}
   output['id'] = id.upper()
   output['longitude'] = np.float(lon)
@@ -216,7 +218,7 @@ def _dict_from_text(infile,file_type,perts):
     north_std[:,i] = sigma_itp[1,:] 
     vertical_std[:,i] = sigma_itp[2,:] 
   
-  out = {}
+  out = DataDict()
   out['time'] = time
   out['longitude'] = longitude    
   out['latitude'] = latitude    
@@ -227,7 +229,17 @@ def _dict_from_text(infile,file_type,perts):
   out['east_std'] = east_std
   out['north_std'] = north_std
   out['vertical_std'] = vertical_std
-  out = interface.perturb(out,perts)
+  for dir in ['east','north','vertical']:
+    sigma = out[dir+'_std']
+    sigma = sigma[None,:,:].repeat(perts,axis=0)
+    # dont add noise for data where sigma is inf or 0.0
+    is_valid = (sigma > 0.0) & ~np.isinf(sigma)
+    noise = np.zeros(sigma.shape)
+    noise[is_valid] = np.random.normal(0.0,sigma[is_valid])
+    out[dir+'_pert'] = out[dir] + noise
+
+  out.set_std()
+  out.check_self_consistency()
   return out
   
 
@@ -290,7 +302,7 @@ def dict_from_hdf5(infile):
   ''' 
   loads a data dictionary from an hdf5 file
   '''
-  out = {}
+  out = DataDict()
   fin = h5py.File(infile,'r')
   for k in fin.keys():
     out[k] = fin[k][...]
