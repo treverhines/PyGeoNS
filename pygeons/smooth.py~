@@ -4,7 +4,6 @@ import numpy as np
 import scipy.sparse
 from scipy.spatial import cKDTree
 import logging
-import pygeons.cuts
 import pygeons.diff
 logger = logging.getLogger(__name__)
 
@@ -139,7 +138,8 @@ def _penalty(T,L,sigma,diff_specs):
 
     tord = tords[0]
     
-  out = (T/4.0)**tord*(L/4.0)**xord/S
+  
+  out = (T/(2*np.pi))**tord*(L/(2*np.pi))**xord/S
   return out  
   
 

@@ -33,6 +33,7 @@ import pygeons.diff
 import pygeons.view
 import pygeons.clean
 import pygeons.downsample
+from pygeons.datadict import DataDict
 from pygeons.downsample import weighted_mean
 from pygeons.dateconv import decday_inv
 from pygeons.dateconv import decday
@@ -66,88 +67,16 @@ def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   return out
 
 
-def _check_data(data):
-  ''' 
-  make sure that the data set has all the necessary components and the 
-  components have the right sizes
-  '''
-  # verify all components are here
-  keys = ['time','id','longitude','latitude',
-          'east','north','vertical',
-          'east_std','north_std','vertical_std']
-  for k in keys:
-    if k not in data:
-      raise ValueError('data set is missing "%s"' % k)
-            
-  Nt = len(data['time'])
-  Nx = len(data['id'])
-  # verify consistent station metadata
-  if (len(data['longitude']) != Nx) | (len(data['latitude']) != Nx):
-    raise ValueError('"longitude", "latitude", and "id" have inconsistent lengths')
-    
-  # verify data all has shape (Nt,Nx)
-  data_keys = ['east','north','vertical','east_std','north_std','vertical_std']
-  for d in data_keys: 
-    if data[d].shape != (Nt,Nx): 
-      raise ValueError('"%s" has shape %s but was expecting %s' % (d,data[d].shape,(Nt,Nx)))
-     
-  pert_keys = ['east_pert','north_pert','vertical_pert']
-  for p in pert_keys:
-    if p in data:
-      if data[p].shape[1:] != (Nt,Nx): 
-        raise ValueError('"%s" has shape %s but was expecting (...,%s,%s)' % (d,data[p].shape,Nt,Nx))
-
-  # verify that all the uncertainties have infs at the same component
-  if np.any(np.isinf(data['east_std']) != np.isinf(data['north_std'])):
-    raise ValueError('data with infinite uncertainty must have infinite uncertainty in all three directions') 
-
-  if np.any(np.isinf(data['east_std']) != np.isinf(data['vertical_std'])):
-    raise ValueError('data with infinite uncertainty must have infinite uncertainty in all three directions') 
-      
-  sigma_keys = ['east_std','north_std','vertical_std']
-  for s in sigma_keys:
-    if np.any(data[s] < 0.0):  
-      raise ValueError('found negative uncertainties in "%s"' % s) 
-
-  return   
-  
-
-def _check_compatibility(data_list):
-  ''' 
-  make sure that each data set contains the same stations and times
-  '''
-  for d in data_list:
-    _check_data(d)
-    
-  # compare agains the first data set
-  time = data_list[0]['time']  
-  id = data_list[0]['id']  
-  for d in data_list[1:]:
-    if len(time) != len(d['time']):
-      raise ValueError('data sets have inconsistent number of time epochs')
-    if len(id) != len(d['id']):
-      raise ValueError('data sets have inconsistent number of stations')
-
-    # make sure each data set has the same times
-    if not np.all(time==d['time']):
-      raise ValueError('data sets do not have the same times epochs')
-
-    # make sure each data set has the same stations
-    if not np.all(id==d['id']):
-      raise ValueError('data sets do not have the same stations')
-
-  return  
-
-
 def _check_io(fin):
   ''' 
   checks the input and output for functions that take and return data dictionaries
   '''
   @wraps(fin)
   def fout(data,*args,**kwargs):
-    _check_data(data)
+    data.check_self_consistency()
     data_out = fin(data,*args,**kwargs)
-    _check_data(data_out)
+    data_out.set_std()
+    data_out.check_self_consistency()
     return data_out
 
   return fout  
@@ -173,20 +102,6 @@ def _log_call(fin):
 
   return fout
       
-
-def _set_std(data):
-  ''' 
-  set sigma equal to the standard deviation of the perturbations. If 
-  there are any nans then the standard deviation is set to inf. This 
-  performs in place operations on the data dictionary 
-  '''
-  for dir in ['east','north','vertical']:
-    mask = np.any(np.isnan(data[dir+'_pert']),axis=0)
-    sigma = np.std(data[dir+'_pert'],axis=0)
-    sigma[mask] = np.inf
-    data[dir+'_std'] = sigma
-
-  return
   
 def _make_basemap(lon,lat,resolution=None):
   ''' 
@@ -349,11 +264,7 @@ def _smooth(data,ds,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  out = {}
-  out['id'] = np.copy(data['id']) 
-  out['longitude'] = np.copy(data['longitude']) 
-  out['latitude'] = np.copy(data['latitude']) 
-  out['time'] = np.copy(data['time'])
+  out = DataDict(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
@@ -373,7 +284,6 @@ def _smooth(data,ds,
     out[dir] = u_smooth
     out[dir+'_pert'] = p_smooth
 
-  _set_std(out)
   return out
            
 
@@ -431,11 +341,7 @@ def _diff(data,ds):
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
 
-  out = {}
-  out['id'] = np.copy(data['id']) 
-  out['longitude'] = np.copy(data['longitude']) 
-  out['latitude'] = np.copy(data['latitude']) 
-  out['time'] = np.copy(data['time'])
+  out = DataDict(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
@@ -447,7 +353,6 @@ def _diff(data,ds):
     out[dir] = u_diff
     out[dir+'_pert'] = p_diff
 
-  _set_std(out)
   return out
   
 
@@ -505,10 +410,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
   sample_period = int(sample_period)
   time_itp = np.arange(start_time,stop_time+1,sample_period)
 
-  out = {}
-  out['id'] = np.copy(data['id']) 
-  out['longitude'] = np.copy(data['longitude']) 
-  out['latitude'] = np.copy(data['latitude']) 
+  out = DataDict(data)
   out['time'] = time_itp
   for dir in ['east','north','vertical']:
     u = data[dir]
@@ -523,7 +425,6 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
     out[dir] = u_ds
     out[dir+'_pert'] = p_ds
 
-  _set_std(out)
   return out
 
 
@@ -564,11 +465,7 @@ def zero(data,zero_date,radius,cut_dates=None):
   vert = np.array(time_cuts).reshape((-1,1))
   smp = np.arange(vert.shape[0]).reshape((-1,1))
   
-  out = {}
-  out['id'] = np.copy(data['id']) 
-  out['longitude'] = np.copy(data['longitude']) 
-  out['latitude'] = np.copy(data['latitude']) 
-  out['time'] = np.copy(data['time'])
+  out = DataDict(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir + '_pert']
@@ -596,7 +493,6 @@ def zero(data,zero_date,radius,cut_dates=None):
     out[dir] = u_zero
     out[dir+'_pert'] = p_zero
   
-  _set_std(out)
   return out
 
 
@@ -619,11 +515,7 @@ def perturb(data,N):
       data dict with *pert* entries
 
   '''
-  out = {}
-  out['id'] = np.copy(data['id']) 
-  out['longitude'] = np.copy(data['longitude']) 
-  out['latitude'] = np.copy(data['latitude']) 
-  out['time'] = np.copy(data['time'])
+  out = DataDict(data)
   for dir in ['east','north','vertical']:
     sigma = data[dir+'_std']
     sigma = sigma[None,:,:].repeat(N,axis=0)
@@ -631,10 +523,8 @@ def perturb(data,N):
     is_valid = (sigma > 0.0) & ~np.isinf(sigma)
     noise = np.zeros(sigma.shape)
     noise[is_valid] = np.random.normal(0.0,sigma[is_valid])
-    out[dir] = np.copy(data[dir])
     out[dir+'_pert'] = data[dir] + noise
 
-  _set_std(out)
   return out
 
 
@@ -708,18 +598,13 @@ def clean(data,resolution='i',
                  station_labels=data['id'],
                  **kwargs)
 
-  out = {}
-  out['id'] = np.copy(data['id']) 
-  out['longitude'] = np.copy(data['longitude']) 
-  out['latitude'] = np.copy(data['latitude']) 
-  out['time'] = np.copy(data['time'])
+  out = DataDict(data)
   out['east'] = clean_data[0][0,:,:]
   out['north'] = clean_data[1][0,:,:]        
   out['vertical'] = clean_data[2][0,:,:]          
   out['east_pert'] = clean_data[0][1:,:,:]
   out['north_pert'] = clean_data[1][1:,:,:]        
   out['vertical_pert'] = clean_data[2][1:,:,:]          
-  _set_std(out)
   return out
 
 
@@ -743,7 +628,11 @@ def view(data_list,resolution='i',
       gets passed to pygeons.view.view
 
   '''
-  _check_compatibility(data_list)
+  for d in data_list:
+    d.check_self_consistency()
+  for d in data_list[1:]:
+    d.check_compatibility(data_list[0])
+
   t = data_list[0]['time']
   lon = data_list[0]['longitude']
   lat = data_list[0]['latitude']
