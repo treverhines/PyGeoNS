@@ -84,22 +84,22 @@ def _average_shortest_distance(x):
   return out
 
 
-def _estimate_scales(t,x):
+def _default_cutoffs(t,x):
   ''' 
   returns a time and spatial scale which is 10x the average shortest 
   distance between observations. If the average distance cannot be 
   computed due to a lack of points then 1.0 is returned
   '''
   dt = _average_shortest_distance(t[:,None])
-  dl = _average_shortest_distance(x)
-  T = 10*dt
-  L = 10*dl
-  if np.isinf(T):
-    T = 1.0
-  if np.isinf(L):
-    L = 1.0
+  dx = _average_shortest_distance(x)
+  time_cutoff = 1.0/10*dt
+  space_cutoff = 1.0/10*dx
+  if time_cutoff == 0.0:
+    time_cutoff = 1.0
+  if space_cutoff == 0.0:
+    space_cutoff = 1.0
     
-  return T,L
+  return time_cutoff,space_cutoff
 
 
 def _rms(x):
@@ -112,34 +112,35 @@ def _rms(x):
   return out
 
 
-def _penalty(T,L,sigma,diff_specs):
+def _penalty(time_cutoff,space_cutoff,sigma,ds):
   ''' 
   returns scaling parameter for the regularization constraint
   '''
-  S = 1.0/_rms(1.0/sigma) # characteristic uncertainty 
+  sigma_rms = 1.0/_rms(1.0/sigma) # characteristic uncertainty 
   
   # make sure all space derivative terms have the same order
-  if diff_specs['space']['diffs'] is None:
+  if ds['space']['diffs'] is None:
     xord = 0
   else:  
-    xords =  [sum(i) for i in diff_specs['space']['diffs']]
-    if not all([i==xords[0] for i in xords]):
+    xords =  [sum(i) for i in ds['space']['diffs']]
+    if not all([i==xords[0] for i in xords[1:]]):
       raise ValueError('all space derivative terms must have the same order')
 
     xord = xords[0]
     
   # make sure all time derivative terms have the same order
-  if diff_specs['time']['diffs'] is None:
+  if ds['time']['diffs'] is None:
     tord = 0
   else:
-    tords =  [sum(i) for i in diff_specs['time']['diffs']]
-    if not all([i==tords[0] for i in tords]):
+    tords =  [sum(i) for i in ds['time']['diffs']]
+    if not all([i==tords[0] for i in tords[1:]]):
       raise ValueError('all time derivative terms must have the same order')
 
     tord = tords[0]
     
-  
-  out = (T/(2*np.pi))**tord*(L/(2*np.pi))**xord/S
+  out = 1.0/(2*np.pi*time_cutoff)**tord
+  out *= 1.0/(2*np.pi*space_cutoff)**xord
+  out *= 1.0/sigma_rms
   return out  
   
 
@@ -193,11 +194,11 @@ def _fill_mask(t,x,sigma,kind):
 
   return mask
   
-def smooth(t,x,u,
+
+def smooth(t,x,u,ds,
            sigma=None,
-           diff_specs=None,
-           length_scale=None,                      
-           time_scale=None,
+           space_cutoff=None,
+           time_cutoff=None,
            fill='none'):
   ''' 
   Parameters
@@ -208,13 +209,15 @@ def smooth(t,x,u,
     
     u : (...,Nt,Nx) array
     
-    sigma : (Nt,Nx) array
+    ds : DiffSpec instance
+
+    sigma : (Nt,Nx) array, optional
     
-    diff_specs : list of DiffSpecs isntances
+    space_cutoff : float, optional
+      spatial cutoff frequency
     
-    length_scale : float
-    
-    time_scale : float
+    time_cutoff : float, optional
+      temporal cutoff frequency
     
     fill : str, {'none', 'interpolate', 'extrapolate'}
       Indicates when and where to make a smoothed estimate. 'none' : 
@@ -232,31 +235,25 @@ def smooth(t,x,u,
   Nx,Nt = x.shape[0],t.shape[0]
   bcast_shape = u.shape[:-2]
 
-  if diff_specs is None:
-    diff_specs = [pygeons.diff.acc(),
-                  pygeons.diff.disp_laplacian()]
- 
   if u.shape[-2:] != (Nt,Nx):
     raise TypeError('u must have shape (...,Nt,Nx)')
 
   if sigma is None:
-    sigma = np.ones((Nt,Nx))
-  
+    sigma = np.ones((Nt,Nx))  
   else:
     sigma = np.asarray(sigma)
     
   if sigma.shape != (Nt,Nx):
     raise TypeError('sigma must have shape (Nt,Nx)')
 
+  default_time_cutoff,default_space_cutoff = _default_cutoffs(t,x)
+  if time_cutoff is None:
+    time_cutoff = default_time_cutoff
+  if space_cutoff is None:
+    space_cutoff = default_space_cutoff
+
+  # identify when/where smoothed data will not be estimated
   mask = _fill_mask(t,x,sigma,fill)
-
-  # estimate length scale and time scale if not given
-  default_time_scale,default_length_scale = _estimate_scales(t,x)
-  if length_scale is None:
-    length_scale = default_length_scale
-
-  if time_scale is None:
-    time_scale = default_time_scale
 
   # flatten only the last two axes
   u_flat = u.reshape(bcast_shape+(Nt*Nx,))
@@ -277,18 +274,12 @@ def smooth(t,x,u,
   Grow,Gcol = range(K),range(K)
   G = scipy.sparse.csr_matrix((Gdata,(Grow,Gcol)),(K,K))
 
-  # create a regularization matrix for each diff_spec
-  Lsubs = [pygeons.diff.diff_matrix(t,x,d,mask=mask) for d in diff_specs]
+  # create a regularization matrix 
+  L = pygeons.diff.diff_matrix(t,x,ds,mask=mask)
+  L = _collapse_sparse_matrix(L,keep_idx)
   # create regularization penalty parameters
-  penalties = [_penalty(time_scale,length_scale,sigma,d) for d in diff_specs]
-
-  # Collapse the regularization matrices on the masked rows 
-  logger.debug('collapsing regularization matrices ...')
-  Lsubs = [_collapse_sparse_matrix(Li,keep_idx) for Li in Lsubs]
-  logger.debug('done')
-
-  # stack the regularization matrices
-  L = scipy.sparse.vstack(p*r for p,r in zip(penalties,Lsubs))
+  p = _penalty(time_cutoff,space_cutoff,sigma,ds)
+  L *= p
   L.eliminate_zeros()
   
   logger.debug('solving for predicted displacements ...')
