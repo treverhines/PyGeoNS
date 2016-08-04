@@ -13,40 +13,59 @@ rbf.basis.set_sym_to_num('numpy')
 import scipy.sparse
 logging.basicConfig(level=logging.DEBUG)
 
+def psd(signals,times):
+  ''' 
   
-t = np.linspace(0.0,1.0,3)
-#x = np.array([[0.0,0.0]])
-x = rbf.halton.halton(200,2)
-u = np.sin(5*t[:,None])*np.cos(5*x[:,0])[None,:]
-u += np.random.normal(0.0,0.1,u.shape)
-sigma = np.ones(u.shape)
-#sigma[(t>0.5)&(t<0.8)] = np.inf
-#u[(t>0.5)&(t<0.8)] = 1.0
-#u[(t<0.5)] += 1.0
+  returns the power spectral density using N realizations of a signal
+  
+  Parameters
+  ----------
+  signals : (N,Nt) array
+  
+  times : (Nt,) array
 
+  Returns
+  -------
+    freq : (Nt,) array
 
-#for i in range(1000):
-#  r1 = np.random.randint(0,1000)
-#  r2 = np.random.randint(0,100)
-#  sigma[r1,r2] = np.inf
-us1 = pygeons.smooth.smooth(t,x,u,sigma=sigma,time_scale=0.05,fill=True)
-us2 = pygeons.smooth.smooth(t,x,u,sigma=sigma,time_scale=0.05,fill=False)
-pygeons.view.view(t,x,z=[u,us1,us2])
+    pow : (Nt,) array
+  '''
+  signals = np.asarray(signals)
+  times = np.asarray(times)
+  Nt = times.shape[0]
+  dt = times[1] - times[0]
+  freq = np.fft.fftfreq(Nt,dt)
+  # normalize the coefficients by 1/sqrt(Nt)
+  coeff = np.array([np.fft.fft(i)/np.sqrt(Nt) for i in signals])
+  # get the complex modulus
+  pow = coeff*coeff.conj()
+  # get the expected value
+  pow = np.mean(pow,axis=0)
+  return freq,pow
 
-print(us1.shape)
-plt.plot(t,u,'k-')
-plt.plot(t,us1,'b-')
-plt.plot(t,us2,'r-')
+  
+cutoff = 1.0/10.0
+Nt = 50000
+t = np.linspace(0.0,5000.0,Nt)
+dt = t[1] - t[0]
+x = np.array([[0.0,0.0]])
+S = 1.0
+sigma = S*np.ones((t.shape[0],x.shape[0]))
+u = np.random.normal(0.0,S,(500,Nt,1))
+
+ds = pygeons.diff.acc()
+ds['time']['diffs'] = [[2]]
+us = pygeons.smooth.smooth(t,x,u,ds,sigma=sigma,time_cutoff=cutoff)
+
+fig,ax = plt.subplots()
+ax.plot(t,us[0,:,0],'b-')
+#ax.plot(t,u[:,0],'ko')
+
+# plot spectral density
+fig,ax = plt.subplots()
+freq,pow = psd(us[:,:,0],t)
+ax.loglog(freq,pow)
+filter = 1.0/(1.0 + (freq/cutoff)**(2*2))
+ax.loglog(freq,filter**2)
+
 plt.show()
-#u += np.random.normal(0.0,0.1,u.shape)
-#sigma = np.ones(u.shape)
-#sigma[10,2] = np.inf
-#sigma[30:,0] = np.inf
-
-#acc['space']['stencil_size'] = 2
-#acc['time']['cuts'] = cuts
-
-#mask = np.isinf(sigma)
-#pygeons.diff.diff_matrix(t,x,acc,mask=mask)
-
-

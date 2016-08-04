@@ -30,9 +30,9 @@ data = {'time':time,
         'east':east,
         'north':north,
         'vertical':vertical,
-        'east_std':east_std,
-        'north_std':north_std,
-        'vertical_std':vertical_std}
+        'east_std':0*east_std,
+        'north_std':0*north_std,
+        'vertical_std':0*vertical_std}
 noisy_data = {'time':time,
         'longitude':lon,
         'latitude':lat,

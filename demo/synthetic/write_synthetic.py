@@ -14,9 +14,9 @@ pos = 2*np.pi*(rbf.halton.halton(Nx,2) - 0.5)
 lon = pos[:,0] - 84.5
 lat = pos[:,1] + 43.0
 
-east = 100*np.sin(lon[None,:])*np.cos(lat[None,:]) + 2.0*time[:,None]/365.25
-north = 100*np.cos(lon[None,:])*np.sin(lat[None,:]) + 3.0*time[:,None]/365.25
-vertical = 100*np.cos(lon[None,:])*np.cos(lat[None,:]) + 4.0*time[:,None]/365.25
+east = 100*np.sin(lon[None,:])*np.cos(lat[None,:])*np.sin(time[:,None]/365.25)
+north = 100*np.cos(lon[None,:])*np.sin(lat[None,:])*np.sin(time[:,None]/365.25)
+vertical = 100*np.cos(lon[None,:])*np.cos(lat[None,:])*np.sin(time[:,None]/365.25)
 
 east_std = 0.1*np.ones((Nt,Nx))
 north_std = 0.2*np.ones((Nt,Nx))

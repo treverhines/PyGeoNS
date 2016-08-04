@@ -188,7 +188,9 @@ def _setup_ts_ax(ax_lst,times):
 
 @_check_io
 @_log_call
-def tsmooth(data,time_scale=None,fill='none',
+def tsmooth(data,
+            min_wavelength,
+            fill='none',
             cut_dates=None):
   ''' 
   time smoothing
@@ -196,13 +198,16 @@ def tsmooth(data,time_scale=None,fill='none',
   time_cuts = _make_time_cuts(cut_dates)
   ds = pygeons.diff.acc()  
   ds['time']['cuts'] = time_cuts
-  return _smooth(data,[ds],time_scale=time_scale,
-                 length_scale=0.0,fill=fill)
+  return _smooth(data,ds,
+                 time_cutoff=1.0/min_wavelength,
+                 fill=fill)
                  
 @_check_io
 @_log_call
-def ssmooth(data,length_scale=None,
-            stencil_size=None,fill='none',
+def ssmooth(data,
+            min_wavelength,
+            stencil_size=None,
+            fill='none',
             cut_lons1=None,cut_lats1=None,
             cut_lons2=None,cut_lats2=None):
   ''' 
@@ -214,13 +219,14 @@ def ssmooth(data,length_scale=None,
   ds = pygeons.diff.disp_laplacian()
   ds['space']['cuts'] = space_cuts
   ds['space']['stencil_size'] = stencil_size
-  return _smooth(data,[ds],time_scale=0.0,
-                 length_scale=length_scale,
+  return _smooth(data,ds,
+                 space_cutoff=1.0/min_wavelength,
                  fill=fill)
 
 
 def _smooth(data,ds,
-            time_scale=None,length_scale=None,
+            time_cutoff=None,  
+            space_cutoff=None,
             fill='none'):
   ''' 
   Spatially and temporally smooths the data set. Data is treated as a 
@@ -272,11 +278,10 @@ def _smooth(data,ds,
       
     up = np.concatenate((u[None,:,:],p),axis=0)
     up_smooth = pygeons.smooth.smooth(
-                  data['time'],pos,up,
+                  data['time'],pos,up,ds,
                   sigma=sigma,
-                  diff_specs=ds,
-                  time_scale=time_scale,
-                  length_scale=length_scale,
+                  time_cutoff=time_cutoff,
+                  space_cutoff=space_cutoff,
                   fill=fill)
 
     u_smooth = up_smooth[0,:,:]
