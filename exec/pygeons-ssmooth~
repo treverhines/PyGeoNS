@@ -22,7 +22,7 @@ p.add_argument('input_file',type=str,
                        ".hdf5", ".he5" are interpretted as HDF5, 
                        ".pos" is interpretted as PBO pos, anything 
                        else is assumed to be a PBO csv file.''')
-p.add_argument('min_wavelength',type=float,
+p.add_argument('--min_wavelength',type=float,
                help='''Shortest wavelength retained in the smoothed 
                        solution. This is specified in meters''')
 p.add_argument('--output_file',type=str,
