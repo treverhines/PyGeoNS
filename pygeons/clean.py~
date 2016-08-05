@@ -275,15 +275,19 @@ Notes
     InteractiveViewer.connect(self)
         
   def remove_jump(self,jump_time,radius):
-    data = self.all_data_sets[0]
-    # expand sigma to the size of data
-    sigma = self.sigma_sets[0][None,:,:].repeat(data.shape[0],axis=0)
-
     xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t > jump_time) & 
                              (self.t <= (jump_time+radius)))
     tidx_left, = np.nonzero((self.t < jump_time) & 
                             (self.t >= (jump_time-radius)))
+    if (len(tidx_right) == 0) | (len(tidx_left) == 0):
+      name = self.station_labels[xidx]
+      logger.info('cannot remove jump for station %s due to a lack of data\n' % name)
+      return
+
+    data = self.all_data_sets[0]
+    # expand sigma to the size of data
+    sigma = self.sigma_sets[0][None,:,:].repeat(data.shape[0],axis=0)
 
     mean_right,sigma_right = weighted_mean(data[:,tidx_right,xidx],
                                            sigma[:,tidx_right,xidx],
@@ -364,13 +368,13 @@ Notes
 
     self._t2 = event.xdata
     for r,v in zip(self.rects,self.vlines):
-      if self._mode == 'outlier removal':
+      if self._mode == 'OUTLIER_REMOVAL':
         r.set_width(self._t2 - self._t1) 
         r.set_x(self._t1)
         r.set_color('r')
         v.set_color('k')
         
-      elif self._mode == 'jump removal':
+      elif self._mode == 'JUMP_REMOVAL':
         r.set_width(2*(self._t2 - self._t1))
         r.set_x(self._t1 - (self._t2 - self._t1))
         r.set_color('b')
@@ -405,7 +409,7 @@ Notes
 
     self._t2 = event.xdata
     # act according to the self._mode at the time of release
-    if self._mode == 'outlier removal':
+    if self._mode == 'OUTLIER_REMOVAL':
       mint = min(self._t1,self._t2)
       maxt = max(self._t1,self._t2)
       self.remove_outliers(mint,maxt) 
@@ -417,7 +421,7 @@ Notes
       [i.set_ylim(j) for i,j in zip(self.ts_ax,ylims)]
       self.ts_fig.canvas.draw()  
 
-    elif self._mode == 'jump removal':
+    elif self._mode == 'JUMP_REMOVAL':
       self.remove_jump(self._t1,abs(self._t2-self._t1))
       # keep the time series axis limits fixed
       xlims = [i.get_xlim() for i in self.ts_ax]      
@@ -430,49 +434,42 @@ Notes
     else: 
       return
 
+  def _set_mode(self,name):
+    if self._mode is None:
+      self._mode = name
+      print('enabled %s mode\n' % name) 
+
+  def _unset_mode(self,name):
+    if self._mode is name:
+      self._mode = None
+      print('disabled %s mode\n' % name) 
+  
   def on_key_press(self,event):
+    print('pressed %s' % event.key)
     # disable c
     if event.key == 'c':
       return
               
     elif event.key == 'd':
-      # cannot change mode unless current mode is None
-      if self._mode is None:
-        self._mode = 'outlier removal'
-        print('enabled outlier removal mode\n') 
-        # this ensures that the fill region gets updated if there is a 
-        # mouse drag in progress
-        self.on_mouse_move(event)
+      self._set_mode('OUTLIER_REMOVAL')
+      self.on_mouse_move(event)
 
     elif event.key == 'j':
-      # cannot change mode unless current mode is None
-      if self._mode is None:
-        self._mode = 'jump removal'
-        print('enabled jump removal mode\n') 
-        # this ensures that the fill region gets updated if there is a 
-        # mouse drag in progress
-        self.on_mouse_move(event)
+      self._set_mode('JUMP_REMOVAL')
+      self.on_mouse_move(event)
 
     else:
       InteractiveViewer.on_key_press(self,event)
         
   def on_key_release(self,event):
+    print('released %s' % event.key)
     if event.key == 'd':
-      if self._mode == 'outlier removal':
-        self._mode = None
-        print('disabled outlier removal mode\n') 
-        # this ensures that the fill region gets updated if there is a 
-        # mouse drag in progress
-        self.on_mouse_move(event)
+      self._unset_mode('OUTLIER_REMOVAL')
+      self.on_mouse_move(event)
 
     elif event.key == 'j':
-      if self._mode == 'jump removal':
-        self._mode = None
-        print('disabled jump removal mode\n') 
-        # this ensures that the fill region gets updated if there is a 
-        # mouse drag in progress
-        self.on_mouse_move(event)
-      
+      self._unset_mode('JUMP_REMOVAL')
+      self.on_mouse_move(event)
   
 def clean(*args,**kwargs):
   ''' 
