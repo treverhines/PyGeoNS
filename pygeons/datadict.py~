@@ -68,8 +68,12 @@ class DataDict(dict):
     performs in place operations on the data dictionary 
     '''
     for dir in ['east','north','vertical']:
+      P = self[dir+'_pert'].shape[0]
+      if P <= 1:
+        raise ValueError('number of perturbations must be greater than 1')
+        
       mask = np.any(np.isnan(self[dir+'_pert']),axis=0)
-      sigma = np.std(self[dir+'_pert'],axis=0)
+      sigma = np.std(self[dir+'_pert'],axis=0,ddof=1)
       sigma[mask] = np.inf
       self[dir+'_std'] = sigma
 
