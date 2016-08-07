@@ -232,10 +232,10 @@ def _dict_from_text(infile,file_type,perts):
   for dir in ['east','north','vertical']:
     sigma = out[dir+'_std']
     sigma = sigma[None,:,:].repeat(perts,axis=0)
-    # dont add noise for data where sigma is inf or 0.0
-    is_valid = (sigma > 0.0) & ~np.isinf(sigma)
+    is_finite = ~np.isinf(sigma)
     noise = np.zeros(sigma.shape)
-    noise[is_valid] = np.random.normal(0.0,sigma[is_valid])
+    noise[is_finite] = np.random.normal(0.0,sigma[is_finite])
+    noise[~is_finite] = np.nan
     out[dir+'_pert'] = out[dir] + noise
 
   out.set_std()
