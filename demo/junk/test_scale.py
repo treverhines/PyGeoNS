@@ -69,17 +69,17 @@ plt.show()
 ## SCALING FOR SPACE SMOOTHING 
 #####################################################################
 # spatial cutoff frequency
-cutoff = 1.0/5.0
+cutoff = 1.0/10.0
 
 # uncertainty scale
 S = 1.0
 
 # number of observations 
-N = 5000
+N = 1000
 
 # number of perturbations to use when computing correlation. Should be 
 # about 1000 for a good plots
-PERTS = 10000
+PERTS = 2000
 
 # observation points
 # define bounding circle
