@@ -48,9 +48,9 @@ print('building')
 idx = np.arange(Nx*Ny).reshape((Nx,Ny))
 D = scipy.sparse.lil_matrix((Nx*Ny,Nx*Ny))
 for i in idx.T:
-  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(x[:,None],diff=(order,))
+  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(x[:,None],(order,))
 for i in idx:
-  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(y[:,None],diff=(order,))
+  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(y[:,None],(order,))
   
 D = D.tocsr()
 D.eliminate_zeros()
@@ -70,7 +70,7 @@ u_smooth = scipy.sparse.linalg.spsolve(lhs,rhs.T).T
 u_smooth = u_smooth.reshape((P,Nx,Ny))
 
 fig,ax = plt.subplots()
-plt.imshow(u_smooth[0],extent=(-5,5,-5,5))
+plt.imshow(u_smooth[0].T,extent=(-5,5,-5,5))
 
 pow,fx,fy = psd2d(u_smooth,x,y)
 fig,ax = plt.subplots()
