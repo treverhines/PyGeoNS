@@ -114,7 +114,7 @@ class DiffSpecs(dict):
       T['coeffs'] = [1.0 for d in T['diffs']]
 
     if T['stencil_size'] is None:
-      T['stencil_size'] = rbf.fd._default_stencil_size(diffs=T['diffs'])
+      T['stencil_size'] = rbf.fd._default_stencil_size(T['diffs'])
 
     if T['diff_type'] is None:
       T['diff_type'] = 'poly'  
@@ -130,7 +130,7 @@ class DiffSpecs(dict):
         T['basis'] = rbf.basis.phs3
         
       if T['order'] is None:
-        T['order'] = rbf.fd._default_poly_order(T['stencil_size'],1)
+        T['order'] = rbf.fd._default_poly_order(T['diffs'])
     
     if T['cuts'] is None:
       T['cuts'] = []
@@ -147,7 +147,7 @@ class DiffSpecs(dict):
       X['coeffs'] = [1.0 for d in X['diffs']]
 
     if X['stencil_size'] is None:
-      X['stencil_size'] = rbf.fd._default_stencil_size(diffs=X['diffs'])
+      X['stencil_size'] = rbf.fd._default_stencil_size(X['diffs'])
 
     # the weights must be computed using the RBF-FD method. 
     X['diff_type'] = 'rbf'  
@@ -156,7 +156,7 @@ class DiffSpecs(dict):
       X['basis'] = rbf.basis.phs3
       
     if X['order'] is None:
-      X['order'] = rbf.fd._default_poly_order(X['stencil_size'],2)
+      X['order'] = rbf.fd._default_poly_order(X['diffs'])
       
     if X['cuts'] is None:
       X['cuts'] = []
@@ -169,7 +169,6 @@ def disp_laplacian():
   '''  
   out = DiffSpecs()
   out['space']['diffs'] = [[2,0],[0,2]]
-  out['space']['coeffs'] = [1.0,1.0]
   return out
 
 def vel_laplacian():
@@ -178,9 +177,7 @@ def vel_laplacian():
   '''  
   out = DiffSpecs()
   out['time']['diffs'] = [[1]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[2,0],[0,2]]
-  out['space']['coeffs'] = [1.0,1.0]
   return out
 
 def acc_laplacian():
@@ -189,9 +186,7 @@ def acc_laplacian():
   '''
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[2,0],[0,2]]
-  out['space']['coeffs'] = [1.0,1.0]
   return out
 
 def disp_dx():
@@ -200,7 +195,6 @@ def disp_dx():
   '''  
   out = DiffSpecs()
   out['space']['diffs'] = [[1,0]]
-  out['space']['coeffs'] = [1.0]
   return out
 
 def vel_dx():
@@ -209,9 +203,7 @@ def vel_dx():
   '''  
   out = DiffSpecs()
   out['time']['diffs'] = [[1]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[1,0]]
-  out['space']['coeffs'] = [1.0]
   return out
 
 def acc_dx():  
@@ -220,9 +212,7 @@ def acc_dx():
   '''  
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[1,0]]
-  out['space']['coeffs'] = [1.0]
   return out
   
 def disp_dy():
@@ -231,7 +221,6 @@ def disp_dy():
   '''  
   out = DiffSpecs()
   out['space']['diffs'] = [[0,1]]
-  out['space']['coeffs'] = [1.0]
   return out
 
 def vel_dy():
@@ -240,9 +229,7 @@ def vel_dy():
   '''  
   out = DiffSpecs()
   out['time']['diffs'] = [[1]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[0,1]]
-  out['space']['coeffs'] = [1.0]
   return out
 
 def acc_dy():
@@ -251,9 +238,7 @@ def acc_dy():
   '''  
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
-  out['time']['coeffs'] = [1.0]
   out['space']['diffs'] = [[0,1]]
-  out['space']['coeffs'] = [1.0]
   return out
   
 def disp():
@@ -269,7 +254,6 @@ def vel():
   '''
   out = DiffSpecs()
   out['time']['diffs'] = [[1]]
-  out['time']['coeffs'] = [1.0]
   return out
   
 def acc():
@@ -278,7 +262,6 @@ def acc():
   '''
   out = DiffSpecs()
   out['time']['diffs'] = [[2]]
-  out['time']['coeffs'] = [1.0]
   return out
 
 
@@ -373,15 +356,17 @@ def _time_diff_matrix(t,x,
 
     if diff_type == 'rbf': 
       Li = rbf.fd.diff_matrix(
-             t[sub_idx,None],N=stencil_size,
-             diffs=diffs,coeffs=coeffs,
+             t[sub_idx,None],diffs,
+             coeffs=coeffs,
+             N=stencil_size,
              basis=basis,order=order,
              vert=vert,smp=smp)
 
     elif diff_type == 'poly':               
       Li = rbf.fd.poly_diff_matrix(
-             t[sub_idx,None],N=stencil_size,
-             diffs=diffs,coeffs=coeffs,
+             t[sub_idx,None],diffs,
+             coeffs=coeffs,
+             N=stencil_size,
              vert=vert,smp=smp)
 
     else:
@@ -449,8 +434,9 @@ def _space_diff_matrix(t,x,
     sub_idx, = np.nonzero(~mask[i,:])
 
     Li = rbf.fd.diff_matrix(
-           x[sub_idx],N=stencil_size,
-           diffs=diffs,coeffs=coeffs,
+           x[sub_idx],diffs,
+           coeffs=coeffs,
+           N=stencil_size,
            basis=basis,order=order,
            vert=vert,smp=smp)
 

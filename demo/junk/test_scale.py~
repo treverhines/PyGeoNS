@@ -69,17 +69,17 @@ plt.show()
 ## SCALING FOR SPACE SMOOTHING 
 #####################################################################
 # spatial cutoff frequency
-cutoff = 1.0/5.0
+cutoff = 1.0/2.0
 
 # uncertainty scale
 S = 1.0
 
 # number of observations 
-N = 5000
+N = 1000
 
 # number of perturbations to use when computing correlation. Should be 
 # about 1000 for a good plots
-PERTS = 10000
+PERTS = 2000
 
 # observation points
 # define bounding circle
@@ -93,7 +93,7 @@ t = np.array([0.0])
 
 sigma = S*np.ones((1,N))
 ds = pygeons.diff.disp_laplacian()
-ds['space']['diffs'] = [[4,0],[0,4]]
+ds['space']['diffs'] = [[2,0],[0,2]]
 data = np.random.normal(0.0,sigma)
 smooth = pygeons.smooth.smooth(t,x,data,ds,
                                sigma=sigma,

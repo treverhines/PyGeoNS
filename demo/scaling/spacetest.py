@@ -48,9 +48,9 @@ print('building')
 idx = np.arange(Nx*Ny).reshape((Nx,Ny))
 D = scipy.sparse.lil_matrix((Nx*Ny,Nx*Ny))
 for i in idx.T:
-  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(x[:,None],diff=(order,))
+  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(x[:,None],(order,))
 for i in idx:
-  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(y[:,None],diff=(order,))
+  D[np.ix_(i,i)] += rbf.fd.poly_diff_matrix(y[:,None],(order,))
   
 D = D.tocsr()
 D.eliminate_zeros()
