@@ -42,6 +42,7 @@ def _solve(A,L,data):
     # singular
     raise ValueError(
 ''' 
+
 Singular matrix. Possible causes include but are not limited to: 
          
   - having zeros in the uncertainty array
@@ -52,9 +53,8 @@ Singular matrix. Possible causes include but are not limited to:
     at an interpolating/extrapolation point. This only causes a 
     singular matrix when *fill* is "interpolate" or "extrapolate"
              
-  - having zero for *time_scale* or *length_scale*. This only
-    causes a singular matrix when *fill* is "interpolate" or 
-    "extrapolate"
+  - having zero for *min_wavelength*. This only causes a singular 
+    matrix when *fill* is "interpolate" or "extrapolate"
   
 ''')     
 
@@ -84,23 +84,17 @@ def _average_shortest_distance(x):
   return out
 
 
-def _default_cutoffs(t,x):
+def _default_min_wavelength(x):
   ''' 
   returns a time and spatial scale which is 10x the average shortest 
   distance between observations. If the average distance cannot be 
   computed due to a lack of points then 1.0 is returned
   '''
-  dt = _average_shortest_distance(t[:,None])
   dx = _average_shortest_distance(x)
-  time_cutoff = 1.0/10*dt
-  space_cutoff = 1.0/10*dx
-  if time_cutoff == 0.0:
-    time_cutoff = 1.0
-  if space_cutoff == 0.0:
-    space_cutoff = 1.0
-    
-  return time_cutoff,space_cutoff
-
+  if np.isinf(dx):
+    return 1.0
+  else:
+    return 20*dx      
 
 def _rms(x):
   ''' 
@@ -111,37 +105,13 @@ def _rms(x):
   out = np.nan_to_num(out)    
   return out
 
-
-def _penalty(time_cutoff,space_cutoff,sigma,ds):
-  ''' 
-  returns scaling parameter for the regularization constraint
-  '''
+def _penalty(min_wavelength,sigma,diffs):
+  D = np.shape(diffs)[-1]
+  diffs = np.reshape(diffs,(-1,D))
+  order = sum(diffs[0])
   sigma_rms = 1.0/_rms(1.0/sigma) # characteristic uncertainty 
-  
-  # make sure all space derivative terms have the same order
-  if ds['space']['diffs'] is None:
-    xord = 0
-  else:  
-    xords =  [sum(i) for i in ds['space']['diffs']]
-    if not all([i==xords[0] for i in xords[1:]]):
-      raise ValueError('all space derivative terms must have the same order')
-
-    xord = xords[0]
-    
-  # make sure all time derivative terms have the same order
-  if ds['time']['diffs'] is None:
-    tord = 0
-  else:
-    tords =  [sum(i) for i in ds['time']['diffs']]
-    if not all([i==tords[0] for i in tords[1:]]):
-      raise ValueError('all time derivative terms must have the same order')
-
-    tord = tords[0]
-    
-  out = 1.0/(2*np.pi*time_cutoff)**tord
-  out *= 1.0/(2*np.pi*space_cutoff)**xord
-  out *= 1.0/sigma_rms
-  return out  
+  out = (min_wavelength/(2*np.pi))**order/sigma_rms
+  return out
   
 
 def _collapse_sparse_matrix(A,idx):
@@ -158,7 +128,7 @@ def _collapse_sparse_matrix(A,idx):
   return out
 
 
-def _fill_mask(t,x,sigma,kind):
+def _time_fill_mask(t,sigma,kind):
   ''' 
   Returns an (Nt,Nx) boolean array identifying when and where a 
   smoothed estimate should be made. True indicates that the datum 
@@ -173,18 +143,19 @@ def _fill_mask(t,x,sigma,kind):
 
   '''
   data_is_missing = np.isinf(sigma)
-  
+  Nt,Nx = sigma.shape
+    
   if kind == 'none':
     mask = data_is_missing 
 
   elif kind == 'interpolate':
     mask = np.ones(sigma.shape,dtype=bool)
-    for i,xi in enumerate(x):
-      active_times = t[~data_is_missing[:,i]]
+    for i in range(Nx):
+      active_times = t[~data_is_missing[:,i],0]
       if active_times.shape[0] > 0: 
         first_time = np.min(active_times)
         last_time = np.max(active_times)
-        mask[:,i] = (t<first_time) | (t>last_time)
+        mask[:,i] = (t[:,0]<first_time) | (t[:,0]>last_time)
   
   elif kind == 'extrapolate':
     mask = np.zeros(sigma.shape,dtype=bool)
@@ -193,13 +164,37 @@ def _fill_mask(t,x,sigma,kind):
     raise ValueError('*kind* must be "none", "interpolate", or "extrapolate"')
 
   return mask
+
+def _space_fill_mask(x,sigma,kind):
+  ''' 
+  Returns an (Nt,Nx) boolean array identifying when and where a 
+  smoothed estimate should be made. True indicates that the datum 
+  should not be estimated. 
+  
+  kind :
+    'none' : output at times and stations where data are not missing
+    
+    'extrapolate' : output at all stations and times
+
+  '''
+  data_is_missing = np.isinf(sigma)
+  Nt,Nx = sigma.shape
+
+  if kind == 'none':
+    mask = data_is_missing 
+  
+  elif kind == 'extrapolate':
+    mask = np.zeros(sigma.shape,dtype=bool)
+      
+  else:
+    raise ValueError('*kind* must be "none" or "extrapolate"')
+
+  return mask
   
 
-def smooth(t,x,u,ds,
-           sigma=None,
-           space_cutoff=None,
-           time_cutoff=None,
-           fill='none'):
+def time_smooth(t,x,u,sigma=None,diffs=None,
+                min_wavelength=None,
+                fill='none',**kwargs):
   ''' 
   Parameters
   ----------
@@ -209,17 +204,110 @@ def smooth(t,x,u,ds,
     
     u : (...,Nt,Nx) array
     
-    ds : DiffSpec instance
-
+    diffs : (1,) or (K,1) array
+      derivative order
+    
     sigma : (Nt,Nx) array, optional
     
-    space_cutoff : float, optional
-      spatial cutoff frequency
-    
-    time_cutoff : float, optional
-      temporal cutoff frequency
+    min_wavelength : float, optional
+      lowest wavelength allowed in the smoothed solution
     
     fill : str, {'none', 'interpolate', 'extrapolate'}
+      Indicates when and where to make a smoothed estimate. 'none' : 
+      output only where data is not missing. 'interpolate' : output 
+      where data is not missing and where time interpolation is 
+      possible. 'all' : output at all stations and times. Masked data 
+      is returned as np.nan
+      
+  '''
+  u = np.array(u,dtype=float,copy=True)
+  # convert any nans to zeros
+  u[np.isnan(u)] = 0.0
+  t = np.asarray(t,dtype=float)
+  x = np.asarray(x,dtype=float)
+  Nx,Nt = x.shape[0],t.shape[0]
+  bcast_shape = u.shape[:-2]
+
+  if u.shape[-2:] != (Nt,Nx):
+    raise TypeError('u must have shape (...,Nt,Nx)')
+
+  if sigma is None:
+    sigma = np.ones((Nt,Nx))  
+  else:
+    sigma = np.asarray(sigma)
+    
+  if sigma.shape != (Nt,Nx):
+    raise TypeError('sigma must have shape (Nt,Nx)')
+
+  if min_wavelength is None:
+    min_wavelength = _default_min_wavelength(t)
+
+  if diffs is None:
+    diffs = [[2]]
+    
+  # identify when/where smoothed data will not be estimated
+  mask = _time_fill_mask(t,sigma,fill)
+
+  # flatten only the last two axes
+  u_flat = u.reshape(bcast_shape+(Nt*Nx,))
+  sigma_flat = sigma.reshape(Nt*Nx)
+  mask_flat = mask.reshape(Nt*Nx)
+
+  # get rid of masked entries in u_flat and sigma_flat
+  keep_idx, = np.nonzero(~mask_flat)
+  u_flat = u_flat[...,keep_idx]
+  sigma_flat = sigma_flat[keep_idx]
+
+  # weigh u by the inverse of data uncertainty.
+  u_flat = u_flat/sigma_flat
+  
+  # system matrix is the identity matrix scaled by data weight
+  K = len(keep_idx)
+  Gdata = 1.0/sigma_flat
+  Grow,Gcol = range(K),range(K)
+  G = scipy.sparse.csr_matrix((Gdata,(Grow,Gcol)),(K,K))
+
+  # create a regularization matrix 
+  L = pygeons.diff.time_diff_matrix(t,x,diffs,mask=mask,**kwargs)
+  L = _collapse_sparse_matrix(L,keep_idx)
+  # create regularization penalty parameters
+  p = _penalty(min_wavelength,sigma,diffs)
+  L *= p
+  L.eliminate_zeros()
+  
+  logger.debug('solving for predicted displacements ...')
+  u_pred = _solve(G,L,u_flat)
+  logger.debug('done')
+
+  # expand the solution to the original size
+  out = np.zeros(bcast_shape+(Nt*Nx,))
+  out[...,keep_idx] = u_pred
+  out = out.reshape(bcast_shape+(Nt,Nx))
+  out[...,mask] = np.nan    
+  return out
+  
+
+def space_smooth(t,x,u,sigma=None,diffs=None,
+                 min_wavelength=None,
+                 fill='none',**kwargs):
+  ''' 
+  Parameters
+  ----------
+    t : (Nt,) array
+    
+    x : (Nx,2) array
+    
+    u : (...,Nt,Nx) array
+    
+    diffs : (2,) or (K,2) array
+      derivative order
+    
+    sigma : (Nt,Nx) array, optional
+    
+    min_wavelength : float, optional
+      lowest wavelength allowed in the smoothed solution
+    
+    fill : str, {'none', 'extrapolate'}
       Indicates when and where to make a smoothed estimate. 'none' : 
       output only where data is not missing. 'interpolate' : output 
       where data is not missing and where time interpolation is 
@@ -246,14 +334,14 @@ def smooth(t,x,u,ds,
   if sigma.shape != (Nt,Nx):
     raise TypeError('sigma must have shape (Nt,Nx)')
 
-  default_time_cutoff,default_space_cutoff = _default_cutoffs(t,x)
-  if time_cutoff is None:
-    time_cutoff = default_time_cutoff
-  if space_cutoff is None:
-    space_cutoff = default_space_cutoff
+  if min_wavelength is None:
+    min_wavelength = _default_min_wavelength(x)
 
+  if diffs is None:
+    diffs = [[2,0],[0,2]]
+    
   # identify when/where smoothed data will not be estimated
-  mask = _fill_mask(t,x,sigma,fill)
+  mask = _space_fill_mask(x,sigma,fill)
 
   # flatten only the last two axes
   u_flat = u.reshape(bcast_shape+(Nt*Nx,))
@@ -275,10 +363,10 @@ def smooth(t,x,u,ds,
   G = scipy.sparse.csr_matrix((Gdata,(Grow,Gcol)),(K,K))
 
   # create a regularization matrix 
-  L = pygeons.diff.diff_matrix(t,x,ds,mask=mask)
+  L = pygeons.diff.space_diff_matrix(t,x,diffs,mask=mask,**kwargs)
   L = _collapse_sparse_matrix(L,keep_idx)
   # create regularization penalty parameters
-  p = _penalty(time_cutoff,space_cutoff,sigma,ds)
+  p = _penalty(min_wavelength,sigma,diffs)
   L *= p
   L.eliminate_zeros()
   
