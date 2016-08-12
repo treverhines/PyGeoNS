@@ -195,13 +195,32 @@ def tsmooth(data,
   ''' 
   time smoothing
   '''
+  bm = _make_basemap(data['longitude'],data['latitude'])
+  x,y = bm(data['longitude'],data['latitude'])
+  pos = np.array([x,y]).T
   time_cuts = _make_time_cuts(cut_dates)
-  ds = pygeons.diff.acc()  
-  ds['time']['cuts'] = time_cuts
-  return _smooth(data,ds,
-                 time_cutoff=1.0/min_wavelength,
-                 fill=fill)
-                 
+
+  out = DataDict(data)
+  for dir in ['east','north','vertical']:
+    u = data[dir]
+    p = data[dir+'_pert']
+    sigma = data[dir+'_std']
+    up = np.concatenate((u[None,:,:],p),axis=0)
+    up_smooth = pygeons.smooth.time_smooth(
+                  data['time'][:,None],pos,up,
+                  diffs=[(2,)],
+                  sigma=sigma,
+                  cuts=time_cuts,
+                  min_wavelength=min_wavelength,
+                  fill=fill)
+    u_smooth = up_smooth[0,:,:]
+    p_smooth = up_smooth[1:,:,:]
+    out[dir] = u_smooth
+    out[dir+'_pert'] = p_smooth
+
+  return out
+
+
 @_check_io
 @_log_call
 def ssmooth(data,
@@ -214,83 +233,31 @@ def ssmooth(data,
   space smoothing
   '''
   bm = _make_basemap(data['longitude'],data['latitude'])
-  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
-                                cut_lons2,cut_lats2,bm)
-  ds = pygeons.diff.disp_laplacian()
-  ds['space']['cuts'] = space_cuts
-  ds['space']['stencil_size'] = stencil_size
-  return _smooth(data,ds,
-                 space_cutoff=1.0/min_wavelength,
-                 fill=fill)
-
-
-def _smooth(data,ds,
-            time_cutoff=None,  
-            space_cutoff=None,
-            fill='none'):
-  ''' 
-  Spatially and temporally smooths the data set. Data is treated as a 
-  stochastic variable where its second time derivative is white noise 
-  and its Laplacian is white noise.
-  
-  Parameters
-  ----------
-    data : dict
-      data dictionary
-      
-    time_scale : float, optional
-      Time scale of the smoothed data. Defaults to 10X the time sample 
-      period. This is specified in days
-
-    length_scale : float, optional
-      Length scale of the smoothed data. Defaults to 10X the average 
-      shortest distance between stations. This is specified in meters
-       
-    kind : str, optional
-      either "time" or "space"
-      
-    fill : str, optional
-      either "none", "interpolate", or "extrapolate". Indicates when 
-      and where to make a smoothed estimate. "none" : output only 
-      where data is not missing. "interpolate" : output where data is 
-      not missing and where time interpolation is possible. "all" : 
-      output at all stations and times.
-    
-    cut_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. This date should be 
-      when the discontinuity is first observed 
-    
-  Returns
-  -------
-    out : dict
-      output data dictionary
-      
-  '''
-  bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
 
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     u = data[dir]
     p = data[dir+'_pert']
     sigma = data[dir+'_std']
-      
     up = np.concatenate((u[None,:,:],p),axis=0)
-    up_smooth = pygeons.smooth.smooth(
-                  data['time'],pos,up,ds,
+    up_smooth = pygeons.smooth.space_smooth(
+                  data['time'][:,None],pos,up,
+                  diffs=[(2,0),(0,2)],
                   sigma=sigma,
-                  time_cutoff=time_cutoff,
-                  space_cutoff=space_cutoff,
+                  cuts=space_cuts,
+                  min_wavelength=min_wavelength,
                   fill=fill)
-
     u_smooth = up_smooth[0,:,:]
     p_smooth = up_smooth[1:,:,:]
     out[dir] = u_smooth
     out[dir+'_pert'] = p_smooth
 
   return out
-           
+
 
 @_check_io
 @_log_call
@@ -298,11 +265,27 @@ def tdiff(data,dt,cut_dates=None):
   ''' 
   time differentiation
   '''
-  ds = pygeons.diff.DiffSpecs()
+  bm = _make_basemap(data['longitude'],data['latitude'])
+  x,y = bm(data['longitude'],data['latitude'])
+  pos = np.array([x,y]).T
   time_cuts = _make_time_cuts(cut_dates)
-  ds['time']['diffs'] = [(dt,)]
-  ds['time']['cuts'] = time_cuts
-  return _diff(data,ds)   
+
+  out = DataDict(data)
+  for dir in ['east','north','vertical']:
+    u = data[dir]
+    p = data[dir+'_pert']
+    mask = np.isinf(data[dir+'_std'])
+    up = np.concatenate((u[None,:,:],p),axis=0)
+    up_diff = pygeons.diff.time_diff(
+                data['time'][:,None],pos,up,[(dt,)],
+                mask=mask,
+                cuts=time_cuts)
+    u_diff = up_diff[0,:,:]
+    p_diff = up_diff[1:,:,:]
+    out[dir] = u_diff
+    out[dir+'_pert'] = p_diff
+
+  return out
 
 
 @_check_io
@@ -313,38 +296,11 @@ def sdiff(data,dx,dy,stencil_size=None,
   ''' 
   space differentiation
   '''
-  ds = pygeons.diff.DiffSpecs()
-  bm = _make_basemap(data['longitude'],data['latitude'])
-  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
-                                cut_lons2,cut_lats2,bm)
-  ds['space']['diffs'] = [(dx,dy)]
-  ds['space']['cuts'] = space_cuts
-  ds['space']['stencil_size'] = stencil_size
-  return _diff(data,ds)
-
-def _diff(data,ds):
-  ''' 
-  Calculates a mixed partial derivative of the data set. The spatial 
-  coordinates are in units of meters and time is in years. The output 
-  then has units of {input units} per meter**(dx+dy) per year**dt, 
-  where dx, dy, and dt are the derivative orders described below.
-  
-  Parameters
-  ----------
-    data : dict
-      data dictionary
-    
-    ds : DiffSpec instance
-      
-  Returns 
-  -------
-    out : dict
-      output dictionary
-
-  '''
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
+  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
+                                cut_lons2,cut_lats2,bm)
 
   out = DataDict(data)
   for dir in ['east','north','vertical']:
@@ -352,14 +308,17 @@ def _diff(data,ds):
     p = data[dir+'_pert']
     mask = np.isinf(data[dir+'_std'])
     up = np.concatenate((u[None,:,:],p),axis=0)
-    up_diff = pygeons.diff.diff(data['time'],pos,up,ds,mask=mask)
+    up_diff = pygeons.diff.space_diff(
+                data['time'][:,None],pos,up,[(dx,dy)],
+                mask=mask,
+                cuts=space_cuts)
     u_diff = up_diff[0,:,:]
     p_diff = up_diff[1:,:,:]
     out[dir] = u_diff
     out[dir+'_pert'] = p_diff
 
   return out
-  
+
 
 @_check_io
 @_log_call
