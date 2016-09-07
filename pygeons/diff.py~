@@ -39,7 +39,7 @@ def time_diff_matrix(t,x,diffs,mask=None,cuts=None,**kwargs):
 
     # find the indices of unmasked times for this station
     sub_idx, = np.nonzero(~mask[:,i])
-    Li = rbf.fd.poly_diff_matrix(t[sub_idx],diffs,vert=vert,smp=smp,**kwargs)
+    Li = rbf.fd.diff_matrix_1d(t[sub_idx],diffs,vert=vert,smp=smp,**kwargs)
       
     # convert to coo to get row and col indices for each entry
     Li = Li.tocoo()
@@ -215,7 +215,7 @@ def space_diff(t,x,u,diffs,mask=None,cuts=None,**kwargs):
   bcast_shape = u.shape[:-2]
   M = np.prod(bcast_shape)
 
-  D = space_diff_matrix(t,x,ds,mask=mask,cuts=cuts,**kwargs)
+  D = space_diff_matrix(t,x,diffs,mask=mask,cuts=cuts,**kwargs)
   u_flat = u.reshape((M,Nt*Nx))
   u_diff_flat = D.dot(u_flat.T).T
   u_diff = u_diff_flat.reshape(bcast_shape + (Nt,Nx))
