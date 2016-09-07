@@ -249,7 +249,8 @@ def ssmooth(data,
                   diffs=[(2,0),(0,2)],
                   sigma=sigma,
                   cuts=space_cuts,
-                  min_wavelength=min_wavelength,
+                  min_wavelength=min_wavelength,                  
+                  size=stencil_size,
                   fill=fill)
     u_smooth = up_smooth[0,:,:]
     p_smooth = up_smooth[1:,:,:]
@@ -311,6 +312,7 @@ def sdiff(data,dx,dy,stencil_size=None,
     up_diff = pygeons.diff.space_diff(
                 data['time'][:,None],pos,up,[(dx,dy)],
                 mask=mask,
+                size=stencil_size,
                 cuts=space_cuts)
     u_diff = up_diff[0,:,:]
     p_diff = up_diff[1:,:,:]
