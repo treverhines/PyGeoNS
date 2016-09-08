@@ -6,38 +6,36 @@ import os
 import pygeons.ioconv
 import pygeons.interface
 import logging
-
+  
 def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
-p = argparse.ArgumentParser(
-      description='''Spatially and temporally smooths the data set. 
-                     Data is treated as a stochastic variable where 
-                     its second time derivative is white noise and its 
-                     Laplacian is white noise.''')
+p = argparse.ArgumentParser()
 p.add_argument('input_file',type=str,
-               help='''Date file. Can either be a PBO csv file, a PBO 
+               help='''date file. Can either be a PBO csv file, a PBO 
                        pos file, or a HDF5 file. The file type is 
                        inferred from the extension. ".hdf", ".h5", 
                        ".hdf5", ".he5" are interpretted as HDF5, 
                        ".pos" is interpretted as PBO pos, anything 
                        else is assumed to be a PBO csv file.''')
-p.add_argument('min_wavelength',type=float,
-               help='''Shortest wavelength retained in the smoothed 
-                       data. This is specified in days''')
+p.add_argument('sample_period',type=int,
+               help='''sample period in days''')
 p.add_argument('--output_file',type=str,
-               help='''If not provided then the input file extension 
+               help='''if not provided then the input file extension 
                        is removed and replaced with smooth.h5. The 
                        output file type is inferred from the 
                        extension. Currently, can only output to HDF5 
                        files or PBO csv files.''')
-p.add_argument('-v','--verbose',action='count',default=0,
-               help='''Controls verbosity''')
-p.add_argument('-f','--fill',type=str)
-               
+p.add_argument('--start_date',type=str,
+               help='''resample start date in YYYY-MM-DD''')
+p.add_argument('--stop_date',type=str,
+               help='''resample stop date in YYYY-MM-DD''')
 p.add_argument('--cut_dates',nargs='+',type=str,
-               help='''list of time discontinuities in YYYY-MM-DD. This date should be 
-                       when the discontinuity is first observed''')
+               help='''list of time discontinuities in YYYY-MM-DD. 
+                       This date should be when the discontinuity is 
+                       first observed''')
+p.add_argument('-v','--verbose',action='count',default=0,
+               help='''controls verbosity''')
                
 p = vars(p.parse_args())
 
@@ -59,8 +57,8 @@ for k in p.keys():
     p.pop(k)
 
 if output_file is None:
-  output_file = change_extension(input_file,'tsmooth.h5')
+  output_file = change_extension(input_file,'downsample.h5')
 
 data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
-out_dict = pygeons.interface.tsmooth(data_dict,**p)
+out_dict = pygeons.interface.downsample(data_dict,**p)
 pygeons.ioconv.hdf5_from_dict(output_file,out_dict)

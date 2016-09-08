@@ -19,9 +19,6 @@ class DataDict(dict):
       east_std : (Nt,Nx) array
       north_std : (Nt,Nx) array
       vertical_std : (Nt,Nx) array
-      east_pert : (Np,Nt,Nx) array
-      north_pert : (Np,Nt,Nx) array
-      vertical_pert : (Np,Nt,Nx) array
   
   '''
   def __init__(self,input=None):
@@ -74,6 +71,7 @@ class DataDict(dict):
         also be unknown)
       - all nan data have corresponding uncertainties of inf
       - all uncertainties are positive and nonzero
+      - there are no duplicate station IDs
 
     '''
     logger.debug('checking self consistency ...')
@@ -123,6 +121,17 @@ class DataDict(dict):
       if np.any(self[k] <= 0.0):
         raise ValueError('found zero or negative uncertainty for *%s*' % k)
      
+    # make sure there are no duplicate station IDs
+    if len(np.unique(self['id'])) != len(self['id']):
+      # there are duplicate stations, now find which ones
+      duplicates = []
+      for i in np.unique(self['id']):
+        if np.sum(i == self['id']) > 1:
+          duplicates += [i]
+
+      duplicates = ' '.join(duplicates)
+      raise ValueError('There were multiple occurrences of these station IDs: %s' % duplicates)
+
     logger.debug('ok')
     return
 

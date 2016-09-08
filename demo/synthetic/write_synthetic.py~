@@ -4,7 +4,7 @@ import pygeons.ioconv
 import pygeons.dateconv
 import rbf.halton
 
-Nx = 200
+Nx = 2000
 start_time = pygeons.dateconv.decday('2000-01-01','%Y-%m-%d')
 stop_time = pygeons.dateconv.decday('2001-01-01','%Y-%m-%d')
 time = np.arange(start_time,stop_time+1)
