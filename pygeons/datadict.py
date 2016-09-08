@@ -42,9 +42,6 @@ class DataDict(dict):
     self['east_std'] = None
     self['north_std'] = None
     self['vertical_std'] = None
-    self['east_pert'] = None
-    self['north_pert'] = None
-    self['vertical_pert'] = None
     
     if input is not None:
       self.update_with_copy(input)
@@ -61,24 +58,6 @@ class DataDict(dict):
   def __repr__(self):
     return self.__str__()
         
-  def set_std(self):
-    ''' 
-    set std equal to the standard deviation of the perturbations. If 
-    there are any nans then the standard deviation is set to inf. This 
-    performs in place operations on the data dictionary 
-    '''
-    for dir in ['east','north','vertical']:
-      P = self[dir+'_pert'].shape[0]
-      if P <= 1:
-        raise ValueError('number of perturbations must be greater than 1')
-        
-      mask = np.any(np.isnan(self[dir+'_pert']),axis=0)
-      sigma = np.std(self[dir+'_pert'],axis=0,ddof=1)
-      sigma[mask] = np.inf
-      self[dir+'_std'] = sigma
-
-    return
-    
   def update_with_copy(self,other):
     '''makes a deep copy before update'''
     other = copy.deepcopy(other)
@@ -86,14 +65,14 @@ class DataDict(dict):
     
   def check_self_consistency(self):
     ''' 
-    raises an error if any of the following conditions are met
+    raises an error if any of the following conditions are not met
 
       - no items are None
-      - all items consistent sizes
+      - all items have consistent sizes
       - all inf uncertainties are inf for each direction (e.g. if the 
         easting component is unknown then the northing component should 
         also be unknown)
-      - all nans have corresponding uncertainties of inf
+      - all nan data have corresponding uncertainties of inf
       - all uncertainties are positive and nonzero
 
     '''
@@ -101,8 +80,7 @@ class DataDict(dict):
     # check for Nones
     keys = ['time','id','longitude','latitude',
             'east','north','vertical',
-            'east_std','north_std','vertical_std',
-            'east_pert','north_pert','vertical_pert']
+            'east_std','north_std','vertical_std']
     for k in keys:
       if self[k] is None:
         raise ValueError('*%s* has not been set' % k)
@@ -115,28 +93,25 @@ class DataDict(dict):
     keys = ['longitude','latitude']
     for k in keys:     
       if not self[k].shape == (Nx,):
-        raise ValueError('*%s* has shape %s but should be %s' (k,self[k].shape,(Nx,)))
+        raise ValueError('*%s* has shape %s but should be %s' % (k,self[k].shape,(Nx,)))
 
     keys = ['east','north','vertical',
-            'east_std','north_std','vertical_std',
-            'east_pert','north_pert','vertical_pert']
+            'east_std','north_std','vertical_std']
     for k in keys:     
-      kshape = self[k].shape[-2:]
-      if not kshape == (Nt,Nx):
-        raise ValueError('last two dimensions of *%s* have shape %s but should be %s' (k,kshape,(Nt,Nx)))
+      if not self[k].shape == (Nt,Nx):
+        raise ValueError('dimensions of *%s* have shape %s but should be %s' % (k,self[k].shape,(Nt,Nx)))
     
     # make sure infinite uncertainties are consistent for all three directions
     east_isinf = np.isinf(self['east_std'])
     north_isinf = np.isinf(self['north_std'])
     vertical_isinf = np.isinf(self['vertical_std'])
     if not np.all(east_isinf==north_isinf):
-      raise ValueError('uncertainty must be infinite for all three directions')
+      raise ValueError('missing data (i.e. data with infinite uncertainty) must be missing for all three directions')
     if not np.all(east_isinf==vertical_isinf):
-      raise ValueError('uncertainty must be infinite for all three directions')
+      raise ValueError('missing data (i.e. data with infinite uncertainty) must be missing for all three directions')
       
     # make sure that infs correspond with nans
-    keys = ['east','north','vertical',
-            'east_pert','north_pert','vertical_pert']
+    keys = ['east','north','vertical']
     for k in keys:
       k_isnan = np.isnan(self[k])
       if not np.all(k_isnan == east_isinf):

@@ -148,10 +148,18 @@ Notes
 
       x : (Nx,2) array
       
-      sigma_sets : (Ns,) list of (Nt,Nx,3) arrays
-        if an entry is np.inf then all components for that station at 
-        that time will be masked
-        
+      u : (S,Nx,Nt) array
+
+      v : (S,Nx,Nt) array
+
+      z : (S,Nx,Nt) array
+
+      su : (S,Nx,Nt) array
+
+      sv : (S,Nx,Nt) array
+
+      sz : (S,Nx,Nt) array
+       
       quiver_key_label : str
         label above the quiver key
         
