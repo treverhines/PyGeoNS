@@ -161,13 +161,13 @@ Notes
       x : (Nx,2) array
         observation positions
         
-      u : (...,Nt,Nx) array
+      u : (Nt,Nx) array
         east component
 
-      v : (...,Nt,Nx) array
+      v : (Nt,Nx) array
         north component
 
-      z : (...,Nt,Nx) array
+      z : (Nt,Nx) array
         vertical component
 
       su : (Nt,Nx) array, optional
@@ -183,82 +183,22 @@ Notes
     ----
       only one of u, v, and z need to be specified
     '''
-    Nt,Nx = len(t),len(x)
-    if u is not None:
-      u = np.asarray(u)
-      input_shape = u.shape
-      u_view = [u.reshape((-1,Nt,Nx))[0]]
-    else:
-      u_view = None
-      
-    if v is not None:
-      v = np.asarray(v)
-      input_shape = v.shape
-      v_view = [v.reshape((-1,Nt,Nx))[0]]
-    else:
-      v_view = None
-      
-    if z is not None:
-      z = np.asarray(z)
-      input_shape = z.shape
-      z_view = [z.reshape((-1,Nt,Nx))[0]]
-    else:
-      z_view = None
-      
-    if su is not None:
-      su = [np.asarray(su)]
-
-    if sv is not None:
-      sv = [np.asarray(sv)]
-
-    if sz is not None:
-      sz = [np.asarray(sz)]
-      
     data_set_names = kwargs.pop('data_set_names',['edited data'])
     color_cycle = kwargs.pop('color_cycle',['k'])
     InteractiveViewer.__init__(self,t,x,
-                               u=u_view,v=v_view,z=z_view,
-                               su=su,sv=sv,sz=sz,
+                               u=[u],v=[v],z=[z],
+                               su=[su],sv=[sv],sz=[sz],
                                color_cycle=color_cycle,
                                data_set_names=data_set_names,
                                **kwargs)
-                               
-    if u is None:
-      u = np.zeros(input_shape)
-      
-    if v is None:
-      v = np.zeros(input_shape)
-
-    if z is None:
-      z = np.zeros(input_shape)
-      
-    self.input_shape = input_shape
-
-    # all changes made to the viewed data set should be broadcasted onto 
-    # this one. 
-    tpl = (u[...,None],v[...,None],z[...,None])
-    all_data = np.concatenate(tpl,axis=-1)
-    # flatten the broadcast dimensions
-    all_data = all_data.reshape((-1,Nt,Nx,3))
-
-    # set any masked data to nan
-    all_data[:,np.isinf(self.sigma_sets[0])] = np.nan
-     
-    self.all_data_sets = [all_data]
     self._mode = None
     self._apply_to_all = False
     self._mouse_is_pressed = False
 
   def get_data(self):
-    all_data = self.all_data_sets[0]
-    # set any masked data to nan. This should already be the case and 
-    # I am probably being too cautious
-    all_data[:,np.isinf(self.sigma_sets[0])] = np.nan
-    
-    all_data = all_data.reshape(self.input_shape+(3,))
-    u = all_data[...,0]
-    v = all_data[...,1]
-    z = all_data[...,2]
+    u = self.data_sets[0][:,:,0]
+    v = self.data_sets[0][:,:,1]
+    z = self.data_sets[0][:,:,2]
     su = self.sigma_sets[0][:,:,0]
     sv = self.sigma_sets[0][:,:,1]
     sz = self.sigma_sets[0][:,:,2]
@@ -273,9 +213,9 @@ Notes
     InteractiveViewer.connect(self)
         
   def remove_jump(self,jump_time,radius):
-    data = self.all_data_sets[0]
+    data = self.data_sets[0]
     # expand sigma to the size of data
-    sigma = self.sigma_sets[0][None,:,:].repeat(data.shape[0],axis=0)
+    sigma = self.sigma_sets[0]
 
     xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t > jump_time) & 
@@ -283,52 +223,35 @@ Notes
     tidx_left, = np.nonzero((self.t < jump_time) & 
                             (self.t >= (jump_time-radius)))
 
-    mean_right,sigma_right = weighted_mean(data[:,tidx_right,xidx],
-                                           sigma[:,tidx_right,xidx],
-                                           axis=1)
-    mean_left,sigma_left = weighted_mean(data[:,tidx_left,xidx],
-                                         sigma[:,tidx_left,xidx],
-                                         axis=1)
+    mean_right,sigma_right = weighted_mean(data[tidx_right,xidx],
+                                           sigma[tidx_right,xidx],
+                                           axis=0)
+    mean_left,sigma_left = weighted_mean(data[tidx_left,xidx],
+                                         sigma[tidx_left,xidx],
+                                         axis=0)
     # jump for each component
     jump = mean_right - mean_left
-    
     # uncertainty in the jump estimate
     jump_sigma = np.sqrt(sigma_right**2 + sigma_left**2)
-
     # find indices of all times after the jump
     all_tidx_right, = np.nonzero(self.t > jump_time)
-    
-    # remove jump from values make after the jump 
-    new_pos = data[:,all_tidx_right,xidx,:] - jump[:,None,:]
-    
+    # remove jump from observations made after the jump 
+    new_pos = data[all_tidx_right,xidx] - jump[None]
     # increase uncertainty 
-    new_var = sigma[:,all_tidx_right,xidx,:]**2 + jump_sigma[:,None,:]**2
+    new_var = sigma[all_tidx_right,xidx]**2 + jump_sigma[None]**2
     new_sigma = np.sqrt(new_var)
-    
-    self.all_data_sets[0][:,all_tidx_right,xidx,:] = new_pos
-    self.data_sets[0][all_tidx_right,xidx,:] = new_pos[0]
-    self.sigma_sets[0][all_tidx_right,xidx,:] = new_sigma[0]
-    
+    self.data_sets[0][all_tidx_right,xidx] = new_pos
+    self.sigma_sets[0][all_tidx_right,xidx] = new_sigma
     # turn the new data sets into masked arrays
     self.update_data()
-
     name = self.station_labels[xidx]
     logger.info('removed jump at time %g for station %s using data from time %g to %g\n' % 
                 (jump_time,name,jump_time-radius,jump_time+radius))
       
-  def remove_jump_all(self,jump_time,radius):
-    xidx = self.config['xidx']
-    N = self.all_data_sets[0].shape[2]
-    for i in range(N):
-      self.config['xidx'] = i
-      self.remove_jump(jump_time,radius)
-
-    self.config['xidx'] = xidx
     
   def remove_outliers(self,start_time,end_time):
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
-    self.all_data_sets[0][:,tidx,xidx] = np.nan
     self.data_sets[0][tidx,xidx] = np.nan
     self.sigma_sets[0][tidx,xidx] = np.inf
 
@@ -338,9 +261,20 @@ Notes
     name = self.station_labels[xidx]
     logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
           
+
+  def remove_jump_all(self,jump_time,radius):
+    xidx = self.config['xidx']
+    N = self.data_sets[0].shape[1]
+    for i in range(N):
+      self.config['xidx'] = i
+      self.remove_jump(jump_time,radius)
+
+    self.config['xidx'] = xidx
+
+
   def remove_outliers_all(self,start_time,end_time):
     xidx = self.config['xidx']
-    N = self.all_data_sets[0].shape[2]
+    N = self.data_sets[0].shape[1]
     for i in range(N):
       self.config['xidx'] = i
       self.remove_outliers(start_time,end_time)
@@ -495,6 +429,7 @@ Notes
       print('disabled APPLY_TO_ALL\n')
       self._apply_to_all = False
   
+
 def clean(*args,**kwargs):
   ''' 
   Runs InteractiveCleaner and returns the kept data
