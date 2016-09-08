@@ -108,8 +108,7 @@ def _parse_csv(file_str):
 
 def _parse_pos(file_str):
   ''' 
-  reads data from a pos file. Note that the output displacements are 
-  converted to mm.  This is to be consistent with the csv format
+  reads data from a pos file
   '''
   fmt = '%Y%m%d'
 
@@ -138,12 +137,12 @@ def _parse_pos(file_str):
   output['longitude'] = np.float(lon)
   output['latitude'] = np.float(lat)
   output['time'] = data[:,0].astype(int)
-  output['north'] = data[:,1].astype(float)*1000
-  output['east'] = data[:,2].astype(float)*1000
-  output['vertical'] = data[:,3].astype(float)*1000
-  output['north_std'] = data[:,4].astype(float)*1000
-  output['east_std'] = data[:,5].astype(float)*1000
-  output['vertical_std'] = data[:,6].astype(float)*1000
+  output['north'] = data[:,1].astype(float)
+  output['east'] = data[:,2].astype(float)
+  output['vertical'] = data[:,3].astype(float)
+  output['north_std'] = data[:,4].astype(float)
+  output['east_std'] = data[:,5].astype(float)
+  output['vertical_std'] = data[:,6].astype(float)
   return output 
   
 
@@ -189,7 +188,6 @@ def _dict_from_text(infile,file_type,perts):
   
   # interpolation times, make sure that the stop_time is included
   time = np.arange(start_time,stop_time+1,1)
-  
   longitude = np.array([d['longitude'] for d in dicts])
   latitude = np.array([d['latitude'] for d in dicts])
   id = np.array([d['id'] for d in dicts])
@@ -229,16 +227,6 @@ def _dict_from_text(infile,file_type,perts):
   out['east_std'] = east_std
   out['north_std'] = north_std
   out['vertical_std'] = vertical_std
-  for dir in ['east','north','vertical']:
-    sigma = out[dir+'_std']
-    sigma = sigma[None,:,:].repeat(perts,axis=0)
-    is_finite = ~np.isinf(sigma)
-    noise = np.zeros(sigma.shape)
-    noise[is_finite] = np.random.normal(0.0,sigma[is_finite])
-    noise[~is_finite] = np.nan
-    out[dir+'_pert'] = out[dir] + noise
-
-  out.set_std()
   out.check_self_consistency()
   return out
   
@@ -321,46 +309,3 @@ def hdf5_from_dict(outfile,data_dict):
     
   fout.close()
   return
-  
-
-def file_from_dict(outfile,data_dict):  
-  ''' 
-  outputs data dictionary to either a csv or hdf5 file. The file type 
-  is inferred from the extension
-  ''' 
-  ext = outfile.split('.')[-1]
-  if ext in ['hdf','h5','hdf5','he5']: 
-    hdf5_from_dict(outfile,data_dict)
-
-  elif ext in ['csv']:
-    csv_from_dict(outfile,data_dict)
-      
-  else:
-    raise ValueError('cannot infer file type with extension *%s*' % ext)
-
-  return
-
-
-def dict_from_file(infile,perts=20):  
-  ''' 
-  loads a data dictionary from either a pos, csv, or hdf5 file. The file 
-  type is inferred from the extension
-  '''
-  ext = infile.split('.')[-1]
-  if ext in ['hdf','h5','hdf5','he5']: 
-    out = dict_from_hdf5(infile)
-
-  elif ext in ['pos']:
-    out = dict_from_pos(infile,perts=perts)
-
-  elif ext in ['csv']:
-    out = dict_from_csv(infile,perts=perts)
-    
-  else:
-    raise ValueError('cannot infer file type with extension *%s*' % ext)
-  
-  return out
-  
-    
-                  
-
