@@ -20,7 +20,7 @@ p.add_argument('--output_file',type=str,
                        replaced with 'sfilter.h5'. The output file 
                        type is always an HDF5 file.''') 
 p.add_argument('--cutoff',type=float,
-               help='''Spatial cutoff frequency in meters''')
+               help='''Spatial cutoff frequency in 1/meters''')
 p.add_argument('--diff',type=int,nargs=2,
                help='''If provided, then the specified spatial 
                        derivative of the filtered solution is 
@@ -35,19 +35,19 @@ p.add_argument('-f','--fill',type=str,
                        where missing interior data is filled in, or 
                        'extrapolate' where all missing data is filled 
                        in.''')               
-p.add_argument('--cut_lons1',nargs='+',type=float,
+p.add_argument('--break_lons1',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuity line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
-p.add_argument('--cut_lons2',nargs='+',type=float,
+p.add_argument('--break_lons2',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
-p.add_argument('--cut_lats1',nargs='+',type=float,
+p.add_argument('--break_lats1',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
-p.add_argument('--cut_lats2',nargs='+',type=float,
+p.add_argument('--break_lats2',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')

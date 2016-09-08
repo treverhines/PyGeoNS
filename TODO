@@ -1,7 +1,0 @@
-* give downsample, clean, and zero the ability to broadcast over 
-perturbations
-
-* change DiffSpec so that is only gives specifications for either a 
-time or space differentiation matrix
-
-* change smooth so that it only has one regularization matrix.
