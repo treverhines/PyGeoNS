@@ -23,34 +23,30 @@ dictionary contains the following items:
 
 '''
 from __future__ import division
-from functools import wraps
-import rbf.geometry
-import pygeons.smooth
-import pygeons.diff
+import numpy as np
 import pygeons.view
 import pygeons.clean
 import rbf.filter
-from pygeons.downsample import MeanInterpolant
+import logging
+import matplotlib.pyplot as plt
+from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
-from pygeons.downsample import weighted_mean
 from pygeons.dateconv import decday_inv
 from pygeons.dateconv import decday
-import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-import numpy as np
-import logging
+from functools import wraps
 logger = logging.getLogger(__name__)
 
-def _make_time_cuts(cut_dates):
-  if cut_dates is None: cut_dates = []
+def _make_time_breaks(break_dates):
+  if break_dates is None: break_dates = []
   # subtract half a day to get rid of any ambiguity about what day 
   # the dislocation is observed
-  cuts = [decday(d,'%Y-%m-%d') - 0.5 for d in cut_dates]   
-  vert = np.array(cuts).reshape((-1,1))
+  breaks = [decday(d,'%Y-%m-%d') - 0.5 for d in break_dates]   
+  vert = np.array(breaks).reshape((-1,1))
   smp = np.arange(vert.shape[0]).reshape((-1,1))  
   return vert,smp
 
-def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
+def _make_space_breaks(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   if end1_lons is None: end1_lons = []
   if end1_lats is None: end1_lats = []
   if end2_lons is None: end2_lons = []
@@ -59,8 +55,8 @@ def _make_space_cuts(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   end2 = [bm(i,j) for i,j in zip(end2_lons,end2_lats)]
   end1 = np.array(end1).reshape((-1,2))
   end2 = np.array(end2).reshape((-1,2))
-  cuts = np.concatenate((end1[:,None,:],end2[:,None,:]),axis=1)
-  vert = np.array(cuts).reshape((-1,1))
+  breaks = np.concatenate((end1[:,None,:],end2[:,None,:]),axis=1)
+  vert = np.array(breaks).reshape((-1,1))
   smp = np.arange(vert.shape[0]).reshape((-1,1))  
   return vert,smp
 
@@ -185,20 +181,22 @@ def _setup_ts_ax(ax_lst,times):
 
 @_check_io
 @_log_call
-def tsmooth(data,
-            min_wavelength,
+def tfilter(data,
+            cutoff=None,
+            diff=None,
             fill='none',
-            cut_dates=None):
+            break_dates=None):
   ''' 
   time smoothing
   '''
-  vert,smp = _make_time_cuts(cut_dates)
+  vert,smp = _make_time_breaks(break_dates)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         data['time'][:,None],data[dir].T,
                         sigma=data[dir+'_std'].T,
-                        cutoff=1.0/min_wavelength,
+                        cutoff=cutoff,
+                        diffs=diff,
                         vert=vert,smp=smp,         
                         fill=fill)
     out[dir] = post.T
@@ -209,77 +207,29 @@ def tsmooth(data,
 
 @_check_io
 @_log_call
-def ssmooth(data,
-            min_wavelength,
+def sfilter(data,
+            cutoff=None,
+            diff=None,
             fill='none',
-            cut_lons1=None,cut_lats1=None,
-            cut_lons2=None,cut_lats2=None):
+            break_lons1=None,break_lats1=None,
+            break_lons2=None,break_lats2=None):
   ''' 
   space smoothing
   '''
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
-  vert,smp = _make_space_cuts(cut_lons1,cut_lats1,
-                              cut_lons2,cut_lats2,bm)
+  vert,smp = _make_space_breaks(break_lons1,break_lats1,
+                              break_lons2,break_lats2,bm)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         pos,data[dir],
                         sigma=data[dir+'_std'],
-                        cutoff=1.0/min_wavelength,
+                        cutoff=cutoff,
+                        diffs=diff,
                         vert=vert,smp=smp,         
                         fill=fill)
-    out[dir] = post
-    out[dir+'_std'] = post_sigma
-
-  return out
-
-
-@_check_io
-@_log_call
-def tdiff(data,dt,cut_dates=None):
-  ''' 
-  time differentiation
-  '''
-  vert,smp = _make_time_cuts(cut_dates)
-  out = DataDict(data)
-  for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.filter.filter(
-                        data['time'][:,None],data[dir].T,
-                        sigma=data[dir+'_std'].T,
-                        cutoff=1.0/min_wavelength,
-                        vert=vert,smp=smp, 
-                        fill=fill,
-                        diffs=(dt,))
-    out[dir] = post.T
-    out[dir+'_std'] = post_sigma.T
-
-  return out
-
-
-@_check_io
-@_log_call
-def sdiff(data,dx,dy,
-          cut_lons1=None,cut_lats1=None,
-          cut_lons2=None,cut_lats2=None):
-  ''' 
-  space differentiation
-  '''
-  bm = _make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  pos = np.array([x,y]).T
-  vert,smp = _make_space_cuts(cut_lons1,cut_lats1,
-                              cut_lons2,cut_lats2,bm)
-  out = DataDict(data)
-  for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.filter.filter(
-                        pos,data[dir],
-                        sigma=data[dir+'_std'],
-                        cutoff=1.0/min_wavelength,
-                        vert=vert,smp=smp,         
-                        fill=fill,
-                        diffs=(dx,dy))
     out[dir] = post
     out[dir+'_std'] = post_sigma
 
@@ -289,7 +239,7 @@ def sdiff(data,dx,dy,
 @_check_io
 @_log_call
 def downsample(data,sample_period,start_date=None,stop_date=None,
-               cut_dates=None):
+               break_dates=None):
   ''' 
   downsamples the data set along the time axis
   
@@ -312,7 +262,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
       stop date of output data set in YYYY-MM-DD. Uses the stop date 
       of *data* if not provided
 
-    cut_dates : lst, optional
+    break_dates : lst, optional
       list of time discontinuities in YYYY-MM-DD. This date should be 
       when the discontinuity is first observed
       
@@ -322,7 +272,7 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
       output data dictionary
 
   '''
-  vert,smp = _make_time_cuts(cut_dates)
+  vert,smp = _make_time_breaks(break_dates)
       
   # if the start and stop time are not specified then use the min and 
   # max times
@@ -351,8 +301,8 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 @_check_io
 @_log_call
 def clean(data,resolution='i',
-          cut_lons1=None,cut_lats1=None,
-          cut_lons2=None,cut_lats2=None,
+          break_lons1=None,break_lats1=None,
+          break_lons2=None,break_lats2=None,
           **kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
@@ -380,10 +330,10 @@ def clean(data,resolution='i',
   bm = _make_basemap(data['longitude'],data['latitude'],
                      resolution=resolution)
   _setup_map_ax(bm,map_ax)
-  # draw cuts if there are any
-  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
-                                cut_lons2,cut_lats2,bm)
-  vert = np.array(space_cuts).reshape((-1,2))
+  # draw breaks if there are any
+  space_breaks = _make_space_breaks(break_lons1,break_lats1,
+                                break_lons2,break_lats2,bm)
+  vert = np.array(space_breaks).reshape((-1,2))
   smp = np.arange(vert.shape[0]).reshape((-1,2))
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
@@ -413,8 +363,8 @@ def clean(data,resolution='i',
 
 @_log_call
 def view(data_list,resolution='i',
-         cut_lons1=None,cut_lats1=None,
-         cut_lons2=None,cut_lats2=None,
+         break_lons1=None,break_lats1=None,
+         break_lons2=None,break_lats2=None,
          **kwargs):
   ''' 
   runs the PyGeoNS interactive Viewer
@@ -457,11 +407,11 @@ def view(data_list,resolution='i',
                      resolution=resolution)
   _setup_map_ax(bm,map_ax)
 
-  # draw cuts if there are any
-  space_cuts = _make_space_cuts(cut_lons1,cut_lats1,
-                                cut_lons2,cut_lats2,bm)
+  # draw breaks if there are any
+  space_breaks = _make_space_breaks(break_lons1,break_lats1,
+                                break_lons2,break_lats2,bm)
 
-  vert = np.array(space_cuts).reshape((-1,2))
+  vert = np.array(space_breaks).reshape((-1,2))
   smp = np.arange(vert.shape[0]).reshape((-1,2))
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)

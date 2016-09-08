@@ -5,7 +5,7 @@ import numpy as np
 import logging
 import h5py
 import interface
-from pygeons.downsample import MeanInterpolant
+from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
 from pygeons.dateconv import decday,decday_inv
 logger = logging.getLogger(__name__)
@@ -233,22 +233,18 @@ def _dict_from_text(infile,file_type,perts):
 
 def dict_from_csv(infile,perts=20):
   ''' 
-  loads a data dictionary from a csv file. The data in the csv file 
-  needs to be resampled with the same frequency and duration for each 
-  station. This resampling could potentially cause data loss. By 
-  default the data is resampled daily from the earliest to the latest 
-  observation time for the network
+  loads a data dictionary from a csv file. The new data set has a 
+  daily sampling frequency and any missing days will be filled with 
+  np.nan and np.inf for the mean and uncertainty respectively.
   '''
   return _dict_from_text(infile,'csv',perts)
 
 
 def dict_from_pos(infile,perts=20):
   ''' 
-  loads a data dictionary from a pos file. The data in the pos file 
-  needs to be resampled with the same frequency and duration for each 
-  station. This resampling could potentially cause data loss. By 
-  default the data is resampled daily from the earliest to the latest 
-  observation time for the network
+  loads a data dictionary from a csv file. The new data set has a 
+  daily sampling frequency and any missing days will be filled with 
+  np.nan and np.inf for the mean and uncertainty respectively.
   '''
   return _dict_from_text(infile,'pos',perts)
 

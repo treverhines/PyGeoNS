@@ -35,10 +35,10 @@ def memoize(f):
 
   return fout
 
+
 def _decyear_from_datetime(d):
   ''' 
-  converts to decimal year from a datetime object. datetime can 
-  optionally be first rounded to the nearest day, hour, minute, or second
+  converts to decimal year from a datetime object
   '''
   date_tuple = d.timetuple()
   # time in seconds of d
@@ -53,6 +53,7 @@ def _decyear_from_datetime(d):
                            (time_year_end - time_year_start))
   return decimal_time
 
+
 def _datetime_from_decyear(f):
   ''' 
   converts to a datetime object from decimal year. 
@@ -65,6 +66,7 @@ def _datetime_from_decyear(f):
   decdays = remainder*days_in_year
   d = year_start + datetime.timedelta(days=decdays)
   return d
+
 
 @memoize
 def decyear(s,fmt):
@@ -87,6 +89,7 @@ def decyear(s,fmt):
   '''
   d = datetime.datetime.strptime(s,fmt)
   return _decyear_from_datetime(d)
+
 
 @memoize
 def decyear_inv(f,fmt):

@@ -11,32 +11,32 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
-      description='''Spatially and temporally smooths the data set. 
-                     Data is treated as a stochastic variable where 
-                     its second time derivative is white noise and its 
-                     Laplacian is white noise.''')
+      description='''Spatially filters the data set''')
 p.add_argument('input_file',type=str,
-               help='''Date file. Can either be a PBO csv file, a PBO 
-                       pos file, or a HDF5 file. The file type is 
-                       inferred from the extension. ".hdf", ".h5", 
-                       ".hdf5", ".he5" are interpretted as HDF5, 
-                       ".pos" is interpretted as PBO pos, anything 
-                       else is assumed to be a PBO csv file.''')
-p.add_argument('min_wavelength',type=float,
-               help='''Shortest wavelength retained in the smoothed 
-                       solution. This is specified in meters''')
+               help='''HDF5 data file''')
 p.add_argument('--output_file',type=str,
-               help='''If not provided then the input file extension 
-                       is removed and replaced with smooth.h5. The 
-                       output file type is inferred from the 
-                       extension. Currently, can only output to HDF5 
-                       files or PBO csv files.''')
-p.add_argument('--stencil_size',type=int)
-p.add_argument('-v','--verbose',action='count',default=0,
-               help='''Controls verbosity''')
-p.add_argument('-f','--fill',type=str)
+               help='''Name of the output file. If not provided then 
+                       the input file extension is removed and 
+                       replaced with 'sfilter.h5'. The output file 
+                       type is always an HDF5 file.''') 
+p.add_argument('--cutoff',type=float,
+               help='''Spatial cutoff frequency in meters''')
+p.add_argument('--diff',type=int,nargs=2,
+               help='''If provided, then the specified spatial 
+                       derivative of the filtered solution is 
+                       returned. The derivative is specified with two
+                       integers, E and N, where E is the derivative 
+                       order in the east direction and N is the 
+                       derivative order in the north direction.''')
+p.add_argument('-f','--fill',type=str,
+               help='''Indicates how to handle missing data (i.e. data
+                       with inf uncertainty). Can either be 'none', 
+                       where missing data is ignored, 'interpolate' 
+                       where missing interior data is filled in, or 
+                       'extrapolate' where all missing data is filled 
+                       in.''')               
 p.add_argument('--cut_lons1',nargs='+',type=float,
-               help='''Coordinates of the spatial discontinuty line 
+               help='''Coordinates of the spatial discontinuity line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
 p.add_argument('--cut_lons2',nargs='+',type=float,
@@ -51,6 +51,8 @@ p.add_argument('--cut_lats2',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
+p.add_argument('-v','--verbose',action='count',default=0,
+               help='''Controls verbosity''')
                
 p = vars(p.parse_args())
 
@@ -72,8 +74,8 @@ for k in p.keys():
     p.pop(k)
 
 if output_file is None:
-  output_file = change_extension(input_file,'ssmooth.h5')
+  output_file = change_extension(input_file,'sfilter.h5')
 
 data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
-out_dict = pygeons.interface.ssmooth(data_dict,**p)
+out_dict = pygeons.interface.sfilter(data_dict,**p)
 pygeons.ioconv.hdf5_from_dict(output_file,out_dict)
