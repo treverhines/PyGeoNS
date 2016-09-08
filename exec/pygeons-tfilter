@@ -32,7 +32,7 @@ p.add_argument('-f','--fill',type=str,
                        where missing interior data is filled in, or 
                        'extrapolate' where all missing data is filled 
                        in.''')               
-p.add_argument('--cut_dates',nargs='+',type=str,
+p.add_argument('--break_dates',nargs='+',type=str,
                help='''list of time discontinuities in YYYY-MM-DD. 
                        This date should be when the discontinuity is 
                        first observed''')

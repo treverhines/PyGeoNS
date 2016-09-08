@@ -56,8 +56,8 @@ def _make_space_breaks(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   end1 = np.array(end1).reshape((-1,2))
   end2 = np.array(end2).reshape((-1,2))
   breaks = np.concatenate((end1[:,None,:],end2[:,None,:]),axis=1)
-  vert = np.array(breaks).reshape((-1,1))
-  smp = np.arange(vert.shape[0]).reshape((-1,1))  
+  vert = np.array(breaks).reshape((-1,2))
+  smp = np.arange(vert.shape[0]).reshape((-1,2))  
   return vert,smp
 
 
@@ -220,7 +220,7 @@ def sfilter(data,
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
   vert,smp = _make_space_breaks(break_lons1,break_lats1,
-                              break_lons2,break_lats2,bm)
+                                break_lons2,break_lats2,bm)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
@@ -331,10 +331,8 @@ def clean(data,resolution='i',
                      resolution=resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
-  space_breaks = _make_space_breaks(break_lons1,break_lats1,
+  vert,smp = _make_space_breaks(break_lons1,break_lats1,
                                 break_lons2,break_lats2,bm)
-  vert = np.array(space_breaks).reshape((-1,2))
-  smp = np.arange(vert.shape[0]).reshape((-1,2))
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
@@ -408,11 +406,8 @@ def view(data_list,resolution='i',
   _setup_map_ax(bm,map_ax)
 
   # draw breaks if there are any
-  space_breaks = _make_space_breaks(break_lons1,break_lats1,
+  vert,smp = _make_space_breaks(break_lons1,break_lats1,
                                 break_lons2,break_lats2,bm)
-
-  vert = np.array(space_breaks).reshape((-1,2))
-  smp = np.arange(vert.shape[0]).reshape((-1,2))
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 

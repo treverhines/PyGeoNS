@@ -35,19 +35,19 @@ p.add_argument('-f','--fill',type=str,
                        where missing interior data is filled in, or 
                        'extrapolate' where all missing data is filled 
                        in.''')               
-p.add_argument('--cut_lons1',nargs='+',type=float,
+p.add_argument('--break_lons1',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuity line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
-p.add_argument('--cut_lons2',nargs='+',type=float,
+p.add_argument('--break_lons2',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
-p.add_argument('--cut_lats1',nargs='+',type=float,
+p.add_argument('--break_lats1',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
-p.add_argument('--cut_lats2',nargs='+',type=float,
+p.add_argument('--break_lats2',nargs='+',type=float,
                help='''Coordinates of the spatial discontinuty line 
                        segments. Smoothness is not enforced across 
                        these discontinuities''')
