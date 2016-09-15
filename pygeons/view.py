@@ -944,7 +944,7 @@ Notes
       return
 
 
-def view(*args,**kwargs):
+def interactive_viewer(*args,**kwargs):
   ''' 
   wrapper to initiate and show an InteractiveViewer
   '''
@@ -952,3 +952,4 @@ def view(*args,**kwargs):
   iv.connect()
   plt.show()
   return   
+

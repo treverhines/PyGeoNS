@@ -11,7 +11,7 @@ np.random.seed(2)
 
 ## observation points
 #####################################################################
-Nx = 200
+Nx = 1000
 #pos_geo = np.random.uniform(-3,3,(Nx,3))
 pos_geo = np.random.normal(0.0,1.0,(Nx,3))
 pos_geo[:,0] += -84.2
@@ -25,7 +25,7 @@ pos = np.array([pos[:,0],pos[:,1],0*pos[:,0]]).T
 
 ### patch specifications
 #####################################################################
-strike = 70.0 # degrees
+strike = 0.0 # degrees
 dip = 89.9 # degrees
 length = 200000.0 # meters
 width = 60000.0 # meters
@@ -50,6 +50,12 @@ print('endpoint 2 : lon %s lat %s' % point2)
 #####################################################################
 disp,derr = slippy.okada.patch_dislocation(pos,slip,p)
 
+# XXXXXXXXXXXXXXXXXXXXX
+disp[:,0] = 0.0
+disp[:,1] = np.arctan((pos[:,0]-seg_pos[0])/100000.0)
+disp[:,2] = 0.0
+# XXXXXXXXXXXXXXXXXXXXX
+
 time_start = pygeons.dateconv.decday('2000-01-01','%Y-%m-%d')
 time_stop = pygeons.dateconv.decday('2002-01-01','%Y-%m-%d')
 time_eq = pygeons.dateconv.decday('2001-01-01','%Y-%m-%d')
@@ -58,10 +64,13 @@ Nt = len(times)
 
 data = np.zeros((Nt,Nx,3))
 slip_history = np.zeros(Nt)
-slip_history[times>=time_eq] = 5.0 - np.exp(-(times[times>=time_eq]-time_eq)/100.0)
+#slip_history[times>=time_eq] = 5.0 - np.exp(-(times[times>=time_eq]-time_eq)/100.0)
+# XXXXXXXXXXXXXXXXXXXXX
+slip_history[...] = 1.0
+# XXXXXXXXXXXXXXXXXXXXX
 
 data = slip_history[:,None,None]*disp[None,:]
-sigma = 0.1*np.ones(data.shape)
+sigma = 0.001*np.ones(data.shape)
 data += np.random.normal(0.0,sigma)
 
 data_dict = {}
