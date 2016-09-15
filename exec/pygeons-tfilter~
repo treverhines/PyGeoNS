@@ -25,6 +25,10 @@ p.add_argument('--diff',type=int,nargs=1,
                help='''If provided, then the specified time
                        derivative of the filtered solution is 
                        returned.''')
+p.add_argument('--procs',type=int,
+               help='''Number of processes to use.''')
+p.add_argument('--samples',type=int,
+               help='''Number of random samples to use for estimating the uncertainty.''')
 p.add_argument('-f','--fill',type=str,
                help='''Indicates how to handle missing data (i.e. data
                        with inf uncertainty). Can either be 'none', 
@@ -32,7 +36,7 @@ p.add_argument('-f','--fill',type=str,
                        where missing interior data is filled in, or 
                        'extrapolate' where all missing data is filled 
                        in.''')               
-p.add_argument('--cut_dates',nargs='+',type=str,
+p.add_argument('--break_dates',nargs='+',type=str,
                help='''list of time discontinuities in YYYY-MM-DD. 
                        This date should be when the discontinuity is 
                        first observed''')

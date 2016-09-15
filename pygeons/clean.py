@@ -430,7 +430,7 @@ Notes
       self._apply_to_all = False
   
 
-def clean(*args,**kwargs):
+def interactive_cleaner(*args,**kwargs):
   ''' 
   Runs InteractiveCleaner and returns the kept data
   '''
