@@ -25,6 +25,7 @@ dictionary contains the following items:
 from __future__ import division
 import numpy as np
 import pygeons.view
+import pygeons.strain
 import pygeons.clean
 import rbf.filter
 import logging
@@ -185,6 +186,8 @@ def tfilter(data,
             cutoff=None,
             diff=None,
             fill='none',
+            procs=0,
+            samples=100,
             break_dates=None):
   ''' 
   time smoothing
@@ -197,7 +200,9 @@ def tfilter(data,
                         sigma=data[dir+'_std'].T,
                         cutoff=cutoff,
                         diffs=diff,
-                        vert=vert,smp=smp,         
+                        procs=procs,
+                        samples=samples,
+                        vert=vert,smp=smp,
                         fill=fill)
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
@@ -211,6 +216,8 @@ def sfilter(data,
             cutoff=None,
             diff=None,
             fill='none',
+            procs=0,
+            samples=100,
             break_lons1=None,break_lats1=None,
             break_lons2=None,break_lats2=None):
   ''' 
@@ -228,6 +235,8 @@ def sfilter(data,
                         sigma=data[dir+'_std'],
                         cutoff=cutoff,
                         diffs=diff,
+                        procs=procs,
+                        samples=samples,
                         vert=vert,smp=smp,         
                         fill=fill)
     out[dir] = post
@@ -342,7 +351,7 @@ def clean(data,resolution='i',
   dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
   u,v,z = data['east'],data['north'],data['vertical']
   su,sv,sz = data['east_std'],data['north_std'],data['vertical_std']
-  clean_data = pygeons.clean.clean(
+  clean_data = pygeons.clean.interactive_cleaner(
                  t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
                  map_ax=map_ax,ts_ax=ts_ax,
                  time_labels=dates,
@@ -414,9 +423,68 @@ def view(data_list,resolution='i',
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
-  pygeons.view.view(
+  pygeons.view.interactive_viewer(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
     ts_ax=ts_ax,map_ax=map_ax,
+    station_labels=id,
+    time_labels=dates,
+    **kwargs)
+
+  return
+
+@_log_call
+def strain(data_dx,data_dy,resolution='i',
+           break_lons1=None,break_lats1=None,
+           break_lons2=None,break_lats2=None,
+           **kwargs):
+  ''' 
+  runs the PyGeoNS Interactive Strain Viewer
+  
+  Parameters
+  ----------
+    data_dx : x derivative data dictionaries 
+
+    data_dy : y derivative data dictionaries 
+      
+    resolution : str
+      basemap resolution
+      
+    **kwargs :
+      gets passed to pygeons.strain.view
+
+  '''
+  data_dx.check_self_consistency()
+  data_dy.check_self_consistency()
+  data_dx.check_compatibility(data_dy)
+  
+  t = data_dx['time']
+  lon = data_dx['longitude']
+  lat = data_dx['latitude']
+  id = data_dx['id']
+  dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
+
+  dudx = data_dx['east']
+  dvdx = data_dx['north']
+  dudy = data_dy['east']
+  dvdy = data_dy['north']
+   
+  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
+  bm = _make_basemap(lon,lat,
+                     resolution=resolution)
+  _setup_map_ax(bm,map_ax)
+
+  # draw breaks if there are any
+  vert,smp = _make_space_breaks(break_lons1,break_lats1,
+                                break_lons2,break_lats2,bm)
+  for s in smp:
+    map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+
+  x,y = bm(lon,lat)
+  pos = np.array([x,y]).T
+  
+  pygeons.strain.interactive_strain_viewer(
+    t,pos,dudx,dudy,dvdx,dvdy,
+    map_ax=map_ax,
     station_labels=id,
     time_labels=dates,
     **kwargs)

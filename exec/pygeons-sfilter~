@@ -28,6 +28,10 @@ p.add_argument('--diff',type=int,nargs=2,
                        integers, E and N, where E is the derivative 
                        order in the east direction and N is the 
                        derivative order in the north direction.''')
+p.add_argument('--procs',type=int,
+               help='''Number of processes to use''')
+p.add_argument('--samples',type=int,
+               help='''Number of random samples to use for estimating the uncertainty.''')
 p.add_argument('-f','--fill',type=str,
                help='''Indicates how to handle missing data (i.e. data
                        with inf uncertainty). Can either be 'none', 
