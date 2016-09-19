@@ -10,19 +10,15 @@ from matplotlib.collections import PatchCollection
 from pygeons.view import disable_default_key_bindings
 from pygeons.view import without_interactivity
 from pygeons._input import restricted_input
+from math import sin,cos,sqrt
 
-def _get_R(theta):
-  return np.array([[np.cos(theta),-np.sin(theta)],
-                   [np.sin(theta),np.cos(theta)]])
 
-def strain_glyph2(x,y,
-                  ux,uy,vx,vy,
-                  sux=0.0,suy=0.0,svx=0.0,svy=0.0,
-                  scale=1.0,
-                  extension_color='b',
-                  compression_color='r',
-                  alpha=0.2,
-                  k=100):
+def strain_glyph(x,y,grad,sigma=None)
+                 scale=1.0,
+                 extension_color='b',
+                 compression_color='r',
+                 alpha=0.2,
+                 k=100):
   ''' 
   Returns the artists making up a two-dimensional strain glyph which 
   indicates the magnitude of normal strain in any direction. The 
@@ -51,12 +47,16 @@ def strain_glyph2(x,y,
 
   Parameters
   ----------
-    e_xx,e_yy,e_xy : float
-      components of the strain tensor
+    x,y : float
+      center of the glyph
       
-    sigma_xx,sigma_yy,sigma_xy : float, optional
-      one standard deviation uncertainty in components of the strain 
-      tensor
+    grad : (4,) array
+      list of deformation gradient components. The order is du/dx, 
+      du/dy, dv/dx, dv/dy
+
+    sigma : (4,) array
+      corresponding uncertainties in the deformation gradient 
+      components
       
     extension_color : optional
       string or tuple indicating the color used for extensional normal 
@@ -80,12 +80,12 @@ def strain_glyph2(x,y,
 
   '''
   # convert deformation gradient to strain 
-  e_xx = ux
-  e_yy = vy
-  e_xy = 0.5*(uy + vx)
-  sigma_xx = sux
-  sigma_yy = svy
-  sigma_xy = np.sqrt(0.25*suy**2 + 0.25*svx**2)
+  exx = grad[0],
+  eyy = grad[3]
+  exy = 0.5*(grad[1] + grad[2])
+  sxx = sigma[0]
+  syy = sigma[3]
+  sxy = sqrt(0.25*sigma[1]**2 + 0.25*sigma[2]**2)
 
   mean_ext = []
   mean_cmp = []
@@ -96,33 +96,38 @@ def strain_glyph2(x,y,
 
   theta = np.linspace(0.0,2*np.pi,k)
   for t in theta:
-    R = _get_R(t)
     # normal vector rotated about the origin by t
-    n = R.dot([1.0,0.0])
+    n = [cos(t),sin(t)]
     # maps strain to the normal strain component 
-    norm = (e_xx*n[0]**2 +
-            e_yy*n[1]**2 +
-            e_xy*2*n[0]*n[1])*scale
+    norm = (exx*n[0]**2 +
+            eyy*n[1]**2 +
+            exy*2*n[0]*n[1])*scale
     # uncertainty in the normal strain component
-    norm_sigma = np.sqrt(sigma_xx**2*n[0]**4 +
-                         sigma_yy**2*n[1]**4 +
-                         sigma_xy**2*(2*n[0]*n[1])**2)*scale
+    norm_sigma = sqrt(sxx**2*n[0]**4 +
+                      syy**2*n[1]**4 +
+                      sxy**2*(2*n[0]*n[1])**2)*scale
 
     if norm >= 0.0:
-      mean_ext += [n*norm]
+      mean_ext += [[n[0]*norm,
+                    n[1]*norm]]
     else:
-      mean_cmp += [n*norm]
+      mean_cmp += [[n[0]*norm,
+                    n[1]*norm]]
 
     if (norm+norm_sigma) >= 0.0:
-      ub_ext += [n*(norm + norm_sigma)]
+      ub_ext += [[n[0]*(norm + norm_sigma),
+                  n[1]*(norm + norm_sigma)]]
     else:
-      ub_cmp += [n*(norm + norm_sigma)]
+      ub_cmp += [[n[0]*(norm + norm_sigma),
+                  n[1]*(norm + norm_sigma)]]
 
     if (norm-norm_sigma) >= 0.0:
-      lb_ext += [n*(norm - norm_sigma)]
+      lb_ext += [[n[0]*(norm - norm_sigma),
+                  n[1]*(norm - norm_sigma)]]
     else:
-      lb_cmp += [n*(norm - norm_sigma)]
-
+      lb_cmp += [[n[0]*(norm - norm_sigma),
+                  n[1]*(norm - norm_sigma)]]
+      
 
   mean_ext = np.array(mean_ext).reshape(-1,2)
   mean_cmp = np.array(mean_cmp).reshape(-1,2)
@@ -154,7 +159,7 @@ def strain_glyph2(x,y,
   return out
 
 
-def _principle_component(x,y,eigval,eigvec,scale,**kwargs):
+def _principle_strain_component(x,y,eigval,eigvec,scale,**kwargs):
   ''' 
   returns two arrow patches corresponding to a principle strain 
   component
@@ -209,7 +214,7 @@ def _principle_component(x,y,eigval,eigvec,scale,**kwargs):
   return arrow1,arrow2
 
 
-def strain_glyph1(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
+def principle_strain_glyph(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
   ''' 
   returns the arrows patches corresponding to each principle strain 
   component
@@ -242,7 +247,7 @@ class Strain:
     for args in zip(x,y,
                     ux,uy,vx,vy,
                     sux,suy,svx,svy): 
-      artists += strain_glyph2(*args,**kwargs)
+      artists += strain_glyph(*args,**kwargs)
 
     self.x = x
     self.y = y
@@ -263,7 +268,7 @@ class Strain:
     for args in zip(self.x,self.y,
                     ux,uy,vx,vy,
                     sux,suy,svx,svy): 
-      artists += strain_glyph2(*args,**self.kwargs)
+      artists += strain_glyph(*args,**self.kwargs)
     
     self.artists = artists
     
