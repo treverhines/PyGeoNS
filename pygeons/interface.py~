@@ -468,24 +468,23 @@ def strain(data_dx,data_dy,resolution='i',
   dudy = data_dy['east']
   dvdy = data_dy['north']
    
-  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
+  fig,ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
                      resolution=resolution)
-  _setup_map_ax(bm,map_ax)
+  _setup_map_ax(bm,ax)
 
   # draw breaks if there are any
   vert,smp = _make_space_breaks(break_lons1,break_lats1,
                                 break_lons2,break_lats2,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+    ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
   pygeons.strain.interactive_strain_viewer(
     t,pos,dudx,dudy,dvdx,dvdy,
-    map_ax=map_ax,
-    station_labels=id,
+    ax=ax,
     time_labels=dates,
     **kwargs)
 
