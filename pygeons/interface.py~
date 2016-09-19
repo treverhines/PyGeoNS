@@ -463,10 +463,14 @@ def strain(data_dx,data_dy,resolution='i',
   id = data_dx['id']
   dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
 
-  dudx = data_dx['east']
-  dvdx = data_dx['north']
-  dudy = data_dy['east']
-  dvdy = data_dy['north']
+  ux = data_dx['east']
+  vx = data_dx['north']
+  uy = data_dy['east']
+  vy = data_dy['north']
+  sux = data_dx['east_std']
+  svx = data_dx['north_std']
+  suy = data_dy['east_std']
+  svy = data_dy['north_std']
    
   fig,ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
@@ -483,7 +487,9 @@ def strain(data_dx,data_dy,resolution='i',
   pos = np.array([x,y]).T
   
   pygeons.strain.interactive_strain_viewer(
-    t,pos,dudx,dudy,dvdx,dvdy,
+    t,pos,
+    ux,uy,vx,vy,
+    sux,suy,svx,svy,
     ax=ax,
     time_labels=dates,
     **kwargs)
