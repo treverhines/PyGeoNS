@@ -11,7 +11,7 @@ np.random.seed(2)
 
 ## observation points
 #####################################################################
-Nx = 1000
+Nx = 500
 #pos_geo = np.random.uniform(-3,3,(Nx,3))
 pos_geo = np.random.normal(0.0,1.0,(Nx,3))
 pos_geo[:,0] += -84.2
@@ -70,7 +70,7 @@ slip_history[...] = 1.0
 # XXXXXXXXXXXXXXXXXXXXX
 
 data = slip_history[:,None,None]*disp[None,:]
-sigma = 0.001*np.ones(data.shape)
+sigma = 0.1*np.ones(data.shape)
 data += np.random.normal(0.0,sigma)
 
 data_dict = {}

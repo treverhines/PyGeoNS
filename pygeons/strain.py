@@ -3,14 +3,158 @@ This module provides functions for plotting strain
 '''
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrow
 from matplotlib.collections import PatchCollection
 from pygeons.view import disable_default_key_bindings
 from pygeons.view import without_interactivity
 from pygeons._input import restricted_input
 
+def _get_R(theta):
+  return np.array([[np.cos(theta),-np.sin(theta)],
+                   [np.sin(theta),np.cos(theta)]])
 
-def _component(x,y,eigval,eigvec,scale,**kwargs):
+def strain_glyph2(x,y,
+                  ux,uy,vx,vy,
+                  sux=0.0,suy=0.0,svx=0.0,svy=0.0,
+                  scale=1.0,
+                  extension_color='b',
+                  compression_color='r',
+                  alpha=0.2,
+                  k=100):
+  ''' 
+  Returns the artists making up a two-dimensional strain glyph which 
+  indicates the magnitude of normal strain in any direction. The 
+  normal strain pointing in the direction of n is defined as
+  
+    n.dot(E).dot(n)
+  
+  where n is a unit vector and E is the infinitesimal strain tensor 
+  with components
+  
+    E = [[e_xx,e_xy],[e_xy,eyy]].
+   
+  If the normal strain is positive then it indicates extension in that 
+  direction, otherwise it indicates compression. The strain glyph 
+  consists of each point 
+  
+    n*(n.dot(E).dot(n)) 
+  
+  for n pointing in directions ranging from 0 to 2*pi.  The points are 
+  connected making up a petal shaped glyph, where each petal has a 
+  color indicating extensional or compressional normal strain.
+  
+  If uncertainties are provided then the 68% confidence interval is 
+  also shown in the glyph. Regions of the confidence interval which 
+  are extensional and compressional are colored accordingly.
+
+  Parameters
+  ----------
+    e_xx,e_yy,e_xy : float
+      components of the strain tensor
+      
+    sigma_xx,sigma_yy,sigma_xy : float, optional
+      one standard deviation uncertainty in components of the strain 
+      tensor
+      
+    extension_color : optional
+      string or tuple indicating the color used for extensional normal 
+      strain
+
+    compresion_color : optional
+      string or tuple indicating the color used for compresional 
+      normal strain
+
+    alpha : float, optional
+      transparency of the confidence interval
+
+    k : int, optional
+      number of vertices used in the glyph. Higher numbers result in 
+      higher resolution
+
+  Returns
+  -------
+    out : tuple
+      artists making up the strain glyph
+
+  '''
+  # convert deformation gradient to strain 
+  e_xx = ux
+  e_yy = vy
+  e_xy = 0.5*(uy + vx)
+  sigma_xx = sux
+  sigma_yy = svy
+  sigma_xy = np.sqrt(0.25*suy**2 + 0.25*svx**2)
+
+  mean_ext = []
+  mean_cmp = []
+  ub_ext = []
+  ub_cmp = []
+  lb_ext = []
+  lb_cmp = []
+
+  theta = np.linspace(0.0,2*np.pi,k)
+  for t in theta:
+    R = _get_R(t)
+    # normal vector rotated about the origin by t
+    n = R.dot([1.0,0.0])
+    # maps strain to the normal strain component 
+    norm = (e_xx*n[0]**2 +
+            e_yy*n[1]**2 +
+            e_xy*2*n[0]*n[1])*scale
+    # uncertainty in the normal strain component
+    norm_sigma = np.sqrt(sigma_xx**2*n[0]**4 +
+                         sigma_yy**2*n[1]**4 +
+                         sigma_xy**2*(2*n[0]*n[1])**2)*scale
+
+    if norm >= 0.0:
+      mean_ext += [n*norm]
+    else:
+      mean_cmp += [n*norm]
+
+    if (norm+norm_sigma) >= 0.0:
+      ub_ext += [n*(norm + norm_sigma)]
+    else:
+      ub_cmp += [n*(norm + norm_sigma)]
+
+    if (norm-norm_sigma) >= 0.0:
+      lb_ext += [n*(norm - norm_sigma)]
+    else:
+      lb_cmp += [n*(norm - norm_sigma)]
+
+
+  mean_ext = np.array(mean_ext).reshape(-1,2)
+  mean_cmp = np.array(mean_cmp).reshape(-1,2)
+  ub_ext = np.array(ub_ext).reshape(-1,2)
+  lb_ext = np.array(lb_ext).reshape(-1,2)
+  ub_cmp = np.array(ub_cmp).reshape(-1,2)
+  lb_cmp = np.array(lb_cmp).reshape(-1,2)
+
+  out = ()
+  # draw the extensional component of the uncertainty 
+  ext_poly_x = x + np.concatenate((ub_ext[:,0],lb_ext[::-1,0]))
+  ext_poly_y = y + np.concatenate((ub_ext[:,1],lb_ext[::-1,1]))
+  ext_poly_coo = np.array([ext_poly_x,ext_poly_y]).T
+  if ext_poly_coo.shape[0] != 0:
+    out += Polygon(ext_poly_coo,facecolor=extension_color,
+                   edgecolor='none',alpha=alpha),
+
+  # draw the compressional component of the uncertainty 
+  cmp_poly_x = x + np.concatenate((ub_cmp[:,0],lb_cmp[::-1,0]))
+  cmp_poly_y = y + np.concatenate((ub_cmp[:,1],lb_cmp[::-1,1]))
+  cmp_poly_coo = np.array([cmp_poly_x,cmp_poly_y]).T
+  if cmp_poly_coo.shape[0] != 0:
+    out += Polygon(cmp_poly_coo,facecolor=compression_color,
+                   edgecolor='none',alpha=alpha),
+
+  # draw the solid line indicating the mean strain
+  out += Line2D(x + mean_ext[:,0],y + mean_ext[:,1],color=extension_color),
+  out += Line2D(x + mean_cmp[:,0],y + mean_cmp[:,1],color=compression_color),
+  return out
+
+
+def _principle_component(x,y,eigval,eigvec,scale,**kwargs):
   ''' 
   returns two arrow patches corresponding to a principle strain 
   component
@@ -65,7 +209,7 @@ def _component(x,y,eigval,eigvec,scale,**kwargs):
   return arrow1,arrow2
 
 
-def get_principle_strain_artists(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
+def strain_glyph1(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
   ''' 
   returns the arrows patches corresponding to each principle strain 
   component
@@ -77,29 +221,58 @@ def get_principle_strain_artists(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
 
   eigvals,eigvecs = np.linalg.eig(strain)
   artists = ()
-  artists += _component(x,y,eigvals[0],eigvecs[:,0],scale,**kwargs)
-  artists += _component(x,y,eigvals[1],eigvecs[:,1],scale,**kwargs)
+  artists += _principle_component(x,y,eigvals[0],eigvecs[:,0],scale,**kwargs)
+  artists += _principle_component(x,y,eigvals[1],eigvecs[:,1],scale,**kwargs)
   return artists
 
 
-class Strain(PatchCollection):
-  def __init__(self,x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
-    patches = ()
-    for args in zip(x,y,dudx,dudy,dvdx,dvdy): 
-      patches += get_principle_strain_artists(*args,scale=scale)
+class Strain:
+  def __init__(self,x,y,
+               ux,uy,vx,vy,
+               sux=None,suy=None,
+               svx=None,svy=None,
+               **kwargs):
+    N = len(x)
+    if sux is None: sux = np.zeros(N)
+    if suy is None: suy = np.zeros(N)
+    if svx is None: svx = np.zeros(N)
+    if svy is None: svy = np.zeros(N)
+      
+    artists = ()
+    for args in zip(x,y,
+                    ux,uy,vx,vy,
+                    sux,suy,svx,svy): 
+      artists += strain_glyph2(*args,**kwargs)
 
-    PatchCollection.__init__(self,patches,**kwargs)
     self.x = x
     self.y = y
-    self.scale=scale
+    self.kwargs = kwargs
+    self.artists = artists
 
-  def set_gradient(self,dudx,dudy,dvdx,dvdy):
-    patches = ()
-    for args in zip(self.x,self.y,dudx,dudy,dvdx,dvdy): 
-      patches += get_principle_strain_artists(*args,scale=self.scale)
+  def set_gradient(self,
+                   ux,uy,vx,vy,
+                   sux=None,suy=None,
+                   svx=None,svy=None):
+    N = len(self.x)
+    if sux is None: sux = np.zeros(N)
+    if suy is None: suy = np.zeros(N)
+    if svx is None: svx = np.zeros(N)
+    if svy is None: svy = np.zeros(N)
+
+    artists = ()
+    for args in zip(self.x,self.y,
+                    ux,uy,vx,vy,
+                    sux,suy,svx,svy): 
+      artists += strain_glyph2(*args,**self.kwargs)
     
-    self.set_paths(patches)
-
+    self.artists = artists
+    
+  def get_artists(self):
+    return self.artists
+    
+  def remove(self):
+    for a in self.artists: a.remove()  
+      
 
 class InteractiveStrainViewer:
   ''' 
@@ -131,8 +304,9 @@ Notes
 ---------------------------------------------------------------------
   '''
   def __init__(self,t,x,
-               dudx,dudy,
-               dvdx,dvdy,
+               ux,uy,vx,vy,
+               sux=None,suy=None,
+               svx=None,svy=None,
                scale=1.0,
                time_labels=None,
                fontsize=10,
@@ -151,7 +325,7 @@ Notes
       x : (Nx,2) array
         Observation positions
         
-      dudx,dudy,dvdx,dvdy : (Nx,Nt) array
+      ux,uy,vx,vy : (Nt,Nx) array
         Gradient of the vector field
         
       scale : float
@@ -176,9 +350,18 @@ Notes
     # time and space arrays
     self.t = np.asarray(t)
     self.x = np.asarray(x)
+    Nx,Nt = len(x),len(t)
+    
+    if sux is None: sux = np.zeros((Nt,Nx))
+    if suy is None: suy = np.zeros((Nt,Nx))
+    if svx is None: svx = np.zeros((Nt,Nx))
+    if svy is None: svy = np.zeros((Nt,Nx))
 
-    tpl = (dudx[:,:,None],dudy[:,:,None],dvdx[:,:,None],dvdy[:,:,None])
+    tpl = (ux[:,:,None],uy[:,:,None],vx[:,:,None],vy[:,:,None])
     self.data_set = np.concatenate(tpl,axis=2)
+
+    tpl = (sux[:,:,None],suy[:,:,None],svx[:,:,None],svy[:,:,None])
+    self.sigma_set = np.concatenate(tpl,axis=2)
 
     # map view axis and figure
     if ax is None:
@@ -248,20 +431,28 @@ Notes
                     self.data_set[self.config['tidx'],:,1],
                     self.data_set[self.config['tidx'],:,2],
                     self.data_set[self.config['tidx'],:,3],
-                    scale=self.config['scale'],
-                    facecolor='k',
-                    edgecolor='k',
-                    zorder=2)
+                    self.sigma_set[self.config['tidx'],:,0],
+                    self.sigma_set[self.config['tidx'],:,1],
+                    self.sigma_set[self.config['tidx'],:,2],
+                    self.sigma_set[self.config['tidx'],:,3],
+                    scale=self.config['scale'])
 
-    self.ax.add_collection(self.strain,autolim=True)
+    for a in self.strain.get_artists(): self.ax.add_artist(a)
     self.ax.autoscale_view()
 
   def _update_strain(self):
+    self.strain.remove()
     self.strain.set_gradient(
       self.data_set[self.config['tidx'],:,0],
       self.data_set[self.config['tidx'],:,1],
       self.data_set[self.config['tidx'],:,2],
-      self.data_set[self.config['tidx'],:,3])
+      self.data_set[self.config['tidx'],:,3],
+      self.sigma_set[self.config['tidx'],:,0],
+      self.sigma_set[self.config['tidx'],:,1],
+      self.sigma_set[self.config['tidx'],:,2],
+      self.sigma_set[self.config['tidx'],:,3])
+
+    for a in self.strain.get_artists(): self.ax.add_artist(a)
 
   def _init(self):
     self._init_ax()
