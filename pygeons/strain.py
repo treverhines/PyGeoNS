@@ -10,7 +10,7 @@ from pygeons.view import without_interactivity
 from pygeons._input import restricted_input
 
 
-def _component(x,y,eigval,eigvec,scale):
+def _component(x,y,eigval,eigvec,scale,**kwargs):
   ''' 
   returns two arrow patches corresponding to a principle strain 
   component
@@ -37,31 +37,35 @@ def _component(x,y,eigval,eigvec,scale):
                         width=width,
                         head_width=head_width,
                         head_length=head_length,
-                        overhang=overhang)
+                        overhang=overhang,
+                        **kwargs)
     arrow2 = FancyArrow(x+u,y+v,-u,-v,
                         length_includes_head=True,
                         width=width,
                         head_width=head_width,
                         head_length=head_length,
-                        overhang=overhang)
+                        overhang=overhang,
+                        **kwargs)
   else:
     arrow1 = FancyArrow(x,y,u,v,
                         length_includes_head=True,
                         width=width,
                         head_width=head_width,
                         head_length=head_length,
-                        overhang=overhang)
+                        overhang=overhang,
+                        **kwargs)
     arrow2 = FancyArrow(x,y,-u,-v,
                         length_includes_head=True,
                         width=width,
                         head_width=head_width,
                         head_length=head_length,
-                        overhang=overhang)
+                        overhang=overhang,
+                        **kwargs)
 
   return arrow1,arrow2
 
 
-def get_principle_strain_artists(x,y,dudx,dudy,dvdx,dvdy,scale=1.0):
+def get_principle_strain_artists(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
   ''' 
   returns the arrows patches corresponding to each principle strain 
   component
@@ -73,8 +77,8 @@ def get_principle_strain_artists(x,y,dudx,dudy,dvdx,dvdy,scale=1.0):
 
   eigvals,eigvecs = np.linalg.eig(strain)
   artists = ()
-  artists += _component(x,y,eigvals[0],eigvecs[:,0],scale)
-  artists += _component(x,y,eigvals[1],eigvecs[:,1],scale)
+  artists += _component(x,y,eigvals[0],eigvecs[:,0],scale,**kwargs)
+  artists += _component(x,y,eigvals[1],eigvecs[:,1],scale,**kwargs)
   return artists
 
 
@@ -115,25 +119,13 @@ Controls
     Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
         forward 10 and 100 respectively)
 
-    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10
-        and 100 respectively)
-
-    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 
-        10 and 100 respectively)
-
     R : redraw figures
-
-    C : cycle the ordering of the data sets
- 
-    H : hide station marker
 
 Notes
 -----
-    Stations may also be selected by clicking on them 
-    
-    Exit PIV by closing the figures
+    Exit PISV by closing the figures
   
-    Key bindings only work when the active window is one of the PIV 
+    Key bindings only work when the active window is one of the PISV 
     figures   
 
 ---------------------------------------------------------------------
@@ -142,39 +134,39 @@ Notes
                dudx,dudy,
                dvdx,dvdy,
                scale=1.0,
-               station_labels=None,
                time_labels=None,
                fontsize=10,
-               map_ax=None,
-               map_title=None,
-               map_ylim=None,
-               map_xlim=None):
+               ax=None,
+               title=None,
+               ylim=None,
+               xlim=None):
     ''' 
-    interactively views vector valued data which is time and space 
-    dependent
+    interactively views strain which is time and space dependent
     
     Parameters
     ----------
       t : (Nt,) array
+        Observation times
 
       x : (Nx,2) array
-      
-      dudx,dudy,dvdx,dvdy : (Nx,Nt) array
+        Observation positions
         
-      station_labels : (Nx,) str array
-      
-      data_set_names : (Ns,) str array
-
-      map_ax : Axis instance
+      dudx,dudy,dvdx,dvdy : (Nx,Nt) array
+        Gradient of the vector field
+        
+      scale : float
+        Increases the size of the strain markers
+         
+      ax : Axis instance
         axis where map view will be plotted
 
-      map_title : str
+      title : str
         replaces the default title for the map view plot
 
-      map_ylim : (2,) array
+      ylim : (2,) array
         ylim for the map view plot
       
-      map_xlim : (2,) array
+      xlim : (2,) array
         xlim for the map view plot
       
       fontsize : float
@@ -189,23 +181,18 @@ Notes
     self.data_set = np.concatenate(tpl,axis=2)
 
     # map view axis and figure
-    if map_ax is None:
+    if ax is None:
       # gives a white background 
-      map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-      self.map_fig = map_fig
-      self.map_ax = map_ax
+      fig,ax = plt.subplots(num='Map View',facecolor='white')
+      self.fig = fig
+      self.ax = ax
     else:
-      self.map_fig = map_ax.get_figure()
-      self.map_ax = map_ax
-
-    # station names used for the time series plots
-    if station_labels is None:
-      station_labels = np.arange(len(self.x)).astype(str)
+      self.fig = ax.get_figure()
+      self.ax = ax
 
     if time_labels is None:
       time_labels = np.array(self.t).astype(str)
 
-    self.station_labels = list(station_labels)
     self.time_labels = list(time_labels)
 
     # this dictionary contains plot configuration parameters which may 
@@ -213,46 +200,46 @@ Notes
     self.config = {}
     self.config['tidx'] = 0
     self.config['scale'] = scale
-    self.config['map_title'] = map_title
-    self.config['map_xlim'] = map_xlim
-    self.config['map_ylim'] = map_ylim
+    self.config['title'] = title
+    self.config['xlim'] = xlim
+    self.config['ylim'] = ylim
     self.config['fontsize'] = fontsize
     self._init()
     disable_default_key_bindings()
     print(self.__doc__)
 
   def connect(self):
-    self.map_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
+    self.fig.canvas.mpl_connect('key_press_event',self.on_key_press)
 
-  def _init_map_ax(self):
+  def _init_ax(self):
     # call after _init_scatter
-    self.map_ax.set_aspect('equal')
-    self.map_ax.tick_params(labelsize=self.config['fontsize'])
-    if self.config['map_title'] is None:
+    self.ax.set_aspect('equal')
+    self.ax.tick_params(labelsize=self.config['fontsize'])
+    if self.config['title'] is None:
       time_label = self.time_labels[self.config['tidx']]
-      self.map_ax.set_title('time : %s' % time_label,
+      self.ax.set_title('time : %s' % time_label,
                             fontsize=self.config['fontsize'])
     else:
-      self.map_ax.set_title(self.config['map_title'],
+      self.ax.set_title(self.config['title'],
                             fontsize=self.config['fontsize'])
 
     # do not dynamically update the axis limits
-    if self.config['map_xlim'] is None:
-      self.config['map_xlim'] = self.map_ax.get_xlim()
+    if self.config['xlim'] is None:
+      self.config['xlim'] = self.ax.get_xlim()
 
-    if self.config['map_ylim'] is None:
-      self.config['map_ylim'] = self.map_ax.get_ylim()
+    if self.config['ylim'] is None:
+      self.config['ylim'] = self.ax.get_ylim()
 
-    self.map_ax.set_xlim(self.config['map_xlim'])
-    self.map_ax.set_ylim(self.config['map_ylim'])
+    self.ax.set_xlim(self.config['xlim'])
+    self.ax.set_ylim(self.config['ylim'])
 
-  def _update_map_ax(self):
-    if self.config['map_title'] is None:
+  def _update_ax(self):
+    if self.config['title'] is None:
       time_label = self.time_labels[self.config['tidx']]
-      self.map_ax.set_title('time : %s' % time_label,
+      self.ax.set_title('time : %s' % time_label,
                             fontsize=self.config['fontsize'])
     else:
-      self.map_ax.set_title(self.config['map_title'],
+      self.ax.set_title(self.config['title'],
                             fontsize=self.config['fontsize'])
 
   def _init_strain(self):
@@ -266,8 +253,8 @@ Notes
                     edgecolor='k',
                     zorder=2)
 
-    self.map_ax.add_collection(self.strain,autolim=True)
-    self.map_ax.autoscale_view()
+    self.ax.add_collection(self.strain,autolim=True)
+    self.ax.autoscale_view()
 
   def _update_strain(self):
     self.strain.set_gradient(
@@ -277,14 +264,14 @@ Notes
       self.data_set[self.config['tidx'],:,3])
 
   def _init(self):
-    self._init_map_ax()
+    self._init_ax()
     self._init_strain()
-    self.map_fig.canvas.draw()
+    self.fig.canvas.draw()
 
   def update(self):
-    self._update_map_ax()
+    self._update_ax()
     self._update_strain()
-    self.map_fig.canvas.draw()
+    self.fig.canvas.draw()
 
   def hard_update(self):
     # clears all axes and redraws everything
