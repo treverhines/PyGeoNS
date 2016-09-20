@@ -363,6 +363,7 @@ Notes
     self.config['highlight'] = True
     self.config['tidx'] = 0
     self.config['xidx'] = 0
+    self.config['units'] = units
     self.config['image_cmap'] = image_cmap
     self.config['image_clim'] = image_clim
     self.config['image_clabel'] = image_clabel
