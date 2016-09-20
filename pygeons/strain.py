@@ -170,6 +170,7 @@ Notes
                sux=None,suy=None,
                svx=None,svy=None,
                scale=None,
+               units='',
                time_labels=None,
                fontsize=10,
                ax=None,
@@ -270,7 +271,7 @@ Notes
       scale = dist/mag
       
     if key_magnitude is None:  
-      mag = 5*np.nanmean(np.abs([ux,uy,vx,vy]))
+      mag = 3*np.nanmean(np.abs([ux,uy,vx,vy]))
       mag = max(mag,1e-10)
       key_magnitude = one_sigfig(mag)
       
@@ -283,6 +284,7 @@ Notes
     self.config['xlim'] = xlim
     self.config['ylim'] = ylim
     self.config['fontsize'] = fontsize
+    self.config['units'] = units
     self.config['compression_color'] = compression_color
     self.config['extension_color'] = extension_color
     self.config['alpha'] = alpha
@@ -333,6 +335,7 @@ Notes
 
   def _draw_key(self):
     mag = self.config['key_magnitude']
+    units = self.config['units']
     grad = [mag,0.0,0.0,-mag]
     sigma = [0.1*mag,0.0,0.0,-0.1*mag]
 
@@ -348,12 +351,12 @@ Notes
                                  vertices=self.config['vertices'])
     textx = posx + 1.1*mag*self.config['scale']
     texty = posy 
-    self.artists += [Text(textx,texty,'%s' % mag,
+    self.artists += [Text(textx,texty,'%s %s' % (mag,units),
                           fontsize=10,
                           color=self.config['extension_color'])]
     textx = posx 
     texty = posy + 1.1*mag*self.config['scale']
-    self.artists += [Text(textx,texty,'-%s' % mag,
+    self.artists += [Text(textx,texty,'-%s %s' % (mag,units),
                           fontsize=10,
                           color=self.config['compression_color'])]
   

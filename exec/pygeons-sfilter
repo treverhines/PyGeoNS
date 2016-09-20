@@ -11,52 +11,69 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
-      description='''Spatially filters the data set''')
-p.add_argument('input_file',type=str,
-               help='''HDF5 data file''')
-p.add_argument('--output_file',type=str,
-               help='''Name of the output file. If not provided then 
-                       the input file extension is removed and 
-                       replaced with 'sfilter.h5'. The output file 
-                       type is always an HDF5 file.''') 
-p.add_argument('--cutoff',type=float,
-               help='''Spatial cutoff frequency in 1/meters''')
-p.add_argument('--diff',type=int,nargs=2,
-               help='''If provided, then the specified spatial 
-                       derivative of the filtered solution is 
-                       returned. The derivative is specified with two
-                       integers, E and N, where E is the derivative 
-                       order in the east direction and N is the 
-                       derivative order in the north direction.''')
-p.add_argument('--procs',type=int,
-               help='''Number of processes to use''')
-p.add_argument('--samples',type=int,
-               help='''Number of random samples to use for estimating the uncertainty.''')
-p.add_argument('-f','--fill',type=str,
-               help='''Indicates how to handle missing data (i.e. data
-                       with inf uncertainty). Can either be 'none', 
-                       where missing data is ignored, 'interpolate' 
-                       where missing interior data is filled in, or 
-                       'extrapolate' where all missing data is filled 
-                       in.''')               
-p.add_argument('--break_lons1',nargs='+',type=float,
-               help='''Coordinates of the spatial discontinuity line 
-                       segments. Smoothness is not enforced across 
-                       these discontinuities''')
-p.add_argument('--break_lons2',nargs='+',type=float,
-               help='''Coordinates of the spatial discontinuty line 
-                       segments. Smoothness is not enforced across 
-                       these discontinuities''')
-p.add_argument('--break_lats1',nargs='+',type=float,
-               help='''Coordinates of the spatial discontinuty line 
-                       segments. Smoothness is not enforced across 
-                       these discontinuities''')
-p.add_argument('--break_lats2',nargs='+',type=float,
-               help='''Coordinates of the spatial discontinuty line 
-                       segments. Smoothness is not enforced across 
-                       these discontinuities''')
-p.add_argument('-v','--verbose',action='count',default=0,
-               help='''Controls verbosity''')
+   description='''Spatially filters the data set''')
+
+p.add_argument(
+  'input_file',type=str,metavar='STR',
+  help='''Input data file. This must be an HDF5 file''')
+
+p.add_argument(
+  '-o','--output_file',type=str,metavar='STR',
+  help='''Output file name. If this is not provided then it is the 
+          same as the input file name but the extension is removed 
+          and replaced with "sfilter.h5"''')
+
+p.add_argument(
+  '--cutoff',type=float,metavar='FLOAT',
+  help='''Spatial cutoff frequency in 1/meters''')
+
+p.add_argument(
+  '--diff',type=int,nargs=2,metavar='INT',
+   help='''If provided, then the specified spatial derivative of the 
+           filtered solution is returned. The derivative is specified 
+           with two integers, where the first is the derivative order
+           in the east direction and the second is the derivative 
+           order in the north direction.''')
+
+p.add_argument(
+  '--procs',type=int,metavar='INT',
+  help='''Number of processes to use''')
+
+p.add_argument(
+  '--samples',type=int,metavar='INT',
+  help='''Number of random samples to use for estimating the 
+          uncertainty.''')
+
+p.add_argument(
+  '-f','--fill',type=str,metavar='STR',
+  help='''Indicates how to handle missing data (i.e. data with inf 
+          uncertainty). Can either be 'none', where missing data is 
+          ignored, 'interpolate' where missing interior data is filled
+          in, or 'extrapolate' where all missing data is filled in.''')               
+
+p.add_argument(
+  '--break_lons1',nargs='+',type=float,metavar='FLOAT',
+  help='''Coordinates of the spatial discontinuity line segments. 
+          Smoothness is not enforced across these discontinuities''')
+
+p.add_argument(
+  '--break_lons2',nargs='+',type=float,metavar='FLOAT',
+  help='''Coordinates of the spatial discontinuty line segments. 
+          Smoothness is not enforced across these discontinuities''')
+
+p.add_argument(
+  '--break_lats1',nargs='+',type=float,metavar='FLOAT',
+  help='''Coordinates of the spatial discontinuty line segments. 
+          Smoothness is not enforced across these discontinuities''')
+
+p.add_argument(
+  '--break_lats2',nargs='+',type=float,metavar='FLOAT',
+  help='''Coordinates of the spatial discontinuty line segments. 
+          Smoothness is not enforced across these discontinuities''')
+
+p.add_argument(
+  '-v','--verbose',action='count',default=0,
+  help='''Controls verbosity''')
                
 p = vars(p.parse_args())
 
