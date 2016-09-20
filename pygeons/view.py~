@@ -43,6 +43,12 @@ def _grid_interp_data(u,pnts,x,y):
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
   
+def one_sigfig(val):
+  ''' 
+  rounds *val* to one significant figure
+  '''
+  return np.round(val,-int(np.floor(np.log10(val))))
+
 def disable_default_key_bindings():
   ''' 
   removes the default matplotlib key bindings
@@ -328,15 +334,15 @@ Notes
       average_length = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
                                        self._masked_data_sets[0][:,:,1]**2))
       # prevents division by zero issues
-      average_length = max(average_length,1e-5) 
+      average_length = max(average_length,1e-10) 
       # round to leading sigfig
-      quiver_key_length = np.round(average_length,-int(np.floor(np.log10(average_length))))
+      quiver_key_length = one_sigfig(average_length)
       
     if quiver_scale is None:
       average_length = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
                                        self._masked_data_sets[0][:,:,1]**2))
       # prevents division by zero issues
-      average_length = max(average_length,1e-5) 
+      average_length = max(average_length,1e-10) 
       
       T = cKDTree(self.x)
       if Nx <= 1:
@@ -944,7 +950,7 @@ Notes
       return
 
 
-def view(*args,**kwargs):
+def interactive_viewer(*args,**kwargs):
   ''' 
   wrapper to initiate and show an InteractiveViewer
   '''
