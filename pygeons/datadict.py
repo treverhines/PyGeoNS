@@ -7,50 +7,68 @@ logger = logging.getLogger(__name__)
 class DataDict(dict):
   ''' 
   Specialized dictionary for GPS data.  An instance of this class 
-  contains the following items
+  should contain the following entries
   
       time : (Nt,) array
+        Array of observation times. These are in units of days since 
+        1970-01-01. Days are used instead of years because there is no 
+        ambiguity about the length of a day
+        
       id : (Nx,) array
+        Array of 4-character IDs for each station
+
       longitude : (Nx,) array
+        Longitude for each station in degrees
+        
       latitude : (Nx,) array
-      east : (Nt,Nx) array
-      north : (Nt,Nx) array
-      vertical : (Nt,Nx) array
-      east_std : (Nt,Nx) array
-      north_std : (Nt,Nx) array
-      vertical_std : (Nt,Nx) array
+        Latitude for each station in degrees
+
+      east,north,vertical : (Nt,Nx) array
+        data components. The units should be in terms of meters and 
+        days and should be consistent with the values specified for 
+        *space_power* and *time_power*. For example, if *time_power* 
+        is -1 and *space_power* is 1 then the units should be in 
+        meters per day.
+
+      east_std,north_std,vertical_std : (Nt,Nx) array
+        One standard deviation uncertainty. These should have the same 
+        units as the data components
+
+      time_power : int
+        Indicates the power of the time units for the data. -1 
+        indicates that the data is a rate, -2 is an acceleration etc.
+
+      space_power : int
+        Indicates the power of the spatial units for the data
   
+  Calling the function *check_self_consistency* will verify that all 
+  the entries exist and have the proper shapes 
   '''
-  def __init__(self,input=None):
+  def __init__(self,input):
     ''' 
-    Initiates a DataDict instance. This can be initiated with the same 
-    entries as *input* which is another dictionary or DataDict 
-    instance. If *input* is provided then array copies are made so 
-    that the new DataDict does not share any data with *input*.
+    Initiates a DataDict instance. 
+    
+    Parameters
+    ----------
+      input : dict or DataDict instance
+        This should contain all the necessary items for a DataDict 
+        instance. Items from *input* are copied so that the new 
+        DataDict does not share any data with *input*.
+
     '''
     dict.__init__(self)
-    self['time'] = None
-    self['id'] = None
-    self['longitude'] = None
-    self['latitude'] = None
-    self['east'] = None
-    self['north'] = None
-    self['vertical'] = None
-    self['east_std'] = None
-    self['north_std'] = None
-    self['vertical_std'] = None
-    
-    if input is not None:
-      self.update_with_copy(input)
-      
+    self.update_with_copy(input)
     return
 
   def __str__(self):
-    out = ['DataDict instance']
-    for k in self.keys():
-      out += ['    %s : %s array' % (k,np.shape(self[k]))]
-
-    return '\n'.join(out)
+    out = ('<DataDict instance, '
+           'times: %s, '
+           'stations: %s, '
+           'units: meters^%s * days^%s>'
+           % (len(self['time']),len(self['id']),
+              self['space_power'],self['time_power']))
+    
+    return out
 
   def __repr__(self):
     return self.__str__()
@@ -78,48 +96,58 @@ class DataDict(dict):
     # check for Nones
     keys = ['time','id','longitude','latitude',
             'east','north','vertical',
-            'east_std','north_std','vertical_std']
+            'east_std','north_std','vertical_std',
+            'time_power','space_power']
     for k in keys:
-      if self[k] is None:
+      if not self.has_key(k):
         raise ValueError('*%s* has not been set' % k)
-    
-      self[k] = np.asarray(self[k])
-      
+
     # check for proper sizes
     Nt = len(self['time'])
     Nx = len(self['id'])
     keys = ['longitude','latitude']
     for k in keys:     
       if not self[k].shape == (Nx,):
-        raise ValueError('*%s* has shape %s but should be %s' % (k,self[k].shape,(Nx,)))
+        raise ValueError(
+          '*%s* has shape %s but should be %s' % (k,self[k].shape,(Nx,)))
 
     keys = ['east','north','vertical',
             'east_std','north_std','vertical_std']
     for k in keys:     
       if not self[k].shape == (Nt,Nx):
-        raise ValueError('dimensions of *%s* have shape %s but should be %s' % (k,self[k].shape,(Nt,Nx)))
+        raise ValueError(
+          'dimensions of *%s* have shape %s but should be %s' 
+          % (k,self[k].shape,(Nt,Nx)))
     
-    # make sure infinite uncertainties are consistent for all three directions
+    # make sure infinite uncertainties are consistent for all three 
+    # directions
     east_isinf = np.isinf(self['east_std'])
     north_isinf = np.isinf(self['north_std'])
     vertical_isinf = np.isinf(self['vertical_std'])
     if not np.all(east_isinf==north_isinf):
-      raise ValueError('missing data (i.e. data with infinite uncertainty) must be missing for all three directions')
+      raise ValueError(
+        'missing data (i.e. data with infinite uncertainty) must be '
+        'missing for all three directions')
     if not np.all(east_isinf==vertical_isinf):
-      raise ValueError('missing data (i.e. data with infinite uncertainty) must be missing for all three directions')
+      raise ValueError(
+        'missing data (i.e. data with infinite uncertainty) must be '
+        'missing for all three directions')
       
     # make sure that infs correspond with nans
     keys = ['east','north','vertical']
     for k in keys:
       k_isnan = np.isnan(self[k])
       if not np.all(k_isnan == east_isinf):
-        raise ValueError('infs in the uncertainties do not correspond to nans in the data')
+        raise ValueError(
+          'infs in the uncertainties do not correspond to nans in '
+          'the data')
         
     # make sure that all uncertainties are positive
     keys = ['east_std','north_std','vertical_std']
     for k in keys:
       if np.any(self[k] <= 0.0):
-        raise ValueError('found zero or negative uncertainty for *%s*' % k)
+        raise ValueError(
+          'found zero or negative uncertainty for *%s*' % k)
      
     # make sure there are no duplicate station IDs
     if len(np.unique(self['id'])) != len(self['id']):
@@ -130,7 +158,9 @@ class DataDict(dict):
           duplicates += [i]
 
       duplicates = ' '.join(duplicates)
-      raise ValueError('There were multiple occurrences of these station IDs: %s' % duplicates)
+      raise ValueError(
+        'There were multiple occurrences of these station IDs: %s' 
+        % duplicates)
 
     logger.debug('ok')
     return
@@ -146,6 +176,10 @@ class DataDict(dict):
       raise ValueError('DataDicts have inconsistent time epochs')
     if not np.all(self['id'] == other['id']):
       raise ValueError('DataDicts have inconsistent stations')
+    if self['time_power'] != other['time_power']:
+      raise ValueError('DataDicts have inconsistent units')
+    if self['space_power'] != other['space_power']:
+      raise ValueError('DataDicts have inconsistent units')
 
     return
 
