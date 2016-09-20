@@ -20,6 +20,8 @@ dictionary contains the following items:
   east_std : (Nt,Nx) array
   north_std : (Nt,Nx) array
   vertical_std : (Nt,Nx) array
+  time_power : int
+  space_power : int
 
 '''
 from __future__ import division
@@ -38,6 +40,44 @@ from mpl_toolkits.basemap import Basemap
 from functools import wraps
 logger = logging.getLogger(__name__)
 
+
+def _unit_string(space_power,time_power):
+  ''' 
+  returns a string indicating the units
+  '''
+  if (space_power == 0) & (time_power == 0):
+    return ''
+
+  if space_power == 0:
+    space_str = '1'
+  elif space_power == 1:
+    space_str = 'mm'
+  else:
+    space_str = 'mm^%s' % space_power
+
+  if time_power == 0:
+    time_str = ''
+  elif time_power == -1:
+    time_str = '/yr'
+  else:
+    time_str = '/yr^%s' % -time_power
+  
+  return space_str + time_str
+        
+
+def _unit_conversion(space_power,time_power):
+  ''' 
+  returns the scalar which converts 
+  
+    meters**(space_power) * days*(time_power)
+  
+  to   
+
+    mm**(space_power) * years*(time_power)
+  '''
+  return 1000**space_power * (1.0/365.25)**time_power
+  
+
 def _make_time_breaks(break_dates):
   if break_dates is None: break_dates = []
   # subtract half a day to get rid of any ambiguity about what day 
@@ -46,6 +86,7 @@ def _make_time_breaks(break_dates):
   vert = np.array(breaks).reshape((-1,1))
   smp = np.arange(vert.shape[0]).reshape((-1,1))  
   return vert,smp
+
 
 def _make_space_breaks(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   if end1_lons is None: end1_lons = []
@@ -75,27 +116,6 @@ def _check_io(fin):
 
   return fout  
 
-
-def _log_call(fin):
-  ''' 
-  Notifies the user of calls to a function and prints all but the 
-  first positional input argument, which is the data dictionary
-  '''
-  @wraps(fin)
-  def fout(data,*args,**kwargs):
-    str = 'calling function %s :\n' % fin.__name__
-    str += '    positional arguments following data :\n'
-    for a in args:
-      str += '        %s\n' % a
-    str += '    key word arguments :\n'
-    for k,v in kwargs.iteritems():
-      str += '        %s : %s\n' % (k,v)
-
-    logger.debug(str)
-    return fin(data,*args,**kwargs)
-
-  return fout
-      
   
 def _make_basemap(lon,lat,resolution=None):
   ''' 
@@ -181,10 +201,9 @@ def _setup_ts_ax(ax_lst,times):
 
 
 @_check_io
-@_log_call
 def tfilter(data,
             cutoff=None,
-            diff=None,
+            diff=(0,),
             fill='none',
             procs=0,
             samples=100,
@@ -207,14 +226,15 @@ def tfilter(data,
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
 
+  # set the time units
+  out['time_power'] -= sum(diff)
   return out
 
 
 @_check_io
-@_log_call
 def sfilter(data,
             cutoff=None,
-            diff=None,
+            diff=(0,0),
             fill='none',
             procs=0,
             samples=100,
@@ -242,12 +262,13 @@ def sfilter(data,
     out[dir] = post
     out[dir+'_std'] = post_sigma
 
+  # set the space units
+  out['space_power'] -= sum(diff)
   return out
 
 
 @_check_io
-@_log_call
-def downsample(data,sample_period,start_date=None,stop_date=None,
+def downsample(data,sample_period=1,start_date=None,stop_date=None,
                break_dates=None):
   ''' 
   downsamples the data set along the time axis
@@ -257,11 +278,11 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
     data : dict
       data dictionary
       
-    sample_period : int
+    sample_period : int, optional
       sample period of the output data set in days. Output data is 
       computed using a running mean with this width. This should be an 
       odd integer in order to avoid double counting the observations 
-      at some days
+      at some days. Defaults to 1.
       
     start_date : str, optional
       start date of output data set in YYYY-MM-DD. Uses the start date 
@@ -308,7 +329,6 @@ def downsample(data,sample_period,start_date=None,stop_date=None,
 
 
 @_check_io
-@_log_call
 def clean(data,resolution='i',
           break_lons1=None,break_lats1=None,
           break_lons2=None,break_lats2=None,
@@ -349,12 +369,23 @@ def clean(data,resolution='i',
   pos = np.array([x,y]).T
   t = data['time']
   dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
-  u,v,z = data['east'],data['north'],data['vertical']
-  su,sv,sz = data['east_std'],data['north_std'],data['vertical_std']
+
+  conv = _unit_conversion(data['space_power'],
+                          data['time_power'])
+  units = _unit_string(data['space_power'],
+                       data['time_power'])
+
+  u = conv*data['east']
+  v = conv*data['north']
+  z = conv*data['vertical']
+  su = conv*data['east_std']
+  sv = conv*data['north_std']
+  sz = conv*data['vertical_std']
   clean_data = pygeons.clean.interactive_cleaner(
                  t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
                  map_ax=map_ax,ts_ax=ts_ax,
                  time_labels=dates,
+                 units=units,
                  station_labels=data['id'],
                  **kwargs)
 
@@ -368,7 +399,6 @@ def clean(data,resolution='i',
   return out
 
 
-@_log_call
 def view(data_list,resolution='i',
          break_lons1=None,break_lats1=None,
          break_lons2=None,break_lats2=None,
@@ -399,12 +429,17 @@ def view(data_list,resolution='i',
   id = data_list[0]['id']
   dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
 
-  u = [d['east'] for d in data_list]
-  v = [d['north'] for d in data_list]
-  z = [d['vertical'] for d in data_list]
-  su = [d['east_std'] for d in data_list]
-  sv = [d['north_std'] for d in data_list]
-  sz = [d['vertical_std'] for d in data_list]
+  conv = _unit_conversion(data_list[0]['space_power'],
+                          data_list[0]['time_power'])
+  units = _unit_string(data_list[0]['space_power'],
+                       data_list[0]['time_power'])
+
+  u = [conv*d['east'] for d in data_list]
+  v = [conv*d['north'] for d in data_list]
+  z = [conv*d['vertical'] for d in data_list]
+  su = [conv*d['east_std'] for d in data_list]
+  sv = [conv*d['north_std'] for d in data_list]
+  sz = [conv*d['vertical_std'] for d in data_list]
 
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
   _setup_ts_ax(ts_ax,data_list[0]['time'])
@@ -428,11 +463,11 @@ def view(data_list,resolution='i',
     ts_ax=ts_ax,map_ax=map_ax,
     station_labels=id,
     time_labels=dates,
+    units=units,
     **kwargs)
 
   return
 
-@_log_call
 def strain(data_dx,data_dy,resolution='i',
            break_lons1=None,break_lats1=None,
            break_lons2=None,break_lats2=None,
@@ -456,21 +491,27 @@ def strain(data_dx,data_dy,resolution='i',
   data_dx.check_self_consistency()
   data_dy.check_self_consistency()
   data_dx.check_compatibility(data_dy)
+  if (data_dx['space_power'] != 0) | data_dy['space_power'] != 0:
+    raise ValueError('data sets cannot have spatial units')
   
   t = data_dx['time']
   lon = data_dx['longitude']
   lat = data_dx['latitude']
-  id = data_dx['id']
   dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
 
-  ux = data_dx['east']
-  vx = data_dx['north']
-  uy = data_dy['east']
-  vy = data_dy['north']
-  sux = data_dx['east_std']
-  svx = data_dx['north_std']
-  suy = data_dy['east_std']
-  svy = data_dy['north_std']
+  conv = _unit_conversion(data_dx['space_power'],
+                          data_dx['time_power'])
+  units = _unit_string(data_dx['space_power'],
+                       data_dx['time_power'])
+
+  ux = conv*data_dx['east']
+  sux = conv*data_dx['east_std']
+  vx = conv*data_dx['north']
+  svx = conv*data_dx['north_std']
+  uy = conv*data_dy['east']
+  suy = conv*data_dy['east_std']
+  vy = conv*data_dy['north']
+  svy = conv*data_dy['north_std']
    
   fig,ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(lon,lat,
@@ -492,6 +533,7 @@ def strain(data_dx,data_dy,resolution='i',
     sux,suy,svx,svy,
     ax=ax,
     time_labels=dates,
+    units=units,
     **kwargs)
 
   return

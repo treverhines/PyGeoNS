@@ -17,6 +17,7 @@ def _roll(lst):
   out = [lst[-1]] + lst[:-1]
   return out
 
+
 def _grid_interp_data(u,pnts,x,y):
   # u must be a masked array
   pnts = pnts[~u.mask]
@@ -43,11 +44,13 @@ def _grid_interp_data(u,pnts,x,y):
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
   
+
 def one_sigfig(val):
   ''' 
   rounds *val* to one significant figure
   '''
   return np.round(val,-int(np.floor(np.log10(val))))
+
 
 def disable_default_key_bindings():
   ''' 
@@ -56,6 +59,7 @@ def disable_default_key_bindings():
   for k in plt.rcParams.keys():
     if 'keymap' in k:
       plt.rcParams[k] = []
+
 
 def without_interactivity(fin):
   ''' 
@@ -72,6 +76,7 @@ def without_interactivity(fin):
 
   return fout
     
+
 class InteractiveViewer:
   ''' 
                --------------------------------
@@ -116,11 +121,11 @@ Notes
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None, 
-               quiver_key_label=None,
+               units='',
                quiver_key_length=None,
                quiver_scale=None,
                quiver_width=0.005,
-               quiver_key_pos=None,
+               quiver_key_pos=(0.2,0.1),
                scatter_show=True,
                scatter_size=100,
                image_clim=None,
@@ -132,9 +137,6 @@ Notes
                data_set_names=None,
                ts_ax=None,
                ts_title=None,
-               ts_ylabel_0='east',
-               ts_ylabel_1='north',
-               ts_ylabel_2='vertical',
                ts_xlabel='time',
                fontsize=10,
                map_ax=None,
@@ -148,24 +150,20 @@ Notes
     
     Parameters
     ----------
-      data_sets : (Ns,) list of (Nt,Nx,3) arrays
-        
       t : (Nt,) array
+        observation times
 
       x : (Nx,2) array
+        observation positions
+        
+      u,v,z : (S,Nx,Nt) array
+        vector field components
+        
+      su,sv,sz : (S,Nx,Nt) array
+        one standard deviation uncertainty in vector field components
+        
+      units : str
       
-      u : (S,Nx,Nt) array
-
-      v : (S,Nx,Nt) array
-
-      z : (S,Nx,Nt) array
-
-      su : (S,Nx,Nt) array
-
-      sv : (S,Nx,Nt) array
-
-      sz : (S,Nx,Nt) array
-       
       quiver_key_label : str
         label above the quiver key
         
@@ -264,7 +262,9 @@ Notes
     if ((len(u)  != S) | (len(v)  != S) |
         (len(z)  != S) | (len(su) != S) |
         (len(sv) != S) | (len(sz) != S)):
-      raise ValueError('provided values of u, v, z, su, sv, and sz must have the same length')
+      raise ValueError(
+        'provided values of u, v, z, su, sv, and sz must have the '
+        'same length')
 
     if color_cycle is None:
       self.color_cycle = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
@@ -291,7 +291,8 @@ Notes
     # map view axis and figure
     if map_ax is None:
       # gives a white background 
-      map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
+      map_fig,map_ax = plt.subplots(num='Map View',
+                                    facecolor='white')
       self.map_fig = map_fig
       self.map_ax = map_ax
     else:
@@ -300,7 +301,9 @@ Notes
 
     # make figure and axis for the time series 
     if ts_ax is None:
-      ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+      ts_fig,ts_ax = plt.subplots(3,1,sharex=True,
+                                  num='Time Series View',
+                                  facecolor='white')
       self.ts_fig = ts_fig
       self.ts_ax = ts_ax
     else:
@@ -325,35 +328,34 @@ Notes
     self.time_labels = list(time_labels)
     self.data_set_names = list(data_set_names)
 
-    # position and length of the scale vector 
-    if quiver_key_pos is None:
-      quiver_key_pos = (0.2,0.1)
-
     if quiver_key_length is None: 
       # find the average length of unmasked data
-      average_length = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
-                                       self._masked_data_sets[0][:,:,1]**2))
+      mag = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
+                            self._masked_data_sets[0][:,:,1]**2))
       # prevents division by zero issues
-      average_length = max(average_length,1e-10) 
+      mag = max(mag,1e-10) 
       # round to leading sigfig
-      quiver_key_length = one_sigfig(average_length)
+      quiver_key_length = one_sigfig(mag)
       
     if quiver_scale is None:
-      average_length = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
-                                       self._masked_data_sets[0][:,:,1]**2))
+      mag = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
+                            self._masked_data_sets[0][:,:,1]**2))
       # prevents division by zero issues
-      average_length = max(average_length,1e-10) 
+      mag = max(mag,1e-10) 
       
+      # find the average shortest distance between points
       T = cKDTree(self.x)
       if Nx <= 1:
-        average_dist = 1.0
+        dist = 1.0
       else:  
-        average_dist = np.mean(T.query(self.x,2)[0][:,1])
+        dist = np.mean(T.query(self.x,2)[0][:,1])
 
-      quiver_scale = average_length/average_dist
+      quiver_scale = mag/dist
       
-    if quiver_key_label is None:   
-      quiver_key_label = 'scale : ' + str(quiver_key_length)
+    quiver_key_label = '%s %s' % (str(quiver_key_length),units)
+    ts_ylabel_0 = 'east [%s]' % units
+    ts_ylabel_1 = 'north [%s]' % units
+    ts_ylabel_2 = 'vertical [%s]' % units
 
     # this dictionary contains plot configuration parameters which may 
     # be interactively changed
@@ -390,7 +392,7 @@ Notes
     if one component in sigma_sets is inf then set the other 
     components to inf. For example, if an easting component is inf 
     then set the northing and vertical component to inf. Set the 
-    corresponding values in data_sets to zero
+    corresponding values in data_sets to nan
     '''
     new_data_sets = []
     new_sigma_sets = []

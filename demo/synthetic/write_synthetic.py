@@ -11,7 +11,7 @@ np.random.seed(2)
 
 ## observation points
 #####################################################################
-Nx = 500
+Nx = 200
 #pos_geo = np.random.uniform(-3,3,(Nx,3))
 pos_geo = np.random.normal(0.0,1.0,(Nx,3))
 pos_geo[:,0] += -84.2
@@ -70,7 +70,7 @@ slip_history[...] = 1.0
 # XXXXXXXXXXXXXXXXXXXXX
 
 data = slip_history[:,None,None]*disp[None,:]
-sigma = 0.1*np.ones(data.shape)
+sigma = 0.01*np.ones(data.shape)
 data += np.random.normal(0.0,sigma)
 
 data_dict = {}
@@ -84,6 +84,8 @@ data_dict['vertical'] = data[:,:,2]
 data_dict['east_std'] = sigma[:,:,0]
 data_dict['north_std'] = sigma[:,:,1]
 data_dict['vertical_std'] = sigma[:,:,2]
+data_dict['time_power'] = 0
+data_dict['space_power'] = 1
 pygeons.ioconv.csv_from_dict('data/synthetic.csv',data_dict)
 quit()
 print(data.shape)

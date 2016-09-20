@@ -5,97 +5,9 @@ from pygeons.view import InteractiveViewer
 from pygeons.downsample import weighted_mean
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from scipy.spatial import cKDTree
 import logging
 logger = logging.getLogger(__name__)
 
-def most(a,axis=None,cutoff=0.5):
-  ''' 
-  behaves like np.all but returns True if the percentage of Trues
-  is greater than or equal to cutoff
-  '''
-  a = np.asarray(a,dtype=bool)
-  if axis is None:
-    b = np.prod(a.shape)
-  else:
-    b = a.shape[axis]
-
-  asum = np.sum(a,axis=axis)
-  return asum >= b*cutoff
-
-
-def time_lacks_data(sigma,cutoff=0.5):
-  ''' 
-  returns true for each time where sigma is np.inf for most of the stations.
-  The percentage of infs must exceed cutoff in order to return True.
-  '''
-  out = most(np.isinf(sigma),axis=1,cutoff=cutoff)
-  return out
-
-
-def station_lacks_data(sigma,cutoff=0.5):
-  ''' 
-  returns true for each station where sigma is np.inf for most of the times.
-  The percentage of infs must exceed cutoff in order to return True.
-  '''
-  out = most(np.isinf(sigma),axis=0,cutoff=cutoff)
-  return out
-
-
-def station_is_duplicate(sigma,x,tol=4.0):
-  ''' 
-  returns the indices for a set of nonduplicate stations. if duplicate 
-  stations are found then the one that has the most observations is 
-  retained
-  '''
-  x = np.asarray(x)
-  # if there is zero or one station then dont run this check
-
-  is_duplicate = np.zeros(x.shape[0],dtype=bool)
-  while True:
-    xi = x[~is_duplicate]
-    sigmai = sigma[:,~is_duplicate]
-    idx = _identify_duplicate_station(sigmai,xi,tol=tol) 
-    if idx is None:
-      break
-    else:  
-      global_idx = np.nonzero(~is_duplicate)[0][idx]
-      logger.info('identified station %s as a duplicate' % global_idx)
-      is_duplicate[global_idx] = True
-
-  return is_duplicate      
-
-
-def _identify_duplicate_station(sigma,x,tol=3.0):
-  ''' 
-  returns the index of the station which is likely to be a duplicate 
-  due to its proximity to another station.  The station which has the 
-  least amount of data is identified as the duplicate
-  '''
-  # if there is zero or one station then dont run this check
-  if x.shape[0] <= 1:
-    return None
-    
-  T = cKDTree(x)
-  dist,idx = T.query(x,2)
-  r = dist[:,1]
-  ri = idx[:,1]
-  logr = np.log10(r)
-  cutoff = np.mean(logr) - tol*np.std(logr)
-  if not np.any(logr < cutoff):
-    # if no duplicates were found then return nothing
-    return None
-
-  else:
-    # otherwise return the index of the least useful of the two 
-    # nearest stations
-    idx1 = np.argmin(logr)    
-    idx2 = ri[idx1]
-    count1 = np.sum(~np.isinf(sigma[:,idx1]))
-    count2 = np.sum(~np.isinf(sigma[:,idx2]))
-    count,out = min((count1,idx1),(count2,idx2))
-    return out
-  
 
 class InteractiveCleaner(InteractiveViewer):
   ''' 
@@ -430,7 +342,7 @@ Notes
       self._apply_to_all = False
   
 
-def clean(*args,**kwargs):
+def interactive_cleaner(*args,**kwargs):
   ''' 
   Runs InteractiveCleaner and returns the kept data
   '''
