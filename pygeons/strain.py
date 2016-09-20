@@ -5,12 +5,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.lines import Line2D
-from matplotlib.patches import FancyArrow
 from matplotlib.collections import PatchCollection
+from matplotlib.text import Text
 from pygeons.view import disable_default_key_bindings
 from pygeons.view import without_interactivity
+from pygeons.view import one_sigfig
 from pygeons._input import restricted_input
-
+from scipy.spatial import cKDTree
 
 def strain_glyph(x,y,grad,sigma=None,
                  scale=1.0,
@@ -135,78 +136,6 @@ def strain_glyph(x,y,grad,sigma=None,
   return out
 
 
-def _principle_strain_component(x,y,eigval,eigvec,scale,**kwargs):
-  ''' 
-  returns two arrow patches corresponding to a principle strain 
-  component
-  '''
-  if eigval == 0.0:
-    return ()
-  elif eigval < 0.0:
-    compressional = True
-  else:
-    compressional = False
-
-  u = eigval*eigvec[0]*scale
-  v = eigval*eigvec[1]*scale
-  length = np.sqrt(u**2 + v**2)
-
-  # set arrow parameters
-  head_length = 0.25*length
-  head_width = 0.5*head_length
-  width = 0.03*length
-  overhang = 0.05
-  if compressional:
-    arrow1 = FancyArrow(x-u,y-v,u,v,
-                        length_includes_head=True,
-                        width=width,
-                        head_width=head_width,
-                        head_length=head_length,
-                        overhang=overhang,
-                        **kwargs)
-    arrow2 = FancyArrow(x+u,y+v,-u,-v,
-                        length_includes_head=True,
-                        width=width,
-                        head_width=head_width,
-                        head_length=head_length,
-                        overhang=overhang,
-                        **kwargs)
-  else:
-    arrow1 = FancyArrow(x,y,u,v,
-                        length_includes_head=True,
-                        width=width,
-                        head_width=head_width,
-                        head_length=head_length,
-                        overhang=overhang,
-                        **kwargs)
-    arrow2 = FancyArrow(x,y,-u,-v,
-                        length_includes_head=True,
-                        width=width,
-                        head_width=head_width,
-                        head_length=head_length,
-                        overhang=overhang,
-                        **kwargs)
-
-  return arrow1,arrow2
-
-
-def principle_strain_glyph(x,y,dudx,dudy,dvdx,dvdy,scale=1.0,**kwargs):
-  ''' 
-  returns the arrows patches corresponding to each principle strain 
-  component
-  '''
-  strain = np.array([[dudx,0.5*(dudy + dvdx)],
-                     [0.5*(dudy + dvdx),dvdy]])
-  if np.any(np.isnan(strain)):
-    return ()
-
-  eigvals,eigvecs = np.linalg.eig(strain)
-  artists = ()
-  artists += _principle_component(x,y,eigvals[0],eigvecs[:,0],scale,**kwargs)
-  artists += _principle_component(x,y,eigvals[1],eigvecs[:,1],scale,**kwargs)
-  return artists
-
-
 class InteractiveStrainViewer:
   ''' 
                ----------------------------------------
@@ -240,7 +169,7 @@ Notes
                ux,uy,vx,vy,
                sux=None,suy=None,
                svx=None,svy=None,
-               scale=1.0,
+               scale=None,
                time_labels=None,
                fontsize=10,
                ax=None,
@@ -250,7 +179,9 @@ Notes
                compression_color='r',
                extension_color='b',
                alpha=0.2,
-               vertices=100):
+               vertices=100,
+               key_magnitude=None,
+               key_position=(0.1,0.1)):
     ''' 
     interactively views strain which is time and space dependent
     
@@ -285,6 +216,12 @@ Notes
       
       fontsize : float
         Controls all fontsizes
+      
+      key_magnitude : float
+        strain magnitude for the key
+        
+      key_position : tuple    
+        position of the key in axis coordinates
         
     '''
     # time and space arrays
@@ -318,6 +255,25 @@ Notes
 
     self.time_labels = list(time_labels)
 
+    # estimate a good scale for the strain glyphs
+    if scale is None:
+      # Get an idea of what the typical strain magnitudes are
+      mag = 5*np.nanmean(np.abs([ux,uy,vx,vy]))
+      mag = max(mag,1e-10)
+      # find the average distance between points
+      T = cKDTree(self.x) 
+      if Nx <= 1:
+        dist = 1.0
+      else:
+        dist = np.mean(T.query(self.x,2)[0][:,1])
+    
+      scale = dist/mag
+      
+    if key_magnitude is None:  
+      mag = 5*np.nanmean(np.abs([ux,uy,vx,vy]))
+      mag = max(mag,1e-10)
+      key_magnitude = one_sigfig(mag)
+      
     # this dictionary contains plot configuration parameters which may 
     # be interactively changed
     self.config = {}
@@ -331,6 +287,8 @@ Notes
     self.config['extension_color'] = extension_color
     self.config['alpha'] = alpha
     self.config['vertices'] = vertices
+    self.config['key_magnitude'] = key_magnitude
+    self.config['key_position'] = key_position
     self._init()
     disable_default_key_bindings()
     print(self.__doc__)
@@ -373,6 +331,32 @@ Notes
     while len(self.artists) > 0:
       self.artists.pop().remove()
 
+  def _draw_key(self):
+    mag = self.config['key_magnitude']
+    grad = [mag,0.0,0.0,-mag]
+    sigma = [0.1*mag,0.0,0.0,-0.1*mag]
+
+    key_pos_axes = self.config['key_position']
+    key_pos_display = self.ax.transAxes.transform(key_pos_axes)
+    key_pos_data = self.ax.transData.inverted().transform(key_pos_display)
+    posx,posy = key_pos_data
+    self.artists += strain_glyph(posx,posy,grad,sigma,
+                                 scale=self.config['scale'],
+                                 extension_color=self.config['extension_color'],
+                                 compression_color=self.config['compression_color'],
+                                 alpha=self.config['alpha'],
+                                 vertices=self.config['vertices'])
+    textx = posx + 1.1*mag*self.config['scale']
+    texty = posy 
+    self.artists += [Text(textx,texty,'%s' % mag,
+                          fontsize=10,
+                          color=self.config['extension_color'])]
+    textx = posx 
+    texty = posy + 1.1*mag*self.config['scale']
+    self.artists += [Text(textx,texty,'-%s' % mag,
+                          fontsize=10,
+                          color=self.config['compression_color'])]
+  
   def _draw_strain(self): 
     grad = self.data_set[self.config['tidx'],:,:]
     sigma = self.sigma_set[self.config['tidx'],:,:]
@@ -389,6 +373,7 @@ Notes
   def _init(self):
     self.artists = []
     self._init_ax()
+    self._draw_key()
     self._draw_strain()
     self.fig.canvas.draw()
     self.ax.autoscale_view()
@@ -396,6 +381,7 @@ Notes
   def update(self):
     self._remove_artists()
     self._update_ax()
+    self._draw_key()
     self._draw_strain()
     self.fig.canvas.draw()
 
