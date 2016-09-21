@@ -353,7 +353,8 @@ def clean(data,resolution='i',
       output data dictionary 
     
   '''
-  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
+                              facecolor='white')
   _setup_ts_ax(ts_ax,data['time'])
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = _make_basemap(data['longitude'],data['latitude'],
@@ -390,12 +391,12 @@ def clean(data,resolution='i',
                  **kwargs)
 
   out = DataDict(data)
-  out['east'] = clean_data[0]
-  out['north'] = clean_data[1]
-  out['vertical'] = clean_data[2]
-  out['east_std'] = clean_data[3]
-  out['north_std'] = clean_data[4]
-  out['vertical_std'] = clean_data[5]
+  out['east'] = clean_data[0]/conv
+  out['north'] = clean_data[1]/conv
+  out['vertical'] = clean_data[2]/conv
+  out['east_std'] = clean_data[3]/conv
+  out['north_std'] = clean_data[4]/conv
+  out['vertical_std'] = clean_data[5]/conv
   return out
 
 
@@ -441,12 +442,12 @@ def view(data_list,resolution='i',
   sv = [conv*d['north_std'] for d in data_list]
   sz = [conv*d['vertical_std'] for d in data_list]
 
-  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
+                              facecolor='white')
   _setup_ts_ax(ts_ax,data_list[0]['time'])
    
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-  bm = _make_basemap(lon,lat,
-                     resolution=resolution)
+  bm = _make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,map_ax)
 
   # draw breaks if there are any
@@ -514,8 +515,7 @@ def strain(data_dx,data_dy,resolution='i',
   svy = conv*data_dy['north_std']
    
   fig,ax = plt.subplots(num='Map View',facecolor='white')
-  bm = _make_basemap(lon,lat,
-                     resolution=resolution)
+  bm = _make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,ax)
 
   # draw breaks if there are any

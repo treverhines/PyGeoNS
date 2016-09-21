@@ -14,7 +14,7 @@ p.add_argument(
    help='''date files. These must be HDF5 files''')
 
 p.add_argument(
-  '-v','--verbose',action='count',default=0,metavar='STR',
+  '-v','--verbose',action='count',default=0,
   help='''controls verbosity''')
   
 p.add_argument('--data_set_names',nargs='+',type=str,metavar='STR')
