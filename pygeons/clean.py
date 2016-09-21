@@ -2,7 +2,7 @@
 from __future__ import division
 import numpy as np
 from pygeons.view import InteractiveViewer
-from pygeons.downsample import weighted_mean
+from pygeons.mean import weighted_mean
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import logging
