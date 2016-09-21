@@ -11,7 +11,7 @@ np.random.seed(2)
 
 ## observation points
 #####################################################################
-Nx = 200
+Nx = 100
 #pos_geo = np.random.uniform(-3,3,(Nx,3))
 pos_geo = np.random.normal(0.0,1.0,(Nx,3))
 pos_geo[:,0] += -84.2
@@ -52,7 +52,7 @@ disp,derr = slippy.okada.patch_dislocation(pos,slip,p)
 
 # XXXXXXXXXXXXXXXXXXXXX
 disp[:,0] = 0.0
-disp[:,1] = np.arctan((pos[:,0]-seg_pos[0])/100000.0)
+disp[:,1] = pos[:,1]#np.arctan((pos[:,0]-seg_pos[0])/100000.0)
 disp[:,2] = 0.0
 # XXXXXXXXXXXXXXXXXXXXX
 
