@@ -103,20 +103,6 @@ def _make_space_breaks(end1_lons,end1_lats,end2_lons,end2_lats,bm):
   return vert,smp
 
 
-def _check_io(fin):
-  ''' 
-  checks the input and output for functions that take and return data dictionaries
-  '''
-  @wraps(fin)
-  def fout(data,*args,**kwargs):
-    data.check_self_consistency()
-    data_out = fin(data,*args,**kwargs)
-    data_out.check_self_consistency()
-    return data_out
-
-  return fout  
-
-  
 def _make_basemap(lon,lat,resolution=None):
   ''' 
   creates a transverse mercator projection which is centered about the 
@@ -200,7 +186,6 @@ def _setup_ts_ax(ax_lst,times):
   return
 
 
-@_check_io
 def tfilter(data,
             cutoff=None,
             diff=(0,),
@@ -211,6 +196,7 @@ def tfilter(data,
   ''' 
   time smoothing
   '''
+  data.check_self_consistency()
   vert,smp = _make_time_breaks(break_dates)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
@@ -228,10 +214,10 @@ def tfilter(data,
 
   # set the time units
   out['time_power'] -= sum(diff)
+  out.check_self_consistency()
   return out
 
 
-@_check_io
 def sfilter(data,
             cutoff=None,
             diff=(0,0),
@@ -243,6 +229,7 @@ def sfilter(data,
   ''' 
   space smoothing
   '''
+  data.check_self_consistency()
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
@@ -264,10 +251,10 @@ def sfilter(data,
 
   # set the space units
   out['space_power'] -= sum(diff)
+  out.check_self_consistency()
   return out
 
 
-@_check_io
 def downsample(data,sample_period=1,start_date=None,stop_date=None,
                break_dates=None):
   ''' 
@@ -302,6 +289,7 @@ def downsample(data,sample_period=1,start_date=None,stop_date=None,
       output data dictionary
 
   '''
+  data.check_self_consistency()
   vert,smp = _make_time_breaks(break_dates)
       
   # if the start and stop time are not specified then use the min and 
@@ -325,10 +313,10 @@ def downsample(data,sample_period=1,start_date=None,stop_date=None,
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
 
+  out.check_self_consistency()
   return out
 
 
-@_check_io
 def clean(data,resolution='i',
           break_lons1=None,break_lats1=None,
           break_lons2=None,break_lats2=None,
@@ -353,6 +341,7 @@ def clean(data,resolution='i',
       output data dictionary 
     
   '''
+  data.check_self_consistency()
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax,data['time'])
@@ -397,6 +386,7 @@ def clean(data,resolution='i',
   out['east_std'] = clean_data[3]/conv
   out['north_std'] = clean_data[4]/conv
   out['vertical_std'] = clean_data[5]/conv
+  out.check_self_consistency()
   return out
 
 
