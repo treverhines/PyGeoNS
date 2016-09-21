@@ -124,20 +124,16 @@ Notes
                units=None,
                quiver_key_length=None,
                quiver_scale=None,
-               quiver_width=0.005,
                quiver_key_pos=(0.2,0.1),
-               scatter_show=True,
                scatter_size=100,
                image_clim=None,
                image_cmap=None,
                image_array_size=200,
-               image_clabel=None,
                station_labels=None,
                time_labels=None,
-               data_set_names=None,
+               data_set_labels=None,
                ts_ax=None,
                ts_title=None,
-               ts_xlabel='time',
                fontsize=10,
                map_ax=None,
                map_title=None,
@@ -164,9 +160,6 @@ Notes
         
       units : str
       
-      quiver_key_label : str
-        label above the quiver key
-        
       quiver_key_length : float
         length of the quiver key
 
@@ -179,22 +172,15 @@ Notes
       scatter_size : float
         size of the vertical deformation dots
 
-      scatter_show : bool
-        whether to show the vertical deformation for the second data 
-        set as scatter points
-        
       station_labels : (Nx,) str array
       
-      data_set_names : (Ns,) str array
+      data_set_labels : (Ns,) str array
       
       image_clim : float
         minimum and maximum vertical color value      
 
       image_cmap : Colormap instance
         colormap for vertical deformation
-
-      image_clabel : str
-        color bar label  
 
       image_array_size : int
         number of columns and rows in the matrix passed to plt.imshow. 
@@ -220,12 +206,6 @@ Notes
       ts_title : str
         title for time series plot
       
-      ts_ylabel : str
-        time series y label
-      
-      ts_xlabel : str
-        time series x label
-        
       fontsize : float
         controls all fontsizes
         
@@ -321,12 +301,12 @@ Notes
       time_labels = np.array(self.t).astype(str)
 
     # data set names used for the legends
-    if data_set_names is None:
-      data_set_names = np.arange(len(self.data_sets)).astype(str)
+    if data_set_labels is None:
+      data_set_labels = np.arange(len(self.data_sets)).astype(str)
 
     self.station_labels = list(station_labels)
     self.time_labels = list(time_labels)
-    self.data_set_names = list(data_set_names)
+    self.data_set_labels = list(data_set_labels)
 
     if quiver_key_length is None: 
       # find the average length of unmasked data
@@ -363,12 +343,9 @@ Notes
     self.config['image_clim'] = image_clim
     self.config['image_array_size'] = image_array_size
     self.config['quiver_scale'] = quiver_scale
-    self.config['quiver_width'] = quiver_width
     self.config['quiver_key_pos'] = quiver_key_pos        
     self.config['quiver_key_length'] = quiver_key_length
     self.config['scatter_size'] = scatter_size
-    self.config['scatter_show'] = scatter_show
-    self.config['ts_xlabel'] = ts_xlabel
     self.config['ts_title'] = ts_title
     self.config['map_title'] = map_title
     self.config['map_xlim'] = map_xlim
@@ -444,7 +421,7 @@ Notes
       ts_ylabel_1 = 'north [%s]' % self.config['units']
       ts_ylabel_2 = 'vertical [%s]' % self.config['units']
 
-    self.ts_ax[2].set_xlabel(self.config['ts_xlabel'])
+    self.ts_ax[2].set_xlabel('time')
     self.ts_ax[0].set_ylabel(ts_ylabel_0)
     self.ts_ax[1].set_ylabel(ts_ylabel_1)
     self.ts_ax[2].set_ylabel(ts_ylabel_2)
@@ -608,7 +585,7 @@ Notes
     
   def _init_scatter(self):
     # call after _init_image
-    if (len(self.data_sets) < 2) | (not self.config['scatter_show']):
+    if len(self.data_sets) < 2:
       self.scatter = None 
       return
 
@@ -628,7 +605,7 @@ Notes
     # updates for:
     #   tidx
     #   image_clim
-    if (len(self.data_sets) < 2) | (not self.config['scatter_show']):
+    if len(self.data_sets) < 2:
       return
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
@@ -655,7 +632,7 @@ Notes
                  self._masked_data_sets[si][self.config['tidx'],:,0],
                  self._masked_data_sets[si][self.config['tidx'],:,1],
                  scale=self.config['quiver_scale'],  
-                 width=self.config['quiver_width'],
+                 width=0.005,
                  sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
                         self._masked_sigma_sets[si][self.config['tidx'],:,1],
                         0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]),
@@ -709,19 +686,19 @@ Notes
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],0],
                    color=self.color_cycle[si],
-                   label=self.data_set_names[si],
+                   label=self.data_set_labels[si],
                    marker='.')
       self.line2 += self.ts_ax[1].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],1],
                    color=self.color_cycle[si],
-                   label=self.data_set_names[si],
+                   label=self.data_set_labels[si],
                    marker='.')
       self.line3 += self.ts_ax[2].plot(
                    self.t,
                    self._masked_data_sets[si][:,self.config['xidx'],2],
                    color=self.color_cycle[si],
-                   label=self.data_set_names[si],
+                   label=self.data_set_labels[si],
                    marker='.')
     
   def _update_lines(self):
@@ -731,13 +708,13 @@ Notes
       self.line1[si].set_data(self.t,
                               self._masked_data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
-      self.line1[si].set_label(self.data_set_names[si])                     
+      self.line1[si].set_label(self.data_set_labels[si])                     
       self.line2[si].set_data(self.t,
                               self._masked_data_sets[si][:,self.config['xidx'],1])
-      self.line2[si].set_label(self.data_set_names[si])                     
+      self.line2[si].set_label(self.data_set_labels[si])                     
       self.line3[si].set_data(self.t,
                               self._masked_data_sets[si][:,self.config['xidx'],2])
-      self.line3[si].set_label(self.data_set_names[si])                     
+      self.line3[si].set_label(self.data_set_labels[si])                     
   
   def _init_fill(self):
     self.fill1,self.fill2,self.fill3 = [],[],[]
@@ -943,7 +920,7 @@ Notes
     elif event.key == 'c':
       # cycle data arrays 
       self.data_sets = _roll(self.data_sets)
-      self.data_set_names = _roll(self.data_set_names)
+      self.data_set_labels = _roll(self.data_set_labels)
       self.sigma_sets = _roll(self.sigma_sets)
       self.update_data()
       self.update()
