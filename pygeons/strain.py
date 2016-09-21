@@ -10,7 +10,7 @@ from matplotlib.text import Text
 from pygeons.view import disable_default_key_bindings
 from pygeons.view import without_interactivity
 from pygeons.view import one_sigfig
-from pygeons._input import restricted_input
+from pygeons.rin import restricted_input
 from scipy.spatial import cKDTree
 
 def strain_glyph(x,y,grad,sigma=None,
