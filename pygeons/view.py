@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from rbf.interpolate import RBFInterpolant
-from pygeons._input import restricted_input
+from pygeons.rin import restricted_input
 from pygeons.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
@@ -121,7 +121,7 @@ Notes
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None, 
-               units='',
+               units=None,
                quiver_key_length=None,
                quiver_scale=None,
                quiver_width=0.005,
@@ -131,7 +131,7 @@ Notes
                image_clim=None,
                image_cmap=None,
                image_array_size=200,
-               image_clabel='vertical',
+               image_clabel=None,
                station_labels=None,
                time_labels=None,
                data_set_names=None,
@@ -352,11 +352,6 @@ Notes
 
       quiver_scale = mag/dist
       
-    quiver_key_label = '%s %s' % (str(quiver_key_length),units)
-    ts_ylabel_0 = 'east [%s]' % units
-    ts_ylabel_1 = 'north [%s]' % units
-    ts_ylabel_2 = 'vertical [%s]' % units
-
     # this dictionary contains plot configuration parameters which may 
     # be interactively changed
     self.config = {}
@@ -366,19 +361,14 @@ Notes
     self.config['units'] = units
     self.config['image_cmap'] = image_cmap
     self.config['image_clim'] = image_clim
-    self.config['image_clabel'] = image_clabel
     self.config['image_array_size'] = image_array_size
     self.config['quiver_scale'] = quiver_scale
     self.config['quiver_width'] = quiver_width
     self.config['quiver_key_pos'] = quiver_key_pos        
-    self.config['quiver_key_label'] = quiver_key_label
     self.config['quiver_key_length'] = quiver_key_length
     self.config['scatter_size'] = scatter_size
     self.config['scatter_show'] = scatter_show
     self.config['ts_xlabel'] = ts_xlabel
-    self.config['ts_ylabel_0'] = ts_ylabel_0
-    self.config['ts_ylabel_1'] = ts_ylabel_1
-    self.config['ts_ylabel_2'] = ts_ylabel_2
     self.config['ts_title'] = ts_title
     self.config['map_title'] = map_title
     self.config['map_xlim'] = map_xlim
@@ -444,10 +434,20 @@ Notes
 
   def _init_ts_ax(self):
     # call after _init_lines
+    if self.config['units'] is None:
+      ts_ylabel_0 = 'east'
+      ts_ylabel_1 = 'north'
+      ts_ylabel_2 = 'vertical' 
+
+    else:
+      ts_ylabel_0 = 'east [%s]' % self.config['units']
+      ts_ylabel_1 = 'north [%s]' % self.config['units']
+      ts_ylabel_2 = 'vertical [%s]' % self.config['units']
+
     self.ts_ax[2].set_xlabel(self.config['ts_xlabel'])
-    self.ts_ax[0].set_ylabel(self.config['ts_ylabel_0'])
-    self.ts_ax[1].set_ylabel(self.config['ts_ylabel_1'])
-    self.ts_ax[2].set_ylabel(self.config['ts_ylabel_2'])
+    self.ts_ax[0].set_ylabel(ts_ylabel_0)
+    self.ts_ax[1].set_ylabel(ts_ylabel_1)
+    self.ts_ax[2].set_ylabel(ts_ylabel_2)
     self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
     self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
     self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])
@@ -574,8 +574,13 @@ Notes
     else:
       self.cbar = self.map_fig.colorbar(self.image,cax=self.cax)  
       
+    if self.config['units'] is None:
+      image_clabel = 'vertical'
+    else:
+      image_clabel = 'vertical [%s]' % self.config['units']
+      
     self.cbar.set_clim(image_clim)
-    self.cbar.set_label(self.config['image_clabel'],
+    self.cbar.set_label(image_clabel,
                         fontsize=self.config['fontsize'])
     self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
     self.cbar.solids.set_rasterized(True)
@@ -600,10 +605,6 @@ Notes
 
     self.image.set_clim(image_clim)
     self.cbar.set_clim(image_clim)
-    self.cbar.set_label(self.config['image_clabel'],
-                        fontsize=self.config['fontsize'])
-    self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
-    self.cbar.solids.set_rasterized(True)
     
   def _init_scatter(self):
     # call after _init_image
@@ -666,12 +667,18 @@ Notes
       self.quiver += [q]                        
       if si == 0:
         # plot quiver key for the first data set
+        if self.config['units'] is None:
+          quiver_key_label = '%s' % self.config['quiver_key_length']
+        else:
+          quiver_key_label = '%s %s' % (self.config['quiver_key_length'],
+                                        self.config['units'])
+          
         self.key = self.map_ax.quiverkey(
                      self.quiver[si],
                      self.config['quiver_key_pos'][0],
                      self.config['quiver_key_pos'][1],
                      self.config['quiver_key_length'],
-                     self.config['quiver_key_label'],
+                     quiver_key_label,
                      zorder=2,
                      labelsep=0.05,
                      fontproperties={'size':self.config['fontsize']})
@@ -722,14 +729,14 @@ Notes
     #   xidx
     for si in range(len(self._masked_data_sets)):
       self.line1[si].set_data(self.t,
-                           self._masked_data_sets[si][:,self.config['xidx'],0])
+                              self._masked_data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
       self.line1[si].set_label(self.data_set_names[si])                     
       self.line2[si].set_data(self.t,
-                           self._masked_data_sets[si][:,self.config['xidx'],1])
+                              self._masked_data_sets[si][:,self.config['xidx'],1])
       self.line2[si].set_label(self.data_set_names[si])                     
       self.line3[si].set_data(self.t,
-                           self._masked_data_sets[si][:,self.config['xidx'],2])
+                              self._masked_data_sets[si][:,self.config['xidx'],2])
       self.line3[si].set_label(self.data_set_names[si])                     
   
   def _init_fill(self):
@@ -842,7 +849,8 @@ Notes
         
     except Exception as err:
       print('')
-      print('the following error was raised when evaluating the above expression:\n    %s\n' % repr(err))
+      print('the following error was raised when evaluating the '
+            'above expression:\n    %s\n' % repr(err))
       new_val = val
         
     self.config[key] = new_val

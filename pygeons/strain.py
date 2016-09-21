@@ -170,7 +170,7 @@ Notes
                sux=None,suy=None,
                svx=None,svy=None,
                scale=None,
-               units='',
+               units=None,
                time_labels=None,
                fontsize=10,
                ax=None,
@@ -349,14 +349,19 @@ Notes
                                  compression_color=self.config['compression_color'],
                                  alpha=self.config['alpha'],
                                  vertices=self.config['vertices'])
+    if units is None:
+      text_str = '%s' % mag
+    else:
+      text_str = '%s %s' % (mag,units)
+      
     textx = posx + 1.1*mag*self.config['scale']
-    texty = posy 
-    self.artists += [Text(textx,texty,'%s %s' % (mag,units),
+    texty = posy
+    self.artists += [Text(textx,texty,text_str,
                           fontsize=10,
                           color=self.config['extension_color'])]
-    textx = posx 
+    textx = posx
     texty = posy + 1.1*mag*self.config['scale']
-    self.artists += [Text(textx,texty,'-%s %s' % (mag,units),
+    self.artists += [Text(textx,texty,'-' + text_str,
                           fontsize=10,
                           color=self.config['compression_color'])]
   
