@@ -95,13 +95,13 @@ Notes
     ----
       only one of u, v, and z need to be specified
     '''
-    data_set_names = kwargs.pop('data_set_names',['edited data'])
+    data_set_labels = kwargs.pop('data_set_labels',['edited data'])
     color_cycle = kwargs.pop('color_cycle',['k'])
     InteractiveViewer.__init__(self,t,x,
                                u=[u],v=[v],z=[z],
                                su=[su],sv=[sv],sz=[sz],
                                color_cycle=color_cycle,
-                               data_set_names=data_set_names,
+                               data_set_labels=data_set_labels,
                                **kwargs)
     self._mode = None
     self._apply_to_all = False
