@@ -1,5 +1,6 @@
 # Bash commands to process the synthetic data
-pygeons-csvtoh5 data/synthetic.csv -vv
+pygeons-toh5 data/synthetic.csv csv -vv --procs 7
+
 
 # time smoothing
 #pypygeons-tfilter data/synthetic.h5 --cutoff 0.01 --break_dates 2001-01-01 -vv
@@ -31,4 +32,6 @@ pygeons-csvtoh5 data/synthetic.csv -vv
 # --break_lons2 -83.0353452111 -87.3166 -81.5607 \
 # --break_lats2 43.6001605868 42.3336 44.3666 --quiver_scale 1e-7 -vv
 
-pygeons-strain data/diffx.h5 data/diffy.h5 -vv --scale 200000000.0
+pygeons-sfilter data/synthetic.h5 --diff 1 0 --procs 7 -vv -o data/diffx.h5
+pygeons-sfilter data/synthetic.h5 --diff 0 1 --procs 7 -vv -o data/diffy.h5
+pygeons-strain data/diffx.h5 data/diffy.h5 -vv 
