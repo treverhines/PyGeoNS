@@ -15,7 +15,7 @@ p = argparse.ArgumentParser(
   
 p.add_argument(
   'input_file',type=str,metavar='STR',
-   help='''date file. This must be a HDF5 file'''
+   help='''date file. This must be a HDF5 file''')
 
 p.add_argument(
   '-o','--output_file',type=str,metavar='STR',
@@ -36,7 +36,7 @@ p.add_argument(
   help='''resample stop date in YYYY-MM-DD''')
 
 p.add_argument(
-  '--cut_dates',nargs='+',type=str,metavar='STR',
+  '--break_dates',nargs='+',type=str,metavar='STR',
   help='''list of time discontinuities in YYYY-MM-DD. This date 
           should be when the discontinuity is first observed''')
 

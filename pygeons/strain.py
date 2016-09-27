@@ -12,6 +12,7 @@ from pygeons.view import without_interactivity
 from pygeons.view import one_sigfig
 from pygeons.rin import restricted_input
 from scipy.spatial import cKDTree
+import os
 
 def strain_glyph(x,y,grad,sigma=None,
                  scale=1.0,
@@ -83,6 +84,11 @@ def strain_glyph(x,y,grad,sigma=None,
   '''
   if sigma is None: sigma = np.zeros(4)
   
+  if np.any(np.isinf(sigma)):
+    return []
+  if np.any(np.isnan(grad)):
+    return []
+    
   # convert deformation gradient to strain 
   exx,eyy,exy =  grad[0],  grad[3],                      0.5*(grad[1] + grad[2])
   sxx,syy,sxy = sigma[0], sigma[3], np.sqrt(0.25*sigma[1]**2 + 0.25*sigma[2]**2)
@@ -298,6 +304,20 @@ Notes
   def connect(self):
     self.fig.canvas.mpl_connect('key_press_event',self.on_key_press)
 
+  def save_frames(self,dir):
+    ''' 
+    saves each frame as a jpeg image in the direction *dir*
+    '''
+    Nt = self.data_set.shape[0]
+    for i in range(Nt):
+      self.config['tidx'] = i
+      self.update()
+      fname = '%06d.jpeg' % i
+      print('saving file %s/%s' % (dir,fname))
+      plt.savefig(dir+'/'+fname)
+    
+    print('done')  
+
   def _init_ax(self):
     # call after _init_scatter
     self.ax.set_aspect('equal')
@@ -466,9 +486,11 @@ Notes
       self.config['tidx'] = self.config['tidx']%Nt
       self.update()
 
-    elif event.key == 'h':
-      self.config['highlight'] = not self.config['highlight']
-      self.update()
+    elif event.key == 's':
+      if not os.path.exists('frames'):
+        os.mkdir('frames')
+        
+      self.save_frames('frames')
 
     elif event.key == 'r':
       # refresh  
