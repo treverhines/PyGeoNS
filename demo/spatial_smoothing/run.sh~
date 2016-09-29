@@ -1,0 +1,35 @@
+# Smoothing Synthetic Cascadia Data
+
+# This script demonstrates how to use pygeons to spatially smooth GPS
+# data.
+
+# convert the csv file to and HDF5 file. The first and second
+# positional arguments are the file name and file type respectively.
+# Possible file types are csv, pbo_csv, and pbo_pos
+pygeons-toh5 synthetic.csv csv -o work/synthetic.h5
+
+# spatial cutoff frequency in meters^-1. The underlying signal in the
+# synthetic data has a frequency of 2.5e-6.  If we pick a cutoff
+# frequency which is just above the frequency of the signals then the
+# underlying signal will be kept in tact.
+SPATIAL_CUTOFF=5e-6
+pygeons-sfilter work/synthetic.h5 --cutoff $SPATIAL_CUTOFF
+
+# view the data set before smoothing
+pygeons-view work/synthetic.h5 --image_clim -15 15\
+             --image_array_size 1000 --map_title "data"&
+
+# view the data set after smoothing
+pygeons-view work/synthetic.sfilter.h5 --image_clim -15 15\
+             --image_array_size 1000 --map_title "smoothed"&
+
+# view the true signal
+pygeons-toh5 synthetic.nonoise.csv csv -o work/synthetic.nonoise.h5
+pygeons-view work/synthetic.nonoise.h5 --image_clim -15 15\
+             --image_array_size 1000 --map_title "true signal"&
+
+
+
+
+
+
