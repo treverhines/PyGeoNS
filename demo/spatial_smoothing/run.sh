@@ -15,6 +15,7 @@ pygeons-toh5 synthetic.csv csv -o work/synthetic.h5
 SPATIAL_CUTOFF=5e-6
 pygeons-sfilter work/synthetic.h5 --cutoff $SPATIAL_CUTOFF
 
+echo "spawning three subprocesses to view the observed, smoothed and true data sets"
 # view the data set before smoothing
 pygeons-view work/synthetic.h5 --image_clim -15 15\
              --image_array_size 1000 --map_title "data" &
