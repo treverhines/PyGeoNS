@@ -78,7 +78,10 @@ def _unit_conversion(space_power,time_power):
   return 1000**space_power * (1.0/365.25)**time_power
   
 
-def _make_time_breaks(break_dates):
+def _get_time_vert_smp(break_dates):
+  ''' 
+  returns the vertices and simplices defining the time breaks
+  ''' 
   if break_dates is None: break_dates = []
   # subtract half a day to get rid of any ambiguity about what day 
   # the dislocation is observed
@@ -88,7 +91,10 @@ def _make_time_breaks(break_dates):
   return vert,smp
 
 
-def _make_space_breaks(end1_lons,end1_lats,end2_lons,end2_lats,bm):
+def _get_space_vert_smp(end1_lons,end1_lats,end2_lons,end2_lats,bm):
+  ''' 
+  returns the vertices and simplices defining the space breaks
+  ''' 
   if end1_lons is None: end1_lons = []
   if end1_lats is None: end1_lats = []
   if end2_lons is None: end2_lons = []
@@ -128,7 +134,7 @@ def _make_basemap(lon,lat,resolution=None):
 
 def _get_meridians_and_parallels(bm,ticks):
   ''' 
-  returns the meridians and parallels that should be plotted.
+  attempts to find nice locations for the meridians and parallels 
   '''
   diff_lon = (bm.urcrnrlon-bm.llcrnrlon)
   round_digit = int(np.ceil(np.log10(ticks/diff_lon)))
@@ -138,15 +144,22 @@ def _get_meridians_and_parallels(bm,ticks):
   round_digit = int(np.ceil(np.log10(ticks/diff_lat)))
   dlat = np.round(diff_lat/ticks,round_digit)
 
-  meridians = np.arange(np.floor(bm.llcrnrlon),
-                        np.ceil(bm.urcrnrlon),dlon)
-  parallels = np.arange(np.floor(bm.llcrnrlat),
-                        np.ceil(bm.urcrnrlat),dlat)
+  # round down to the nearest rounding digit
+  lon_low = np.floor(bm.llcrnrlon*10**round_digit)/10**round_digit
+  lat_low = np.floor(bm.llcrnrlat*10**round_digit)/10**round_digit
+  # round up to the nearest rounding digit
+  lon_high = np.ceil(bm.urcrnrlon*10**round_digit)/10**round_digit
+  lat_high = np.ceil(bm.urcrnrlat*10**round_digit)/10**round_digit
 
+  meridians = np.arange(lon_low,lon_high+dlon,dlon)
+  parallels = np.arange(lat_low,lat_high+dlat,dlat)
   return meridians,parallels
   
 
 def _setup_map_ax(bm,ax):
+  ''' 
+  prepares the map axis for display
+  '''
   # function which prints out the coordinates on the bottom left 
   # corner of the figure
   def coord_string(x,y):                         
@@ -169,6 +182,9 @@ def _setup_map_ax(bm,ax):
                      
 
 def _setup_ts_ax(ax_lst,times):
+  ''' 
+  prepares the time series axes for display
+  '''
   # display time in decday and date on time series plot
   def ts_coord_string(x,y):                         
     str = 'time : %g  ' % x
@@ -197,7 +213,7 @@ def tfilter(data,
   time smoothing
   '''
   data.check_self_consistency()
-  vert,smp = _make_time_breaks(break_dates)
+  vert,smp = _get_time_vert_smp(break_dates)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
@@ -233,8 +249,8 @@ def sfilter(data,
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
-  vert,smp = _make_space_breaks(break_lons1,break_lats1,
-                                break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
+                                 break_lons2,break_lats2,bm)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
@@ -290,7 +306,7 @@ def downsample(data,sample_period=1,start_date=None,stop_date=None,
 
   '''
   data.check_self_consistency()
-  vert,smp = _make_time_breaks(break_dates)
+  vert,smp = _get_time_vert_smp(break_dates)
       
   # if the start and stop time are not specified then use the min and 
   # max times
@@ -350,8 +366,8 @@ def clean(data,resolution='i',
                      resolution=resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
-  vert,smp = _make_space_breaks(break_lons1,break_lats1,
-                                break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
+                                 break_lons2,break_lats2,bm)
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
@@ -441,8 +457,8 @@ def view(data_list,resolution='i',
   _setup_map_ax(bm,map_ax)
 
   # draw breaks if there are any
-  vert,smp = _make_space_breaks(break_lons1,break_lats1,
-                                break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
+                                 break_lons2,break_lats2,bm)
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
@@ -509,8 +525,8 @@ def strain(data_dx,data_dy,resolution='i',
   _setup_map_ax(bm,ax)
 
   # draw breaks if there are any
-  vert,smp = _make_space_breaks(break_lons1,break_lats1,
-                                break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
+                                 break_lons2,break_lats2,bm)
   for s in smp:
     ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
 
