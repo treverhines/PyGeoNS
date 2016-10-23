@@ -4,12 +4,11 @@ parses the content of data text files
 import numpy as np
 import logging
 import h5py
-import interface
+import pygeons.interface
 from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
 from pygeons.dateconv import decday,decday_inv
-logger = logging.getLogger(__name__)
-  
+logger = logging.getLogger(__name__)  
 
 def _get_line_with(sub,master):
   ''' 

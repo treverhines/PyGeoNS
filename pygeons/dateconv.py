@@ -130,6 +130,7 @@ def decday_inv(f,fmt):
   ''' 
   converts number of days since 1970-01-01T00:00:00 to a date
   '''
+  f = float(f)
   ref = datetime.datetime(1970,1,1)
   d = ref + datetime.timedelta(f)
   s = d.strftime(fmt)

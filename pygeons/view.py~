@@ -9,7 +9,11 @@ from rbf.basis import phs1
 import logging
 import scipy.interpolate
 from scipy.spatial import cKDTree
-from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+try:
+  from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+except ImportError
+  from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+  
 logger = logging.getLogger(__name__)
 
 def _roll(lst):
