@@ -19,6 +19,7 @@ def strain_glyph(x,y,grad,sigma=None,
                  extension_color='b',
                  compression_color='r',
                  alpha=0.2,
+                 linewidth=1.0,
                  vertices=500):
   ''' 
   Returns the artists making up a two-dimensional strain glyph which 
@@ -137,8 +138,12 @@ def strain_glyph(x,y,grad,sigma=None,
                     edgecolor='none',alpha=alpha)]
 
   # draw the solid line indicating the mean strain
-  out += [Line2D(x + mean_ext[:,0],y + mean_ext[:,1],color=extension_color)]
-  out += [Line2D(x + mean_cmp[:,0],y + mean_cmp[:,1],color=compression_color)]
+  out += [Line2D(x + mean_ext[:,0],y + mean_ext[:,1],
+                 color=extension_color,
+                 linewidth=linewidth)]
+  out += [Line2D(x + mean_cmp[:,0],y + mean_cmp[:,1],
+                 color=compression_color,
+                 linewidth=linewidth)]
   return out
 
 

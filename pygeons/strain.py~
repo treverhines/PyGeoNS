@@ -19,6 +19,7 @@ def strain_glyph(x,y,grad,sigma=None,
                  extension_color='b',
                  compression_color='r',
                  alpha=0.2,
+                 linewidth=1.0,
                  vertices=500):
   ''' 
   Returns the artists making up a two-dimensional strain glyph which 
@@ -84,6 +85,11 @@ def strain_glyph(x,y,grad,sigma=None,
   '''
   if sigma is None: sigma = np.zeros(4)
   
+  if np.any(np.isinf(sigma)):
+    return []
+  if np.any(np.isnan(grad)):
+    return []
+    
   # convert deformation gradient to strain 
   exx,eyy,exy =  grad[0],  grad[3],                      0.5*(grad[1] + grad[2])
   sxx,syy,sxy = sigma[0], sigma[3], np.sqrt(0.25*sigma[1]**2 + 0.25*sigma[2]**2)
