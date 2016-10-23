@@ -1,6 +1,9 @@
 # PYGEONS DEMONSTRATION #2:
 # TEMPORALLY SMOOTHING GPS DATA
 
+# make work directory
+mkdir -p work
+
 # This script demonstrates how to temporally smooth GPS data for a
 # single station.  This station, MIDA, recorded displacements
 # associated with the 2004 Parkfield earthquake and the 2003 San

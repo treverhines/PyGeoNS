@@ -1,6 +1,9 @@
 # PYGEONS DEMONSTRATION #1:
 # SPATIALLY SMOOTHING SYNTHETIC CASCADIA DATA
 
+# make work directory
+mkdir -p work
+
 # This script demonstrates how to spatially smooth GPS data.  We use
 # the synthetic data saved in synthetic.csv. The underlying signal in
 # the synthetic data consists of sinusoids with a 400km wavelength and
