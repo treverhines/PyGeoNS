@@ -4,7 +4,7 @@ parses the content of data text files
 import numpy as np
 import logging
 import h5py
-import interface
+import pygeons.interface
 from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
 from pygeons.dateconv import decday,decday_inv
@@ -102,6 +102,7 @@ def parse_csv(file_str):
                        usecols=(0,1,2,3,4,5,6))
   # make sure that the data set is a two-dimensional array
   data = data.reshape((-1,7))
+  
   output = {}
   output['id'] = id.upper()
   output['longitude'] = np.float(lon)

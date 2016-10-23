@@ -20,7 +20,7 @@ SANSIMEON=2003-12-23
 
 # temporal cutoff frequency in days^-1. 0.033 corresponds to a
 # wavelength of one month
-CUTOFF=0.033
+CUTOFF=0.0001
 pygeons-tfilter work/disp.h5 --cutoff $CUTOFF --break_dates $PARKFIELD $SANSIMEON --fill interpolate
 
 # view the observed and smoothed displacements
