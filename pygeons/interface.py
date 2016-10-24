@@ -369,7 +369,7 @@ def clean(data,resolution='i',
   vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
                                  break_lons2,break_lats2,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
@@ -460,7 +460,7 @@ def view(data_list,resolution='i',
   vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
                                  break_lons2,break_lats2,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
@@ -528,7 +528,7 @@ def strain(data_dx,data_dy,resolution='i',
   vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
                                  break_lons2,break_lats2,bm)
   for s in smp:
-    ax.plot(vert[s,0],vert[s,1],'r-',lw=2,zorder=2)
+    ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
