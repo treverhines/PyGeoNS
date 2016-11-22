@@ -11,7 +11,7 @@ import scipy.interpolate
 from scipy.spatial import cKDTree
 try:
   from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
-except ImportError
+except ImportError:
   from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
   
 logger = logging.getLogger(__name__)

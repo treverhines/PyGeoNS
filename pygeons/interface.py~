@@ -91,21 +91,46 @@ def _get_time_vert_smp(break_dates):
   return vert,smp
 
 
-def _get_space_vert_smp(end1_lons,end1_lats,end2_lons,end2_lats,bm):
+def _get_space_vert_smp(break_lons,break_lats,break_conn,bm):
   ''' 
   returns the vertices and simplices defining the space breaks
+  
+  Parameters
+  ----------
+  break_lons : (N,) float array
+    
+  break_lats : (N,) float array
+      
+  break_conn : (M,) str array 
   ''' 
-  if end1_lons is None: end1_lons = []
-  if end1_lats is None: end1_lats = []
-  if end2_lons is None: end2_lons = []
-  if end2_lats is None: end2_lats = []
-  end1 = [bm(i,j) for i,j in zip(end1_lons,end1_lats)]
-  end2 = [bm(i,j) for i,j in zip(end2_lons,end2_lats)]
-  end1 = np.array(end1).reshape((-1,2))
-  end2 = np.array(end2).reshape((-1,2))
-  breaks = np.concatenate((end1[:,None,:],end2[:,None,:]),axis=1)
-  vert = np.array(breaks).reshape((-1,2))
-  smp = np.arange(vert.shape[0]).reshape((-1,2))  
+  if break_lons is None:
+    break_lons = np.zeros(0,dtype=float)
+  else:
+    break_lons = np.asarray(break_lons,dtype=float)
+
+  if break_lats is None:
+    break_lats = np.zeros(0,dtype=float)
+  else:
+    break_lats = np.asarray(break_lats,dtype=float)
+    
+  if break_lons.shape[0] != break_lats.shape[0]:
+    raise ValueError('*break_lons* and *break_lats* must have the same length')
+    
+  N = break_lons.shape[0]
+  if break_conn is None:
+    if N != 0:
+      break_conn = ['-'.join(np.arange(N).astype(str))]
+    else:
+      break_conn = []
+        
+  smp = [] 
+  for c in break_conn:
+    idx = np.array(c.split('-'),dtype=int)  
+    smp += zip(idx[:-1],idx[1:])    
+    
+  smp = np.array(smp,dtype=int).reshape((-1,2))
+  vert = [bm(i,j) for i,j in zip(break_lons,break_lats)]
+  vert = np.array(vert,dtype=float).reshape((-1,2))
   return vert,smp
 
 
@@ -203,12 +228,10 @@ def _setup_ts_ax(ax_lst,times):
 
 
 def tfilter(data,
-            cutoff=None,
             diff=(0,),
             fill='none',
-            procs=0,
-            samples=100,
-            break_dates=None):
+            break_dates=None,
+            **kwargs):
   ''' 
   time smoothing
   '''
@@ -219,12 +242,10 @@ def tfilter(data,
     post,post_sigma = rbf.filter.filter(
                         data['time'][:,None],data[dir].T,
                         sigma=data[dir+'_std'].T,
-                        cutoff=cutoff,
                         diffs=diff,
-                        procs=procs,
-                        samples=samples,
+                        fill=fill,
                         vert=vert,smp=smp,
-                        fill=fill)
+                        **kwargs)
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
 
@@ -238,10 +259,10 @@ def sfilter(data,
             cutoff=None,
             diff=(0,0),
             fill='none',
-            procs=0,
-            samples=100,
-            break_lons1=None,break_lats1=None,
-            break_lons2=None,break_lats2=None):
+            break_lons=None,
+            break_lats=None,
+            break_conn=None,
+            **kwargs):
   ''' 
   space smoothing
   '''
@@ -249,19 +270,17 @@ def sfilter(data,
   bm = _make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
-  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
-                                 break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons,break_lats,
+                                 break_conn,bm)
   out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         pos,data[dir],
                         sigma=data[dir+'_std'],
-                        cutoff=cutoff,
                         diffs=diff,
-                        procs=procs,
-                        samples=samples,
-                        vert=vert,smp=smp,         
-                        fill=fill)
+                        fill=fill,
+                        vert=vert,smp=smp,     
+                        **kwargs)
     out[dir] = post
     out[dir+'_std'] = post_sigma
 
@@ -334,8 +353,8 @@ def downsample(data,sample_period=1,start_date=None,stop_date=None,
 
 
 def clean(data,resolution='i',
-          break_lons1=None,break_lats1=None,
-          break_lons2=None,break_lats2=None,
+          break_lons=None,break_lats=None,
+          break_conn=None,
           **kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
@@ -366,10 +385,10 @@ def clean(data,resolution='i',
                      resolution=resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
-  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
-                                 break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons,break_lats,
+                                 break_conn,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k:',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
@@ -407,8 +426,8 @@ def clean(data,resolution='i',
 
 
 def view(data_list,resolution='i',
-         break_lons1=None,break_lats1=None,
-         break_lons2=None,break_lats2=None,
+         break_lons=None,break_lats=None,
+         break_conn=None,
          **kwargs):
   ''' 
   runs the PyGeoNS interactive Viewer
@@ -457,10 +476,10 @@ def view(data_list,resolution='i',
   _setup_map_ax(bm,map_ax)
 
   # draw breaks if there are any
-  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
-                                 break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons,break_lats,
+                                 break_conn,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k:',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
@@ -476,8 +495,8 @@ def view(data_list,resolution='i',
   return
 
 def strain(data_dx,data_dy,resolution='i',
-           break_lons1=None,break_lats1=None,
-           break_lons2=None,break_lats2=None,
+           break_lons=None,break_lats=None,
+           break_conn=None,
            **kwargs):
   ''' 
   runs the PyGeoNS Interactive Strain Viewer
@@ -525,10 +544,10 @@ def strain(data_dx,data_dy,resolution='i',
   _setup_map_ax(bm,ax)
 
   # draw breaks if there are any
-  vert,smp = _get_space_vert_smp(break_lons1,break_lats1,
-                                 break_lons2,break_lats2,bm)
+  vert,smp = _get_space_vert_smp(break_lons,break_lats,
+                                 break_conn,bm)
   for s in smp:
-    ax.plot(vert[s,0],vert[s,1],'k:',lw=2,zorder=2)
+    ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T

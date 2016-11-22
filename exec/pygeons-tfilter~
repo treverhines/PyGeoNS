@@ -21,7 +21,7 @@ p.add_argument(
   '-o','--output_file',type=str,metavar='STR',
   help='''Output file name. If this is not provided then it is the  
           same as the input file name but the extension is removed 
-          and replaced with tfilter.h5''')
+          and replaced with "tfilter.h5"''')
 
 p.add_argument(
   '--cutoff',type=float,metavar='FLOAT',
@@ -40,6 +40,10 @@ p.add_argument(
   '--samples',type=int,metavar='INT',
   help='''Number of random samples to use for estimating the 
           uncertainty''')
+
+p.add_argument(
+  '--size',type=int,metavar='INT',
+  help='''Stencil Size''')
 
 p.add_argument(
   '-f','--fill',type=str,metavar='STR',

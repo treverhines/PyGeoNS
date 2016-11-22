@@ -246,6 +246,18 @@ Notes
     if svx is None: svx = np.zeros((Nt,Nx))
     if svy is None: svy = np.zeros((Nt,Nx))
 
+#    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#    ux = np.cumsum(ux,axis=0) 
+#    uy = np.cumsum(uy,axis=0) 
+#    vx = np.cumsum(vx,axis=0) 
+#    vy = np.cumsum(vy,axis=0) 
+#    sux = np.sqrt(np.cumsum(sux**2*365.25,axis=0))
+#    suy = np.sqrt(np.cumsum(suy**2*365.25,axis=0))
+#    svx = np.sqrt(np.cumsum(svx**2*365.25,axis=0))
+#    svy = np.sqrt(np.cumsum(svy**2*365.25,axis=0))
+#    print('a')
+#    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#
     tpl = (ux[:,:,None],uy[:,:,None],vx[:,:,None],vy[:,:,None])
     self.data_set = np.concatenate(tpl,axis=2)
 

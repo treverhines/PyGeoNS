@@ -42,6 +42,10 @@ p.add_argument(
           uncertainty''')
 
 p.add_argument(
+  '--n',type=int,metavar='INT',
+  help='''Stencil Size''')
+
+p.add_argument(
   '-f','--fill',type=str,metavar='STR',
   help='''Indicates how to handle missing data (i.e. data with inf 
           uncertainty). Can either be 'none', where missing data is 
