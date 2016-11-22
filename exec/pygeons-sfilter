@@ -45,6 +45,10 @@ p.add_argument(
           uncertainty.''')
 
 p.add_argument(
+  '--n',type=int,metavar='INT',
+  help='''Stencil size''')
+
+p.add_argument(
   '-f','--fill',type=str,metavar='STR',
   help='''Indicates how to handle missing data (i.e. data with inf 
           uncertainty). Can either be 'none', where missing data is 
@@ -52,24 +56,31 @@ p.add_argument(
           in, or 'extrapolate' where all missing data is filled in.''')               
 
 p.add_argument(
-  '--break_lons1',nargs='+',type=float,metavar='FLOAT',
-  help='''Coordinates of the spatial discontinuity line segments. 
-          Smoothness is not enforced across these discontinuities''')
+  '--break_lons',nargs='+',type=float,metavar='FLOAT',
+  help='''Longitudes of the spatial discontinuity vertices''')
 
 p.add_argument(
-  '--break_lons2',nargs='+',type=float,metavar='FLOAT',
-  help='''Coordinates of the spatial discontinuty line segments. 
-          Smoothness is not enforced across these discontinuities''')
+  '--break_lats',nargs='+',type=float,metavar='FLOAT',
+  help='''Latitudes of the spatial discontinuity vertices''')
 
 p.add_argument(
-  '--break_lats1',nargs='+',type=float,metavar='FLOAT',
-  help='''Coordinates of the spatial discontinuty line segments. 
-          Smoothness is not enforced across these discontinuities''')
+  '--break_conn',nargs='+',type=str,metavar='STR', 
+  help='''Connectivity of the spatial discontinuity vertices. This can 
+          be one or multiple strings where each string contains the 
+          vertex indices making up each discontinuity separated by a 
+          '-'. For example, '0-1-2 3-4' indicates that there are two 
+          discontinuties, one contains vertices 0, 1, and 2 and the 
+          other contains vertices 3 and 4''')
 
 p.add_argument(
-  '--break_lats2',nargs='+',type=float,metavar='FLOAT',
-  help='''Coordinates of the spatial discontinuty line segments. 
-          Smoothness is not enforced across these discontinuities''')
+  '-p','--use_pinv',action='store_true',
+  help='''Computes RBF-FD weights with a pseudo-inversion. This 
+          should be used when there may be duplicate stations''')
+
+p.add_argument(
+  '-c','--check_all_edges',action='store_true',
+  help='''Enforces that no stencil contains stations which form an 
+          edge that crosses the boundary''')
 
 p.add_argument(
   '-v','--verbose',action='count',default=0,

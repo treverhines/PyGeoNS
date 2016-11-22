@@ -92,6 +92,8 @@ def _dict_from_text(infile,file_type):
   # dictionaries of data for each station
   if file_type == 'pbocsv':
     dicts = [pygeons.parser.parse_pbocsv(s) for s in strs]
+  if file_type == 'tdecsv':
+    dicts = [pygeons.parser.parse_tdecsv(s) for s in strs]
   elif file_type == 'pbopos':
     dicts = [pygeons.parser.parse_pbopos(s) for s in strs]
   elif file_type == 'csv':
@@ -152,7 +154,6 @@ def _dict_from_text(infile,file_type):
   out['time_power'] = time_power
   out['space_power'] = space_power
   out = DataDict(out)
-  out.check_self_consistency()
   return out
 
 
@@ -168,6 +169,10 @@ def dict_from_pbopos(infile):
   return _dict_from_text(infile,'pbopos')
 
 
+def dict_from_tdecsv(infile):
+  return _dict_from_text(infile,'tdepos')
+
+
 def dict_from_hdf5(infile):
   ''' 
   loads a data dictionary from an hdf5 file
@@ -178,7 +183,6 @@ def dict_from_hdf5(infile):
     out[k] = fin[k][...]
 
   out = DataDict(out)
-  out.check_self_consistency()
   fin.close()
   return out  
 

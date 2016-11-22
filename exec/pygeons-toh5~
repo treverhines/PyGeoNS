@@ -50,6 +50,8 @@ if file_type == 'csv':
   data_dict = pygeons.ioconv.dict_from_csv(input_file)
 elif file_type == 'pbo_csv':
   data_dict = pygeons.ioconv.dict_from_pbocsv(input_file)
+elif file_type == 'tde_csv':
+  data_dict = pygeons.ioconv.dict_from_tdecsv(input_file)
 elif file_type == 'pbo_pos':
   data_dict = pygeons.ioconv.dict_from_pbopos(input_file)
     
