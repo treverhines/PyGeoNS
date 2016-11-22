@@ -162,6 +162,50 @@ def parse_pbocsv(file_str):
   output['space_power'] = 1
   return output 
 
+def parse_tdecsv(file_str):
+  ''' 
+  Reads data from a single data file which has the format used by the 
+  SCEC Geodetic Transient Detection Validation Exercise
+  '''
+  fmt = '%Y-%m-%d'
+  delim = ','
+
+  # converts date to days since 1970-01-01
+  def date_conv(date_str): 
+    return decday(date_str,fmt)
+
+  # make everything lowercase so that field searches are not case 
+  # sensitive
+  file_str = file_str.strip()
+  file_str = file_str.lower()
+  line_one = file_str[:file_str.find('\n')]
+  id = line_one.split(',')[0].split()[1]
+  lat = line_one.split(',')[1]
+  lon = line_one.split(',')[2]
+  data_start_idx = file_str.find('\n') + 1
+
+  logger.debug('reading csv data for station %s' % id.upper()) 
+  data = file_str[data_start_idx:]
+  data = np.genfromtxt(data.split('\n'),
+                       converters={0:date_conv},
+                       delimiter=delim,
+                       usecols=(0,1,2,3))
+  output = {}
+  output['id'] = id.upper()
+  output['longitude'] = np.float(lon)
+  output['latitude'] = np.float(lat)
+  output['time'] = data[:,0].astype(int)
+  # comvert from millimeters to meters  
+  output['north'] = 0.001*data[:,2].astype(float)
+  output['east'] = 0.001*data[:,1].astype(float)
+  output['vertical'] = 0.001*data[:,3].astype(float)
+  output['north_std'] = 0.001*np.ones(len(data[:,0]))
+  output['east_std'] = 0.001*np.ones(len(data[:,0]))
+  output['vertical_std'] = 0.001*np.ones(len(data[:,0]))
+  # indicate that the data are in units of meters
+  output['time_power'] = 0  
+  output['space_power'] = 1
+  return output 
 
 def parse_pbopos(file_str):
   ''' 

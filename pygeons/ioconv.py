@@ -92,6 +92,8 @@ def _dict_from_text(infile,file_type):
   # dictionaries of data for each station
   if file_type == 'pbocsv':
     dicts = [pygeons.parser.parse_pbocsv(s) for s in strs]
+  if file_type == 'tdecsv':
+    dicts = [pygeons.parser.parse_tdecsv(s) for s in strs]
   elif file_type == 'pbopos':
     dicts = [pygeons.parser.parse_pbopos(s) for s in strs]
   elif file_type == 'csv':
@@ -165,6 +167,10 @@ def dict_from_pbocsv(infile):
 
 def dict_from_pbopos(infile):
   return _dict_from_text(infile,'pbopos')
+
+
+def dict_from_tdecsv(infile):
+  return _dict_from_text(infile,'tdecsv')
 
 
 def dict_from_hdf5(infile):
