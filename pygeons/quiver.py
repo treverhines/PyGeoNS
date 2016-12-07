@@ -80,7 +80,7 @@ def quiver(*args, **kw):
 
 class Quiver(_Quiver):
   def __init__(self,ax,*args,**kwargs):
-    if kwargs.has_key('sigma'):
+    if 'sigma' in kwargs:
       scale_units = kwargs.get('scale_units','xy')
       kwargs['scale_units'] = scale_units
       if kwargs['scale_units'] != 'xy':
@@ -94,9 +94,9 @@ class Quiver(_Quiver):
     sigma = kwargs.pop('sigma',None)
 
     ellipse_kwargs = kwargs.pop('ellipse_kwargs',{})
-    if ellipse_kwargs.has_key('offsets'):
+    if 'offsets' in ellipse_kwargs:
       raise ValueError('cannot specify ellipse offsets')
-    if ellipse_kwargs.has_key('units'):
+    if 'units' in ellipse_kwargs:
       raise ValueError('cannot specify ellipse units')
     
     self.ellipse_kwargs = {'edgecolors':'k',
