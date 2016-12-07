@@ -256,7 +256,6 @@ def tfilter(data,
 
 
 def sfilter(data,
-            cutoff=None,
             diff=(0,0),
             fill='none',
             break_lons=None,

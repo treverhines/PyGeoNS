@@ -80,7 +80,7 @@ def quiver(*args, **kw):
 
 class Quiver(_Quiver):
   def __init__(self,ax,*args,**kwargs):
-    if kwargs.has_key('sigma'):
+    if 'sigma' in kwargs:
       scale_units = kwargs.get('scale_units','xy')
       kwargs['scale_units'] = scale_units
       if kwargs['scale_units'] != 'xy':
