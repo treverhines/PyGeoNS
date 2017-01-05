@@ -35,7 +35,6 @@ def memoize(f):
 
   return fout
 
-
 def _decyear_from_datetime(d):
   ''' 
   converts to decimal year from a datetime object
