@@ -6,6 +6,7 @@ import logging
 import h5py
 from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
+from pygeons.mjd import mjd_inv,mjd
 import pygeons.parser 
 from pygeons.dateconv import decday_inv
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ def _write_csv(data_dict):
   out += 'date, north, east, vertical, north std. deviation, east std. deviation, vertical std. deviation\n'
   # convert displacements and uncertainties to strings
   for i in range(len(data_dict['time'])):
-    date_str = decday_inv(time[i],'%Y-%m-%d')
+    date_str = mjd_inv(time[i],'%Y-%m-%d')
     out += ('%s, %e, %e, %e, %e, %e, %e\n' % 
             (date_str,data_dict['north'][i],data_dict['east'][i],data_dict['vertical'][i],
              data_dict['north_std'][i],data_dict['east_std'][i],data_dict['vertical_std'][i]))

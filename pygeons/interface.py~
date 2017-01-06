@@ -30,6 +30,7 @@ import pygeons.view
 import pygeons.strain
 import pygeons.clean
 import rbf.filter
+import rbf.gpr
 import logging
 import matplotlib.pyplot as plt
 from pygeons.mean import MeanInterpolant
@@ -238,7 +239,18 @@ def tfilter(data,
   data.check_self_consistency()
   vert,smp = _get_time_vert_smp(break_dates)
   out = DataDict(data)
+  # XXXXXXXXXXXXXXXXXXXXX
+  #cutoff = kwargs['cutoff']
+  # XXXXXXXXXXXXXXXXXXXXX
+  
   for dir in ['east','north','vertical']:
+    #post,post_sigma = rbf.gpr.gpr(
+    #                    data['time'][:,None],
+    #                    data[dir].T,
+    #                    data[dir+'_std'].T,
+    #                    (
+    #                    diffs=diff,
+    #                    **kwargs)
     post,post_sigma = rbf.filter.filter(
                         data['time'][:,None],data[dir].T,
                         sigma=data[dir+'_std'].T,
@@ -547,6 +559,13 @@ def strain(data_dx,data_dy,resolution='i',
                                  break_conn,bm)
   for s in smp:
     ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
+
+  ## draw map scale
+  # find point 0.1,0.1
+  # XXXXXXXXXXXX 
+  scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),inverse=True)
+  bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=ax,barstyle='fancy',fontsize=10)
+  # XXXXXXXXXXXX 
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
