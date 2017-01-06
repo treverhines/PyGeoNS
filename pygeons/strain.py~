@@ -257,7 +257,7 @@ Notes
 #    svy = np.sqrt(np.cumsum(svy**2*365.25,axis=0))
 #    print('a')
 #    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
+#
     tpl = (ux[:,:,None],uy[:,:,None],vx[:,:,None],vy[:,:,None])
     self.data_set = np.concatenate(tpl,axis=2)
 
