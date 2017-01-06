@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 import argparse
-import json
-import sys
-import os
-from pygeons.io.convert import hdf5_from_dict,dict_from_hdf5
-import pygeons.interface
 import logging
+from pygeons import *
 
 def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
@@ -84,5 +80,5 @@ if output_file is None:
   output_file = change_extension(input_file,'tfilter.h5')
 
 data_dict = dict_from_hdf5(input_file)
-out_dict = pygeons.interface.tfilter(data_dict,**p)
+out_dict = pygeons_tfilter(data_dict,**p)
 hdf5_from_dict(output_file,out_dict)

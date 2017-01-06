@@ -2,9 +2,8 @@
 import argparse
 import json
 import sys
-from pygeons.io.convert import hdf5_from_dict,dict_from_hdf5
-import pygeons.interface
 import logging
+from pygeons import *
 
 p = argparse.ArgumentParser(
   description='''Runs the PyGeoNS Interactive Strain Viewer''')
@@ -64,4 +63,4 @@ for k in p.keys():
   if p[k] is None: 
     p.pop(k)
 
-pygeons.interface.strain(xdiff_dict,ydiff_dict,**p)
+pygeons_strain(xdiff_dict,ydiff_dict,**p)
