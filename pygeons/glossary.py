@@ -16,6 +16,28 @@ described in the main help documentation.
 '''
 }
 #####################################################################
+XDIFF_FILE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the input file containing the x derivatives of a displacement 
+or velocity field. This should be the output of pygeons-sfilter with 
+the argument "--diff 1 0".
+'''
+}
+#####################################################################
+YDIFF_FILE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the input file containing the y derivatives of a displacement 
+or velocity field. This should be the output of pygeons-sfilter with 
+the argument "--diff 0 1".
+'''
+}
+#####################################################################
 FILE_TYPE = {
 'type':str,
 'metavar':'STR',
@@ -57,6 +79,16 @@ Sets the colors of the data sets.
 '''
 }
 #####################################################################
+DATA_SET_LABELS = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Label for each data sets.
+'''
+}
+#####################################################################
 RESOLUTION = {
 'type':str,
 'metavar':'STR',
@@ -64,6 +96,15 @@ RESOLUTION = {
 ''' 
 Sets the basemap resolution. Can be either 'c', 'i', or 'h' for 
 coarse, intermediate, or high resolution.
+'''
+}
+#####################################################################
+SCALE = {
+'type':float,
+'metavar':'FLOAT',
+'help':
+''' 
+Controls size of the strain glyphs.
 '''
 }
 #####################################################################
@@ -102,6 +143,16 @@ SCATTER_SIZE = {
 'help':
 ''' 
 Size of the scatter points showing vertical deformation.
+'''
+}
+#####################################################################
+SCATTER_SHOW = {
+'type':bool,
+'metavar':'BOOL',
+'help':
+''' 
+Controls whether the vertical deformation in the second data set 
+should be shown as scatter points.
 '''
 }
 #####################################################################
@@ -216,16 +267,185 @@ indicates that there are two discontinuties, one contains vertices 0,
 '''
 }
 #####################################################################
+BREAK_DATES = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Lists of dates with temporal discontinuities specified as YYYY-MM-DD. 
+This dates should be when the discontinuity is first observed.
+'''
+}
+#####################################################################
+START_DATE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Start date for the output data set.
+'''
+}
+#####################################################################
+STOP_DATE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Stop date for the output data set.
+'''
+}
+#####################################################################
+MIN_LAT = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Minimum station latitude in the ouput data set.
+'''
+}
+#####################################################################
+MAX_LAT = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Maximum station latitude in the ouput data set.
+'''
+}
+#####################################################################
+MIN_LON = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Minimum station longitude in the ouput data set.
+'''
+}
+#####################################################################
+MAX_LON = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Maximum station longitude in the ouput data set.
+'''
+}
+#####################################################################
+S_CUTOFF = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Cutoff frequency in 1/meters.
+'''
+}
+#####################################################################
+T_CUTOFF = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Cutoff frequency in 1/days.
+'''
+}
+#####################################################################
+S_DIFF = {
+'nargs':2,
+'type':int, 
+'metavar':'INT', 
+'help': 
+''' 
+Derivative order for each dimension. For example, "--diff 1 0" 
+computes the first derivative in the x direction. If nothing is 
+provided then no derivatives will be computed.
+'''
+}
+#####################################################################
+T_DIFF = {
+'type':int, 
+'metavar':'INT', 
+'help': 
+''' 
+Derivative order. For example, "--diff 1" computes the first time 
+derivative. If nothing is provided then no derivatives will be 
+computed.
+'''
+}
+#####################################################################
+PROCS = {
+'type':int,
+'metavar':'INT',
+'help':
+''' 
+Number of subprocesses to use. 
+'''
+}
+#####################################################################
+SAMPLES = {
+'type':int,
+'metavar':'INT',
+'help':
+''' 
+Number of samples to use for estimating the uncertainty.
+'''
+}
+#####################################################################
+N = {
+'type':int,
+'metavar':'INT',
+'help':
+''' 
+Stencil size.
+'''
+}
+#####################################################################
+FILL = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Indicates how to handle missing data. either "none", "interpolate", or 
+"extrapolate"
+'''
+}
+#####################################################################
+USE_PINV = {
+'type':bool,
+'metavar':'BOOL',
+'help':
+''' 
+Indicate whether to use a pseudo-inversion to calculate the RBF-FD 
+weights. This should be used when there are duplicate stations.
+'''
+}
+#####################################################################
+CHECK_ALL_EDGES = {
+'type':bool,
+'metavar':'BOOL',
+'help':
+''' 
+Enforces that no stencil contains stations which form an edge that 
+crosses the boundary.
+'''
+}
+#####################################################################
+
 GLOSSARY = {
 'input_file':INPUT_FILE,
 'output_file':OUTPUT_FILE,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
+'xdiff_file':XDIFF_FILE,
+'ydiff_file':YDIFF_FILE,
 'color_cycle':COLOR_CYCLE,
+'data_set_labels':DATA_SET_LABELS,
 'quiver_scale':QUIVER_SCALE,
+'scale':SCALE,
 'quiver_key_length':QUIVER_KEY_LENGTH,
 'quiver_key_pos':QUIVER_KEY_POS,
 'scatter_size':SCATTER_SIZE,
+'scatter_show':SCATTER_SHOW,
 'image_clim':IMAGE_CLIM,
 'image_cmap':IMAGE_CMAP,
 'image_array_size':IMAGE_ARRAY_SIZE,
@@ -237,5 +457,22 @@ GLOSSARY = {
 'fontsize':FONTSIZE,
 'break_lons':BREAK_LONS,
 'break_lats':BREAK_LATS,
-'break_conn':BREAK_CONN
+'break_conn':BREAK_CONN,
+'break_dates':BREAK_DATES,
+'start_date':START_DATE,
+'stop_date':STOP_DATE,
+'min_lat':MIN_LAT,
+'max_lat':MAX_LAT,
+'min_lon':MIN_LON,
+'max_lon':MAX_LON,
+'t_cutoff':T_CUTOFF,
+'s_cutoff':S_CUTOFF,
+'t_diff':T_DIFF,
+'s_diff':S_DIFF,
+'samples':SAMPLES,
+'procs':PROCS,
+'n':N,
+'fill':FILL,
+'use_pinv':USE_PINV,
+'check_all_edges':CHECK_ALL_EDGES
 }
