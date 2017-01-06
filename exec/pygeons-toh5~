@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import pygeons.interface
-from pygeons.io.convert import dict_from_text,hdf5_from_dict
-from pygeons.io.parser import (parse_csv,parse_pbocsv,
-                               parse_pbopos,parse_tdecsv)
+from pygeons import *
 import logging
 
 def change_extension(f,ext):

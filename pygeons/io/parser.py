@@ -1,21 +1,28 @@
 ''' 
-parses the content of data text files
+This module contains functions which parse a text file for a single 
+station and return a dictionary with the following entries. The data 
+in the text file can be displacements or any of its spatial or 
+temporal derivatives, e.g. velocities or deformation gradients. The 
+units for the data have bases of meters and days and the exponents are 
+indicated with *space_exponent* and *time_exponent*. For example, if 
+the text file contains velocity data in meters per day, then 
+*space_exponent* and *time_exponent* should be 1 and -1, respectively.
 
-Each function must be able to read in a text file for a station and 
-return the following information
-
-  id : 4-characterstation name
-  longitude :
+  id : 4-character station name
+  longitude : 
   latitude :
-  time : array of observation times in MJD
-  east : array of observations in meters**p * days**q
+  time : array of observation times in Modified Julian Date (MJD)
+  east : array of easting observations in meters**p * days**q
   north :               '' 
   vertical :            ''
   east_std : standard deviation in meters**p * days**q
   north_std :           ''
   vertical_std :        ''
-  space_power : the space unit exponent
-  time_power : the time unit exponent    
+  space_exponent : the exponent for the spatial unit 
+  time_exponent : the exponent for the temporal unit
+
+The parser function should be able to fill in any required information 
+that is not in the text file.
 
 '''
 import numpy as np
@@ -79,8 +86,8 @@ def _get_field(field,master,delim=':'):
 
 def parse_csv(file_str):
   ''' 
-  Reads data from a single file PyGeoNS csv file which has a format 
-  based on the PBO csv file
+  Reads data from a single PyGeoNS csv file which has a format based 
+  on the PBO csv file
   '''
   fmt = '%Y-%m-%d'
   delim = ','
@@ -102,9 +109,8 @@ def parse_csv(file_str):
   lat = float(lat.split(' ')[0])
 
   units = _get_field('units',file_str,delim=delim)
-  space_power = int(units.split('*')[2])
-  time_power = int(units.split('*')[5])
-
+  space_exponent = units.split()[0].split('**')[1]
+  time_exponent = units.split()[1].split('**')[1]
   start = _get_field('begin date',file_str,delim=delim)
 
   data_start_idx = file_str.rfind(start)
@@ -126,8 +132,8 @@ def parse_csv(file_str):
   output['north_std'] = data[:,4].astype(float)
   output['east_std'] = data[:,5].astype(float)
   output['vertical_std'] = data[:,6].astype(float)
-  output['time_power'] = time_power
-  output['space_power'] = space_power
+  output['time_exponent'] = time_exponent
+  output['space_exponent'] = space_exponent
   return output 
 
 
@@ -170,8 +176,8 @@ def parse_pbocsv(file_str):
   output['east_std'] = 0.001*data[:,5].astype(float)
   output['vertical_std'] = 0.001*data[:,6].astype(float)
   # indicate that the data are in units of meters
-  output['time_power'] = 0  
-  output['space_power'] = 1
+  output['time_exponent'] = 0  
+  output['space_exponent'] = 1
   return output 
 
 
@@ -215,8 +221,8 @@ def parse_tdecsv(file_str):
   output['east_std'] = 0.001*np.ones(len(data[:,0]))
   output['vertical_std'] = 0.001*np.ones(len(data[:,0]))
   # indicate that the data are in units of meters
-  output['time_power'] = 0  
-  output['space_power'] = 1
+  output['time_exponent'] = 0  
+  output['space_exponent'] = 1
   return output 
 
 
@@ -244,7 +250,6 @@ def parse_pbopos(file_str):
   data = np.genfromtxt(data.split('\n'),
                        converters={0:date_conv},
                        usecols=(0,15,16,17,18,19,20))
-
   output = {}
   output['id'] = id.upper()
   output['longitude'] = np.float(lon)
@@ -257,8 +262,8 @@ def parse_pbopos(file_str):
   output['east_std'] = data[:,5].astype(float)
   output['vertical_std'] = data[:,6].astype(float)
   # indicate that the units are in meters
-  output['time_power'] = 0
-  output['space_power'] = 1
+  output['time_exponent'] = 0
+  output['space_exponent'] = 1
   return output 
   
   

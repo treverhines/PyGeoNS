@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 import argparse
-import json
-import sys
-import os
-from pygeons.io.convert import hdf5_from_dict,dict_from_hdf5
-import pygeons.interface
 import logging
+from pygeons import *
 
 def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])

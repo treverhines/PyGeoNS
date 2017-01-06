@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 import argparse
-import json
-import sys
-from pygeons.io.convert import dict_from_hdf5
-import pygeons.interface
 import logging
+from pygeons import *
 
 p = argparse.ArgumentParser(
   description='''Runs the PyGeoNS Interactive Viewer''')
@@ -69,4 +66,4 @@ for k in p.keys():
   if p[k] is None: 
     p.pop(k)
 
-pygeons.interface.view(data_dicts,**p)
+pygeons_view(data_dicts,**p)

@@ -5,8 +5,7 @@ import numpy as np
 import logging
 import h5py
 from pygeons.datadict import DataDict
-from pygeons.mjd import mjd_inv,mjd
-import pygeons.parser 
+from pygeons.mjd import mjd_inv
 logger = logging.getLogger(__name__)
 
 ## Write files from DataDict instances
@@ -18,18 +17,20 @@ def _write_csv(data_dict):
   '''
   time = data_dict['time']
   out  = '4-character id, %s\n' % data_dict['id']
-  out += 'begin date, %s\n' % decday_inv(time[0],'%Y-%m-%d')
-  out += 'end date, %s\n' % decday_inv(time[-1],'%Y-%m-%d')
+  out += 'begin date, %s\n' % mjd_inv(time[0],'%Y-%m-%d')
+  out += 'end date, %s\n' % mjd_inv(time[-1],'%Y-%m-%d')
   out += 'longitude, %s E\n' % data_dict['longitude']
   out += 'latitude, %s N\n' % data_dict['latitude']
-  out += 'units, meters**%s * days**%s\n' % (data_dict['space_power'],data_dict['time_power'])
+  out += ('units, meters**%s days**%s\n' % 
+          (data_dict['space_power'],data_dict['time_power']))
   out += 'date, north, east, vertical, north std. deviation, east std. deviation, vertical std. deviation\n'
   # convert displacements and uncertainties to strings
   for i in range(len(data_dict['time'])):
     date_str = mjd_inv(time[i],'%Y-%m-%d')
     out += ('%s, %e, %e, %e, %e, %e, %e\n' % 
-            (date_str,data_dict['north'][i],data_dict['east'][i],data_dict['vertical'][i],
-             data_dict['north_std'][i],data_dict['east_std'][i],data_dict['vertical_std'][i]))
+            (date_str,data_dict['north'][i],data_dict['east'][i],
+             data_dict['vertical'][i],data_dict['north_std'][i],
+             data_dict['east_std'][i],data_dict['vertical_std'][i]))
 
   return out             
   
