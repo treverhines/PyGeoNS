@@ -266,4 +266,10 @@ def parse_pbopos(file_str):
   output['space_exponent'] = 1
   return output 
   
-  
+# dictionary of all parsers defined in this module
+PARSER_DICT = {'csv':parse_csv,
+               'pbocsv':parse_pbocsv,
+               'tdecsv':parse_tdecsv,
+               'pbopos':parse_pbopos}
+
+

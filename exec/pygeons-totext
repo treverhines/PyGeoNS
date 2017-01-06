@@ -7,35 +7,24 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
-  description='''Converts a HDF5 data file to a csv file''')
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+''' 
+Converts a HDF5 data file to a csv file.
 
-p.add_argument(
-  'input_file',type=str,metavar='STR',
-  help='''Input file name. This must be an HDF5 file''')
+'''
+)
 
-p.add_argument(
-  '-o','--output_file',type=str,metavar='STR',
-  help='''Output file name. If this is not provided then it is the 
-          same as the input file name but the extension is removed 
-          and replaced with "csv"''')
-
-p.add_argument(
-  '-v','--verbose',action='count',default=0,
-  help='''controls verbosity''')
-               
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('-o','--output_file',**GLOSSARY['output_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p = vars(p.parse_args())
 
 # set logger
 verbose = p.pop('verbose')
-if verbose == 0:
-  logging.basicConfig(level=logging.WARNING)
-elif verbose == 1:
-  logging.basicConfig(level=logging.INFO)
-else:
-  logging.basicConfig(level=logging.DEBUG)
-
 input_file = p.pop('input_file')
 output_file = p.pop('output_file')
+logging.basicConfig(level=30-10*verbose)
 if output_file is None:
   output_file = change_extension(input_file,'csv')
 

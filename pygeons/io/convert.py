@@ -1,19 +1,20 @@
 ''' 
-module for converting between input/output data formats
+Module for converting between hdf5 files, text files and data 
+dictionaries
 '''
 import numpy as np
 import logging
 import h5py
 from pygeons.datadict import DataDict
 from pygeons.mjd import mjd_inv
+from pygeons.io.parser import PARSER_DICT
 logger = logging.getLogger(__name__)
 
 ## Write files from DataDict instances
 #####################################################################
-
 def _write_csv(data_dict):
   ''' 
-  Writes to a PyGeoNS csv file
+  Write data for a single station to a csv file
   '''
   time = data_dict['time']
   out  = '4-character id, %s\n' % data_dict['id']
@@ -22,8 +23,9 @@ def _write_csv(data_dict):
   out += 'longitude, %s E\n' % data_dict['longitude']
   out += 'latitude, %s N\n' % data_dict['latitude']
   out += ('units, meters**%s days**%s\n' % 
-          (data_dict['space_power'],data_dict['time_power']))
-  out += 'date, north, east, vertical, north std. deviation, east std. deviation, vertical std. deviation\n'
+          (data_dict['space_exponent'],data_dict['time_exponent']))
+  out += ('date, north, east, vertical, north std. deviation, '
+          'east std. deviation, vertical std. deviation\n')
   # convert displacements and uncertainties to strings
   for i in range(len(data_dict['time'])):
     date_str = mjd_inv(time[i],'%Y-%m-%d')
@@ -36,8 +38,17 @@ def _write_csv(data_dict):
   
 def text_from_dict(outfile,data_dict):
   ''' 
-  Creates a csv string for every station in *data_dict*. Joins the 
-  strings, separated by '***', in *outfiles*
+  Writes a text file from a data dictionary. The text file contains a 
+  csv string for each station separated by "***".
+  
+  Parameters
+  ----------
+  outfile : string
+    Name of the output text file
+
+  data_dict : dict
+    Data dictionary 
+
   '''
   Nx = len(data_dict['id'])
   strs = []
@@ -61,8 +72,8 @@ def text_from_dict(outfile,data_dict):
     dict_i['east_std'] = data_dict['east_std'][~mask,i]
     dict_i['north_std'] = data_dict['north_std'][~mask,i]
     dict_i['vertical_std'] = data_dict['vertical_std'][~mask,i]
-    dict_i['time_power'] = data_dict['time_power']
-    dict_i['space_power'] = data_dict['space_power']
+    dict_i['time_exponent'] = data_dict['time_exponent']
+    dict_i['space_exponent'] = data_dict['space_exponent']
     strs += [_write_csv(dict_i)]
     
   out = '***\n'.join(strs)
@@ -74,7 +85,16 @@ def text_from_dict(outfile,data_dict):
 
 def hdf5_from_dict(outfile,data_dict):
   ''' 
-  Writes an hdf5 file from the data dictionary
+  Writes an hdf5 file from the data dictionary.
+  
+  Parameters
+  ----------
+  outfile : str
+    Name of the output file
+  
+  data_dict : dict
+    Data dictionary      
+  
   '''
   fout = h5py.File(outfile,'w') 
   for k in data_dict.keys():
@@ -86,22 +106,23 @@ def hdf5_from_dict(outfile,data_dict):
 
 ## Load DataDict instances from files
 #####################################################################
-
-def dict_from_text(infile,parser):
+def dict_from_text(infile,parser='csv'):
   ''' 
   Loads a data dictionary from a text file. 
   
   Parameters
   ----------
   infile : str
-    input file name
+    Input file name
   
-  parser : function
-    Function from the module *pygeons.parser*. This function should be 
-    able to read in a station string and return a dictionary 
-    containing "id", "longitude", "latitude", "time", "east", "north", 
-    "vertical", "east_std", "north_std", "vertical_std", "time_power", 
-    and "space_power". 
+  parser : str
+    String indicating which parser to use. Can be either "csv", 
+    "pbocsv", "tdecsv", or "pbopos".
+    
+  Returns
+  -------
+  out : dict
+    Data dictionary
     
   '''
   buff = open(infile,'r')
@@ -109,7 +130,7 @@ def dict_from_text(infile,parser):
   buff.close()
 
   # dictionaries of data for each station
-  dicts = [parser(s) for s in strs]
+  dicts = [PARSER_DICT[parser](s) for s in strs]
 
   # find the earliest and latest time. note that these are in MJD
   start_time = np.inf
@@ -123,8 +144,8 @@ def dict_from_text(infile,parser):
   # form an array of times ranging from the time of the earliest 
   # observation to the time of the latest observation. count by days
   out = {}
-  out['time_power'] = dicts[0]['time_power']
-  out['space_power'] = dicts[0]['space_power']
+  out['time_exponent'] = dicts[0]['time_exponent']
+  out['space_exponent'] = dicts[0]['space_exponent']
   out['time'] = np.arange(int(start_time),int(stop_time)+1,1)
   out['longitude'] = np.array([d['longitude'] for d in dicts])
   out['latitude'] = np.array([d['latitude'] for d in dicts])
@@ -150,7 +171,18 @@ def dict_from_text(infile,parser):
 
 def dict_from_hdf5(infile):
   ''' 
-  loads a data dictionary from an hdf5 file
+  Loads a data dictionary from an hdf5 file.
+  
+  Parameters
+  ----------
+  infile : str
+    Name of hdf5 file
+    
+  Returns
+  -------
+  out : dict
+    Data dictionary
+
   '''
   out = {}
   fin = h5py.File(infile,'r')
