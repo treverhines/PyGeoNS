@@ -15,9 +15,9 @@ if __name__ == '__main__':
                  'exec/pygeons-view',
                  'exec/pygeons-strain',
                  'exec/pygeons-toh5',
-                 'exec/pygeons-tocsv',
+                 'exec/pygeons-totext',
                  'exec/pygeons-downsample'],
-        packages=['pygeons'],
+        packages=['pygeons','pygeons.io','pygeons.plot'],
         license='MIT')
 
 

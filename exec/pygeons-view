@@ -2,7 +2,7 @@
 import argparse
 import json
 import sys
-import pygeons.ioconv
+from pygeons.io.convert import dict_from_hdf5
 import pygeons.interface
 import logging
 
@@ -62,7 +62,7 @@ else:
   logging.basicConfig(level=logging.DEBUG)
 
 input_files = p.pop('input_files')
-data_dicts = [pygeons.ioconv.dict_from_hdf5(i) for i in input_files]
+data_dicts = [dict_from_hdf5(i) for i in input_files]
 
 # throw out any Nones and let the lower level functions determine the defaults
 for k in p.keys(): 

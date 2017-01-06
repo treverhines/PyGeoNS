@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import pygeons.ioconv
+from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
 import pygeons.interface
 import logging
 
@@ -77,6 +77,6 @@ for k in p.keys():
 if output_file is None:
   output_file = change_extension(input_file,'clean.h5')
 
-data_dict = pygeons.ioconv.dict_from_hdf5(input_file) 
+data_dict = dict_from_hdf5(input_file) 
 out_dict = pygeons.interface.clean(data_dict,**p)
-pygeons.ioconv.hdf5_from_dict(output_file,out_dict)
+hdf5_from_dict(output_file,out_dict)

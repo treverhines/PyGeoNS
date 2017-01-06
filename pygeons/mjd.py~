@@ -69,6 +69,6 @@ def mjd_inv(m,fmt):
     
   '''
   m = int(m)
-  d = _REFERENCE_TIME + timedelta(m)
+  d = _REFERENCE_DATETIME + timedelta(m)
   out = d.strftime(fmt)
   return out
