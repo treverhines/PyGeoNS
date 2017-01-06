@@ -3,7 +3,7 @@ import argparse
 import json
 import sys
 import os
-import pygeons.ioconv
+from pygeons.io.convert import hdf5_from_dict,dict_from_hdf5
 import pygeons.interface
 import logging
 
@@ -42,7 +42,7 @@ p.add_argument(
           uncertainty''')
 
 p.add_argument(
-  '--size',type=int,metavar='INT',
+  '--n',type=int,metavar='INT',
   help='''Stencil Size''')
 
 p.add_argument(
@@ -83,6 +83,6 @@ for k in p.keys():
 if output_file is None:
   output_file = change_extension(input_file,'tfilter.h5')
 
-data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
+data_dict = dict_from_hdf5(input_file)
 out_dict = pygeons.interface.tfilter(data_dict,**p)
-pygeons.ioconv.hdf5_from_dict(output_file,out_dict)
+hdf5_from_dict(output_file,out_dict)

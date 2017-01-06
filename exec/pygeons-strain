@@ -2,7 +2,7 @@
 import argparse
 import json
 import sys
-import pygeons.ioconv
+from pygeons.io.convert import dict_from_hdf5
 import pygeons.interface
 import logging
 
@@ -55,9 +55,9 @@ else:
   logging.basicConfig(level=logging.DEBUG)
 
 xdiff_file = p.pop('xdiff_file')
-xdiff_dict = pygeons.ioconv.dict_from_hdf5(xdiff_file)
+xdiff_dict = dict_from_hdf5(xdiff_file)
 ydiff_file = p.pop('ydiff_file')
-ydiff_dict = pygeons.ioconv.dict_from_hdf5(ydiff_file)
+ydiff_dict = dict_from_hdf5(ydiff_file)
 
 # throw out any Nones and let the lower level functions determine the defaults
 for k in p.keys(): 

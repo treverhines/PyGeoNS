@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 import argparse
-import pygeons.ioconv
 import pygeons.interface
+from pygeons.io.convert import dict_from_text,hdf5_from_dict
+from pygeons.io.parser import (parse_csv,parse_pbocsv,
+                               parse_pbopos,parse_tdecsv)
 import logging
 
 def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
-  description='''Converts a text data file to a HDF5 file''')
+  description='''Converts a text data file to an HDF5 file''')
 
 p.add_argument(
   'input_file',type=str,metavar='STR',
@@ -16,7 +18,7 @@ p.add_argument(
 
 p.add_argument(
   'file_type',type=str,metavar='STR',
-  choices=['pbo_pos','pbo_csv','csv','tde_csv'],
+  choices=['pbopos','pbocsv','csv','tdecsv'],
   help='''Input file type''')
 
 p.add_argument(
@@ -47,12 +49,12 @@ if output_file is None:
   output_file = change_extension(input_file,'h5')
 
 if file_type == 'csv':
-  data_dict = pygeons.ioconv.dict_from_csv(input_file)
-elif file_type == 'pbo_csv':
-  data_dict = pygeons.ioconv.dict_from_pbocsv(input_file)
-elif file_type == 'tde_csv':
-  data_dict = pygeons.ioconv.dict_from_tdecsv(input_file)
-elif file_type == 'pbo_pos':
-  data_dict = pygeons.ioconv.dict_from_pbopos(input_file)
+  data_dict = dict_from_text(input_file,parse_csv)
+elif file_type == 'pbocsv':
+  data_dict = dict_from_text(input_file,parse_pbocsv)
+elif file_type == 'tdecsv':
+  data_dict = dict_from_text(input_file,parse_tdecsv)
+elif file_type == 'pbopos':
+  data_dict = dict_from_text(input_file,parse_pbopos)
     
-pygeons.ioconv.hdf5_from_dict(output_file,data_dict)
+hdf5_from_dict(output_file,data_dict)

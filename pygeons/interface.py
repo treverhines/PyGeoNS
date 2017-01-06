@@ -26,19 +26,17 @@ dictionary contains the following items:
 '''
 from __future__ import division
 import numpy as np
-import pygeons.view
-import pygeons.strain
+import pygeons.plot.view
+import pygeons.plot.strain
 import pygeons.clean
 import rbf.filter
 import rbf.gpr
 import logging
 import matplotlib.pyplot as plt
-from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
-from pygeons.dateconv import decday_inv
-from pygeons.dateconv import decday
+from pygeons.mjd import mjd_inv
+from pygeons.mjd import mjd
 from mpl_toolkits.basemap import Basemap
-from functools import wraps
 logger = logging.getLogger(__name__)
 
 
@@ -86,7 +84,7 @@ def _get_time_vert_smp(break_dates):
   if break_dates is None: break_dates = []
   # subtract half a day to get rid of any ambiguity about what day 
   # the dislocation is observed
-  breaks = [decday(d,'%Y-%m-%d') - 0.5 for d in break_dates]   
+  breaks = [mjd(d,'%Y-%m-%d') - 0.5 for d in break_dates]   
   vert = np.array(breaks).reshape((-1,1))
   smp = np.arange(vert.shape[0]).reshape((-1,1))  
   return vert,smp
@@ -211,15 +209,15 @@ def _setup_ts_ax(ax_lst,times):
   ''' 
   prepares the time series axes for display
   '''
-  # display time in decday and date on time series plot
+  # display time in MJD and date on time series plot
   def ts_coord_string(x,y):                         
     str = 'time : %g  ' % x
-    str += '(date : %s)' % decday_inv(x,'%Y-%m-%d')
+    str += '(date : %s)' % mjd_inv(x,'%Y-%m-%d')
     return str 
 
   ticks = np.linspace(times.min(),times.max(),13)[1:-1:2]
   ticks = np.round(ticks)
-  tick_labels = [decday_inv(t,'%Y-%m-%d') for t in ticks]
+  tick_labels = [mjd_inv(t,'%Y-%m-%d') for t in ticks]
   ax_lst[2].set_xticks(ticks)
   ax_lst[2].set_xticklabels(tick_labels)
   ax_lst[0].format_coord = ts_coord_string
@@ -239,18 +237,7 @@ def tfilter(data,
   data.check_self_consistency()
   vert,smp = _get_time_vert_smp(break_dates)
   out = DataDict(data)
-  # XXXXXXXXXXXXXXXXXXXXX
-  #cutoff = kwargs['cutoff']
-  # XXXXXXXXXXXXXXXXXXXXX
-  
   for dir in ['east','north','vertical']:
-    #post,post_sigma = rbf.gpr.gpr(
-    #                    data['time'][:,None],
-    #                    data[dir].T,
-    #                    data[dir+'_std'].T,
-    #                    (
-    #                    diffs=diff,
-    #                    **kwargs)
     post,post_sigma = rbf.filter.filter(
                         data['time'][:,None],data[dir].T,
                         sigma=data[dir+'_std'].T,
@@ -301,67 +288,68 @@ def sfilter(data,
   return out
 
 
-def downsample(data,sample_period=1,start_date=None,stop_date=None,
-               break_dates=None):
-  ''' 
-  downsamples the data set along the time axis
-  
-  Parameters
-  ----------
-    data : dict
-      data dictionary
-      
-    sample_period : int, optional
-      sample period of the output data set in days. Output data is 
-      computed using a running mean with this width. This should be an 
-      odd integer in order to avoid double counting the observations 
-      at some days. Defaults to 1.
-      
-    start_date : str, optional
-      start date of output data set in YYYY-MM-DD. Uses the start date 
-      of *data* if not provided
-
-    stop_date : str, optional
-      stop date of output data set in YYYY-MM-DD. Uses the stop date 
-      of *data* if not provided
-
-    break_dates : lst, optional
-      list of time discontinuities in YYYY-MM-DD. This date should be 
-      when the discontinuity is first observed
-      
-  Returns
-  -------
-    out_dict : dict
-      output data dictionary
-
-  '''
-  data.check_self_consistency()
-  vert,smp = _get_time_vert_smp(break_dates)
-      
-  # if the start and stop time are not specified then use the min and 
-  # max times
-  if start_date is None:
-    start_date = decday_inv(data['time'].min(),'%Y-%m-%d')
-  if stop_date is None:
-    stop_date = decday_inv(data['time'].max(),'%Y-%m-%d')
-  
-  start_time = int(decday(start_date,'%Y-%m-%d'))
-  stop_time = int(decday(stop_date,'%Y-%m-%d'))
-  sample_period = int(sample_period)
-  time_itp = np.arange(start_time,stop_time+1,sample_period)
-  out = DataDict(data)
-  out['time'] = time_itp
-  for dir in ['east','north','vertical']:
-    mi = MeanInterpolant(data['time'][:,None],
-                         data[dir].T,sigma=data[dir+'_std'].T,
-                         vert=vert,smp=smp)
-    post,post_sigma = mi(time_itp[:,None])
-    out[dir] = post.T
-    out[dir+'_std'] = post_sigma.T
-
-  out.check_self_consistency()
-  return out
-
+#def downsample(data,sample_period=1,start_date=None,stop_date=None,
+#               break_dates=None):
+#  ''' 
+#  downsamples the data set along the time axis
+#  
+#  Parameters
+#  ----------
+#    data : dict
+#      data dictionary
+#      
+#    sample_period : int, optional
+#      sample period of the output data set in days. Output data is 
+#      computed using a running mean with this width. This should be an 
+#      odd integer in order to avoid double counting the observations 
+#      at some days. Defaults to 1.
+#      
+#    start_date : str, optional
+#      start date of output data set in YYYY-MM-DD. Uses the start date 
+#      of *data* if not provided
+#
+#    stop_date : str, optional
+#      stop date of output data set in YYYY-MM-DD. Uses the stop date 
+#      of *data* if not provided
+#
+#    break_dates : lst, optional
+#      list of time discontinuities in YYYY-MM-DD. This date should be 
+#      when the discontinuity is first observed
+#      
+#  Returns
+#  -------
+#    out_dict : dict
+#      output data dictionary
+#
+#  '''
+#  data.check_self_consistency()
+#  vert,smp = _get_time_vert_smp(break_dates)
+#      
+#  # if the start and stop time are not specified then use the min and 
+#  # max times
+#  if start_date is None:
+#    start_date = mjd_inv(data['time'].min(),'%Y-%m-%d')
+#  if stop_date is None:
+#    stop_date = mjd_inv(data['time'].max(),'%Y-%m-%d')
+#  
+#  start_time = int(mjd(start_date,'%Y-%m-%d'))
+#  stop_time = int(mjd(stop_date,'%Y-%m-%d'))
+#  sample_period = int(sample_period)
+#  time_itp = np.arange(start_time,stop_time+1,sample_period)
+#  out = DataDict(data)
+#  out['time'] = time_itp
+#  for dir in ['east','north','vertical']:
+#    mi = MeanInterpolant(data['time'][:,None],
+#                         data[dir].T,sigma=data[dir+'_std'].T,
+#                         vert=vert,smp=smp)
+#    post,post_sigma = mi(time_itp[:,None])
+#    out[dir] = post.T
+#    out[dir+'_std'] = post_sigma.T
+#
+#  out.check_self_consistency()
+#  return out
+#
+#
 
 def clean(data,resolution='i',
           break_lons=None,break_lats=None,
@@ -404,7 +392,7 @@ def clean(data,resolution='i',
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
   t = data['time']
-  dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
+  dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
 
   conv = _unit_conversion(data['space_power'],
                           data['time_power'])
@@ -452,7 +440,7 @@ def view(data_list,resolution='i',
       basemap resolution
       
     **kwargs :
-      gets passed to pygeons.view.view
+      gets passed to pygeons.plot.view.interactive_view
 
   '''
   for d in data_list:
@@ -464,7 +452,7 @@ def view(data_list,resolution='i',
   lon = data_list[0]['longitude']
   lat = data_list[0]['latitude']
   id = data_list[0]['id']
-  dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
+  dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
 
   conv = _unit_conversion(data_list[0]['space_power'],
                           data_list[0]['time_power'])
@@ -495,7 +483,7 @@ def view(data_list,resolution='i',
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
-  pygeons.view.interactive_viewer(
+  pygeons.plot.view.interactive_viewer(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
     ts_ax=ts_ax,map_ax=map_ax,
     station_labels=id,
@@ -534,7 +522,7 @@ def strain(data_dx,data_dy,resolution='i',
   t = data_dx['time']
   lon = data_dx['longitude']
   lat = data_dx['latitude']
-  dates = [decday_inv(ti,'%Y-%m-%d') for ti in t]
+  dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
 
   conv = _unit_conversion(data_dx['space_power'],
                           data_dx['time_power'])
@@ -570,7 +558,7 @@ def strain(data_dx,data_dy,resolution='i',
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   
-  pygeons.strain.interactive_strain_viewer(
+  pygeons.plot.strain.interactive_strain_viewer(
     t,pos,
     ux,uy,vx,vy,
     sux,suy,svx,svy,

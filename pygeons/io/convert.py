@@ -4,11 +4,9 @@ module for converting between input/output data formats
 import numpy as np
 import logging
 import h5py
-from pygeons.mean import MeanInterpolant
 from pygeons.datadict import DataDict
 from pygeons.mjd import mjd_inv,mjd
 import pygeons.parser 
-from pygeons.dateconv import decday_inv
 logger = logging.getLogger(__name__)
 
 ## Write files from DataDict instances
@@ -35,13 +33,19 @@ def _write_csv(data_dict):
 
   return out             
   
-def csv_from_dict(outfile,data_dict):
+def text_from_dict(outfile,data_dict):
+  ''' 
+  Creates a csv string for every station in *data_dict*. Joins the 
+  strings, separated by '***', in *outfiles*
+  '''
   Nx = len(data_dict['id'])
   strs = []
   for i in range(Nx):
     # create a subdictionary for each station
     dict_i = {}
-    mask = np.isinf(data_dict['north_std'][:,i])
+    mask = (~np.isfinite(data_dict['north_std'][:,i]) |
+            ~np.isfinite(data_dict['east_std'][:,i]) |
+            ~np.isfinite(data_dict['vertical_std'][:,i]))
     # do not write data for this station if the station has no data
     if np.all(mask):
       continue
@@ -69,7 +73,7 @@ def csv_from_dict(outfile,data_dict):
 
 def hdf5_from_dict(outfile,data_dict):
   ''' 
-  writes an hdf5 file from the data dictionary
+  Writes an hdf5 file from the data dictionary
   '''
   fout = h5py.File(outfile,'w') 
   for k in data_dict.keys():
@@ -82,25 +86,31 @@ def hdf5_from_dict(outfile,data_dict):
 ## Load DataDict instances from files
 #####################################################################
 
-def _dict_from_text(infile,file_type):
+def dict_from_text(infile,parser):
   ''' 
-  loads a data dictionary from a text file. 
+  Loads a data dictionary from a text file. 
+  
+  Parameters
+  ----------
+  infile : str
+    input file name
+  
+  parser : function
+    Function from the module *pygeons.parser*. This function should be 
+    able to read in a station string and return a dictionary 
+    containing "id", "longitude", "latitude", "time", "east", "north", 
+    "vertical", "east_std", "north_std", "vertical_std", "time_power", 
+    and "space_power". 
+    
   '''
   buff = open(infile,'r')
   strs = buff.read().split('***')
   buff.close()
 
   # dictionaries of data for each station
-  if file_type == 'pbocsv':
-    dicts = [pygeons.parser.parse_pbocsv(s) for s in strs]
-  if file_type == 'tdecsv':
-    dicts = [pygeons.parser.parse_tdecsv(s) for s in strs]
-  elif file_type == 'pbopos':
-    dicts = [pygeons.parser.parse_pbopos(s) for s in strs]
-  elif file_type == 'csv':
-    dicts = [pygeons.parser.parse_csv(s) for s in strs]
+  dicts = [parser(s) for s in strs]
 
-  # find the start and end time
+  # find the earliest and latest time. note that these are in MJD
   start_time = np.inf
   stop_time = -np.inf
   for d in dicts:
@@ -109,69 +119,32 @@ def _dict_from_text(infile,file_type):
     if np.max(d['time']) > stop_time:
       stop_time = np.max(d['time'])
 
-  # interpolation times, make sure that the stop_time is included
-  time = np.arange(start_time,stop_time+1,1)
-  longitude = np.array([d['longitude'] for d in dicts])
-  latitude = np.array([d['latitude'] for d in dicts])
-  id = np.array([d['id'] for d in dicts])
-  Nt,Nx = len(time),len(id)
-  east = np.zeros((Nt,Nx))
-  north = np.zeros((Nt,Nx))
-  vertical = np.zeros((Nt,Nx))
-  east_std = np.zeros((Nt,Nx))
-  north_std = np.zeros((Nt,Nx))
-  vertical_std = np.zeros((Nt,Nx))
-  # interpolate data onto the interpolation times for each station
-  time_power = dicts[0]['time_power']
-  space_power = dicts[0]['space_power']
-  for i,d in enumerate(dicts):
-    logger.debug('interpolating data for station %s onto grid times' % d['id'])
-    data_i = np.concatenate((d['east'][None,:],
-                             d['north'][None,:],
-                             d['vertical'][None,:]),axis=0)
-    sigma_i = np.concatenate((d['east_std'][None,:],
-                              d['north_std'][None,:],
-                              d['vertical_std'][None,:]),axis=0)
-    itp = MeanInterpolant(d['time'][:,None],data_i,sigma_i)
-    data_itp,sigma_itp = itp(time[:,None])
-    east[:,i] = data_itp[0,:]
-    north[:,i] = data_itp[1,:]
-    vertical[:,i] = data_itp[2,:]
-    east_std[:,i] = sigma_itp[0,:]
-    north_std[:,i] = sigma_itp[1,:]
-    vertical_std[:,i] = sigma_itp[2,:]
-
+  # form an array of times ranging from the time of the earliest 
+  # observation to the time of the latest observation. count by days
   out = {}
-  out['time'] = time
-  out['longitude'] = longitude
-  out['latitude'] = latitude
-  out['id'] = id
-  out['east'] = east
-  out['north'] = north
-  out['vertical'] = vertical
-  out['east_std'] = east_std
-  out['north_std'] = north_std
-  out['vertical_std'] = vertical_std
-  out['time_power'] = time_power
-  out['space_power'] = space_power
+  out['time_power'] = dicts[0]['time_power']
+  out['space_power'] = dicts[0]['space_power']
+  out['time'] = np.arange(int(start_time),int(stop_time)+1,1)
+  out['longitude'] = np.array([d['longitude'] for d in dicts])
+  out['latitude'] = np.array([d['latitude'] for d in dicts])
+  out['id'] = np.array([d['id'] for d in dicts])
+  Nt,Nx = len(out['time']),len(out['id'])
+  # make a lookup table associating times with indices
+  time_dict = dict(zip(out['time'],range(Nt)))
+  for key in ['east','north','vertical']:
+    # initiate the data arrays with nans or infs. then fill in the 
+    # elements where there is
+    out[key] = np.empty((Nt,Nx))
+    out[key + '_std'] = np.empty((Nt,Nx))
+    out[key][:,:] = np.nan
+    out[key + '_std'][:,:] = np.inf 
+    for i,d in enumerate(dicts):
+      idx = [time_dict[t] for t in d['time']]
+      out[key][idx,i] = d[key]
+      out[key + '_std'][idx,i] = d[key + '_std']
+
   out = DataDict(out)
   return out
-
-
-def dict_from_csv(infile):
-  return _dict_from_text(infile,'csv')
-
-
-def dict_from_pbocsv(infile):
-  return _dict_from_text(infile,'pbocsv')
-
-
-def dict_from_pbopos(infile):
-  return _dict_from_text(infile,'pbopos')
-
-
-def dict_from_tdecsv(infile):
-  return _dict_from_text(infile,'tdecsv')
 
 
 def dict_from_hdf5(infile):

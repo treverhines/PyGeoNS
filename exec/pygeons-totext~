@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import pygeons.ioconv
+import pygeons.io.convert import dict_from_hdf5,text_from_dict
 import pygeons.interface
 import logging
 
@@ -40,5 +40,5 @@ output_file = p.pop('output_file')
 if output_file is None:
   output_file = change_extension(input_file,'csv')
 
-data_dict = pygeons.ioconv.dict_from_hdf5(input_file)
-pygeons.ioconv.csv_from_dict(output_file,data_dict)
+data_dict = dict_from_hdf5(input_file)
+text_from_dict(output_file,data_dict)

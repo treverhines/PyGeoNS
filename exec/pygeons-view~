@@ -2,7 +2,7 @@
 import argparse
 import json
 import sys
-import pygeons.ioconv
+from pygeons.io.convert import dict_from_hdf5
 import pygeons.interface
 import logging
 
@@ -33,10 +33,22 @@ p.add_argument('--map_title',type=str,metavar='STR')
 p.add_argument('--map_xlim',nargs=2,type=float,metavar='FLOAT')
 p.add_argument('--map_ylim',nargs=2,type=float,metavar='FLOAT')
 p.add_argument('--fontsize',type=float,metavar='FLOAT')
-p.add_argument('--break_lons1',nargs='+',type=float,metavar='FLOAT')
-p.add_argument('--break_lats1',nargs='+',type=float,metavar='FLOAT')
-p.add_argument('--break_lons2',nargs='+',type=float,metavar='FLOAT')
-p.add_argument('--break_lats2',nargs='+',type=float,metavar='FLOAT')
+p.add_argument(
+  '--break_lons',nargs='+',type=float,metavar='FLOAT',
+  help='''Longitudes of the spatial discontinuity vertices''')
+
+p.add_argument(
+  '--break_lats',nargs='+',type=float,metavar='FLOAT',
+  help='''Latitudes of the spatial discontinuity vertices''')
+
+p.add_argument(
+  '--break_conn',nargs='+',type=str,metavar='STR',
+  help='''Connectivity of the spatial discontinuity vertices. This can 
+          be one or multiple strings where each string contains the 
+          vertex indices making up each discontinuity separated by a 
+          '-'. For example, '0-1-2 3-4' indicates that there are two 
+          discontinuties, one contains vertices 0, 1, and 2 and the 
+          other contains vertices 3 and 4''')
                
 p = vars(p.parse_args())
 
@@ -50,7 +62,7 @@ else:
   logging.basicConfig(level=logging.DEBUG)
 
 input_files = p.pop('input_files')
-data_dicts = [pygeons.ioconv.dict_from_hdf5(i) for i in input_files]
+data_dicts = [dict_from_hdf5(i) for i in input_files]
 
 # throw out any Nones and let the lower level functions determine the defaults
 for k in p.keys(): 

@@ -3,7 +3,7 @@ import argparse
 import json
 import sys
 import os
-import pygeons.ioconv
+from pygeons.io.convert import hdf5_from_dict,dict_from_hdf5
 import pygeons.interface
 import logging
 

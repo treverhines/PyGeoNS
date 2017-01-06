@@ -7,10 +7,10 @@ from matplotlib.patches import Polygon
 from matplotlib.lines import Line2D
 from matplotlib.collections import PatchCollection
 from matplotlib.text import Text
-from pygeons.view import disable_default_key_bindings
-from pygeons.view import without_interactivity
-from pygeons.view import one_sigfig
-from pygeons.rin import restricted_input
+from pygeons.plot.view import disable_default_key_bindings
+from pygeons.plot.view import without_interactivity
+from pygeons.plot.view import one_sigfig
+from pygeons.plot.rin import restricted_input
 from scipy.spatial import cKDTree
 import os
 

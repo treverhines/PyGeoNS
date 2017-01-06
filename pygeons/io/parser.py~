@@ -1,13 +1,26 @@
 ''' 
 parses the content of data text files
+
+Each function must be able to read in a text file for a station and 
+return the following information
+
+  id : 4-characterstation name
+  longitude :
+  latitude :
+  time : array of observation times in MJD
+  east : array of observations in meters**p * days**q
+  north :               '' 
+  vertical :            ''
+  east_std : standard deviation in meters**p * days**q
+  north_std :           ''
+  vertical_std :        ''
+  space_power : the space unit exponent
+  time_power : the time unit exponent    
+
 '''
 import numpy as np
 import logging
-import h5py
-import pygeons.interface
-from pygeons.mean import MeanInterpolant
-from pygeons.datadict import DataDict
-from pygeons.dateconv import decday,decday_inv
+from pygeons.mjd import mjd
 logger = logging.getLogger(__name__)  
 
 def _get_line_with(sub,master):
@@ -72,9 +85,10 @@ def parse_csv(file_str):
   fmt = '%Y-%m-%d'
   delim = ','
 
-  # converts date to days since 1970-01-01
   def date_conv(date_str): 
-    return decday(date_str,fmt)
+    # return a float, rather than an integer, to be consistent with 
+    # the other data types
+    return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
   # sensitive
@@ -101,7 +115,6 @@ def parse_csv(file_str):
                        usecols=(0,1,2,3,4,5,6))
   # make sure that the data set is a two-dimensional array
   data = data.reshape((-1,7))
-  
   output = {}
   output['id'] = id.upper()
   output['longitude'] = np.float(lon)
@@ -125,9 +138,8 @@ def parse_pbocsv(file_str):
   fmt = '%Y-%m-%d'
   delim = ','
 
-  # converts date to days since 1970-01-01
   def date_conv(date_str): 
-    return decday(date_str,fmt)
+    return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
   # sensitive
@@ -162,6 +174,7 @@ def parse_pbocsv(file_str):
   output['space_power'] = 1
   return output 
 
+
 def parse_tdecsv(file_str):
   ''' 
   Reads data from a single data file which has the format used by the 
@@ -170,9 +183,8 @@ def parse_tdecsv(file_str):
   fmt = '%Y-%m-%d'
   delim = ','
 
-  # converts date to days since 1970-01-01
   def date_conv(date_str): 
-    return decday(date_str,fmt)
+    return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
   # sensitive
@@ -180,8 +192,8 @@ def parse_tdecsv(file_str):
   file_str = file_str.lower()
   line_one = file_str[:file_str.find('\n')]
   id = line_one.split(',')[0].split()[1]
-  lon = line_one.split(',')[1]
-  lat = line_one.split(',')[2]
+  lat = line_one.split(',')[1]
+  lon = line_one.split(',')[2]
   data_start_idx = file_str.find('\n') + 1
 
   logger.debug('reading csv data for station %s' % id.upper()) 
@@ -207,15 +219,15 @@ def parse_tdecsv(file_str):
   output['space_power'] = 1
   return output 
 
+
 def parse_pbopos(file_str):
   ''' 
   Reads data from a single PBO pos file
   '''
   fmt = '%Y%m%d'
 
-  # converts date to days since 1970-01-01
   def date_conv(date_str): 
-    return decday(date_str,fmt)
+    return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
   # sensitive

@@ -2,8 +2,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from rbf.interpolate import RBFInterpolant
-from pygeons.rin import restricted_input
-from pygeons.quiver import Quiver
+from pygeons.plot.rin import restricted_input
+from pygeons.plot.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from rbf.basis import phs1
 import logging
@@ -40,10 +40,10 @@ def _grid_interp_data(u,pnts,x,y):
   xg,yg = np.meshgrid(x,y)
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
-  #I = scipy.interpolate.NearestNDInterpolator(pnts,u)
+  I = scipy.interpolate.NearestNDInterpolator(pnts,u)
   # uncomment to use a smooth interpolator
-  I = RBFInterpolant(pnts,u,penalty=0.0,
-                     order=1,basis=phs1)
+  #I = RBFInterpolant(pnts,u,penalty=0.0,
+  #                   order=1,basis=phs1)
   uitp = I(pnts_itp)
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
@@ -53,7 +53,7 @@ def one_sigfig(val):
   ''' 
   rounds *val* to one significant figure
   '''
-  return np.round(val,-int(np.floor(np.log10(val))))
+  return np.round(val,-int(np.floor(np.log10(np.abs(val)))))
 
 
 def disable_default_key_bindings():
