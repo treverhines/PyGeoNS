@@ -349,12 +349,12 @@ Cutoff frequency in 1/days.
 '''
 }
 #####################################################################
-VAR = {
+SIGMA = {
 'type':float, 
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Variance of the Gaussian process
+Standard deviation of the prior Gaussian process
 '''
 }
 #####################################################################
@@ -363,7 +363,7 @@ CLS = {
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Characteristic length-scale of the Gaussian process
+Characteristic length-scale of the prior Gaussian process
 '''
 }
 #####################################################################
