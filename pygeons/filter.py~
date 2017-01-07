@@ -29,13 +29,14 @@ import numpy as np
 import rbf.filter
 import rbf.gpr
 import logging
+from rbf.filter import _get_mask
 from pygeons.datadict import DataDict
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 
-def pygeons_tgpr(data,var,cls,order=1,diff=(0,),
+def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                  procs=0,fill='none'):
   ''' 
   Temporal Gaussian process regression
@@ -45,8 +46,8 @@ def pygeons_tgpr(data,var,cls,order=1,diff=(0,),
   data : dict
     Data dictionary.
 
-  var : float
-    Prior variance 
+  sigma : float
+    Prior standard deviation 
   
   cls : float
     Characteristic length-scale in meters
@@ -68,12 +69,18 @@ def pygeons_tgpr(data,var,cls,order=1,diff=(0,),
                         data['time'][:,None],
                         data[dir].T,
                         data[dir+'_std'].T,
-                        (0.0,var,cls),
+                        (0.0,sigma,cls),
                         basis=rbf.basis.ga,
                         order=order,
                         diff=diff,
-                        fill=fill,
                         procs=procs)
+    # loop over the stations and mask the time series based on the 
+    # argument for *fill*
+    for i in range(post.shape[0]):
+      mask = _get_mask(data['time'][:,None],data[dir+'_std'][:,i],fill)
+      post_sigma[i,mask] = np.inf
+      post[i,mask] = np.nan
+    
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
 
@@ -82,7 +89,63 @@ def pygeons_tgpr(data,var,cls,order=1,diff=(0,),
   out.check_self_consistency()
   return out
   
-  gp = PriorGaussianProcess(rbf.basis.ga,(0.0,var,cls),order=order)
+
+def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
+                 procs=0,fill='none'):
+  ''' 
+  Temporal Gaussian process regression
+  
+  Parameters
+  ----------
+  data : dict
+    Data dictionary.
+
+  sigma : float
+    Prior standard deviation
+  
+  cls : float
+    Characteristic length-scale in meters
+  
+  order : int, optional
+    Order of the polynomial null space
+  
+  diff : int, optional
+    Derivative order
+  
+  procs : int, optional
+    Number of subprocesses to spawn       
+
+  '''
+  data.check_self_consistency()
+  bm = make_basemap(data['longitude'],data['latitude'])
+  x,y = bm(data['longitude'],data['latitude'])
+  pos = np.array([x,y]).T
+  out = DataDict(data)
+  for dir in ['east','north','vertical']:
+    post,post_sigma = rbf.gpr.gpr(
+                        pos,
+                        data[dir],
+                        data[dir+'_std'],
+                        (0.0,sigma,cls),
+                        basis=rbf.basis.ga,
+                        order=order,
+                        diff=diff,
+                        procs=procs)
+    # loop over the times and mask the stations based on the 
+    # argument for *fill*
+    for i in range(post.shape[0]):
+      mask = _get_mask(pos,data[dir+'_std'][i,:],fill)
+      post_sigma[i,mask] = np.inf
+      post[i,mask] = np.nan
+    
+    out[dir] = post
+    out[dir+'_std'] = post_sigma
+
+  # set the space units
+  out['space_exponent'] -= sum(diff)
+  out.check_self_consistency()
+  return out
+  
 
 def pygeons_tfilter(data,diff=(0,),fill='none',
                     break_dates=None,**kwargs):

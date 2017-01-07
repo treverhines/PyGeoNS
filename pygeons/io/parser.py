@@ -132,8 +132,8 @@ def parse_csv(file_str):
   output['north_std'] = data[:,4].astype(float)
   output['east_std'] = data[:,5].astype(float)
   output['vertical_std'] = data[:,6].astype(float)
-  output['time_exponent'] = time_exponent
-  output['space_exponent'] = space_exponent
+  output['time_exponent'] = int(time_exponent)
+  output['space_exponent'] = int(space_exponent)
   return output 
 
 
