@@ -11,8 +11,18 @@ INPUT_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Input file name. This must be an HDF5 file containing the fields 
-described in the main help documentation.
+Input file name. 
+'''
+}
+#####################################################################
+INPUT_FILES = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Input file names. Multiple files can be specified as long as they 
+describe deformation at the same times and stations. 
 '''
 }
 #####################################################################
@@ -46,7 +56,7 @@ FILE_TYPE = {
 ''' 
 The format for the input file. This can either be "csv", "pbocsv", 
 "pbopos", or "tdecsv". See the main documentation for a description of 
-each format.
+each format. Defaults to "csv".
 '''
 }
 #####################################################################
@@ -122,8 +132,7 @@ QUIVER_KEY_LENGTH = {
 'metavar':'FLOAT',
 'help':
 ''' 
-Length of the key vector. This should be in the units of the 
-data set being plotted.
+Length of the key vector.
 '''
 }
 #####################################################################
@@ -143,16 +152,6 @@ SCATTER_SIZE = {
 'help':
 ''' 
 Size of the scatter points showing vertical deformation.
-'''
-}
-#####################################################################
-SCATTER_SHOW = {
-'type':bool,
-'metavar':'BOOL',
-'help':
-''' 
-Controls whether the vertical deformation in the second data set 
-should be shown as scatter points.
 '''
 }
 #####################################################################
@@ -274,7 +273,7 @@ BREAK_DATES = {
 'help':
 ''' 
 Lists of dates with temporal discontinuities specified as YYYY-MM-DD. 
-This dates should be when the discontinuity is first observed.
+These dates should be when the discontinuity is first observed.
 '''
 }
 #####################################################################
@@ -283,7 +282,7 @@ START_DATE = {
 'metavar':'STR',
 'help':
 ''' 
-Start date for the output data set.
+Start date for the output data set in YYYY-MM-DD.
 '''
 }
 #####################################################################
@@ -292,7 +291,7 @@ STOP_DATE = {
 'metavar':'STR',
 'help':
 ''' 
-Stop date for the output data set.
+Stop date for the output data set in YYYY-MM-DD.
 '''
 }
 #####################################################################
@@ -350,6 +349,34 @@ Cutoff frequency in 1/days.
 '''
 }
 #####################################################################
+VAR = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Variance of the Gaussian process
+'''
+}
+#####################################################################
+CLS = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Characteristic length-scale of the Gaussian process
+'''
+}
+#####################################################################
+ORDER = {
+'default':1,
+'type':int, 
+'metavar':'INT', 
+'help': 
+''' 
+Order of the polynomial null space.
+'''
+}
+#####################################################################
 S_DIFF = {
 'nargs':2,
 'type':int, 
@@ -363,6 +390,7 @@ provided then no derivatives will be computed.
 }
 #####################################################################
 T_DIFF = {
+'nargs':1,
 'type':int, 
 'metavar':'INT', 
 'help': 
@@ -433,6 +461,7 @@ crosses the boundary.
 
 GLOSSARY = {
 'input_file':INPUT_FILE,
+'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
@@ -445,7 +474,6 @@ GLOSSARY = {
 'quiver_key_length':QUIVER_KEY_LENGTH,
 'quiver_key_pos':QUIVER_KEY_POS,
 'scatter_size':SCATTER_SIZE,
-'scatter_show':SCATTER_SHOW,
 'image_clim':IMAGE_CLIM,
 'image_cmap':IMAGE_CMAP,
 'image_array_size':IMAGE_ARRAY_SIZE,
@@ -467,6 +495,9 @@ GLOSSARY = {
 'max_lon':MAX_LON,
 't_cutoff':T_CUTOFF,
 's_cutoff':S_CUTOFF,
+'var':VAR,
+'cls':CLS,
+'order':ORDER,
 't_diff':T_DIFF,
 's_diff':S_DIFF,
 'samples':SAMPLES,
