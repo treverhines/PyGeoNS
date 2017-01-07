@@ -10,6 +10,7 @@ if __name__ == '__main__':
         author_email='treverhines@gmail.com',
         url='www.github.com/treverhines/PyGeoNS',
         scripts=['exec/pygeons-tfilter',
+                 'exec/pygeons-tgpr',
                  'exec/pygeons-sfilter',
                  'exec/pygeons-clean',
                  'exec/pygeons-view',

@@ -16,41 +16,41 @@ from pygeons.breaks import make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 
-def _unit_string(space_power,time_power):
+def _unit_string(space_exponent,time_exponent):
   ''' 
   returns a string indicating the units
   '''
-  if (space_power == 0) & (time_power == 0):
+  if (space_exponent == 0) & (time_exponent == 0):
     return ''
 
-  if space_power == 0:
+  if space_exponent == 0:
     space_str = '1'
-  elif space_power == 1:
+  elif space_exponent == 1:
     space_str = 'mm'
   else:
-    space_str = 'mm^%s' % space_power
+    space_str = 'mm^%s' % space_exponent
 
-  if time_power == 0:
+  if time_exponent == 0:
     time_str = ''
-  elif time_power == -1:
+  elif time_exponent == -1:
     time_str = '/yr'
   else:
-    time_str = '/yr^%s' % -time_power
+    time_str = '/yr^%s' % -time_exponent
   
   return space_str + time_str
         
 
-def _unit_conversion(space_power,time_power):
+def _unit_conversion(space_exponent,time_exponent):
   ''' 
   returns the scalar which converts 
   
-    meters**(space_power) * days*(time_power)
+    meters**(space_exponent) * days*(time_exponent)
   
   to   
 
-    mm**(space_power) * years*(time_power)
+    mm**(space_exponent) * years*(time_exponent)
   '''
-  return 1000**space_power * (1.0/365.25)**time_power
+  return 1000**space_exponent * (1.0/365.25)**time_exponent
   
 
 def _get_meridians_and_parallels(bm,ticks):
@@ -157,10 +157,10 @@ def pygeons_view(data_list,resolution='i',
   lat = data_list[0]['latitude']
   id = data_list[0]['id']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
-  conv = _unit_conversion(data_list[0]['space_power'],
-                          data_list[0]['time_power'])
-  units = _unit_string(data_list[0]['space_power'],
-                       data_list[0]['time_power'])
+  conv = _unit_conversion(data_list[0]['space_exponent'],
+                          data_list[0]['time_exponent'])
+  units = _unit_string(data_list[0]['space_exponent'],
+                       data_list[0]['time_exponent'])
   u = [conv*d['east'] for d in data_list]
   v = [conv*d['north'] for d in data_list]
   z = [conv*d['vertical'] for d in data_list]
@@ -218,17 +218,17 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   data_dx.check_self_consistency()
   data_dy.check_self_consistency()
   data_dx.check_compatibility(data_dy)
-  if (data_dx['space_power'] != 0) | data_dy['space_power'] != 0:
+  if (data_dx['space_exponent'] != 0) | data_dy['space_exponent'] != 0:
     raise ValueError('data sets cannot have spatial units')
   
   t = data_dx['time']
   lon = data_dx['longitude']
   lat = data_dx['latitude']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
-  conv = _unit_conversion(data_dx['space_power'],
-                          data_dx['time_power'])
-  units = _unit_string(data_dx['space_power'],
-                       data_dx['time_power'])
+  conv = _unit_conversion(data_dx['space_exponent'],
+                          data_dx['time_exponent'])
+  units = _unit_string(data_dx['space_exponent'],
+                       data_dx['time_exponent'])
   ux = conv*data_dx['east']
   sux = conv*data_dx['east_std']
   vx = conv*data_dx['north']

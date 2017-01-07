@@ -7,7 +7,7 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
-  filter_class=argparse.RawDescriptionHelpFormatter,
+  formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
 Temporally filters the data set.
@@ -23,7 +23,7 @@ p.add_argument('--procs',**GLOSSARY['procs'])
 p.add_argument('--samples',**GLOSSARY['samples'])
 p.add_argument('--n',**GLOSSARY['n'])
 p.add_argument('-f','--fill',**GLOSSARY['fill'])
-p.add_argument('break_dates',**GLOSSARY['break_dates'])
+p.add_argument('--break_dates',**GLOSSARY['break_dates'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p = vars(p.parse_args())
 

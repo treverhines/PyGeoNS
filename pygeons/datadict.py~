@@ -26,19 +26,19 @@ class DataDict(dict):
       east,north,vertical : (Nt,Nx) array
         data components. The units should be in terms of meters and 
         days and should be consistent with the values specified for 
-        *space_power* and *time_power*. For example, if *time_power* 
-        is -1 and *space_power* is 1 then the units should be in 
+        *space_exponent* and *time_exponent*. For example, if *time_exponent* 
+        is -1 and *space_exponent* is 1 then the units should be in 
         meters per day.
 
       east_std,north_std,vertical_std : (Nt,Nx) array
         One standard deviation uncertainty. These should have the same 
         units as the data components
 
-      time_power : int
+      time_exponent : int
         Indicates the power of the time units for the data. -1 
         indicates that the data is a rate, -2 is an acceleration etc.
 
-      space_power : int
+      space_exponent : int
         Indicates the power of the spatial units for the data
   
   Calling the function *check_self_consistency* will verify that all 
@@ -61,12 +61,12 @@ class DataDict(dict):
     return
 
   def __str__(self):
-    out = ('<DataDict instance, '
-           'times: %s, '
-           'stations: %s, '
-           'units: meters^%s * days^%s>'
+    out = ('<DataDict : '
+           'times = %s, '
+           'stations = %s, '
+           'units = meters**%s days**%s>'
            % (len(self['time']),len(self['id']),
-              self['space_power'],self['time_power']))
+              self['space_exponent'],self['time_exponent']))
     
     return out
 
@@ -97,7 +97,7 @@ class DataDict(dict):
     keys = ['time','id','longitude','latitude',
             'east','north','vertical',
             'east_std','north_std','vertical_std',
-            'time_power','space_power']
+            'time_exponent','space_exponent']
     for k in keys:
       if not self.has_key(k):
         raise ValueError('*%s* has not been set' % k)
@@ -176,9 +176,9 @@ class DataDict(dict):
       raise ValueError('DataDicts have inconsistent time epochs')
     if not np.all(self['id'] == other['id']):
       raise ValueError('DataDicts have inconsistent stations')
-    if self['time_power'] != other['time_power']:
+    if self['time_exponent'] != other['time_exponent']:
       raise ValueError('DataDicts have inconsistent units')
-    if self['space_power'] != other['space_power']:
+    if self['space_exponent'] != other['space_exponent']:
       raise ValueError('DataDicts have inconsistent units')
 
     return

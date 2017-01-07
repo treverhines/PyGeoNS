@@ -20,8 +20,8 @@ dictionary contains the following items:
   east_std : (Nt,Nx) array
   north_std : (Nt,Nx) array
   vertical_std : (Nt,Nx) array
-  time_power : int
-  space_power : int
+  time_exponent : int
+  space_exponent : int
 
 '''
 from __future__ import division
@@ -34,6 +34,55 @@ from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
+
+def pygeons_tgpr(data,var,cls,order=1,diff=(0,),
+                 procs=0,fill='none'):
+  ''' 
+  Temporal Gaussian process regression
+  
+  Parameters
+  ----------
+  data : dict
+    Data dictionary.
+
+  var : float
+    Prior variance 
+  
+  cls : float
+    Characteristic length-scale in meters
+  
+  order : int, optional
+    Order of the polynomial null space
+  
+  diff : int, optional
+    Derivative order
+  
+  procs : int, optional
+    Number of subprocesses to spawn       
+
+  '''
+  data.check_self_consistency()
+  out = DataDict(data)
+  for dir in ['east','north','vertical']:
+    post,post_sigma = rbf.gpr.gpr(
+                        data['time'][:,None],
+                        data[dir].T,
+                        data[dir+'_std'].T,
+                        (0.0,var,cls),
+                        basis=rbf.basis.ga,
+                        order=order,
+                        diff=diff,
+                        fill=fill,
+                        procs=procs)
+    out[dir] = post.T
+    out[dir+'_std'] = post_sigma.T
+
+  # set the time units
+  out['time_exponent'] -= sum(diff)
+  out.check_self_consistency()
+  return out
+  
+  gp = PriorGaussianProcess(rbf.basis.ga,(0.0,var,cls),order=order)
 
 def pygeons_tfilter(data,diff=(0,),fill='none',
                     break_dates=None,**kwargs):
@@ -55,7 +104,7 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
     out[dir+'_std'] = post_sigma.T
 
   # set the time units
-  out['time_power'] -= sum(diff)
+  out['time_exponent'] -= sum(diff)
   out.check_self_consistency()
   return out
 
@@ -85,7 +134,7 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
     out[dir+'_std'] = post_sigma
 
   # set the space units
-  out['space_power'] -= sum(diff)
+  out['space_exponent'] -= sum(diff)
   out.check_self_consistency()
   return out
 

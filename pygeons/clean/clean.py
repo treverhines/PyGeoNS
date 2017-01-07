@@ -18,7 +18,9 @@ from pygeons.plot.plot import (_unit_string,
 logger = logging.getLogger(__name__)
 
 
-def pygeons_crop(data,start_date=None,stop_date=None):
+def pygeons_crop(data,start_date=None,stop_date=None,
+                 min_lat=-np.inf,max_lat=np.inf,
+                 min_lon=-np.inf,max_lon=np.inf):
   ''' 
   Sets the time span of the data set to be between *start_date* and 
   *stop_date*.
@@ -33,9 +35,12 @@ def pygeons_crop(data,start_date=None,stop_date=None):
     of *data* if not provided. Defaults to the earliest date.
 
   stop_date : str, optional
-    stop date of output data set in YYYY-MM-DD. Uses the stop date 
+    Stop date of output data set in YYYY-MM-DD. Uses the stop date 
     of *data* if not provided. Defaults to the latest date.
       
+  min_lon, max_lon, min_lat, max_lat : float, optional
+    Spatial bounds on the output data set
+    
   Returns
   -------
   out_dict : dict
@@ -47,18 +52,55 @@ def pygeons_crop(data,start_date=None,stop_date=None):
     start_date = mjd_inv(data['time'].min(),'%Y-%m-%d')
   if stop_date is None:
     stop_date = mjd_inv(data['time'].max(),'%Y-%m-%d')
-        
+  
+  out = DataDict(data) # make copy of the data dictionary
+
+  # remove times that are not within the bounds of *start_date* and 
+  # *stop_date*
   start_time = int(mjd(start_date,'%Y-%m-%d'))
   stop_time = int(mjd(stop_date,'%Y-%m-%d'))
   idx = ((data['time'] >= start_time) &
          (data['time'] <= stop_time))
-
-  out = DataDict(data) # make copy of the data dictionary
   out['time'] = out['time'][idx]         
   for dir in ['east','north','vertical']:
     out[dir] = out[dir][idx,:]
     out[dir + '_std'] = out[dir + '_std'][idx,:]
     
+  # remove stations that are not within the bounds 
+  idx = ((data['longitude'] > min_lon) &
+         (data['longitude'] < max_lon) &
+         (data['latitude'] > min_lat) &
+         (data['latitude'] < max_lat))
+         
+  out['id'] = out['id'][idx]
+  out['longitude'] = out['longitude'][idx]
+  out['latitude'] = out['latitude'][idx]
+  for dir in ['east','north','vertical']:
+    out[dir] = out[dir][:,idx]
+    out[dir + '_std'] = out[dir + '_std'][:,idx]
+    
+  # make a boolean array indicating whether data is available for a 
+  # times and stations
+  is_missing = (~np.isfinite(out['east_std']) &
+                ~np.isfinite(out['north_std']) &
+                ~np.isfinite(out['vertical_std']))
+
+  # find and remove times that have no observations                
+  idx = ~np.all(is_missing,axis=1)
+  out['time'] = out['time'][idx]         
+  for dir in ['east','north','vertical']:
+    out[dir] = out[dir][idx,:]
+    out[dir + '_std'] = out[dir + '_std'][idx,:]
+    
+  # find and remove stations that have no observations                
+  idx = ~np.all(is_missing,axis=0)
+  out['id'] = out['id'][idx]
+  out['longitude'] = out['longitude'][idx]
+  out['latitude'] = out['latitude'][idx]
+  for dir in ['east','north','vertical']:
+    out[dir] = out[dir][:,idx]
+    out[dir + '_std'] = out[dir + '_std'][:,idx]
+  
   out.check_self_consistency()
   return out
 
@@ -105,10 +147,10 @@ def pygeons_clean(data,resolution='i',
   t = data['time']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
 
-  conv = _unit_conversion(data['space_power'],
-                          data['time_power'])
-  units = _unit_string(data['space_power'],
-                       data['time_power'])
+  conv = _unit_conversion(data['space_exponent'],
+                          data['time_exponent'])
+  units = _unit_string(data['space_exponent'],
+                       data['time_exponent'])
 
   u = conv*data['east']
   v = conv*data['north']
