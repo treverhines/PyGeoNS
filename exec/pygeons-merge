@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+import argparse
+import logging
+from pygeons import *
+  
+def change_extension(f,ext):
+  return '.'.join(f.split('.')[:-1] + [ext])
+
+p = argparse.ArgumentParser(
+  description='''Merge stations that are within some distance of eachother.''')
+  
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('radius',type=float,metavar='STR')
+p.add_argument('-o','--output_file',**GLOSSARY['output_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
+p = vars(p.parse_args())
+
+verbose = p.pop('verbose')
+logging.basicConfig(level=30 - 10*verbose)
+input_file = p.pop('input_file')
+output_file = p.pop('output_file')
+# throw out any Nones and let the lower level functions determine the defaults
+for k in p.keys():
+  if p[k] is None:
+    p.pop(k)
+
+if output_file is None:
+  output_file = change_extension(input_file,'merge.h5')
+
+data_dict = dict_from_hdf5(input_file)
+out_dict = pygeons_merge(data_dict,**p)
+hdf5_from_dict(output_file,out_dict)

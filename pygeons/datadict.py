@@ -145,9 +145,9 @@ class DataDict(dict):
     # make sure that all uncertainties are positive
     keys = ['east_std','north_std','vertical_std']
     for k in keys:
-      if np.any(self[k] <= 0.0):
+      if np.any(self[k] < 0.0):
         raise ValueError(
-          'found zero or negative uncertainty for *%s*' % k)
+          'found negative uncertainty for *%s*' % k)
      
     # make sure there are no duplicate station IDs
     if len(np.unique(self['id'])) != len(self['id']):
