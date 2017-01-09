@@ -1,5 +1,5 @@
 ''' 
-This module provides a quiver function which allows for error ellipses 
+This module provides a quiver function which allows for error ellipses.
 '''
 import numpy as np
 from matplotlib.quiver import Quiver as _Quiver
