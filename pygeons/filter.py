@@ -47,27 +47,35 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     Data dictionary.
 
   sigma : float
-    Prior standard deviation 
+    Prior standard deviation. Units of millimeters**p years**q, where 
+    p and q are *time_exponent* and *space_exponent* from the data 
+    dictionary.
   
   cls : float
-    Characteristic length-scale in meters
+    Characteristic length-scale in years.
   
   order : int, optional
-    Order of the polynomial null space
+    Order of the polynomial null space.
   
   diff : int, optional
-    Derivative order
+    Derivative order.
   
   procs : int, optional
-    Number of subprocesses to spawn       
+    Number of subprocesses to spawn.
 
   '''
+  # convert units of sigma from mm**p years**q to m**p days**q
+  sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
+  # convert units of cls from years to days
+  cls *= 365.25
+
   data.check_self_consistency()
   out = DataDict(data)
+  # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
                         data['time'][:,None],
-                        data[dir].T,
+                        data[dir].T, 
                         data[dir+'_std'].T,
                         (0.0,sigma**2,cls),
                         basis=rbf.basis.ga,
@@ -101,38 +109,44 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     Data dictionary.
 
   sigma : float
-    Prior standard deviation
+    Prior standard deviation. Units of millimeters**p years**q, where 
+    p and q are *time_exponent* and *space_exponent* from the data 
+    dictionary.
   
   cls : float
-    Characteristic length-scale in meters
+    Characteristic length-scale in kilometers.
   
   order : int, optional
-    Order of the polynomial null space
+    Order of the polynomial null space.
   
   diff : int, optional
-    Derivative order
+    Derivative order.
   
   procs : int, optional
-    Number of subprocesses to spawn       
+    Number of subprocesses to spawn.
 
   '''
+  # convert units of sigma from mm**p years**q to m**p days**q
+  sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
+  # convert units of cls from km to m
+  cls *= 1000.0
+  
   data.check_self_consistency()
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
   out = DataDict(data)
+  # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
                         pos,
-                        data[dir],
+                        data[dir], 
                         data[dir+'_std'],
                         (0.0,sigma**2,cls),
                         basis=rbf.basis.ga,
                         order=order,
                         diff=diff,
                         procs=procs)
-    #import code
-    #code.interact(local=locals())                        
     # loop over the times and mask the stations based on the 
     # argument for *fill*
     for i in range(post.shape[0]):
