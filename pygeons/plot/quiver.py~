@@ -1,5 +1,5 @@
 ''' 
-This module provides a quiver function which allows for error ellipses 
+This module provides a quiver function which allows for error ellipses.
 '''
 import numpy as np
 from matplotlib.quiver import Quiver as _Quiver
@@ -94,9 +94,9 @@ class Quiver(_Quiver):
     sigma = kwargs.pop('sigma',None)
 
     ellipse_kwargs = kwargs.pop('ellipse_kwargs',{})
-    if ellipse_kwargs.has_key('offsets'):
+    if 'offsets' in ellipse_kwargs:
       raise ValueError('cannot specify ellipse offsets')
-    if ellipse_kwargs.has_key('units'):
+    if 'units' in ellipse_kwargs:
       raise ValueError('cannot specify ellipse units')
     
     self.ellipse_kwargs = {'edgecolors':'k',
