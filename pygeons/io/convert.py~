@@ -7,7 +7,7 @@ import logging
 import h5py
 from pygeons.datadict import DataDict
 from pygeons.mjd import mjd_inv
-from pygeons.parser import PARSER_DICT
+from pygeons.io.parser import PARSER_DICT
 logger = logging.getLogger(__name__)
 
 ## Write files from DataDict instances
@@ -130,7 +130,7 @@ def dict_from_text(infile,parser='csv'):
   buff.close()
 
   # dictionaries of data for each station
-  dicts = [PARSER_DICT[parser](s) for s in strs]
+  dicts = [PARSER_DICT[parser](str(s)) for s in strs]
 
   # find the earliest and latest time. note that these are in MJD
   start_time = np.inf
