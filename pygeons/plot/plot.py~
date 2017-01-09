@@ -229,14 +229,16 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
                           data_dx['time_exponent'])
   units = _unit_string(data_dx['space_exponent'],
                        data_dx['time_exponent'])
-  ux = conv*data_dx['east']
-  sux = conv*data_dx['east_std']
-  vx = conv*data_dx['north']
-  svx = conv*data_dx['north_std']
-  uy = conv*data_dy['east']
-  suy = conv*data_dy['east_std']
-  vy = conv*data_dy['north']
-  svy = conv*data_dy['north_std']
+  exx = conv*data_dx['east'] 
+  sxx = conv*data_dx['east_std']
+
+  eyy = conv*data_dy['north']
+  syy = conv*data_dy['north_std']
+
+  exy = conv*(data_dx['north'] + data_dy['east'])
+  sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + 
+                         data_dy['east_std']**2)
+  
   fig,ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,ax)
@@ -256,7 +258,7 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_strain_viewer(
-    t,pos,ux,uy,vx,vy,sux,suy,svx,svy,
+    t,pos,exx,eyy,exy,sxx=sxx,syy=syy,sxy=sxy,
     ax=ax,time_labels=dates,units=units,**kwargs)
 
   return

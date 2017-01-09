@@ -11,6 +11,7 @@ if __name__ == '__main__':
         url='www.github.com/treverhines/PyGeoNS',
         scripts=['exec/pygeons-tfilter',
                  'exec/pygeons-tgpr',
+                 'exec/pygeons-sgpr',
                  'exec/pygeons-sfilter',
                  'exec/pygeons-clean',
                  'exec/pygeons-view',

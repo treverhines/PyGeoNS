@@ -131,6 +131,8 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                         order=order,
                         diff=diff,
                         procs=procs)
+    #import code
+    #code.interact(local=locals())                        
     # loop over the times and mask the stations based on the 
     # argument for *fill*
     for i in range(post.shape[0]):

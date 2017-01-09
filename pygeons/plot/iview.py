@@ -81,7 +81,7 @@ def without_interactivity(fin):
   return fout
     
 
-class InteractiveViewer:
+class InteractiveViewer(object):
   ''' 
                --------------------------------
                PyGeoNS Interactive Viewer (PIV)
