@@ -80,6 +80,11 @@ def strain_glyph(x,strain,sigma=None,
       # uncertainty vector then convert it to a covariance matrix
       cov = np.diag(sigma**2)
 
+    # if either strain or cov are not finite then silently return an 
+    # empty container
+    if ~np.all(np.isfinite(strain)) | ~np.all(np.isfinite(cov)):
+      return Container([])
+    
     # scale the data
     strain = scale*strain
     cov = scale**2*cov

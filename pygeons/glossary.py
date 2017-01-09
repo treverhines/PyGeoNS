@@ -354,16 +354,30 @@ SIGMA = {
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Standard deviation of the prior Gaussian process
+Standard deviation of the prior Gaussian process. This is in units of 
+mm**p year**q, where p and q are exponents determined the input data 
+type. For example, If the input data describes velocities then p=1 and 
+q=-1, so the units for this argument should be in mm/yr.
 '''
 }
 #####################################################################
-CLS = {
+S_CLS = {
 'type':float, 
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Characteristic length-scale of the prior Gaussian process
+Characteristic length-scale of the prior Gaussian process. This is in 
+units of kilometers.
+'''
+}
+#####################################################################
+T_CLS = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Characteristic time-scale of the prior Gaussian process. This is in 
+units of years.
 '''
 }
 #####################################################################
@@ -496,7 +510,8 @@ GLOSSARY = {
 't_cutoff':T_CUTOFF,
 's_cutoff':S_CUTOFF,
 'sigma':SIGMA,
-'cls':CLS,
+'s_cls':S_CLS,
+'t_cls':T_CLS,
 'order':ORDER,
 't_diff':T_DIFF,
 's_diff':S_DIFF,

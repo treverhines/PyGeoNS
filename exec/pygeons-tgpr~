@@ -17,7 +17,7 @@ Temporally filters the data set with Gaussian process regression.
 )
 
 p.add_argument('input_file',**GLOSSARY['input_file'])
-p.add_argument('var',**GLOSSARY['var'])
+p.add_argument('sigma',**GLOSSARY['sigma'])
 p.add_argument('cls',**GLOSSARY['cls'])
 p.add_argument('--order',**GLOSSARY['order'])
 p.add_argument('--fill',**GLOSSARY['fill'])
