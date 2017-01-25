@@ -245,19 +245,16 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   units = _unit_string(data_dx['space_exponent'],
                        data_dx['time_exponent'])
   exx = conv*data_dx['east'] 
-  sxx = conv*data_dx['east_std']
   eyy = conv*data_dy['north']
-  syy = conv*data_dy['north_std']
   exy = 0.5*conv*(data_dx['north'] + data_dy['east'])
-  sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + 
-                         data_dy['east_std']**2)
-  
+  sxx = conv*data_dx['east_std']
+  syy = conv*data_dy['north_std']
+  sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + data_dy['east_std']**2)
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
-  vert,smp = make_space_vert_smp(break_lons,break_lats,
-                                 break_conn,bm)
+  vert,smp = make_space_vert_smp(break_lons,break_lats,break_conn,bm)
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
@@ -267,13 +264,13 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   scale_lon,scale_lat = bm(*map_ax.transData.inverted().transform(map_ax.transAxes.transform([0.15,0.1])),inverse=True)
   bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=map_ax,barstyle='fancy',fontsize=10)
   # XXXXXXXXXXXX 
-  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
-                              facecolor='white')
-  _setup_ts_ax(ts_ax)
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
+  _setup_ts_ax(ts_ax)
   interactive_strain_viewer(
     t,pos,exx,eyy,exy,sxx=sxx,syy=syy,sxy=sxy,
-    map_ax=map_ax,ts_ax=ts_ax,time_labels=dates,station_labels=id,units=units,**kwargs)
+    map_ax=map_ax,ts_ax=ts_ax,time_labels=dates,
+    station_labels=id,units=units,**kwargs)
 
   return

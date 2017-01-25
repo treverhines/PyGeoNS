@@ -30,9 +30,11 @@ def compute_abphi(sigma_x,sigma_y,rho):
   b = []
   phi = []
   for i in range(n):
-    if (np.ma.is_masked(sigma_x[i]) | 
-        np.ma.is_masked(sigma_y[i]) | 
-        np.ma.is_masked(rho[i])):
+    if ((not np.isfinite(sigma_x[i])) |
+        (not np.isfinite(sigma_y[i])) | 
+        (not np.isfinite(rho[i]))):
+      # this block should run if the uncertainties or correlations are 
+      # not finite or are masked
       a += [0.0]
       b += [0.0]
       phi += [0.0]

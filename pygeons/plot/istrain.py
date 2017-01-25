@@ -56,7 +56,7 @@ Notes
                map_title=None,
                map_ylim=None,
                map_xlim=None,
-               contraction_color='r',
+               compression_color='r',
                extension_color='b',
                alpha=0.2,
                vertices=100,
@@ -152,9 +152,8 @@ Notes
     # estimate a good scale for the strain glyphs
     if scale is None:
       # Get an idea of what the typical strain magnitudes are
-      mags = np.sqrt(exx**2 + eyy**2 + 2*exy**2)
-      mag = 10**(np.nanmean(np.log10(mags))) 
-      mag = max(mag,1e-10)
+      mags = np.linalg.norm(self.data_set,axis=2)
+      mag = max(np.nanmean(mags),1e-10)
       # find the average distance between points
       if Nx <= 1:
         dist = 1.0
@@ -165,9 +164,8 @@ Notes
       scale = dist/mag
       
     if key_magnitude is None:  
-      mags = np.sqrt(exx**2 + eyy**2 + 2*exy**2)
-      mag = 10**(np.nanmean(np.log10(mags))) 
-      mag = max(mag,1e-10)
+      mags = np.linalg.norm(self.data_set,axis=2)
+      mag = max(np.nanmean(mags),1e-10)
       key_magnitude = one_sigfig(mag)
       
     # this dictionary contains plot configuration parameters which may 
@@ -183,7 +181,7 @@ Notes
     self.config['ts_title'] = ts_title
     self.config['fontsize'] = fontsize
     self.config['units'] = units
-    self.config['contraction_color'] = contraction_color
+    self.config['compression_color'] = compression_color
     self.config['extension_color'] = extension_color
     self.config['alpha'] = alpha
     self.config['vertices'] = vertices
@@ -336,18 +334,6 @@ Notes
                                        picker=10,
                                        markersize=0)
 
-  def _remove_artists(self):
-    self.marker.remove()
-    self.line1.remove()
-    self.line2.remove()
-    self.line3.remove()
-    self.fill1.remove()
-    self.fill2.remove()
-    self.fill3.remove()
-    for a in self.pickers: a.remove()
-    for a in self.glyphs: a.remove()
-    for a in self.glyph_key: a.remove()
-
   def _init_key(self):
     self.glyph_key = []
     mag = self.config['key_magnitude']
@@ -362,7 +348,7 @@ Notes
     self.glyph_key += strain_glyph(key_pos_data,strain,sigma=sigma,
                                    scale=self.config['scale'],
                                    ext_color=self.config['extension_color'],
-                                   cnt_color=self.config['contraction_color'],
+                                   cmp_color=self.config['compression_color'],
                                    alpha=self.config['alpha'],
                                    vert=self.config['vertices'])
     if units is None:
@@ -379,7 +365,7 @@ Notes
     texty = posy + 1.1*mag*self.config['scale']
     self.glyph_key += [Text(textx,texty,'-' + text_str,
                             fontsize=10,
-                            color=self.config['contraction_color'])]
+                            color=self.config['compression_color'])]
 
     for a in self.glyph_key: self.map_ax.add_artist(a)
   
@@ -395,7 +381,7 @@ Notes
       self.glyphs += strain_glyph(*args,
                                   scale=self.config['scale'],
                                   ext_color=self.config['extension_color'],
-                                  cnt_color=self.config['contraction_color'],
+                                  cmp_color=self.config['compression_color'],
                                   alpha=self.config['alpha'],
                                   vert=self.config['vertices'])
        
@@ -492,6 +478,18 @@ Notes
     self._update_ts_ax()
     self.ts_fig.canvas.draw()
     self.map_fig.canvas.draw()
+
+  def _remove_artists(self):
+    self.marker.remove()
+    self.line1.remove()
+    self.line2.remove()
+    self.line3.remove()
+    self.fill1.remove()
+    self.fill2.remove()
+    self.fill3.remove()
+    for a in self.pickers: a.remove()
+    for a in self.glyphs: a.remove()
+    for a in self.glyph_key: a.remove()
 
   def hard_update(self):
     self._remove_artists() 
