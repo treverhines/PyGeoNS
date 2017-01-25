@@ -127,7 +127,7 @@ def _setup_ts_ax(ax_lst):
     try:
       out = mjd_inv(x,'%Y-%m-%d')
     except (ValueError,OverflowError):
-      out = 'HERE BE DRAGONS!'  
+      out = ''  
       
     return out
     
@@ -236,6 +236,7 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
     raise ValueError('data sets cannot have spatial units')
   
   t = data_dx['time']
+  id = data_dx['id']
   lon = data_dx['longitude']
   lat = data_dx['latitude']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
@@ -253,26 +254,29 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + 
                          data_dy['east_std']**2)
   
-  fig,ax = plt.subplots(num='Map View',facecolor='white')
+  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=resolution)
-  _setup_map_ax(bm,ax)
+  _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
   vert,smp = make_space_vert_smp(break_lons,break_lats,
                                  break_conn,bm)
   for s in smp:
-    ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
   ## draw map scale
   # find point 0.1,0.1
   # XXXXXXXXXXXX 
-  scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),inverse=True)
-  bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=ax,barstyle='fancy',fontsize=10)
+  scale_lon,scale_lat = bm(*map_ax.transData.inverted().transform(map_ax.transAxes.transform([0.15,0.1])),inverse=True)
+  bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=map_ax,barstyle='fancy',fontsize=10)
   # XXXXXXXXXXXX 
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
+                              facecolor='white')
+  _setup_ts_ax(ts_ax)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_strain_viewer(
     t,pos,exx,eyy,exy,sxx=sxx,syy=syy,sxy=sxy,
-    ax=ax,time_labels=dates,units=units,**kwargs)
+    map_ax=map_ax,ts_ax=ts_ax,time_labels=dates,station_labels=id,units=units,**kwargs)
 
   return

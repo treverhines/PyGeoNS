@@ -448,6 +448,7 @@ Notes
                               fontsize=self.config['fontsize'])
 
     self.ts_ax[0].legend(frameon=False,fontsize=self.config['fontsize'])
+    # hide x tick labels for the top two axes
     plt.setp(self.ts_ax[0].get_xticklabels(), visible=False)
     plt.setp(self.ts_ax[1].get_xticklabels(), visible=False)
     self.ts_ax[0].set_autoscale_on(True) 
@@ -484,7 +485,6 @@ Notes
     self.ts_ax[0].autoscale_view()
     self.ts_ax[1].autoscale_view()
     self.ts_ax[2].autoscale_view()
-    
 
   def _init_map_ax(self): 
     # call after _init_scatter

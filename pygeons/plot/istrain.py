@@ -48,11 +48,14 @@ Notes
                scale=None,
                units=None,
                time_labels=None,
+               station_labels=None,
                fontsize=10,
-               ax=None,
-               title=None,
-               ylim=None,
-               xlim=None,
+               map_ax=None,
+               ts_ax=None,
+               ts_title=None,
+               map_title=None,
+               map_ylim=None,
+               map_xlim=None,
                contraction_color='r',
                extension_color='b',
                alpha=0.2,
@@ -79,13 +82,13 @@ Notes
       scale : float
         Increases the size of the strain markers
          
-      ax : Axis instance
+      map_ax : Axis instance
         Axis where map view will be plotted
 
-      title : str
+      map_title : str
         Replaces the default title for the map view plot
 
-      ylim : (2,) array
+      map_ylim : (2,) array
         Y limits for the map view plot
       
       xlim : (2,) array
@@ -116,47 +119,68 @@ Notes
     self.sigma_set = np.concatenate(tpl,axis=2)
 
     # map view axis and figure
-    if ax is None:
+    if map_ax is None:
       # gives a white background 
-      fig,ax = plt.subplots(num='Map View',facecolor='white')
-      self.fig = fig
-      self.ax = ax
+      map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
+      self.map_fig = map_fig
+      self.map_ax = map_ax
     else:
-      self.fig = ax.get_figure()
-      self.ax = ax
+      self.map_fig = map_ax.get_figure()
+      self.map_ax = map_ax
 
+    # make figure and axis for the time series 
+    if ts_ax is None:
+      ts_fig,ts_ax = plt.subplots(3,1,sharex=True,
+                                  num='Time Series View',
+                                  facecolor='white')
+      self.ts_fig = ts_fig
+      self.ts_ax = ts_ax
+    else:
+      self.ts_fig = ts_ax[0].get_figure()
+      self.ts_ax = ts_ax
+
+    # station names used for the time series plots
+    if station_labels is None:
+      station_labels = np.arange(len(self.x)).astype(str)
+              
     if time_labels is None:
       time_labels = np.array(self.t).astype(str)
 
     self.time_labels = list(time_labels)
+    self.station_labels = list(station_labels)
 
     # estimate a good scale for the strain glyphs
     if scale is None:
       # Get an idea of what the typical strain magnitudes are
-      mag = 5*np.nanmean(np.abs([exx,eyy,exy]))
+      mags = np.sqrt(exx**2 + eyy**2 + 2*exy**2)
+      mag = 10**(np.nanmean(np.log10(mags))) 
       mag = max(mag,1e-10)
       # find the average distance between points
-      T = cKDTree(self.x) 
       if Nx <= 1:
         dist = 1.0
       else:
-        dist = np.mean(T.query(self.x,2)[0][:,1])
+        kd = cKDTree(self.x) 
+        dist = np.mean(kd.query(self.x,2)[0][:,1])
     
       scale = dist/mag
       
     if key_magnitude is None:  
-      mag = 3*np.nanmean(np.abs([exx,eyy,exy]))
+      mags = np.sqrt(exx**2 + eyy**2 + 2*exy**2)
+      mag = 10**(np.nanmean(np.log10(mags))) 
       mag = max(mag,1e-10)
       key_magnitude = one_sigfig(mag)
       
     # this dictionary contains plot configuration parameters which may 
     # be interactively changed
     self.config = {}
+    self.config['highlight'] = True 
     self.config['tidx'] = 0
+    self.config['xidx'] = 0
     self.config['scale'] = scale
-    self.config['title'] = title
-    self.config['xlim'] = xlim
-    self.config['ylim'] = ylim
+    self.config['map_title'] = map_title
+    self.config['map_xlim'] = map_xlim
+    self.config['map_ylim'] = map_ylim
+    self.config['ts_title'] = ts_title
     self.config['fontsize'] = fontsize
     self.config['units'] = units
     self.config['contraction_color'] = contraction_color
@@ -170,7 +194,10 @@ Notes
     print(self.__doc__)
 
   def connect(self):
-    self.fig.canvas.mpl_connect('key_press_event',self.on_key_press)
+    self.ts_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
+    self.ts_fig.canvas.mpl_connect('pick_event',self.on_pick)
+    self.map_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
+    self.map_fig.canvas.mpl_connect('pick_event',self.on_pick)
 
   def save_frames(self,dir):
     ''' 
@@ -186,57 +213,158 @@ Notes
     
     print('done')  
 
-  def _init_ax(self):
+  def _init_ts_ax(self):
+    # call after _init_lines
+    if self.config['units'] is None:
+      ts_ylabel_0 = 'east normal'
+      ts_ylabel_1 = 'north normal'
+      ts_ylabel_2 = 'east-north shear'
+
+    else:
+      ts_ylabel_0 = 'east normal [%s]' % self.config['units']
+      ts_ylabel_1 = 'north normal [%s]' % self.config['units']
+      ts_ylabel_2 = 'east-north shear [%s]' % self.config['units']
+
+    self.ts_ax[2].set_xlabel('time')
+    self.ts_ax[0].set_ylabel(ts_ylabel_0)
+    self.ts_ax[1].set_ylabel(ts_ylabel_1)
+    self.ts_ax[2].set_ylabel(ts_ylabel_2)
+    self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[0].yaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[1].yaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[2].yaxis.label.set_fontsize(self.config['fontsize'])
+    self.ts_ax[2].title.set_fontsize(self.config['fontsize'])
+    self.ts_ax[0].tick_params(labelsize=self.config['fontsize'])
+    self.ts_ax[1].tick_params(labelsize=self.config['fontsize'])
+    self.ts_ax[2].tick_params(labelsize=self.config['fontsize'])
+    if self.config['ts_title'] is None:
+      name = self.station_labels[self.config['xidx']]
+      self.ts_ax[0].set_title('station : %s' % name,
+                              fontsize=self.config['fontsize'])
+    else:
+      self.ts_ax[0].set_title(self.config['ts_title'],
+                              fontsize=self.config['fontsize'])
+
+    # hide xtick labels for the top two axes
+    plt.setp(self.ts_ax[0].get_xticklabels(), visible=False)
+    plt.setp(self.ts_ax[1].get_xticklabels(), visible=False)
+    self.ts_ax[0].set_autoscale_on(True)
+    self.ts_ax[1].set_autoscale_on(True)
+    self.ts_ax[2].set_autoscale_on(True)
+    self.ts_ax[0].relim()
+    self.ts_ax[1].relim()
+    self.ts_ax[2].relim()
+    self.ts_ax[0].autoscale_view()
+    self.ts_ax[1].autoscale_view()
+    self.ts_ax[2].autoscale_view()
+
+  def _update_ts_ax(self):
+    # call after _update_lines
+    #
+    # updates for:
+    #   xidx
+    #   ts_title
+    if self.config['ts_title'] is None:
+      name = self.station_labels[self.config['xidx']]
+      self.ts_ax[0].set_title('station : %s' % name,
+                              fontsize=self.config['fontsize'])
+    else:
+      self.ts_ax[0].set_title(self.config['ts_title'],
+                              fontsize=self.config['fontsize'])
+
+    self.ts_ax[0].set_autoscale_on(True)
+    self.ts_ax[1].set_autoscale_on(True)
+    self.ts_ax[2].set_autoscale_on(True)
+    self.ts_ax[0].relim()
+    self.ts_ax[1].relim()
+    self.ts_ax[2].relim()
+    self.ts_ax[0].autoscale_view()
+    self.ts_ax[1].autoscale_view()
+    self.ts_ax[2].autoscale_view()
+
+  def _init_map_ax(self):
     # call after _init_scatter
-    self.ax.set_aspect('equal')
-    self.ax.tick_params(labelsize=self.config['fontsize'])
-    if self.config['title'] is None:
+    self.map_ax.set_aspect('equal')
+    self.map_ax.tick_params(labelsize=self.config['fontsize'])
+    if self.config['map_title'] is None:
       time_label = self.time_labels[self.config['tidx']]
-      self.ax.set_title('time : %s' % time_label,
+      self.map_ax.set_title('time : %s' % time_label,
                         fontsize=self.config['fontsize'])
     else:
-      self.ax.set_title(self.config['title'],
+      self.map_ax.set_title(self.config['map_title'],
                         fontsize=self.config['fontsize'])
 
     # do not dynamically update the axis limits
-    if self.config['xlim'] is None:
-      self.config['xlim'] = self.ax.get_xlim()
+    if self.config['map_xlim'] is None:
+      self.config['map_xlim'] = self.map_ax.get_xlim()
 
-    if self.config['ylim'] is None:
-      self.config['ylim'] = self.ax.get_ylim()
+    if self.config['map_ylim'] is None:
+      self.config['map_ylim'] = self.map_ax.get_ylim()
 
-    self.ax.set_xlim(self.config['xlim'])
-    self.ax.set_ylim(self.config['ylim'])
+    self.map_ax.set_xlim(self.config['map_xlim'])
+    self.map_ax.set_ylim(self.config['map_ylim'])
 
-  def _update_ax(self):
-    if self.config['title'] is None:
+  def _update_map_ax(self):
+    if self.config['map_title'] is None:
       time_label = self.time_labels[self.config['tidx']]
-      self.ax.set_title('time : %s' % time_label,
+      self.map_ax.set_title('time : %s' % time_label,
                         fontsize=self.config['fontsize'])
     else:
-      self.ax.set_title(self.config['title'],
+      self.map_ax.set_title(self.config['map_title'],
                         fontsize=self.config['fontsize'])
 
-  def _remove_artists(self):
-    while len(self.artists) > 0:
-      self.artists.pop().remove()
+  def _init_marker(self):
+    self.marker, = self.map_ax.plot(self.x[self.config['xidx'],0],
+                                    self.x[self.config['xidx'],1],'ko',
+                                    markersize=20*self.config['highlight'])
 
-  def _draw_key(self):
+  def _update_marker(self):
+    # updates for:
+    #   xidx
+    #   highlight
+    self.marker.set_data(self.x[self.config['xidx'],0],
+                         self.x[self.config['xidx'],1])
+    self.marker.set_markersize(20*self.config['highlight'])
+
+  def _init_pickers(self):
+    # pickable artists
+    self.pickers = []
+    for xi in self.x:
+      self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                       picker=10,
+                                       markersize=0)
+
+  def _remove_artists(self):
+    self.marker.remove()
+    self.line1.remove()
+    self.line2.remove()
+    self.line3.remove()
+    self.fill1.remove()
+    self.fill2.remove()
+    self.fill3.remove()
+    for a in self.pickers: a.remove()
+    for a in self.glyphs: a.remove()
+    for a in self.glyph_key: a.remove()
+
+  def _init_key(self):
+    self.glyph_key = []
     mag = self.config['key_magnitude']
     units = self.config['units']
     strain = [mag,-mag,0.0]
     sigma = [0.25*mag,0.25*mag,0.25*mag]
 
     key_pos_axes = self.config['key_position']
-    key_pos_display = self.ax.transAxes.transform(key_pos_axes)
-    key_pos_data = self.ax.transData.inverted().transform(key_pos_display)
+    key_pos_display = self.map_ax.transAxes.transform(key_pos_axes)
+    key_pos_data = self.map_ax.transData.inverted().transform(key_pos_display)
     posx,posy = key_pos_data
-    self.artists += strain_glyph(key_pos_data,strain,sigma=sigma,
-                                 scale=self.config['scale'],
-                                 ext_color=self.config['extension_color'],
-                                 cnt_color=self.config['contraction_color'],
-                                 alpha=self.config['alpha'],
-                                 vert=self.config['vertices'])
+    self.glyph_key += strain_glyph(key_pos_data,strain,sigma=sigma,
+                                   scale=self.config['scale'],
+                                   ext_color=self.config['extension_color'],
+                                   cnt_color=self.config['contraction_color'],
+                                   alpha=self.config['alpha'],
+                                   vert=self.config['vertices'])
     if units is None:
       text_str = '%s' % mag
     else:
@@ -244,42 +372,126 @@ Notes
       
     textx = posx + 1.1*mag*self.config['scale']
     texty = posy
-    self.artists += [Text(textx,texty,text_str,
-                          fontsize=10,
-                          color=self.config['extension_color'])]
+    self.glyph_key += [Text(textx,texty,text_str,
+                            fontsize=10,
+                            color=self.config['extension_color'])]
     textx = posx
     texty = posy + 1.1*mag*self.config['scale']
-    self.artists += [Text(textx,texty,'-' + text_str,
-                          fontsize=10,
-                          color=self.config['contraction_color'])]
+    self.glyph_key += [Text(textx,texty,'-' + text_str,
+                            fontsize=10,
+                            color=self.config['contraction_color'])]
+
+    for a in self.glyph_key: self.map_ax.add_artist(a)
   
-  def _draw_strain(self): 
+  def _update_key(self):
+    for a in self.glyph_key: a.remove()
+    self._init_key()
+
+  def _init_strain(self): 
+    self.glyphs = []
     strain = self.data_set[self.config['tidx'],:,:]
     sigma = self.sigma_set[self.config['tidx'],:,:]
     for args in zip(self.x,strain,sigma):
-      self.artists += strain_glyph(*args,
-                                   scale=self.config['scale'],
-                                   ext_color=self.config['extension_color'],
-                                   cnt_color=self.config['contraction_color'],
-                                   alpha=self.config['alpha'],
-                                   vert=self.config['vertices'])
+      self.glyphs += strain_glyph(*args,
+                                  scale=self.config['scale'],
+                                  ext_color=self.config['extension_color'],
+                                  cnt_color=self.config['contraction_color'],
+                                  alpha=self.config['alpha'],
+                                  vert=self.config['vertices'])
        
-    for a in self.artists: self.ax.add_artist(a)
+    for a in self.glyphs: self.map_ax.add_artist(a)
+
+  def _update_strain(self):
+    # remove any existing strain artists and replot
+    for a in self.glyphs: a.remove()
+    self._init_strain()
+
+  def _init_lines(self):
+    self.line1, = self.ts_ax[0].plot(
+                    self.t,
+                    self.data_set[:,self.config['xidx'],0],
+                    color='k',
+                    ls='-')
+    self.line2, = self.ts_ax[1].plot(
+                    self.t,
+                    self.data_set[:,self.config['xidx'],1],
+                    color='k',
+                    ls='-')
+    self.line3, = self.ts_ax[2].plot(
+                    self.t,
+                    self.data_set[:,self.config['xidx'],2],
+                    color='k',
+                    ls='-')
+
+  def _update_lines(self):
+    # updates for:
+    #   xidx
+    self.line1.set_data(self.t,
+                        self.data_set[:,self.config['xidx'],0])
+    # relabel in case the data_set order has switched
+    self.line2.set_data(self.t,
+                        self.data_set[:,self.config['xidx'],1])
+    self.line3.set_data(self.t,
+                        self.data_set[:,self.config['xidx'],2])
+
+  def _init_fill(self):
+    self.fill1 = self.ts_ax[0].fill_between(
+                   self.t,
+                   self.data_set[:,self.config['xidx'],0] -
+                   self.sigma_set[:,self.config['xidx'],0],
+                   self.data_set[:,self.config['xidx'],0] +
+                   self.sigma_set[:,self.config['xidx'],0],
+                   edgecolor='none',
+                   color='k',alpha=0.5)
+    self.fill2 = self.ts_ax[1].fill_between(
+                   self.t,
+                   self.data_set[:,self.config['xidx'],1] -
+                   self.sigma_set[:,self.config['xidx'],1],
+                   self.data_set[:,self.config['xidx'],1] +
+                   self.sigma_set[:,self.config['xidx'],1],
+                   edgecolor='none',
+                   color='k',alpha=0.5)
+    self.fill3 = self.ts_ax[2].fill_between(
+                   self.t,
+                   self.data_set[:,self.config['xidx'],2] -
+                   self.sigma_set[:,self.config['xidx'],2],
+                   self.data_set[:,self.config['xidx'],2] +
+                   self.sigma_set[:,self.config['xidx'],2],
+                   edgecolor='none',
+                   color='k',alpha=0.5)
+
+  def _update_fill(self):
+    # updates for:
+    #   xidx
+    self.fill1.remove()
+    self.fill2.remove()
+    self.fill3.remove()
+    self._init_fill()
 
   def _init(self):
-    self.artists = []
-    self._init_ax()
-    self._draw_key()
-    self._draw_strain()
-    self.fig.canvas.draw()
-    self.ax.autoscale_view()
+    self._init_pickers()
+    self._init_marker()
+    self._init_key()
+    self._init_strain()
+    self._init_lines()
+    self._init_fill()
+    self._init_map_ax()
+    self._init_ts_ax()
+    self.map_fig.canvas.draw()
+    self.map_ax.autoscale_view()
+    self.ts_fig.tight_layout()
+    self.ts_fig.canvas.draw()
 
   def update(self):
-    self._remove_artists()
-    self._update_ax()
-    self._draw_key()
-    self._draw_strain()
-    self.fig.canvas.draw()
+    self._update_marker()
+    self._update_key()
+    self._update_strain()
+    self._update_lines()
+    self._update_fill()
+    self._update_map_ax()
+    self._update_ts_ax()
+    self.ts_fig.canvas.draw()
+    self.map_fig.canvas.draw()
 
   def hard_update(self):
     self._remove_artists() 
@@ -316,6 +528,14 @@ Notes
       new_val = val
 
     self.config[key] = new_val
+
+  def on_pick(self,event):
+    for i,v in enumerate(self.pickers):
+      if event.artist == v:
+        self.config['xidx'] = i
+        break
+
+    self.update()
 
   def on_key_press(self,event):
     if event.key == 'right':
@@ -354,11 +574,51 @@ Notes
       self.config['tidx'] = self.config['tidx']%Nt
       self.update()
 
+    elif event.key == 'up':
+      self.config['xidx'] += 1
+      Nx = self.data_set.shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
+
+    elif event.key == 'ctrl+up':
+      self.config['xidx'] += 10
+      Nx = self.data_set.shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
+
+    elif event.key == 'alt+up':
+      self.config['xidx'] += 100
+      Nx = self.data_set.shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
+
+    elif event.key == 'down':
+      self.config['xidx'] -= 1
+      Nx = self.data_set.shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
+
+    elif event.key == 'ctrl+down':
+      self.config['xidx'] -= 10
+      Nx = self.data_set.shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
+
+    elif event.key == 'alt+down':
+      self.config['xidx'] -= 100
+      Nx = self.data_set.shape[1]
+      self.config['xidx'] = self.config['xidx']%Nx
+      self.update()
+
     elif event.key == 's':
       if not os.path.exists('frames'):
         os.mkdir('frames')
         
       self.save_frames('frames')
+
+    elif event.key == 'h':
+      self.config['highlight'] = not self.config['highlight']
+      self.update()
 
     elif event.key == 'r':
       # refresh  
