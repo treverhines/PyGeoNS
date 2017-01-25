@@ -246,11 +246,9 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
                        data_dx['time_exponent'])
   exx = conv*data_dx['east'] 
   sxx = conv*data_dx['east_std']
-
   eyy = conv*data_dy['north']
   syy = conv*data_dy['north_std']
-
-  exy = conv*(data_dx['north'] + data_dy['east'])
+  exy = 0.5*conv*(data_dx['north'] + data_dy['east'])
   sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + 
                          data_dy['east_std']**2)
   
@@ -272,7 +270,6 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
-
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_strain_viewer(
