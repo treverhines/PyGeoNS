@@ -3,7 +3,7 @@ from matplotlib.patches import Polygon
 from matplotlib.container import Container
 
 def strain_glyph(x,strain,sigma=None,
-                 ext_color='b',cnt_color='r',
+                 ext_color='b',cmp_color='r',
                  alpha=0.2,linewidth=1.0,vert=500,
                  scale=1.0):
     ''' 
@@ -26,8 +26,8 @@ def strain_glyph(x,strain,sigma=None,
     ext_color : str, optional
       Extensional color
 
-    cnt_color : str, optional
-      Contractional color
+    cmp_color : str, optional
+      Compressional color
     
     alpha : float, optional
       Transparency of the uncertainty field
@@ -105,19 +105,19 @@ def strain_glyph(x,strain,sigma=None,
     # vertices associated with extension
     mean_vert_ext = mean_vert[mean>=0.0]
     # vertices associated with compression
-    mean_vert_cnt = mean_vert[mean<0.0]
+    mean_vert_cmp = mean_vert[mean<0.0]
     # make vertices for the upper bound of strain
     ub_vert = n*(mean[:,None] + sigma[:,None])
     ub_vert_ext = ub_vert[(mean + sigma)>=0.0]
-    ub_vert_cnt = ub_vert[(mean + sigma)<0.0]
+    ub_vert_cmp = ub_vert[(mean + sigma)<0.0]
     # make vertices for the lower bound of strain
     lb_vert = n*(mean[:,None] - sigma[:,None])
     lb_vert_ext = lb_vert[(mean - sigma)>=0.0]
-    lb_vert_cnt = lb_vert[(mean - sigma)<0.0]
+    lb_vert_cmp = lb_vert[(mean - sigma)<0.0]
     # make the vertices defining the 1-sigma extension field
     sigma_vert_ext = np.vstack((ub_vert_ext,lb_vert_ext[::-1]))
     # make the vertices defining the 1-sigma compression field
-    sigma_vert_cnt = np.vstack((ub_vert_cnt,lb_vert_cnt[::-1]))
+    sigma_vert_cmp = np.vstack((ub_vert_cmp,lb_vert_cmp[::-1]))
 
     if mean_vert_ext.shape[0] != 0:
       artists += [Polygon(x + mean_vert_ext,
@@ -126,12 +126,12 @@ def strain_glyph(x,strain,sigma=None,
                           linewidth=linewidth,
                           label='extensional mean')]
 
-    if mean_vert_cnt.shape[0] != 0:
-      artists += [Polygon(x + mean_vert_cnt,
-                          edgecolor=cnt_color,
+    if mean_vert_cmp.shape[0] != 0:
+      artists += [Polygon(x + mean_vert_cmp,
+                          edgecolor=cmp_color,
                           facecolor='none',
                           linewidth=linewidth,
-                          label='contractional mean')]
+                          label='compressional mean')]
 
     if sigma_vert_ext.shape[0] != 0:
       artists += [Polygon(x + sigma_vert_ext,
@@ -141,13 +141,13 @@ def strain_glyph(x,strain,sigma=None,
                           linewidth=linewidth,
                           label='extensional confidence interval')]
 
-    if sigma_vert_cnt.shape[0] != 0:
-      artists += [Polygon(x + sigma_vert_cnt,
-                          facecolor=cnt_color,
+    if sigma_vert_cmp.shape[0] != 0:
+      artists += [Polygon(x + sigma_vert_cmp,
+                          facecolor=cmp_color,
                           edgecolor='none',
                           alpha=alpha,
                           linewidth=linewidth,
-                          label='contractional confidence interval')]
+                          label='compressional confidence interval')]
 
     out = Container(artists)
     return out

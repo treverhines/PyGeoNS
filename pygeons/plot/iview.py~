@@ -24,14 +24,13 @@ def _roll(lst):
 
 def _grid_interp_data(u,pnts,x,y):
   # u must be a masked array
-  pnts = pnts[~u.mask]
-  u = u[~u.mask] 
-
   u = np.asarray(u)
   pnts = np.asarray(pnts)
   x = np.asarray(x)  
   y = np.asarray(y)
-  
+
+  pnts = pnts[np.isfinite(u)]
+  u = u[np.isfinite(u)] 
   # return an array of zeros if all data is masked or if there is no 
   # data
   if pnts.shape[0] == 0:
@@ -53,7 +52,10 @@ def one_sigfig(val):
   ''' 
   rounds *val* to one significant figure
   '''
-  return np.round(val,-int(np.floor(np.log10(np.abs(val)))))
+  if np.isfinite(val):
+    return np.round(val,-int(np.floor(np.log10(np.abs(val)))))
+  else:
+    return val  
 
 
 def disable_default_key_bindings():
@@ -269,9 +271,6 @@ Notes
       tpl = (i[:,:,None],j[:,:,None],k[:,:,None])
       self.sigma_sets += [np.concatenate(tpl,axis=2)]
     
-    # convert data and uncertainty to masked arrays
-    self.update_data()
-    
     # map view axis and figure
     if map_ax is None:
       # gives a white background 
@@ -314,24 +313,19 @@ Notes
 
     if quiver_key_length is None: 
       # find the average length of unmasked data
-      mag = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
-                            self._masked_data_sets[0][:,:,1]**2))
-      # prevents division by zero issues
-      mag = max(mag,1e-10) 
+      mags = np.linalg.norm(self.data_sets[0],axis=2)  
+      mag = max(np.nanmean(mags),1e-10)
       # round to leading sigfig
       quiver_key_length = one_sigfig(mag)
       
     if quiver_scale is None:
-      mag = np.mean(np.sqrt(self._masked_data_sets[0][:,:,0]**2 +
-                            self._masked_data_sets[0][:,:,1]**2))
-      # prevents division by zero issues
-      mag = max(mag,1e-10) 
-      
+      mags = np.linalg.norm(self.data_sets[0],axis=2)  
+      mag = max(np.nanmean(mags),1e-10)
       # find the average shortest distance between points
-      T = cKDTree(self.x)
       if Nx <= 1:
         dist = 1.0
       else:  
+        T = cKDTree(self.x)
         dist = np.mean(T.query(self.x,2)[0][:,1])
 
       quiver_scale = mag/dist
@@ -359,54 +353,6 @@ Notes
     disable_default_key_bindings()
     print(self.__doc__)
 
-  def _set_common_infs(self):
-    ''' 
-    if one component in sigma_sets is inf then set the other 
-    components to inf. For example, if an easting component is inf 
-    then set the northing and vertical component to inf. Set the 
-    corresponding values in data_sets to nan
-    '''
-    new_data_sets = []
-    new_sigma_sets = []
-    for d,s in zip(self.data_sets,self.sigma_sets):      
-      d = np.asarray(d)  
-      s = np.asarray(s)  
-      # find if sigma is inf for any component
-      anyinfs = np.any(np.isinf(s),axis=2)
-      anyinfs = anyinfs[:,:,None].repeat(3,axis=2)
-      d[anyinfs] = np.nan
-      s[anyinfs] = np.inf
-      new_data_sets += [d]       
-      new_sigma_sets += [s]       
-    
-    self.data_sets = new_data_sets
-    self.sigma_sets = new_sigma_sets
-
-  def _set_masked_arrays(self):
-    ''' 
-    make corresponding masked arrays for sigma_sets and data_sets. 
-    These arrays should only be used for plotting purposes, since the 
-    plotting function have special functionality for masked arrays
-    '''
-    masked_data_sets = []
-    masked_sigma_sets = []
-    for d,s in zip(self.data_sets,self.sigma_sets):      
-      mask = np.isinf(s)
-      masked_data_sets += [np.ma.masked_array(d,mask=mask)]       
-      masked_sigma_sets += [np.ma.masked_array(s,mask=mask)]
-      
-    self._masked_data_sets = masked_data_sets  
-    self._masked_sigma_sets = masked_sigma_sets  
-    
-  def update_data(self):
-    ''' 
-    calls _set_common_infs followed by _set_masked_arrays. This should 
-    be called after any modification to self.data_sets or 
-    self.sigma_sets
-    '''
-    self._set_common_infs()
-    self._set_masked_arrays()
-  
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
     self.ts_fig.canvas.mpl_connect('pick_event',self.on_pick)
@@ -529,7 +475,7 @@ Notes
                               self.config['map_ylim'][1],
                               self.config['image_array_size'])]
                               
-    data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
+    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
     if self.config['image_clim'] is None:
       # if vmin and vmax are None then the color bounds will be 
@@ -570,7 +516,7 @@ Notes
     # updates for:
     #   tidx
     #   image_clim
-    data_itp = _grid_interp_data(self._masked_data_sets[0][self.config['tidx'],:,2],
+    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
                                  self.x,
                                  self.x_itp[0],
                                  self.x_itp[1])
@@ -595,7 +541,7 @@ Notes
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
     # use scatter points to show z for second data set 
-    colors = sm.to_rgba(self._masked_data_sets[1][self.config['tidx'],:,2])
+    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
     self.scatter = self.map_ax.scatter(
                      self.x[:,0],self.x[:,1],
                      c=colors,
@@ -613,7 +559,7 @@ Notes
       return
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
-    colors = sm.to_rgba(self._masked_data_sets[1][self.config['tidx'],:,2])
+    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
     self.scatter.set_facecolors(colors)
 
   def _init_marker(self):
@@ -633,13 +579,13 @@ Notes
     self.quiver = []
     for si in range(len(self.data_sets)):
       q = Quiver(self.map_ax,self.x[:,0],self.x[:,1],
-                 self._masked_data_sets[si][self.config['tidx'],:,0],
-                 self._masked_data_sets[si][self.config['tidx'],:,1],
+                 self.data_sets[si][self.config['tidx'],:,0],
+                 self.data_sets[si][self.config['tidx'],:,1],
                  scale=self.config['quiver_scale'],  
                  width=0.005,
-                 sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
-                        self._masked_sigma_sets[si][self.config['tidx'],:,1],
-                        0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]),
+                 sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
+                        self.sigma_sets[si][self.config['tidx'],:,1],
+                        np.zeros(self.x.shape[0])), 
                  color=self.color_cycle[si],
                  ellipse_kwargs={'edgecolors':'k','zorder':1+si},
                  zorder=2+si)
@@ -669,11 +615,11 @@ Notes
     #   tidx
     for si in range(len(self.data_sets)):
       self.quiver[si].set_UVC(
-                        self._masked_data_sets[si][self.config['tidx'],:,0],
-                        self._masked_data_sets[si][self.config['tidx'],:,1],
-                        sigma=(self._masked_sigma_sets[si][self.config['tidx'],:,0],
-                               self._masked_sigma_sets[si][self.config['tidx'],:,1],
-                               0.0*self._masked_sigma_sets[si][self.config['tidx'],:,0]))
+                        self.data_sets[si][self.config['tidx'],:,0],
+                        self.data_sets[si][self.config['tidx'],:,1],
+                        sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
+                               self.sigma_sets[si][self.config['tidx'],:,1],
+                               np.zeros(self.x.shape[0])))
 
   def _init_pickers(self):
     # pickable artists
@@ -688,19 +634,19 @@ Notes
     for si in range(len(self.data_sets)):
       self.line1 += self.ts_ax[0].plot(
                    self.t,
-                   self._masked_data_sets[si][:,self.config['xidx'],0],
+                   self.data_sets[si][:,self.config['xidx'],0],
                    color=self.color_cycle[si],
                    label=self.data_set_labels[si],
                    marker='.')
       self.line2 += self.ts_ax[1].plot(
                    self.t,
-                   self._masked_data_sets[si][:,self.config['xidx'],1],
+                   self.data_sets[si][:,self.config['xidx'],1],
                    color=self.color_cycle[si],
                    label=self.data_set_labels[si],
                    marker='.')
       self.line3 += self.ts_ax[2].plot(
                    self.t,
-                   self._masked_data_sets[si][:,self.config['xidx'],2],
+                   self.data_sets[si][:,self.config['xidx'],2],
                    color=self.color_cycle[si],
                    label=self.data_set_labels[si],
                    marker='.')
@@ -708,16 +654,16 @@ Notes
   def _update_lines(self):
     # updates for:
     #   xidx
-    for si in range(len(self._masked_data_sets)):
+    for si in range(len(self.data_sets)):
       self.line1[si].set_data(self.t,
-                              self._masked_data_sets[si][:,self.config['xidx'],0])
+                              self.data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
       self.line1[si].set_label(self.data_set_labels[si])                     
       self.line2[si].set_data(self.t,
-                              self._masked_data_sets[si][:,self.config['xidx'],1])
+                              self.data_sets[si][:,self.config['xidx'],1])
       self.line2[si].set_label(self.data_set_labels[si])                     
       self.line3[si].set_data(self.t,
-                              self._masked_data_sets[si][:,self.config['xidx'],2])
+                              self.data_sets[si][:,self.config['xidx'],2])
       self.line3[si].set_label(self.data_set_labels[si])                     
   
   def _init_fill(self):
@@ -725,26 +671,26 @@ Notes
     for si in range(len(self.data_sets)):
       self.fill1 += [self.ts_ax[0].fill_between(
                     self.t,
-                    self._masked_data_sets[si][:,self.config['xidx'],0] -
-                    self._masked_sigma_sets[si][:,self.config['xidx'],0],
-                    self._masked_data_sets[si][:,self.config['xidx'],0] +
-                    self._masked_sigma_sets[si][:,self.config['xidx'],0],
+                    self.data_sets[si][:,self.config['xidx'],0] -
+                    self.sigma_sets[si][:,self.config['xidx'],0],
+                    self.data_sets[si][:,self.config['xidx'],0] +
+                    self.sigma_sets[si][:,self.config['xidx'],0],
                     edgecolor='none',
                     color=self.color_cycle[si],alpha=0.5)]
       self.fill2 += [self.ts_ax[1].fill_between(
                     self.t,
-                    self._masked_data_sets[si][:,self.config['xidx'],1] -
-                    self._masked_sigma_sets[si][:,self.config['xidx'],1],
-                    self._masked_data_sets[si][:,self.config['xidx'],1] +
-                    self._masked_sigma_sets[si][:,self.config['xidx'],1],
+                    self.data_sets[si][:,self.config['xidx'],1] -
+                    self.sigma_sets[si][:,self.config['xidx'],1],
+                    self.data_sets[si][:,self.config['xidx'],1] +
+                    self.sigma_sets[si][:,self.config['xidx'],1],
                     edgecolor='none',
                     color=self.color_cycle[si],alpha=0.5)]
       self.fill3 += [self.ts_ax[2].fill_between(
                     self.t,
-                    self._masked_data_sets[si][:,self.config['xidx'],2] -
-                    self._masked_sigma_sets[si][:,self.config['xidx'],2],
-                    self._masked_data_sets[si][:,self.config['xidx'],2] +
-                    self._masked_sigma_sets[si][:,self.config['xidx'],2],
+                    self.data_sets[si][:,self.config['xidx'],2] -
+                    self.sigma_sets[si][:,self.config['xidx'],2],
+                    self.data_sets[si][:,self.config['xidx'],2] +
+                    self.sigma_sets[si][:,self.config['xidx'],2],
                     edgecolor='none',
                     color=self.color_cycle[si],alpha=0.5)]
   
@@ -926,7 +872,6 @@ Notes
       self.data_sets = _roll(self.data_sets)
       self.data_set_labels = _roll(self.data_set_labels)
       self.sigma_sets = _roll(self.sigma_sets)
-      self.update_data()
       self.update()
       
     elif event.key == 'r':

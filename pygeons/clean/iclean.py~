@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 import numpy as np
-from pygeons.iview import InteractiveViewer
+from pygeons.plot.iview import InteractiveViewer
 from pygeons.mean import weighted_mean
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -154,8 +154,6 @@ Notes
     new_sigma = np.sqrt(new_var)
     self.data_sets[0][all_tidx_right,xidx] = new_pos
     self.sigma_sets[0][all_tidx_right,xidx] = new_sigma
-    # turn the new data sets into masked arrays
-    self.update_data()
     name = self.station_labels[xidx]
     logger.info('removed jump at time %g for station %s using data from time %g to %g\n' % 
                 (jump_time,name,jump_time-radius,jump_time+radius))
@@ -166,10 +164,6 @@ Notes
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
     self.data_sets[0][tidx,xidx] = np.nan
     self.sigma_sets[0][tidx,xidx] = np.inf
-
-    # turn the new data sets into masked arrays
-    self.update_data()
-
     name = self.station_labels[xidx]
     logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
           
