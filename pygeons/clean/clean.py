@@ -190,7 +190,7 @@ def pygeons_clean(data,resolution='i',
   data.check_self_consistency()
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
-  _setup_ts_ax(ts_ax,data['time'])
+  _setup_ts_ax(ts_ax)
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(data['longitude'],data['latitude'],
                     resolution=resolution)

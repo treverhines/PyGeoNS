@@ -8,6 +8,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
+from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.plot.iview import interactive_viewer
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
@@ -56,6 +57,7 @@ def _unit_conversion(space_exponent,time_exponent):
 def _get_meridians_and_parallels(bm,ticks):
   ''' 
   attempts to find nice locations for the meridians and parallels 
+  based on the current axis limits
   '''
   diff_lon = (bm.urcrnrlon-bm.llcrnrlon)
   round_digit = int(np.ceil(np.log10(ticks/diff_lon)))
@@ -83,12 +85,12 @@ def _setup_map_ax(bm,ax):
   '''
   # function which prints out the coordinates on the bottom left 
   # corner of the figure
-  def coord_string(x,y):                         
-    str = 'x : %g  y : %g  ' % (x,y)
-    str += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
-    return str 
+  def coord_formatter(x,y):                         
+    out = 'x : %g  y : %g  ' % (x,y)
+    out += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
+    return out
 
-  ax.format_coord = coord_string
+  ax.format_coord = coord_formatter
   bm.drawcountries(ax=ax)
   bm.drawstates(ax=ax) 
   bm.drawcoastlines(ax=ax)
@@ -102,24 +104,36 @@ def _setup_map_ax(bm,ax):
   return
                      
 
-def _setup_ts_ax(ax_lst,times):
+def _setup_ts_ax(ax_lst):
   ''' 
   prepares the time series axes for display
   '''
   # display time in MJD and date on time series plot
-  def ts_coord_string(x,y):                         
-    str = 'time : %g  ' % x
-    str += '(date : %s)' % mjd_inv(x,'%Y-%m-%d')
-    return str 
+  def coord_formatter(x,y):                         
+    ''' 
+    Takes coordinates, *x* and *y*, and returns their string 
+    representation
+    '''
+    out = 'time : %g  ' % x
+    out += '(date : %s)' % mjd_inv(x,'%Y-%m-%d')
+    return out
 
-  ticks = np.linspace(times.min(),times.max(),13)[1:-1:2]
-  ticks = np.round(ticks)
-  tick_labels = [mjd_inv(t,'%Y-%m-%d') for t in ticks]
-  ax_lst[2].set_xticks(ticks)
-  ax_lst[2].set_xticklabels(tick_labels)
-  ax_lst[0].format_coord = ts_coord_string
-  ax_lst[1].format_coord = ts_coord_string
-  ax_lst[2].format_coord = ts_coord_string
+  @FuncFormatter
+  def xtick_formatter(x,p):
+    ''' 
+    Takes *x* and the number of ticks, *p*, and returns a string 
+    representation of *x*
+    '''
+    try:
+      out = mjd_inv(x,'%Y-%m-%d')
+    except (ValueError,OverflowError):
+      out = 'HERE BE DRAGONS!'  
+      
+    return out
+    
+  for a in ax_lst: a.get_xaxis().set_major_formatter(xtick_formatter)
+  for a in ax_lst: a.get_xaxis().set_major_locator(MaxNLocator(6))
+  for a in ax_lst: a.format_coord = coord_formatter
   return
 
 
@@ -169,7 +183,7 @@ def pygeons_view(data_list,resolution='i',
   sz = [conv*d['vertical_std'] for d in data_list]
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
-  _setup_ts_ax(ts_ax,data_list[0]['time'])
+  _setup_ts_ax(ts_ax)
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,map_ax)
