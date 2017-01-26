@@ -130,7 +130,7 @@ def dict_from_text(infile,parser='csv'):
   buff.close()
 
   # dictionaries of data for each station
-  dicts = [PARSER_DICT[parser](str(s)) for s in strs]
+  dicts = [PARSER_DICT[parser](s) for s in strs]
 
   # find the earliest and latest time. note that these are in MJD
   start_time = np.inf

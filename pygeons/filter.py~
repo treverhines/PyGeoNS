@@ -30,6 +30,7 @@ import rbf.filter
 import rbf.gpr
 import logging
 from rbf.filter import _get_mask
+from pygeons.mjd import mjd_inv,mjd
 from pygeons.datadict import DataDict
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
@@ -37,7 +38,9 @@ logger = logging.getLogger(__name__)
 
 
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
-                 procs=0,fill='none'):
+                 procs=0,fill='none',
+                 output_start_date=None,
+                 output_stop_date=None):
   ''' 
   Temporal Gaussian process regression
   
@@ -62,26 +65,38 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   
   procs : int, optional
     Number of subprocesses to spawn.
-
+  
+  output_start_date : str, optional
+    Start date for the output data set, defaults to the start date for 
+    the input data set.
+    
+  output_stop_date : str, optional
+    Stop date for the output data set, defaults to the stop date for 
+    the input data set.
+    
   '''
+  data.check_self_consistency()
+  out = DataDict(data)
+  
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
   # convert units of cls from years to days
   cls *= 365.25
+  # set output times
+  if output_start_date is None:
+    output_start_date = mjd_inv(np.min(data['time']),'%Y-%m-%d')
 
-  data.check_self_consistency()
-  out = DataDict(data)
+  if output_stop_date is None:
+    output_stop_date = mjd_inv(np.max(data['time']),'%Y-%m-%d')
+  
+  output_start_time = mjd(output_start_date,'%Y-%m-%d')  
+  output_stop_time = mjd(output_stop_date,'%Y-%m-%d')  
+  output_times = np.arange(output_start_time,output_stop_time+1)
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
-                        data['time'][:,None],
-                        data[dir].T, 
-                        data[dir+'_std'].T,
-                        (0.0,sigma**2,cls),
-                        basis=rbf.basis.ga,
-                        order=order,
-                        diff=diff,
-                        procs=procs)
+                        data['time'][:,None],data[dir].T,data[dir+'_std'].T,(0.0,sigma**2,cls),
+                        x=output_times[:,None],basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
     # loop over the stations and mask the time series based on the 
     # argument for *fill*
     for i in range(post.shape[0]):
@@ -94,12 +109,14 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
 
   # set the time units
   out['time_exponent'] -= sum(diff)
+  out['time'] = output_times
   out.check_self_consistency()
   return out
   
 
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
-                 procs=0,fill='none'):
+                 procs=0,fill='none',
+                 output_lonlat=None):
   ''' 
   Temporal Gaussian process regression
   
@@ -125,32 +142,40 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   procs : int, optional
     Number of subprocesses to spawn.
 
+  output_lonlat : (N,2) array, optional
+    Positions for the output data set, defaults to positions in the 
+    input data set. 
+    
   '''
+  data.check_self_consistency()
+  out = DataDict(data)
+
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
   # convert units of cls from km to m
-  cls *= 1000.0
-  
-  data.check_self_consistency()
+  cls *= 1000.0  
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
-  out = DataDict(data)
+  # set output positions
+  if output_lonlat is None:
+    output_lonlat = np.array([data['longitude'],data['latitude']],copy=True).T
+    output_id = np.array(data['id'],copy=True)
+  else:  
+    output_lonlat = np.asarray(output_lonlat)
+    output_id = np.array(['%04d' % i for i in range(output_lonlat.shape[0])])
+
+  output_x,output_y = bm(output_lonlat[:,0],output_lonlat[:,1])
+  output_pos = np.array([output_x,output_y]).T
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
-                        pos,
-                        data[dir], 
-                        data[dir+'_std'],
-                        (0.0,sigma**2,cls),
-                        basis=rbf.basis.ga,
-                        order=order,
-                        diff=diff,
-                        procs=procs)
+                        pos,data[dir],data[dir+'_std'],(0.0,sigma**2,cls),
+                        x=output_pos,basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
     # loop over the times and mask the stations based on the 
     # argument for *fill*
     for i in range(post.shape[0]):
-      mask = _get_mask(pos,data[dir+'_std'][i,:],fill)
+      mask = _get_mask(output_pos,data[dir+'_std'][i,:],fill)
       post_sigma[i,mask] = np.inf
       post[i,mask] = np.nan
     
@@ -159,6 +184,10 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
 
   # set the space units
   out['space_exponent'] -= sum(diff)
+  # set the new lon lat and id if output_lonlat was given
+  out['longitude'] = output_lonlat[:,0]
+  out['latitude'] = output_lonlat[:,1]
+  out['id'] = output_id
   out.check_self_consistency()
   return out
   

@@ -152,7 +152,7 @@ Notes
     # estimate a good scale for the strain glyphs
     if scale is None:
       # Get an idea of what the typical strain magnitudes are
-      mags = np.linalg.norm(seld.data_set,axis=2)
+      mags = np.linalg.norm(self.data_set,axis=2)
       mag = max(np.nanmean(mags),1e-10)
       # find the average distance between points
       if Nx <= 1:
@@ -164,7 +164,7 @@ Notes
       scale = dist/mag
       
     if key_magnitude is None:  
-      mags = np.linalg.norm(seld.data_set,axis=2)
+      mags = np.linalg.norm(self.data_set,axis=2)
       mag = max(np.nanmean(mags),1e-10)
       key_magnitude = one_sigfig(mag)
       

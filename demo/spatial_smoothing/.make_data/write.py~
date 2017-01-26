@@ -20,11 +20,13 @@ def make_data(pos,times):
   '''returns synthetic displacements'''
   Nx = len(pos)
   Nt = len(times)
-  mean = np.zeros((Nt,Nx,3))
-  omega = 1.0/400000.0
-  mean[:,:,0] = 0.01*np.cos(pos[:,0]*omega*2*np.pi)*np.sin(pos[:,1]*omega*2*np.pi)
-  mean[:,:,1] = 0.01*np.sin(pos[:,0]*omega*2*np.pi)*np.cos(pos[:,1]*omega*2*np.pi)
-  mean[:,:,2] = 0.01*np.cos(pos[:,0]*omega*2*np.pi)*np.cos(pos[:,1]*omega*2*np.pi)
+  u = np.zeros((Nt,Nx))
+  v = np.zeros((Nt,Nx))
+  z = np.zeros((Nt,Nx))
+  u[...] = 0.001*pos[:,0] + 0.004*pos[:,1] 
+  v[...] = 0.002*pos[:,0] + 0.005*pos[:,1] 
+  z[...] = 0.003*pos[:,0] + 0.006*pos[:,1] 
+  mean = np.concatenate((u[...,None],v[...,None],z[...,None]),axis=2)
   return mean
 
 # load Cascadia GPS station location
@@ -59,7 +61,7 @@ data_dict['time_exponent'] = 0
 data_dict['space_exponent'] = 1
 pygeons.io.convert.text_from_dict('synthetic.nonoise.csv',data_dict)
 
-mean = make_data(pos,times)
+mean = 0*make_data(pos,times)
 sigma = 0.005*np.ones(mean.shape)
 mean += np.random.normal(0.0,sigma)
 data_dict = {}
