@@ -82,7 +82,8 @@ def pygeons_crop(data,start_date=None,stop_date=None,
                  min_lon=-np.inf,max_lon=np.inf):
   ''' 
   Sets the time span of the data set to be between *start_date* and 
-  *stop_date*.
+  *stop_date*. Sets the stations to be within the latitude and 
+  longitude bounds.
   
   Parameters
   ----------
@@ -138,28 +139,28 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     out[dir] = out[dir][:,idx]
     out[dir + '_std'] = out[dir + '_std'][:,idx]
     
-  # make a boolean array indicating whether data is available for a 
-  # times and stations
-  is_missing = (~np.isfinite(out['east_std']) &
-                ~np.isfinite(out['north_std']) &
-                ~np.isfinite(out['vertical_std']))
-
+  #  # make a boolean array indicating whether data is available for a 
+  #  # times and stations
+  #  is_missing = (~np.isfinite(out['east_std']) &
+  #                ~np.isfinite(out['north_std']) &
+  #                ~np.isfinite(out['vertical_std']))
+  #
   # find and remove times that have no observations                
-  idx = ~np.all(is_missing,axis=1)
-  out['time'] = out['time'][idx]         
-  for dir in ['east','north','vertical']:
-    out[dir] = out[dir][idx,:]
-    out[dir + '_std'] = out[dir + '_std'][idx,:]
-    
-  # find and remove stations that have no observations                
-  idx = ~np.all(is_missing,axis=0)
-  out['id'] = out['id'][idx]
-  out['longitude'] = out['longitude'][idx]
-  out['latitude'] = out['latitude'][idx]
-  for dir in ['east','north','vertical']:
-    out[dir] = out[dir][:,idx]
-    out[dir + '_std'] = out[dir + '_std'][:,idx]
-  
+  #  idx = ~np.all(is_missing,axis=1)
+  #  out['time'] = out['time'][idx]         
+  #  for dir in ['east','north','vertical']:
+  #    out[dir] = out[dir][idx,:]
+  #    out[dir + '_std'] = out[dir + '_std'][idx,:]
+  #    
+  #  # find and remove stations that have no observations                
+  #  idx = ~np.all(is_missing,axis=0)
+  #  out['id'] = out['id'][idx]
+  #  out['longitude'] = out['longitude'][idx]
+  #  out['latitude'] = out['latitude'][idx]
+  #  for dir in ['east','north','vertical']:
+  #    out[dir] = out[dir][:,idx]
+  #    out[dir + '_std'] = out[dir + '_std'][:,idx]
+  #  
   out.check_self_consistency()
   return out
 

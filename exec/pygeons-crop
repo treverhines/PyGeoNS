@@ -7,7 +7,7 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
-  description='''Downsamples the data set along the time axis''')
+  description='''Limits the spatial and temporal extent of the data set.''')
   
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-o','--output_file',**GLOSSARY['output_file'])
