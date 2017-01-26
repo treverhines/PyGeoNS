@@ -12,7 +12,7 @@
 
 * make a function creates a strain data set form deformation gradients  
 
-* get rid of the mask function
+* get rid of the mask kwarg
   
 
 
