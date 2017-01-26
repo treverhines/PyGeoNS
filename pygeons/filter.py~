@@ -36,7 +36,6 @@ from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
-
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                  procs=0,fill='none',
                  output_start_date=None,
@@ -97,13 +96,6 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     post,post_sigma = rbf.gpr.gpr(
                         data['time'][:,None],data[dir].T,data[dir+'_std'].T,(0.0,sigma**2,cls),
                         x=output_times[:,None],basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
-    # loop over the stations and mask the time series based on the 
-    # argument for *fill*
-    for i in range(post.shape[0]):
-      mask = _get_mask(data['time'][:,None],data[dir+'_std'][:,i],fill)
-      post_sigma[i,mask] = np.inf
-      post[i,mask] = np.nan
-    
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
 
@@ -116,7 +108,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
 
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                  procs=0,fill='none',
-                 output_lonlat=None):
+                 output_positions=None):
   ''' 
   Temporal Gaussian process regression
   
@@ -142,7 +134,7 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   procs : int, optional
     Number of subprocesses to spawn.
 
-  output_lonlat : (N,2) array, optional
+  output_positions : (N,2) array, optional
     Positions for the output data set, defaults to positions in the 
     input data set. 
     
@@ -156,37 +148,30 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   cls *= 1000.0  
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
-  pos = np.array([x,y]).T
+  xy = np.array([x,y]).T
   # set output positions
-  if output_lonlat is None:
-    output_lonlat = np.array([data['longitude'],data['latitude']],copy=True).T
+  if output_positions is None:
+    output_positions = np.array([data['longitude'],data['latitude']],copy=True).T
     output_id = np.array(data['id'],copy=True)
   else:  
-    output_lonlat = np.asarray(output_lonlat)
-    output_id = np.array(['%04d' % i for i in range(output_lonlat.shape[0])])
+    output_positions = np.asarray(output_positions)
+    output_id = np.array(['%04d' % i for i in range(output_positions.shape[0])])
 
-  output_x,output_y = bm(output_lonlat[:,0],output_lonlat[:,1])
-  output_pos = np.array([output_x,output_y]).T
+  output_x,output_y = bm(output_positions[:,0],output_positions[:,1])
+  output_xy = np.array([output_x,output_y]).T # output positions in cartesian coordinates
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
-                        pos,data[dir],data[dir+'_std'],(0.0,sigma**2,cls),
-                        x=output_pos,basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
-    # loop over the times and mask the stations based on the 
-    # argument for *fill*
-    for i in range(post.shape[0]):
-      mask = _get_mask(output_pos,data[dir+'_std'][i,:],fill)
-      post_sigma[i,mask] = np.inf
-      post[i,mask] = np.nan
-    
+                        xy,data[dir],data[dir+'_std'],(0.0,sigma**2,cls),
+                        x=output_xy,basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
     out[dir] = post
     out[dir+'_std'] = post_sigma
 
   # set the space units
   out['space_exponent'] -= sum(diff)
-  # set the new lon lat and id if output_lonlat was given
-  out['longitude'] = output_lonlat[:,0]
-  out['latitude'] = output_lonlat[:,1]
+  # set the new lon lat and id if output_positions was given
+  out['longitude'] = output_positions[:,0]
+  out['latitude'] = output_positions[:,1]
   out['id'] = output_id
   out.check_self_consistency()
   return out

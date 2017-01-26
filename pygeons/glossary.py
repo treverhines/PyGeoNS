@@ -70,6 +70,17 @@ will be the input file name but with a new extension.
 '''
 }
 #####################################################################
+OUTPUT_POSITIONS = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the file containing latitudes and longitudes of the output 
+positions. If this is not specified then the output positions will be 
+the same as the positions in the input file.
+'''
+}
+#####################################################################
 VERBOSE = {
 'action':'count',
 'default':0,
@@ -477,6 +488,7 @@ GLOSSARY = {
 'input_file':INPUT_FILE,
 'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,
+'output_positions':OUTPUT_POSITIONS,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,
