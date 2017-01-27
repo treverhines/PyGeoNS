@@ -18,13 +18,13 @@ these functions with a '-h' flag to see more information.
 * ``pygeons-toh5`` : Converts from data a text file to an hdf5 file.
 * ``pygeons-totext`` : Converts from data a hdf5 file to a csv file.
 * ``pygeons-view`` : Starts an interactive map view and time series 
-  view of vector data sets (e.g. displacements, 
-  deformation gradients, etc.).
+  view of vector data sets (e.g. displacements, deformation gradients, 
+  etc.).
 * ``pygeons-strain`` : Starts an interactive map view and time series 
   view of strain. 
 * ``pygeons-clean`` : Starts the interactive cleaner, which is used to 
-                     manually remove jumps and outliers.
-* ''pygeons-crop`` : Bounds the spatial and temporal extent of the data 
+  manually remove jumps and outliers.
+* ``pygeons-crop`` : Bounds the spatial and temporal extent of the data 
   set.
 * ``pygeons-tgpr`` : Temporally smooths and differentiates a data set.
 * ``pygeons-sgpr`` : Spatially smooths and differentiates a data set.
