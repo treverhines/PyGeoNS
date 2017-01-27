@@ -20,63 +20,6 @@ from pygeons.plot.plot import (_unit_string,
 logger = logging.getLogger(__name__)
 
 
-def pygeons_merge(data,radius):
-  ''' 
-  Merge stations that are within *radius* of eachother. 
-  
-  Parameters
-  ----------
-  data : dict
-    Data dictionary
-  
-  radius : float
-    Minimum distance between stations
-
-  '''
-  data.check_self_consistency()
-  out = DataDict(data)  
-  bm = make_basemap(data['longitude'],data['latitude'])
-  while True:
-    pos = np.array(bm(out['longitude'],out['latitude'])).T
-    kd = cKDTree(pos)
-    dist,idx = kd.query(pos,2)
-    if not np.any(dist[:,1] < radius):
-      break
-    
-    # find the two closest stations and merge them  
-    idx1 = np.argmin(dist[:,1])
-    idx2 = idx[idx1,1]
-    print(pos[idx1])
-    print(pos[idx2])
-    out['longitude'][idx1] = 0.5*(out['longitude'][idx1] + out['longitude'][idx2])
-    out['latitude'][idx1] = 0.5*(out['latitude'][idx1] + out['latitude'][idx2])
-    for dir in ['east','north','vertical']:
-      w1 = 1.0/out[dir+'_std'][:,idx1]**2
-      w2 = 1.0/out[dir+'_std'][:,idx2]**2
-      d1 = np.nan_to_num(out[dir][:,idx1])
-      d2 = np.nan_to_num(out[dir][:,idx2])
-      with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        out[dir][:,idx1] = (d1*w1 + d2*w2)/(w1 + w2)
-        out[dir+'_std'][:,idx1] = np.sqrt(1.0/(w1 + w2))
-        
-      #out[dir][:,idx1] = ((out[dir][:,idx1]/out[dir+'_std'][:,idx1]**2 + 
-      #                     out[dir][:,idx2]/out[dir+'_std'][:,idx2]**2)/
-      #                    (1.0/out[dir+'_std'][:,idx1]**2 + 
-      #                     1.0/out[dir+'_std'][:,idx2]**2))
-      #out[dir+'_std'][:,idx1] = 1.0/np.sqrt(1.0/out[dir+'_std'][:,idx1]**2 + 
-      #                                      1.0/out[dir+'_std'][:,idx2]**2)
-
-    out['longitude'] = np.delete(out['longitude'],idx2)
-    out['latitude'] = np.delete(out['latitude'],idx2)
-    out['id'] = np.delete(out['id'],idx2)
-    for dir in ['east','north','vertical']:
-      out[dir] = np.delete(out[dir],idx2,axis=1)
-      out[dir+'_std'] = np.delete(out[dir+'_std'],idx2,axis=1)
-    
-  out.check_self_consistency()
-  return out  
-
 def pygeons_crop(data,start_date=None,stop_date=None,
                  min_lat=-np.inf,max_lat=np.inf,
                  min_lon=-np.inf,max_lon=np.inf):
@@ -139,28 +82,6 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     out[dir] = out[dir][:,idx]
     out[dir + '_std'] = out[dir + '_std'][:,idx]
     
-  #  # make a boolean array indicating whether data is available for a 
-  #  # times and stations
-  #  is_missing = (~np.isfinite(out['east_std']) &
-  #                ~np.isfinite(out['north_std']) &
-  #                ~np.isfinite(out['vertical_std']))
-  #
-  # find and remove times that have no observations                
-  #  idx = ~np.all(is_missing,axis=1)
-  #  out['time'] = out['time'][idx]         
-  #  for dir in ['east','north','vertical']:
-  #    out[dir] = out[dir][idx,:]
-  #    out[dir + '_std'] = out[dir + '_std'][idx,:]
-  #    
-  #  # find and remove stations that have no observations                
-  #  idx = ~np.all(is_missing,axis=0)
-  #  out['id'] = out['id'][idx]
-  #  out['longitude'] = out['longitude'][idx]
-  #  out['latitude'] = out['latitude'][idx]
-  #  for dir in ['east','north','vertical']:
-  #    out[dir] = out[dir][:,idx]
-  #    out[dir + '_std'] = out[dir + '_std'][:,idx]
-  #  
   out.check_self_consistency()
   return out
 

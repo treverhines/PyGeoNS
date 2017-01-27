@@ -124,9 +124,7 @@ class Quiver(_Quiver):
     tips_x = self.X + self.U/self.scale
     tips_y = self.Y + self.V/self.scale
     tips = np.array([tips_x,tips_y]).transpose()
-
     a,b,angle = compute_abphi(su,sv,rho)
-
     width = 2.0*a/self.scale
     height = 2.0*b/self.scale
     if self.ellipsoids is not None: 

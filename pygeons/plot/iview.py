@@ -23,7 +23,6 @@ def _roll(lst):
 
 
 def _grid_interp_data(u,pnts,x,y):
-  # u must be a masked array
   u = np.asarray(u)
   pnts = np.asarray(pnts)
   x = np.asarray(x)  
@@ -307,9 +306,9 @@ Notes
     if data_set_labels is None:
       data_set_labels = np.arange(len(self.data_sets)).astype(str)
 
-    self.station_labels = list(station_labels)
-    self.time_labels = list(time_labels)
-    self.data_set_labels = list(data_set_labels)
+    #self.station_labels = list(station_labels)
+    #self.time_labels = list(time_labels)
+    #self.data_set_labels = list(data_set_labels)
 
     if quiver_key_length is None: 
       # find the average length of unmasked data
@@ -673,37 +672,54 @@ Notes
     self.fill1,self.fill2,self.fill3 = [],[],[]
     for si in range(len(self.data_sets)):
       self.fill1 += [self.ts_ax[0].fill_between(
-                    self.t,
-                    self.data_sets[si][:,self.config['xidx'],0] -
-                    self.sigma_sets[si][:,self.config['xidx'],0],
-                    self.data_sets[si][:,self.config['xidx'],0] +
-                    self.sigma_sets[si][:,self.config['xidx'],0],
-                    edgecolor='none',
-                    color=self.color_cycle[si],alpha=0.5)]
+                     self.t,
+                     self.data_sets[si][:,self.config['xidx'],0] -
+                     self.sigma_sets[si][:,self.config['xidx'],0],
+                     self.data_sets[si][:,self.config['xidx'],0] +
+                     self.sigma_sets[si][:,self.config['xidx'],0],
+                     edgecolor='none',
+                     color=self.color_cycle[si],alpha=0.5)]
       self.fill2 += [self.ts_ax[1].fill_between(
-                    self.t,
-                    self.data_sets[si][:,self.config['xidx'],1] -
-                    self.sigma_sets[si][:,self.config['xidx'],1],
-                    self.data_sets[si][:,self.config['xidx'],1] +
-                    self.sigma_sets[si][:,self.config['xidx'],1],
-                    edgecolor='none',
-                    color=self.color_cycle[si],alpha=0.5)]
+                     self.t,
+                     self.data_sets[si][:,self.config['xidx'],1] -
+                     self.sigma_sets[si][:,self.config['xidx'],1],
+                     self.data_sets[si][:,self.config['xidx'],1] +
+                     self.sigma_sets[si][:,self.config['xidx'],1],
+                     edgecolor='none',
+                     color=self.color_cycle[si],alpha=0.5)]
       self.fill3 += [self.ts_ax[2].fill_between(
-                    self.t,
-                    self.data_sets[si][:,self.config['xidx'],2] -
-                    self.sigma_sets[si][:,self.config['xidx'],2],
-                    self.data_sets[si][:,self.config['xidx'],2] +
-                    self.sigma_sets[si][:,self.config['xidx'],2],
-                    edgecolor='none',
-                    color=self.color_cycle[si],alpha=0.5)]
+                     self.t,
+                     self.data_sets[si][:,self.config['xidx'],2] -
+                     self.sigma_sets[si][:,self.config['xidx'],2],
+                     self.data_sets[si][:,self.config['xidx'],2] +
+                     self.sigma_sets[si][:,self.config['xidx'],2],
+                     edgecolor='none',
+                     color=self.color_cycle[si],alpha=0.5)]
   
   def _update_fill(self):
     # updates for:
     #   xidx
-    [f.remove() for f in self.fill1]
-    [f.remove() for f in self.fill2]
-    [f.remove() for f in self.fill3]
+    for f in self.fill1: f.remove()
+    for f in self.fill2: f.remove()
+    for f in self.fill3: f.remove()
     self._init_fill()
+
+  def _remove_artists(self):
+    for f in self.fill1: f.remove()
+    for f in self.fill2: f.remove()
+    for f in self.fill3: f.remove()
+    for l in self.line1: l.remove()
+    for l in self.line2: l.remove()
+    for l in self.line3: l.remove()
+    for q in self.quiver: q.remove()
+    for p in self.pickers: p.remove()
+    self.key.remove()
+    self.marker.remove()
+    self.image.remove()
+    if self.scatter is not None:
+      self.scatter.remove()        
+
+    self.cax.clear()
 
   def _init(self):
     self._init_marker()
@@ -732,24 +748,9 @@ Notes
     self.ts_fig.canvas.draw()
     self.map_fig.canvas.draw()
 
-
   def hard_update(self):
     # clears all axes and redraws everything
-    [f.remove() for f in self.fill1]
-    [f.remove() for f in self.fill2]
-    [f.remove() for f in self.fill3]
-    [l.remove() for l in self.line1]
-    [l.remove() for l in self.line2]
-    [l.remove() for l in self.line3]
-    [q.remove() for q in self.quiver]
-    [p.remove() for p in self.pickers]
-    self.key.remove()
-    self.marker.remove()
-    self.image.remove()
-    if self.scatter is not None:
-      self.scatter.remove()        
-
-    self.cax.clear()
+    self._remove_artists()
     self._init()
     
   @without_interactivity
