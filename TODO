@@ -1,6 +1,6 @@
-* Allow for user specified output locations for spgr, sfilter. 
+* Allow for user specified output locations for spgr, sfilter. DONE
 
-* Allow for user specified output date ranges for tpgr, tfilter. 
+* Allow for user specified output date ranges for tpgr, tfilter. DONE
 
 * Remove the data dictionary class, and change the checking methods to 
   checking function
