@@ -56,7 +56,7 @@ def check_entries(data):
           'vertical','east_std','north_std','vertical_std',
           'time_exponent','space_exponent']
   for k in keys:
-    if not self.has_key(k):
+    if not data.has_key(k):
       raise DataError('Data dictionary is missing *%s*' % k)
   
 
@@ -65,19 +65,19 @@ def check_shapes(data):
   Checks if the shapes of each entry are consistent.
   '''
   # check for proper sizes
-  Nt = self['time'].shape[0]
-  Nx = self['id'].shape[0]
+  Nt = data['time'].shape[0]
+  Nx = data['id'].shape[0]
   keys = ['longitude','latitude']
   for k in keys:     
-    if not self[k].shape == (Nx,):
+    if not data[k].shape == (Nx,):
       raise DataError('*%s* has shape %s but it should have shape %s' 
-                      % (k,self[k].shape,(Nx,)))
+                      % (k,data[k].shape,(Nx,)))
   
   keys = ['east','north','vertical','east_std','north_std','vertical_std']
   for k in keys:     
-    if not self[k].shape == (Nt,Nx):
+    if not data[k].shape == (Nt,Nx):
       raise DataError('*%s* has shape %s but it should have shape %s' 
-                      % (k,self[k].shape,(Nt,Nx)))
+                      % (k,data[k].shape,(Nt,Nx)))
 
 
 def check_positive_uncertainties(data):
@@ -86,155 +86,71 @@ def check_positive_uncertainties(data):
   '''
   keys = ['east_std','north_std','vertical_std']
   for k in keys:
-    if np.any(self[k] <= 0.0):
+    if np.any(data[k] <= 0.0):
       raise DataError('*%s* contains zeros or negative values' % k)
      
 
-class DataDict(dict):
+def check_missing_data(data):
   ''' 
-  Specialized dictionary for GPS data.  An instance of this class 
-  should contain the following entries
-  
-  
-  Calling the function *check_self_consistency* will verify that all 
-  the entries exist and have the proper shapes 
+  Checks if all nan observations correspond to inf uncertainties and 
+  vice versa. If this is not the case then plotting functions may not 
+  work properly.
   '''
-  def __init__(self,input):
-    ''' 
-    Initiates a DataDict instance. 
+  dirs = ['east','north','vertical']
+  for d in dirs:
+    mu = data[d] 
+    sigma = data[d + '_std'] 
+    is_nan = np.isnan(mu)
+    is_inf = np.isinf(sigma)
+    if not np.all(is_nan == is_inf):
+      raise DataError('nan values in *%s* do not correspond to inf '
+                      'values in *%s*' % (d,d+'_std'))
     
-    Parameters
-    ----------
-      input : dict or DataDict instance
-        This should contain all the necessary items for a DataDict 
-        instance. Items from *input* are copied so that the new 
-        DataDict does not share any data with *input*.
+    # make sure that there are no nans in the uncertainties or infs in 
+    # the means
+    is_inf = np.isinf(mu)
+    is_nan = np.isnan(sigma)
+    if np.any(is_inf):
+      raise DataError('inf values found in *%s*' % d)
 
-    '''
-    dict.__init__(self)
-    self.update_with_copy(input)
-    return
-
-  def __str__(self):
-    out = ('<DataDict : '
-           'times = %s, '
-           'stations = %s, '
-           'units = meters**%s days**%s>'
-           % (len(self['time']),len(self['id']),
-              self['space_exponent'],self['time_exponent']))
-    
-    return out
-
-  def __repr__(self):
-    return self.__str__()
-        
-  def update_with_copy(self,other):
-    '''makes a deep copy before update'''
-    other = copy.deepcopy(other)
-    self.update(other)
-    
-  def check_self_consistency(self):
-    ''' 
-    raises an error if any of the following conditions are not met
-
-      - no items are None
-      - all items have consistent sizes
-      - all inf uncertainties are inf for each direction (e.g. if the 
-        easting component is unknown then the northing component should 
-        also be unknown)
-      - all nan data have corresponding uncertainties of inf
-      - all uncertainties are positive and nonzero
-      - there are no duplicate station IDs
-
-    '''
-    logger.debug('checking self consistency ...')
-    # check for Nones
-    keys = ['time','id','longitude','latitude',
-            'east','north','vertical',
-            'east_std','north_std','vertical_std',
-            'time_exponent','space_exponent']
-    for k in keys:
-      if not self.has_key(k):
-        raise ValueError('*%s* has not been set' % k)
-
-    # check for proper sizes
-    Nt = len(self['time'])
-    Nx = len(self['id'])
-    keys = ['longitude','latitude']
-    for k in keys:     
-      if not self[k].shape == (Nx,):
-        raise ValueError(
-          '*%s* has shape %s but should be %s' % (k,self[k].shape,(Nx,)))
-
-    keys = ['east','north','vertical',
-            'east_std','north_std','vertical_std']
-    for k in keys:     
-      if not self[k].shape == (Nt,Nx):
-        raise ValueError(
-          'dimensions of *%s* have shape %s but should be %s' 
-          % (k,self[k].shape,(Nt,Nx)))
-    
-    # make sure infinite uncertainties are consistent for all three 
-    # directions
-    east_isinf = np.isinf(self['east_std'])
-    north_isinf = np.isinf(self['north_std'])
-    vertical_isinf = np.isinf(self['vertical_std'])
-    if not np.all(east_isinf==north_isinf):
-      raise ValueError(
-        'missing data (i.e. data with infinite uncertainty) must be '
-        'missing for all three directions')
-    if not np.all(east_isinf==vertical_isinf):
-      raise ValueError(
-        'missing data (i.e. data with infinite uncertainty) must be '
-        'missing for all three directions')
+    if np.any(is_nan):
+      raise DataError('nan values found in *%s*_std' % d)
       
-    # make sure that infs correspond with nans
-    keys = ['east','north','vertical']
-    for k in keys:
-      k_isnan = np.isnan(self[k])
-      if not np.all(k_isnan == east_isinf):
-        raise ValueError(
-          'infs in the uncertainties do not correspond to nans in '
-          'the data')
-        
-    # make sure that all uncertainties are positive
-    keys = ['east_std','north_std','vertical_std']
-    for k in keys:
-      if np.any(self[k] < 0.0):
-        raise ValueError(
-          'found negative uncertainty for *%s*' % k)
-     
-    # make sure there are no duplicate station IDs
-    if len(np.unique(self['id'])) != len(self['id']):
-      # there are duplicate stations, now find which ones
-      duplicates = []
-      for i in np.unique(self['id']):
-        if np.sum(i == self['id']) > 1:
-          duplicates += [i]
 
-      duplicates = ' '.join(duplicates)
-      raise ValueError(
-        'There were multiple occurrences of these station IDs: %s' 
-        % duplicates)
+def check_data(data):
+  ''' 
+  Runs all data consistency check
+  '''
+  logger.debug('checking data consistency ... ')
+  check_entries(data)
+  check_shapes(data)
+  check_positive_uncertainties(data)
+  check_missing_data(data)
+  logger.debug('ok')
+  
+  
+def check_compatibility(data1,data2):
+  ''' 
+  Makes sure that two data sets have the same sizes, times, stations, 
+  and units
+  '''
+  logger.debug('checking data compatibility ... ')
+  if data1['time'].shape[0] != data2['time'].shape[0]:
+    raise DataError('Data sets have inconsistent number of time epochs')
 
-    logger.debug('ok')
-    return
+  if data1['id'].shape[0] != data2['id'].shape[0]:
+    raise DataError('Data sets have inconsistent number of stations')
 
-  def check_compatibility(self,other):
-    '''make sure that the DataDicts have the same stations and times'''
-    # compare agains the first data set
-    if len(self['time']) != len(other['time']):
-      raise ValueError('DataDicts have inconsistent number of time epochs')
-    if len(self['id']) != len(other['id']):
-      raise ValueError('DataDicts have inconsistent number of stations')
-    if not np.all(self['time'] == other['time']):
-      raise ValueError('DataDicts have inconsistent time epochs')
-    if not np.all(self['id'] == other['id']):
-      raise ValueError('DataDicts have inconsistent stations')
-    if self['time_exponent'] != other['time_exponent']:
-      raise ValueError('DataDicts have inconsistent units')
-    if self['space_exponent'] != other['space_exponent']:
-      raise ValueError('DataDicts have inconsistent units')
+  if not np.all(data1['time'] == data2['time']):
+    raise DataError('Data sets have inconsistent time epochs')
+    
+  if not np.all(data1['id'] == data2['id']):
+    raise DataError('Data sets have inconsistent stations')
 
-    return
+  if data1['time_exponent'] != data2['time_exponent']:
+    raise DataError('Data sets have inconsistent units')
 
+  if data1['space_exponent'] != data2['space_exponent']:
+    raise DataError('Data sets have inconsistent units')
+
+  logger.debug('ok')

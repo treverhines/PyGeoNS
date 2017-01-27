@@ -1,0 +1,52 @@
+4-character id, STA1
+begin date, 2000-01-01
+end date, 2000-01-05
+longitude, -86.35 E
+latitude, 41.96 N
+units, meters**1 days**0
+date,       north, east,   vertical, north std. deviation, east std. deviation, vertical std. deviation
+2000-01-01, 0.111, -0.005, -0.016,   0.01,                 0.01,                0.01
+2000-01-02, 0.108, 0.003,  -0.001,   0.01,                 0.01,                0.01
+2000-01-03, 0.104, nan,    -0.007,   0.01,                 inf,                 0.01
+2000-01-04, 0.144, 0.007,  -0.007,   0.01,                 0.01,                0.01
+2000-01-05, 0.144, 0.011,  0.004,    0.01,                 0.01,                0.01
+***
+4-character id, STA2
+begin date, 2000-01-01
+end date, 2000-01-05
+longitude, -82.75 E
+latitude, 42.91 N
+units, meters**1 days**0
+date,       north, east,   vertical, north std. deviation, east std. deviation, vertical std. deviation
+2000-01-01, 0.100, 0.012,  -0.001,   0.01,                 0.01,                0.01
+2000-01-02, 0.114, -0.001, 0.012,    0.01,                 0.01,                0.01
+2000-01-03, 0.119, 0.006,  -0.007,   0.01,                 0.01,                0.01
+2000-01-04, 0.135, -0.012, -0.005,   0.01,                 0.01,                0.01
+2000-01-05, 0.141, 0.008,  0.007,    0.01,                 0.01,                0.01
+***
+4-character id, STA3
+begin date, 2000-01-01
+end date, 2000-01-05
+longitude, -85.26 E
+latitude, 45.20 N
+units, meters**1 days**0
+date,       north, east,   vertical, north std. deviation, east std. deviation, vertical std. deviation
+2000-01-01, 0.112, 0.002,  -0.002,   0.01,                 0.01,                0.01
+2000-01-02, 0.107, -0.003, 0.003,    0.01,                 0.01,                0.01
+2000-01-03, 0.120, -0.011, -0.002,   0.01,                 0.01,                0.01
+2000-01-04, 0.115, 0.003,  0.006,    0.01,                 0.01,                0.01
+2000-01-05, 0.110, -0.001, -0.012,   0.01,                 0.01,                0.01
+***
+4-character id, STA4
+begin date, 2000-01-01
+end date, 2000-01-05
+longitude, -84.53 E
+latitude, 42.92 N
+units, meters**1 days**0
+date,       north, east,   vertical, north std. deviation, east std. deviation, vertical std. deviation
+2000-01-01, 0.098, -0.006, -0.004,   0.01,                 0.01,                0.01
+2000-01-02, 0.115, -0.006, 0.003,    0.01,                 0.01,                0.01
+2000-01-03, 0.116, 0.001,  0.005,    0.01,                 0.01,                0.01
+2000-01-04, 0.125, -0.012, -0.008,   0.01,                 0.01,                0.01
+2000-01-05, 0.119, 0.006,  0.021,    0.01,                 0.01,                0.01
+

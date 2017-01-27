@@ -11,8 +11,11 @@ def make_basemap(lon,lat,resolution=None):
   '''
   lon = np.asarray(lon)
   lat = np.asarray(lat)
-  lon_buff = max(0.1,lon.ptp()/20.0)
-  lat_buff = max(0.1,lat.ptp()/20.0)
+  n = lon.shape[0]
+  # the buffer should be the average shortest distance between 
+  # points... but this is good enough
+  lon_buff = max(0.1,lon.ptp()/np.sqrt(n))
+  lat_buff = max(0.1,lat.ptp()/np.sqrt(n))
   llcrnrlon = min(lon) - lon_buff
   llcrnrlat = min(lat) - lat_buff
   urcrnrlon = max(lon) + lon_buff

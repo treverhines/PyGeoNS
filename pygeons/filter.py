@@ -31,7 +31,7 @@ import rbf.gpr
 import logging
 from rbf.filter import _get_mask
 from pygeons.mjd import mjd_inv,mjd
-from pygeons.datadict import DataDict
+from pygeons.datacheck import check_data
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
@@ -74,8 +74,8 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     the input data set.
     
   '''
-  data.check_self_consistency()
-  out = DataDict(data)
+  check_data(data)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
   
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
@@ -94,15 +94,17 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
-                        data['time'][:,None],data[dir].T,data[dir+'_std'].T,(0.0,sigma**2,cls),
-                        x=output_times[:,None],basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
+                        data['time'][:,None],data[dir].T,
+                        data[dir+'_std'].T,(0.0,sigma**2,cls),
+                        x=output_times[:,None],basis=rbf.basis.ga,
+                        order=order,diff=diff,procs=procs)
     out[dir] = post.T
     out[dir+'_std'] = post_sigma.T
 
   # set the time units
   out['time_exponent'] -= sum(diff)
   out['time'] = output_times
-  out.check_self_consistency()
+  check_data(out)
   return out
   
 
@@ -139,8 +141,8 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     input data set. 
     
   '''
-  data.check_self_consistency()
-  out = DataDict(data)
+  check_data(data)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
@@ -158,12 +160,14 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     output_id = np.array(['%04d' % i for i in range(output_positions.shape[0])])
 
   output_x,output_y = bm(output_positions[:,0],output_positions[:,1])
-  output_xy = np.array([output_x,output_y]).T # output positions in cartesian coordinates
+  output_xy = np.array([output_x,output_y]).T 
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
-                        xy,data[dir],data[dir+'_std'],(0.0,sigma**2,cls),
-                        x=output_xy,basis=rbf.basis.ga,order=order,diff=diff,procs=procs)
+                        xy,data[dir],data[dir+'_std'],
+                        (0.0,sigma**2,cls),
+                        x=output_xy,basis=rbf.basis.ga,
+                        order=order,diff=diff,procs=procs)
     out[dir] = post
     out[dir+'_std'] = post_sigma
 
@@ -173,7 +177,7 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   out['longitude'] = output_positions[:,0]
   out['latitude'] = output_positions[:,1]
   out['id'] = output_id
-  out.check_self_consistency()
+  check_data(out)
   return out
   
 
@@ -182,9 +186,10 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
   ''' 
   time smoothing
   '''
-  data.check_self_consistency()
+  check_data(data)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())  
+
   vert,smp = make_time_vert_smp(break_dates)
-  out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         data['time'][:,None],data[dir].T,
@@ -198,7 +203,7 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
 
   # set the time units
   out['time_exponent'] -= sum(diff)
-  out.check_self_consistency()
+  check_data(out)
   return out
 
 
@@ -208,13 +213,15 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
   ''' 
   space smoothing
   '''
+  check_data(data)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
   data.check_self_consistency()
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
   vert,smp = make_space_vert_smp(break_lons,break_lats,
                                  break_conn,bm)
-  out = DataDict(data)
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         pos,data[dir],
@@ -228,6 +235,6 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
 
   # set the space units
   out['space_exponent'] -= sum(diff)
-  out.check_self_consistency()
+  check_data(out)
   return out
 

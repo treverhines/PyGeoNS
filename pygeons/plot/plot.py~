@@ -12,6 +12,7 @@ from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.plot.iview import interactive_viewer
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
+from pygeons.datacheck import check_data,check_compatibility
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_space_vert_smp
 logger = logging.getLogger(__name__)
@@ -161,10 +162,8 @@ def pygeons_view(data_list,resolution='i',
       gets passed to pygeons.plot.view.interactive_view
 
   '''
-  for d in data_list:
-    d.check_self_consistency()
-  for d in data_list[1:]:
-    d.check_compatibility(data_list[0])
+  for d in data_list: check_data(d)
+  for d in data_list[1:]: check_compatibility(data_list[0],d)
 
   t = data_list[0]['time']
   lon = data_list[0]['longitude']
@@ -229,9 +228,10 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
       gets passed to pygeons.strain.view
 
   '''
-  data_dx.check_self_consistency()
-  data_dy.check_self_consistency()
-  data_dx.check_compatibility(data_dy)
+  check_data(data_dx)
+  check_data(data_dy)
+  check_compatibility(data_dx,data_dy)
+  
   if (data_dx['space_exponent'] != 0) | data_dy['space_exponent'] != 0:
     raise ValueError('data sets cannot have spatial units')
   
