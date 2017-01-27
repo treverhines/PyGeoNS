@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
+  lst = list(lst)
   out = [lst[-1]] + lst[:-1]
   return out
 
@@ -306,9 +307,9 @@ Notes
     if data_set_labels is None:
       data_set_labels = np.arange(len(self.data_sets)).astype(str)
 
-    #self.station_labels = list(station_labels)
-    #self.time_labels = list(time_labels)
-    #self.data_set_labels = list(data_set_labels)
+    self.station_labels = station_labels
+    self.time_labels = time_labels
+    self.data_set_labels = data_set_labels
 
     if quiver_key_length is None: 
       # find the average length of unmasked data

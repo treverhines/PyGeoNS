@@ -60,10 +60,10 @@ HDF5 file must contain the following entries
 * ``east``, ``north``, ``vertical`` : Array of floats with shape 
   (Nt,Nx). These are the data components. The units should be in terms 
   of meters and days and should be consistent with the values 
-  specified for *space_exponent* and *time_exponent*. For example, if 
-  *time_exponent* is -1 and *space_exponent* is 1 then the units 
+  specified for ``space_exponent`` and ``time_exponent``. For example, 
+  if ``time_exponent`` is -1 and *space_exponent* is 1 then the units 
   should be in meters per day. If data is missing for a particular 
-  time and station then this should be set to nan. 
+  time and station then this should be set to nan.
 * ``east_std``, ``north_std``, ``vertical_std`` : Array of floats with 
   shape (Nt,Nx). One standard deviation uncertainties for each 
   component of the data.  The units should be the same as those used 

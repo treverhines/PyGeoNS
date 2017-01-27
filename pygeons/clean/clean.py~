@@ -5,10 +5,8 @@ functions are for data cleaning.
 from __future__ import division
 import numpy as np
 import logging
-import warnings
 import matplotlib.pyplot as plt
-from scipy.spatial import cKDTree
-from pygeons.datadict import DataDict
+from pygeons.datacheck import check_data
 from pygeons.mjd import mjd,mjd_inv
 from pygeons.basemap import make_basemap
 from pygeons.clean.iclean import interactive_cleaner
@@ -50,13 +48,14 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     output data dictionary
 
   '''
-  data.check_self_consistency()
+  check_data(data)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
   if start_date is None:
     start_date = mjd_inv(data['time'].min(),'%Y-%m-%d')
+
   if stop_date is None:
     stop_date = mjd_inv(data['time'].max(),'%Y-%m-%d')
-  
-  out = DataDict(data) # make copy of the data dictionary
 
   # remove times that are not within the bounds of *start_date* and 
   # *stop_date*
@@ -82,7 +81,7 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     out[dir] = out[dir][:,idx]
     out[dir + '_std'] = out[dir + '_std'][:,idx]
     
-  out.check_self_consistency()
+  check_data(out) 
   return out
 
 
@@ -109,7 +108,9 @@ def pygeons_clean(data,resolution='i',
       output data dictionary 
     
   '''
-  data.check_self_consistency()
+  check_data(data)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
@@ -147,14 +148,13 @@ def pygeons_clean(data,resolution='i',
                  station_labels=data['id'],
                  **kwargs)
 
-  out = DataDict(data)
   out['east'] = clean_data[0]/conv
   out['north'] = clean_data[1]/conv
   out['vertical'] = clean_data[2]/conv
   out['east_std'] = clean_data[3]/conv
   out['north_std'] = clean_data[4]/conv
   out['vertical_std'] = clean_data[5]/conv
-  out.check_self_consistency()
+  check_data(out)
   return out
 
 

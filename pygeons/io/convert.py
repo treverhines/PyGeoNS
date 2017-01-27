@@ -5,38 +5,38 @@ dictionaries
 import numpy as np
 import logging
 import h5py
-from pygeons.datadict import DataDict
+from pygeons.datacheck import check_data
 from pygeons.mjd import mjd_inv
 from pygeons.io.parser import PARSER_DICT
 logger = logging.getLogger(__name__)
 
 ## Write files from DataDict instances
 #####################################################################
-def _write_csv(data_dict):
+def _write_csv(data):
   ''' 
   Write data for a single station to a csv file
   '''
-  time = data_dict['time']
-  out  = '4-character id, %s\n' % data_dict['id']
+  time = data['time']
+  out  = '4-character id, %s\n' % data['id']
   out += 'begin date, %s\n' % mjd_inv(time[0],'%Y-%m-%d')
   out += 'end date, %s\n' % mjd_inv(time[-1],'%Y-%m-%d')
-  out += 'longitude, %s E\n' % data_dict['longitude']
-  out += 'latitude, %s N\n' % data_dict['latitude']
+  out += 'longitude, %s E\n' % data['longitude']
+  out += 'latitude, %s N\n' % data['latitude']
   out += ('units, meters**%s days**%s\n' % 
-          (data_dict['space_exponent'],data_dict['time_exponent']))
+          (data['space_exponent'],data['time_exponent']))
   out += ('date, north, east, vertical, north std. deviation, '
           'east std. deviation, vertical std. deviation\n')
   # convert displacements and uncertainties to strings
-  for i in range(len(data_dict['time'])):
+  for i in range(len(data['time'])):
     date_str = mjd_inv(time[i],'%Y-%m-%d')
     out += ('%s, %e, %e, %e, %e, %e, %e\n' % 
-            (date_str,data_dict['north'][i],data_dict['east'][i],
-             data_dict['vertical'][i],data_dict['north_std'][i],
-             data_dict['east_std'][i],data_dict['vertical_std'][i]))
+            (date_str,data['north'][i],data['east'][i],
+             data['vertical'][i],data['north_std'][i],
+             data['east_std'][i],data['vertical_std'][i]))
 
   return out             
   
-def text_from_dict(outfile,data_dict):
+def text_from_dict(outfile,data):
   ''' 
   Writes a text file from a data dictionary. The text file contains a 
   csv string for each station separated by "***".
@@ -46,34 +46,35 @@ def text_from_dict(outfile,data_dict):
   outfile : string
     Name of the output text file
 
-  data_dict : dict
+  data : dict
     Data dictionary 
 
   '''
-  Nx = len(data_dict['id'])
+  check_data(data)
+  Nx = len(data['id'])
   strs = []
   for i in range(Nx):
     # create a subdictionary for each station
     dict_i = {}
-    mask = (~np.isfinite(data_dict['north_std'][:,i]) |
-            ~np.isfinite(data_dict['east_std'][:,i]) |
-            ~np.isfinite(data_dict['vertical_std'][:,i]))
+    mask = (np.isinf(data['north_std'][:,i]) &
+            np.isinf(data['east_std'][:,i]) &
+            np.isinf(data['vertical_std'][:,i]))
     # do not write data for this station if the station has no data
     if np.all(mask):
       continue
 
-    dict_i['id'] = data_dict['id'][i]
-    dict_i['longitude'] = data_dict['longitude'][i]
-    dict_i['latitude'] = data_dict['latitude'][i]
-    dict_i['time'] = data_dict['time'][~mask]
-    dict_i['east'] = data_dict['east'][~mask,i]
-    dict_i['north'] = data_dict['north'][~mask,i]
-    dict_i['vertical'] = data_dict['vertical'][~mask,i]
-    dict_i['east_std'] = data_dict['east_std'][~mask,i]
-    dict_i['north_std'] = data_dict['north_std'][~mask,i]
-    dict_i['vertical_std'] = data_dict['vertical_std'][~mask,i]
-    dict_i['time_exponent'] = data_dict['time_exponent']
-    dict_i['space_exponent'] = data_dict['space_exponent']
+    dict_i['id'] = data['id'][i]
+    dict_i['longitude'] = data['longitude'][i]
+    dict_i['latitude'] = data['latitude'][i]
+    dict_i['time'] = data['time'][~mask]
+    dict_i['east'] = data['east'][~mask,i]
+    dict_i['north'] = data['north'][~mask,i]
+    dict_i['vertical'] = data['vertical'][~mask,i]
+    dict_i['east_std'] = data['east_std'][~mask,i]
+    dict_i['north_std'] = data['north_std'][~mask,i]
+    dict_i['vertical_std'] = data['vertical_std'][~mask,i]
+    dict_i['time_exponent'] = data['time_exponent']
+    dict_i['space_exponent'] = data['space_exponent']
     strs += [_write_csv(dict_i)]
     
   out = '***\n'.join(strs)
@@ -83,7 +84,7 @@ def text_from_dict(outfile,data_dict):
   return
   
 
-def hdf5_from_dict(outfile,data_dict):
+def hdf5_from_dict(outfile,data):
   ''' 
   Writes an hdf5 file from the data dictionary.
   
@@ -92,13 +93,14 @@ def hdf5_from_dict(outfile,data_dict):
   outfile : str
     Name of the output file
   
-  data_dict : dict
+  data : dict
     Data dictionary      
   
   '''
+  check_data(data)
   fout = h5py.File(outfile,'w') 
-  for k in data_dict.keys():
-    fout[k] = data_dict[k]
+  for k in data.keys():
+    fout[k] = data[k]
     
   fout.close()
   return
@@ -165,7 +167,7 @@ def dict_from_text(infile,parser='csv'):
       out[key][idx,i] = d[key]
       out[key + '_std'][idx,i] = d[key + '_std']
 
-  out = DataDict(out)
+  check_data(out)
   return out
 
 
@@ -189,8 +191,8 @@ def dict_from_hdf5(infile):
   for k in fin.keys():
     out[k] = fin[k][...]
 
-  out = DataDict(out)
   fin.close()
+  check_data(out)
   return out  
 
 

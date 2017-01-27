@@ -5,6 +5,7 @@ from pygeons.plot.iview import InteractiveViewer
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import logging
+import warnings
 logger = logging.getLogger(__name__)
 
 
@@ -32,10 +33,9 @@ def weighted_mean(x,sigma,axis=None):
     
   '''
   x = np.array(x,copy=True)
+  sigma = np.asarray(sigma)
   # convert any nans to zeros
   x[np.isnan(x)] = 0.0
-  sigma = np.asarray(sigma)
-
   if x.shape != sigma.shape:
     raise ValueError('x and sigma must have the same shape')
 
@@ -210,7 +210,7 @@ Notes
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
     self.data_sets[0][tidx,xidx] = np.nan
-    self.sigma_sets[0][tidx,xidx] = np.nan
+    self.sigma_sets[0][tidx,xidx] = np.inf
     name = self.station_labels[xidx]
     logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
           

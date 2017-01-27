@@ -1,18 +1,2 @@
-* Allow for user specified output locations for spgr, sfilter. 
-
-* Allow for user specified output date ranges for tpgr, tfilter. 
-
-* Remove the data dictionary class, and change the checking methods to 
-  checking function
-
-* Change the csv file format and data dictionary format so that it is 
-  flexible enough to describe strain. Perhaps change "north", "east", 
-  and "vertical" to a more generic "component1", "component2", and 
-  "component3"
-
-* make a function creates a strain data set form deformation gradients  
-
-* get rid of the mask kwarg
-  
-
-
+* change north_std, east_std, and vertical_std to north_std_dev, 
+  east_std_dev, and vertical_std_dev
