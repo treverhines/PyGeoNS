@@ -250,6 +250,11 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   sxx = conv*data_dx['east_std']
   syy = conv*data_dy['north_std']
   sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + data_dy['east_std']**2)
+
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
+                              facecolor='white')
+  _setup_ts_ax(ts_ax)
+
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,map_ax)
@@ -258,16 +263,13 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
-  ## draw map scale
-  # find point 0.1,0.1
-  # XXXXXXXXXXXX 
-  scale_lon,scale_lat = bm(*map_ax.transData.inverted().transform(map_ax.transAxes.transform([0.15,0.1])),inverse=True)
-  bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=map_ax,barstyle='fancy',fontsize=10)
-  # XXXXXXXXXXXX 
+  # XXXXXX  DRAW MAP SCALE  XXXXXX
+  #scale_lon,scale_lat = bm(*map_ax.transData.inverted().transform(map_ax.transAxes.transform([0.15,0.1])),inverse=True)
+  #bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=map_ax,barstyle='fancy',fontsize=10)
+  # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
+  
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
-  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
-  _setup_ts_ax(ts_ax)
   interactive_strain_viewer(
     t,pos,exx,eyy,exy,sxx=sxx,syy=syy,sxy=sxy,
     map_ax=map_ax,ts_ax=ts_ax,time_labels=dates,

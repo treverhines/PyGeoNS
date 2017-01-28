@@ -39,10 +39,10 @@ def _grid_interp_data(u,pnts,x,y):
   xg,yg = np.meshgrid(x,y)
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
-  I = scipy.interpolate.NearestNDInterpolator(pnts,u)
+  #I = scipy.interpolate.NearestNDInterpolator(pnts,u)
   # uncomment to use a smooth interpolator
-  #I = RBFInterpolant(pnts,u,penalty=0.0,
-  #                   order=1,basis=phs1)
+  I = RBFInterpolant(pnts,u,penalty=0.0,
+                     order=1,basis=phs1)
   uitp = I(pnts_itp)
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
@@ -85,42 +85,45 @@ def without_interactivity(fin):
 
 class InteractiveViewer(object):
   ''' 
-               --------------------------------
-               PyGeoNS Interactive Viewer (PIV)
-               --------------------------------
-                                 
+                   --------------------------------
+                   PyGeoNS Interactive Viewer (PIV)
+                   --------------------------------
+
+An interactive figure for viewing and comparing the spatial and 
+temporal patterns in data sets.
+
 Controls
 --------
-    Enter : edit the configurable parameters through the command line.
-        Variables can be defined using any functions in the numpy, 
-        matplotlib, or base python namespace
+Left : Move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
+  100 respectively)
 
-    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
-        and 100 respectively)
+Right : Move forward 1 time step (Ctrl-Right and Alt-Right move 
+  forward 10 and 100 respectively)
 
-    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
-        forward 10 and 100 respectively)
-
-    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10
-        and 100 respectively)
+Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
+  100 respectively)
           
-    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 
-        10 and 100 respectively)
+Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
+  and 100 respectively)
           
-    R : redraw figures
+R : Redraw figures
         
-    C : cycle the ordering of the data sets
- 
-    H : hide station marker
+C : Cycle the ordering of the data sets
+
+H : Hide station marker
         
+Enter : Disables figures and allows configurable parameters to be 
+  edited through the command line. Variables can be defined using any 
+  functions in the numpy, matplotlib, or base python namespace
+
 Notes
 -----
-    Stations may also be selected by clicking on them 
+Stations may also be selected by clicking on them.
     
-    Exit PIV by closing the figures
+Exit PIV by closing the figures.
   
-    Key bindings only work when the active window is one of the PIV 
-    figures   
+Key bindings only work when the active window is one of the PIV 
+figures.
 
 ---------------------------------------------------------------------
   '''

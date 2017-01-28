@@ -15,30 +15,43 @@ import os
 
 class InteractiveStrainViewer(object):
   ''' 
-               ----------------------------------------
-               PyGeoNS Interactive Strain Viewer (PISV)
-               ----------------------------------------
+              ----------------------------------------
+              PyGeoNS Interactive Strain Viewer (PISV)
+              ----------------------------------------
+
+An interactive figure for viewing the spatial and temporal patterns in 
+strain.
 
 Controls
 --------
-    Enter : edit the configurable parameters through the command line.
-        Variables can be defined using any functions in the numpy, 
-        matplotlib, or base python namespace
+Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
+  100 respectively)
 
-    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
-        and 100 respectively)
+Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
+  forward 10 and 100 respectively)
 
-    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
-        forward 10 and 100 respectively)
+Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
+  100 respectively)
+          
+Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
+  and 100 respectively)
 
-    R : redraw figures
+R : redraw figures
+
+H : Hide station marker
+
+Enter : Disables figures and allows configurable parameters to be 
+  edited through the command line. Variables can be defined using any 
+  functions in the numpy, matplotlib, or base python namespace
 
 Notes
 -----
-    Exit PISV by closing the figures
+Stations may also be selected by clicking on them.
+
+Exit PISV by closing the figures.
   
-    Key bindings only work when the active window is one of the PISV 
-    figures   
+Key bindings only work when the active window is one of the PISV 
+figures.
 
 ---------------------------------------------------------------------
   '''

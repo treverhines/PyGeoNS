@@ -36,8 +36,6 @@ def weighted_mean(x,sigma,axis=None):
   sigma = np.asarray(sigma)
   # convert any nans to zeros
   x[np.isnan(x)] = 0.0
-  print(x)
-  print(sigma)
   if x.shape != sigma.shape:
     raise ValueError('x and sigma must have the same shape')
 
@@ -60,52 +58,53 @@ def weighted_mean(x,sigma,axis=None):
 
 class InteractiveCleaner(InteractiveViewer):
   ''' 
-               ---------------------------------
-               PyGeoNS Interactive Cleaner (PIC)
-               ---------------------------------
+                  ---------------------------------
+                  PyGeoNS Interactive Cleaner (PIC)
+                  ---------------------------------
+
+An interactive figure for removing outliers and time series jumps
 
 Controls
 --------
-    Enter : edit the configurable parameters through the command line. 
-        Variables can be defined using any functions in the numpy, 
-        matplotlib, or base python namespace
+Enter : Edit the configurable parameters through the command line.
+  Variables can be defined using any functions in the numpy, 
+  matplotlib, or base python namespace.
 
-    Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 
-        and 100 respectively)
+Left : Move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
+  100 respectively).
 
-    Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
-        forward 10 and 100 respectively)
+Right : Move forward 1 time step (Ctrl-Right and Alt-Right move 
+forward 10 and 100 respectively).
 
-    Up : move forward 1 station (Ctrl-Left and Alt-Left move back 10 
-        and 100 respectively)
+Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
+  100 respectively).
           
-    Down : move back 1 station (Ctrl-Right and Alt-Right move forward 
-        10 and 100 respectively)
+Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
+  and 100 respectively).
           
-    R : redraw figures
+R : Eedraw figures.
 
-    H : hide station marker
+H : Hide station marker.
 
-    D : enables outlier removal mode while pressed.  Click and drag on 
-        the time series axes to remove outliers within a time interval
+D : Enables outlier removal mode while pressed.  Click and drag on the
+  time series axes to remove outliers within a time interval.
 
-    J : enables jump removal mode while pressed. Jumps are estimated 
-        by taking a weighted mean of the data over a time interval 
-        before and after the jump. Click on the time series axes to 
-        identify a jump and drag the cursor over the desired time 
-        interval.
+J : Enables jump removal mode while pressed. Jumps are estimated by
+  taking a weighted mean of the data over a time interval before and 
+  after the jump. Click on the time series axes to identify a jump and 
+  drag the cursor over the desired time interval.
 
-    A : if pressed while holding down D or J, then jumps or outliers
-        are removed for all stations
+A : If pressed while holding down D or J, then jumps or outliers are 
+  removed for all stations.
     
 Notes
 -----
-    Stations may also be selected by clicking on them 
+Stations may also be selected by clicking on them.
 
-    Exit PIC by closing the figures
+Exit PIC by closing the figures.
 
-    Key bindings only work when the active window is one of the PIC
-    figures   
+Key bindings only work when the active window is one of the PIC 
+figures
 
 ---------------------------------------------------------------------     
   '''
