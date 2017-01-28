@@ -18,7 +18,10 @@ if __name__ == '__main__':
                  'exec/pygeons-strain',
                  'exec/pygeons-toh5',
                  'exec/pygeons-totext',
+<<<<<<< HEAD
+=======
                  'exec/pygeons-merge',
+>>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
                  'exec/pygeons-crop'],
         packages=['pygeons','pygeons.io','pygeons.plot',
                   'pygeons.clean'],

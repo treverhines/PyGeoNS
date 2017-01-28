@@ -256,7 +256,6 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
-
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=resolution)
   _setup_map_ax(bm,map_ax)
@@ -269,7 +268,6 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   #scale_lon,scale_lat = bm(*map_ax.transData.inverted().transform(map_ax.transAxes.transform([0.15,0.1])),inverse=True)
   #bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=map_ax,barstyle='fancy',fontsize=10)
   # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
-  
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_strain_viewer(

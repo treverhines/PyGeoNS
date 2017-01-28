@@ -55,5 +55,3 @@ pygeons-totext work/ydiff.h5
 
 # view the estimated strain
 pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4
-
-
