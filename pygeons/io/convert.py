@@ -31,8 +31,8 @@ def _write_csv(data):
     date_str = mjd_inv(time[i],'%Y-%m-%d')
     out += ('%s, %e, %e, %e, %e, %e, %e\n' % 
             (date_str,data['north'][i],data['east'][i],
-             data['vertical'][i],data['north_std'][i],
-             data['east_std'][i],data['vertical_std'][i]))
+             data['vertical'][i],data['north_std_dev'][i],
+             data['east_std_dev'][i],data['vertical_std_dev'][i]))
 
   return out             
   
@@ -56,9 +56,9 @@ def text_from_dict(outfile,data):
   for i in range(Nx):
     # create a subdictionary for each station
     dict_i = {}
-    mask = (np.isinf(data['north_std'][:,i]) &
-            np.isinf(data['east_std'][:,i]) &
-            np.isinf(data['vertical_std'][:,i]))
+    mask = (np.isinf(data['north_std_dev'][:,i]) &
+            np.isinf(data['east_std_dev'][:,i]) &
+            np.isinf(data['vertical_std_dev'][:,i]))
     # do not write data for this station if the station has no data
     if np.all(mask):
       continue
@@ -70,9 +70,9 @@ def text_from_dict(outfile,data):
     dict_i['east'] = data['east'][~mask,i]
     dict_i['north'] = data['north'][~mask,i]
     dict_i['vertical'] = data['vertical'][~mask,i]
-    dict_i['east_std'] = data['east_std'][~mask,i]
-    dict_i['north_std'] = data['north_std'][~mask,i]
-    dict_i['vertical_std'] = data['vertical_std'][~mask,i]
+    dict_i['east_std_dev'] = data['east_std_dev'][~mask,i]
+    dict_i['north_std_dev'] = data['north_std_dev'][~mask,i]
+    dict_i['vertical_std_dev'] = data['vertical_std_dev'][~mask,i]
     dict_i['time_exponent'] = data['time_exponent']
     dict_i['space_exponent'] = data['space_exponent']
     strs += [_write_csv(dict_i)]
@@ -159,13 +159,13 @@ def dict_from_text(infile,parser='csv'):
     # initiate the data arrays with nans or infs. then fill in the 
     # elements where there is
     out[key] = np.empty((Nt,Nx))
-    out[key + '_std'] = np.empty((Nt,Nx))
+    out[key + '_std_dev'] = np.empty((Nt,Nx))
     out[key][:,:] = np.nan
-    out[key + '_std'][:,:] = np.inf 
+    out[key + '_std_dev'][:,:] = np.inf 
     for i,d in enumerate(dicts):
       idx = [time_dict[t] for t in d['time']]
       out[key][idx,i] = d[key]
-      out[key + '_std'][idx,i] = d[key + '_std']
+      out[key + '_std_dev'][idx,i] = d[key + '_std_dev']
 
   check_data(out)
   return out

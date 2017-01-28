@@ -47,9 +47,9 @@ data['time'] = times
 data['east'] = u
 data['north'] = v
 data['vertical'] = z
-data['east_std'] = su
-data['north_std'] = sv
-data['vertical_std'] = sv
+data['east_std_dev'] = su
+data['north_std_dev'] = sv
+data['vertical_std_dev'] = sv
 data['time_exponent'] = 0
 data['space_exponent'] = 1
 text_from_dict('data.csv',data)

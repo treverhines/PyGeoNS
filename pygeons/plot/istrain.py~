@@ -232,17 +232,17 @@ figures.
       ts_ylabel_2 = 'east-north shear'
 
     else:
-      ts_ylabel_0 = 'east normal [%s]' % self.config['units']
-      ts_ylabel_1 = 'north normal [%s]' % self.config['units']
-      ts_ylabel_2 = 'east-north shear [%s]' % self.config['units']
+      ts_ylabel_0 = 'east normal\n[%s]' % self.config['units']
+      ts_ylabel_1 = 'north normal\n[%s]' % self.config['units']
+      ts_ylabel_2 = 'east-north shear\n[%s]' % self.config['units']
 
     self.ts_ax[2].set_xlabel('time')
     self.ts_ax[0].set_ylabel(ts_ylabel_0)
     self.ts_ax[1].set_ylabel(ts_ylabel_1)
     self.ts_ax[2].set_ylabel(ts_ylabel_2)
-    self.ts_ax[0].grid()
-    self.ts_ax[1].grid()
-    self.ts_ax[2].grid()
+    self.ts_ax[0].grid(True)
+    self.ts_ax[1].grid(True)
+    self.ts_ax[2].grid(True)
     self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
     self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
     self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])

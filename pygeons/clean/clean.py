@@ -66,7 +66,7 @@ def pygeons_crop(data,start_date=None,stop_date=None,
   out['time'] = out['time'][idx]         
   for dir in ['east','north','vertical']:
     out[dir] = out[dir][idx,:]
-    out[dir + '_std'] = out[dir + '_std'][idx,:]
+    out[dir + '_std_dev'] = out[dir + '_std_dev'][idx,:]
     
   # remove stations that are not within the bounds 
   idx = ((data['longitude'] > min_lon) &
@@ -79,7 +79,7 @@ def pygeons_crop(data,start_date=None,stop_date=None,
   out['latitude'] = out['latitude'][idx]
   for dir in ['east','north','vertical']:
     out[dir] = out[dir][:,idx]
-    out[dir + '_std'] = out[dir + '_std'][:,idx]
+    out[dir + '_std_dev'] = out[dir + '_std_dev'][:,idx]
     
   check_data(out) 
   return out
@@ -137,9 +137,9 @@ def pygeons_clean(data,resolution='i',
   u = conv*data['east']
   v = conv*data['north']
   z = conv*data['vertical']
-  su = conv*data['east_std']
-  sv = conv*data['north_std']
-  sz = conv*data['vertical_std']
+  su = conv*data['east_std_dev']
+  sv = conv*data['north_std_dev']
+  sz = conv*data['vertical_std_dev']
   clean_data = interactive_cleaner(
                  t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
                  map_ax=map_ax,ts_ax=ts_ax,
@@ -151,9 +151,9 @@ def pygeons_clean(data,resolution='i',
   out['east'] = clean_data[0]/conv
   out['north'] = clean_data[1]/conv
   out['vertical'] = clean_data[2]/conv
-  out['east_std'] = clean_data[3]/conv
-  out['north_std'] = clean_data[4]/conv
-  out['vertical_std'] = clean_data[5]/conv
+  out['east_std_dev'] = clean_data[3]/conv
+  out['north_std_dev'] = clean_data[4]/conv
+  out['vertical_std_dev'] = clean_data[5]/conv
   check_data(out)
   return out
 

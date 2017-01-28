@@ -24,7 +24,7 @@ dictionaries. A valid dictionary will contain the following entries
     *time_exponent* is -1 and *space_exponent* is 1 then the units 
     should be in meters per day.
 
-  east_std,north_std,vertical_std : (Nt,Nx) array
+  east_std_dev,north_std_dev,vertical_std_dev : (Nt,Nx) array
     One standard deviation uncertainty. These should have the same 
     units as the data components
 
@@ -53,7 +53,7 @@ def check_entries(data):
   Checks if all the entries exist in the data dictionary
   '''
   keys = ['time','id','longitude','latitude','east','north',
-          'vertical','east_std','north_std','vertical_std',
+          'vertical','east_std_dev','north_std_dev','vertical_std_dev',
           'time_exponent','space_exponent']
   for k in keys:
     if not data.has_key(k):
@@ -73,7 +73,8 @@ def check_shapes(data):
       raise DataError('*%s* has shape %s but it should have shape %s' 
                       % (k,data[k].shape,(Nx,)))
   
-  keys = ['east','north','vertical','east_std','north_std','vertical_std']
+  keys = ['east','north','vertical',
+          'east_std_dev','north_std_dev','vertical_std_dev']
   for k in keys:     
     if not data[k].shape == (Nt,Nx):
       raise DataError('*%s* has shape %s but it should have shape %s' 
@@ -84,7 +85,7 @@ def check_positive_uncertainties(data):
   ''' 
   Checks if all the uncertainties are positive.
   '''
-  keys = ['east_std','north_std','vertical_std']
+  keys = ['east_std_dev','north_std_dev','vertical_std_dev']
   for k in keys:
     if np.any(data[k] <= 0.0):
       raise DataError('*%s* contains zeros or negative values' % k)
@@ -99,12 +100,12 @@ def check_missing_data(data):
   dirs = ['east','north','vertical']
   for d in dirs:
     mu = data[d] 
-    sigma = data[d + '_std'] 
+    sigma = data[d + '_std_dev'] 
     is_nan = np.isnan(mu)
     is_inf = np.isinf(sigma)
     if not np.all(is_nan == is_inf):
       raise DataError('nan values in *%s* do not correspond to inf '
-                      'values in *%s*' % (d,d+'_std'))
+                      'values in *%s*' % (d,d+'_std_dev'))
     
     # make sure that there are no nans in the uncertainties or infs in 
     # the means
@@ -114,7 +115,7 @@ def check_missing_data(data):
       raise DataError('inf values found in *%s*' % d)
 
     if np.any(is_nan):
-      raise DataError('nan values found in *%s*_std' % d)
+      raise DataError('nan values found in *%s*_std_dev' % d)
       
 
 def check_data(data):

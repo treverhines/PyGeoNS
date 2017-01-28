@@ -17,9 +17,9 @@ dictionary contains the following items:
   east : (Nt,Nx) array
   north : (Nt,Nx) array
   vertical : (Nt,Nx) array
-  east_std : (Nt,Nx) array
-  north_std : (Nt,Nx) array
-  vertical_std : (Nt,Nx) array
+  east_std_dev : (Nt,Nx) array
+  north_std_dev : (Nt,Nx) array
+  vertical_std_dev : (Nt,Nx) array
   time_exponent : int
   space_exponent : int
 
@@ -95,11 +95,11 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
                         data['time'][:,None],data[dir].T,
-                        data[dir+'_std'].T,(0.0,sigma**2,cls),
+                        data[dir+'_std_dev'].T,(0.0,sigma**2,cls),
                         x=output_times[:,None],basis=rbf.basis.ga,
                         order=order,diff=diff,procs=procs)
     out[dir] = post.T
-    out[dir+'_std'] = post_sigma.T
+    out[dir+'_std_dev'] = post_sigma.T
 
   # set the time units
   out['time_exponent'] -= sum(diff)
@@ -164,12 +164,12 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.gpr.gpr(
-                        xy,data[dir],data[dir+'_std'],
+                        xy,data[dir],data[dir+'_std_dev'],
                         (0.0,sigma**2,cls),
                         x=output_xy,basis=rbf.basis.ga,
                         order=order,diff=diff,procs=procs)
     out[dir] = post
-    out[dir+'_std'] = post_sigma
+    out[dir+'_std_dev'] = post_sigma
 
   # set the space units
   out['space_exponent'] -= sum(diff)
@@ -193,13 +193,13 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         data['time'][:,None],data[dir].T,
-                        sigma=data[dir+'_std'].T,
+                        sigma=data[dir+'_std_dev'].T,
                         diffs=diff,
                         fill=fill,
                         vert=vert,smp=smp,
                         **kwargs)
     out[dir] = post.T
-    out[dir+'_std'] = post_sigma.T
+    out[dir+'_std_dev'] = post_sigma.T
 
   # set the time units
   out['time_exponent'] -= sum(diff)
@@ -225,13 +225,13 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
   for dir in ['east','north','vertical']:
     post,post_sigma = rbf.filter.filter(
                         pos,data[dir],
-                        sigma=data[dir+'_std'],
+                        sigma=data[dir+'_std_dev'],
                         diffs=diff,
                         fill=fill,
                         vert=vert,smp=smp,     
                         **kwargs)
     out[dir] = post
-    out[dir+'_std'] = post_sigma
+    out[dir+'_std_dev'] = post_sigma
 
   # set the space units
   out['space_exponent'] -= sum(diff)

@@ -15,9 +15,9 @@ the text file contains velocity data in meters per day, then
   east : array of easting observations in meters**p * days**q
   north :               '' 
   vertical :            ''
-  east_std : standard deviation in meters**p * days**q
-  north_std :           ''
-  vertical_std :        ''
+  east_std_dev : standard deviation in meters**p * days**q
+  north_std_dev :           ''
+  vertical_std_dev :        ''
   space_exponent : the exponent for the spatial unit 
   time_exponent : the exponent for the temporal unit
 
@@ -129,9 +129,9 @@ def parse_csv(file_str):
   output['north'] = data[:,1].astype(float)
   output['east'] = data[:,2].astype(float)
   output['vertical'] = data[:,3].astype(float)
-  output['north_std'] = data[:,4].astype(float)
-  output['east_std'] = data[:,5].astype(float)
-  output['vertical_std'] = data[:,6].astype(float)
+  output['north_std_dev'] = data[:,4].astype(float)
+  output['east_std_dev'] = data[:,5].astype(float)
+  output['vertical_std_dev'] = data[:,6].astype(float)
   output['time_exponent'] = int(time_exponent)
   output['space_exponent'] = int(space_exponent)
   return output 
@@ -172,9 +172,9 @@ def parse_pbocsv(file_str):
   output['north'] = 0.001*data[:,1].astype(float)
   output['east'] = 0.001*data[:,2].astype(float)
   output['vertical'] = 0.001*data[:,3].astype(float)
-  output['north_std'] = 0.001*data[:,4].astype(float)
-  output['east_std'] = 0.001*data[:,5].astype(float)
-  output['vertical_std'] = 0.001*data[:,6].astype(float)
+  output['north_std_dev'] = 0.001*data[:,4].astype(float)
+  output['east_std_dev'] = 0.001*data[:,5].astype(float)
+  output['vertical_std_dev'] = 0.001*data[:,6].astype(float)
   # indicate that the data are in units of meters
   output['time_exponent'] = 0  
   output['space_exponent'] = 1
@@ -217,9 +217,9 @@ def parse_tdecsv(file_str):
   output['north'] = 0.001*data[:,2].astype(float)
   output['east'] = 0.001*data[:,1].astype(float)
   output['vertical'] = 0.001*data[:,3].astype(float)
-  output['north_std'] = 0.001*np.ones(len(data[:,0]))
-  output['east_std'] = 0.001*np.ones(len(data[:,0]))
-  output['vertical_std'] = 0.001*np.ones(len(data[:,0]))
+  output['north_std_dev'] = 0.001*np.ones(len(data[:,0]))
+  output['east_std_dev'] = 0.001*np.ones(len(data[:,0]))
+  output['vertical_std_dev'] = 0.001*np.ones(len(data[:,0]))
   # indicate that the data are in units of meters
   output['time_exponent'] = 0  
   output['space_exponent'] = 1
@@ -258,9 +258,9 @@ def parse_pbopos(file_str):
   output['north'] = data[:,1].astype(float)
   output['east'] = data[:,2].astype(float)
   output['vertical'] = data[:,3].astype(float)
-  output['north_std'] = data[:,4].astype(float)
-  output['east_std'] = data[:,5].astype(float)
-  output['vertical_std'] = data[:,6].astype(float)
+  output['north_std_dev'] = data[:,4].astype(float)
+  output['east_std_dev'] = data[:,5].astype(float)
+  output['vertical_std_dev'] = data[:,6].astype(float)
   # indicate that the units are in meters
   output['time_exponent'] = 0
   output['space_exponent'] = 1

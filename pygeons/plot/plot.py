@@ -22,11 +22,9 @@ def _unit_string(space_exponent,time_exponent):
   ''' 
   returns a string indicating the units
   '''
-  if (space_exponent == 0) & (time_exponent == 0):
-    return ''
-
   if space_exponent == 0:
-    space_str = '1'
+    # if the space exponent is 0 then use units of microstrain
+    space_str = '$\mathregular{\mu}$strain'
   elif space_exponent == 1:
     space_str = 'mm'
   else:
@@ -52,7 +50,11 @@ def _unit_conversion(space_exponent,time_exponent):
 
     mm**(space_exponent) * years*(time_exponent)
   '''
-  return 1000**space_exponent * (1.0/365.25)**time_exponent
+  # if the space exponent is 0 then use units of microstrain
+  if space_exponent == 0:
+    return 1.0e6 * (1.0/365.25)**time_exponent
+  else:  
+    return 1000**space_exponent * (1.0/365.25)**time_exponent
   
 
 def _get_meridians_and_parallels(bm,ticks):
@@ -177,9 +179,9 @@ def pygeons_view(data_list,resolution='i',
   u = [conv*d['east'] for d in data_list]
   v = [conv*d['north'] for d in data_list]
   z = [conv*d['vertical'] for d in data_list]
-  su = [conv*d['east_std'] for d in data_list]
-  sv = [conv*d['north_std'] for d in data_list]
-  sz = [conv*d['vertical_std'] for d in data_list]
+  su = [conv*d['east_std_dev'] for d in data_list]
+  sv = [conv*d['north_std_dev'] for d in data_list]
+  sz = [conv*d['vertical_std_dev'] for d in data_list]
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
@@ -247,9 +249,9 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   exx = conv*data_dx['east'] 
   eyy = conv*data_dy['north']
   exy = 0.5*conv*(data_dx['north'] + data_dy['east'])
-  sxx = conv*data_dx['east_std']
-  syy = conv*data_dy['north_std']
-  sxy = 0.5*conv*np.sqrt(data_dx['north_std']**2 + data_dy['east_std']**2)
+  sxx = conv*data_dx['east_std_dev']
+  syy = conv*data_dy['north_std_dev']
+  sxy = 0.5*conv*np.sqrt(data_dx['north_std_dev']**2 + data_dy['east_std_dev']**2)
 
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
