@@ -1,9 +1,7 @@
 build
 demo/*/work/*
-<<<<<<< HEAD
 *~
 *.pyc
 demo/junk
-=======
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
+*.h5
 
