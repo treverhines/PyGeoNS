@@ -222,6 +222,7 @@ which shows the estimate strain rates during a recent slow slip event
 in Washington.
 
 .. figure:: demo/demo2/figures/map_view.png
+  :align: center
 
   Map view of strain rates during a slow slip event. The glyphs show 
   the normal strain rates along each azimuth, where red indicates 
@@ -229,6 +230,7 @@ in Washington.
   indicates the 68% confidence interval in the normal strain rates.
 
 .. figure:: demo/demo2/figures/time_series.png
+  :align: center
 
   Time series of each component of the strain rate tensor at the 
   station indicated by the black dot. The shaded region indicates the 
