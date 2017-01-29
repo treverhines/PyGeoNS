@@ -22,7 +22,6 @@ VEL_ORDER=1    # Order of the polynomial null space. Setting this to 1
 
 # make a work directory to store intermediate files and move the csv
 # file into it
-python make_data.py
 mkdir -p work
 cp data.csv work/data.csv
 

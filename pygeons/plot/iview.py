@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import matplotlib.pyplot as plt
 import numpy as np
-from rbf.interpolate import RBFInterpolant
 from pygeons.plot.rin import restricted_input
 from pygeons.plot.quiver import Quiver
 from matplotlib.cm import ScalarMappable
@@ -39,10 +38,7 @@ def _grid_interp_data(u,pnts,x,y):
   xg,yg = np.meshgrid(x,y)
   xf,yf = xg.flatten(),yg.flatten()
   pnts_itp = np.array([xf,yf]).T
-  #I = scipy.interpolate.NearestNDInterpolator(pnts,u)
-  # uncomment to use a smooth interpolator
-  I = RBFInterpolant(pnts,u,penalty=0.0,
-                     order=1,basis=phs1)
+  I = scipy.interpolate.NearestNDInterpolator(pnts,u)
   uitp = I(pnts_itp)
   uitp = uitp.reshape((x.shape[0],y.shape[0]))                   
   return uitp
@@ -137,7 +133,7 @@ figures.
                scatter_size=100,
                image_clim=None,
                image_cmap=None,
-               image_array_size=200,
+               image_array_size=300,
                station_labels=None,
                time_labels=None,
                data_set_labels=None,
@@ -301,14 +297,14 @@ figures.
       
     # station names used for the time series plots
     if station_labels is None:
-      station_labels = np.arange(len(self.x)).astype(str)
+      station_labels = ['%04d' % i for i in range(len(self.x))]
 
     if time_labels is None:
       time_labels = np.array(self.t).astype(str)
 
     # data set names used for the legends
     if data_set_labels is None:
-      data_set_labels = np.arange(len(self.data_sets)).astype(str)
+      data_set_labels = ['data set %s' % i for i in range(len(self.data_sets))]
 
     self.station_labels = station_labels
     self.time_labels = time_labels

@@ -57,7 +57,7 @@ def _get_field(field,master,delim=':'):
   ''' 
   finds the first line containing *field*, splits the line by *delim*, 
   then returns the list element which follows the one containing 
-  *field*
+  *field*. Any surrounding whitespace is removed from the value.
   '''
   if delim in field:
     raise ValueError('Field "%s" contains the delimiter "%s"' % (field,delim))
@@ -86,8 +86,7 @@ def _get_field(field,master,delim=':'):
 
 def parse_csv(file_str):
   ''' 
-  Reads data from a single PyGeoNS csv file which has a format based 
-  on the PBO csv file
+  Reads data from a single PyGeoNS csv file
   '''
   fmt = '%Y-%m-%d'
   delim = ','
@@ -103,18 +102,31 @@ def parse_csv(file_str):
   id = _get_field('4-character id',file_str,delim=delim)
   logger.debug('reading csv data for station %s' % id.upper()) 
 
-  lon = _get_field('longitude',file_str,delim=delim)
-  lon = float(lon.split(' ')[0])
-  lat = _get_field('latitude',file_str,delim=delim)
-  lat = float(lat.split(' ')[0])
+  lon_str = _get_field('longitude',file_str,delim=delim)
+  lon,dir = lon_str.split()
+  lon = float(lon)
+  if dir.upper() == 'W':
+    # make sure longitude component is east
+    lon *= -1.0   
+  
+  lat_str = _get_field('latitude',file_str,delim=delim)
+  lat,dir = lat_str.split()
+  lat = float(lat)
+  if dir.upper() == 'S':
+    # make sure latitude component is north
+    lat *= -1.0   
 
   units = _get_field('units',file_str,delim=delim)
   space_exponent = units.split()[0].split('**')[1]
   time_exponent = units.split()[1].split('**')[1]
   start = _get_field('begin date',file_str,delim=delim)
-
+  stop = _get_field('end date',file_str,delim=delim)
+  # index of the first character in the data block
   data_start_idx = file_str.rfind(start)
-  data = file_str[data_start_idx:]
+  # index for last newline character in data block
+  data_stop_idx = file_str.find('\n',file_str.rfind(stop))
+  # extract just the data block
+  data = file_str[data_start_idx:data_stop_idx]
   data = np.genfromtxt(data.split('\n'),
                        converters={0:date_conv},
                        delimiter=delim,
