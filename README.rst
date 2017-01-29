@@ -87,13 +87,13 @@ PBO CSV
   Source file, P403.pbo.nam08.pos
   Offset from source file, 48.54 mm North, 60.55 mm East, -5.06 mm Vertical
   Reference position, 48.0623223017 North Latitude, -124.1408746693 East Longitude, 284.67725 meters elevation
-  Date, North (mm), East (mm), Vertical (mm), North Std. Deviation (mm), East Std. Deviation (mm), Vertical Std. Deviation (mm), Quality,  2005-09-13,0.00, 0.00, 0.00, 4.71, 3.14, 13.2, repro,
+  Date, North (mm), East (mm), Vertical (mm), North Std. Deviation (mm), East Std. Deviation (mm), Vertical Std. Deviation (mm), Quality,  
+  2005-09-13,0.00, 0.00, 0.00, 4.71, 3.14, 13.2, repro,
   2005-09-14,7.43, 8.65, 2.37, 1.85, 1.34, 5.6, repro,
-  2005-09-15,7.06, 7.77, 1.16, 1.77, 1.3, 5.38, repro,
   ...
   2017-01-26,98.68, 132.58, 6.00, 1.93, 1.49, 6.34, rapid,
 
-PBS POS
+PBO POS
 -------
 .. code-block::
 
@@ -174,7 +174,7 @@ concatenated with the following sed incantation
 
   $ sed -s 'a***' *.csv | sed '$d' > data.csv 
 
-Second, convert the new text file to and HDF5 file with the PyGeoNS 
+Second, convert the new text file to an HDF5 file with the PyGeoNS 
 command ``pygeons-toh5`` and use the ``--file_type`` flag followed by 
 either ``csv``, ``pbocsv``, or ``pbopos``. By default, this is set to 
 ``csv``, indicating the file is a PyGeoNS csv file. The generated HDF5 
