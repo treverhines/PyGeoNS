@@ -183,7 +183,7 @@ the remaining *PyGeoNS* executables for analysis and processing. An HDF5
 file can be converted back to a *PyGeoNS* csv file using 
 ``pygeons-totext`` followed by the file name. 
 
-An HDF5 file can be read using, for example, the h5py package in 
+An HDF5 file can be read using, for example, the *h5py* package in 
 python. Each HDF5 file contain the following entries
 
 * ``time`` : Array of integers with shape (Nt,). Integer values of 
@@ -214,18 +214,23 @@ Demonstration
 =============
 
 See the bash scripts ``demo/demo1/run.sh`` and ``demo/demo2/run.sh`` 
-for examples of how to use PyGeoNS.  These scripts will open several 
+for examples of how to use *PyGeoNS*.  These scripts will open several 
 interactive figures. Use the arrow keys to scroll between stations and 
 time epochs. Additional instructions will be printed out when the 
 figures open. Here is a figure produced from ``demo/demo2/run.sh``, 
 which shows the estimate strain rates during a recent slow slip event 
 in Washington.
 
-Map view of strain rates during a slow slip event
+.. figure:: demo/demo2/figures/map_view.png
 
-.. image:: demo/demo2/figures/map_view.png
+  Map view of strain rates during a slow slip event. The glyphs show 
+  the normal strain rates along each azimuth, where red indicates 
+  compression and blue indicates extension. The shaded region 
+  indicates the 68% confidence interval in the normal strain rates.
 
-Time series of strain rate at the station indicated by the black dot
+.. figure:: demo/demo2/figures/time_series.png
 
-.. image:: demo/demo2/figures/time_series.png
+  Time series of each component of the strain rate tensor at the 
+  station indicated by the black dot. The shaded region indicates the 
+  68% confidence interval.
 
