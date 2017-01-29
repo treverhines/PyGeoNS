@@ -177,9 +177,14 @@ concatenated with the following sed incantation
 Second, convert the new text file to an HDF5 file with the PyGeoNS 
 command ``pygeons-toh5`` and use the ``--file_type`` flag followed by 
 either ``csv``, ``pbocsv``, or ``pbopos``. By default, this is set to 
-``csv``, indicating the file is a PyGeoNS csv file. The generated HDF5 
-file can be read using, for example, the h5py package in python. Each 
-HDF5 contain the following entries
+``csv``, indicating the file is a PyGeoNS csv file. Once you have 
+converted the data to an HDF5 file, it can be passed as an argument to 
+the remaining PyGeoNS executables for analysis and processing. An HDF5 
+file can be converted back to a PyGeoNS csv file using 
+``pygeons-totext`` followed by the file name. 
+
+An HDF5 file can be read using, for example, the h5py package in 
+python. Each HDF5 file contain the following entries
 
 * ``time`` : Array of integers with shape (Nt,). Integer values of 
   modified Julian dates.
@@ -191,7 +196,7 @@ HDF5 contain the following entries
   (Nt,Nx). These are the data components. The units should be in terms 
   of meters and days and should be consistent with the values 
   specified for ``space_exponent`` and ``time_exponent``. For example, 
-  if ``time_exponent`` is -1 and *space_exponent* is 1 then the units 
+  if ``time_exponent`` is -1 and ``space_exponent`` is 1 then the units 
   should be in meters per day. If data is missing for a particular 
   time and station then it should be set to nan.
 * ``east_std_dev``, ``north_std_dev``, ``vertical_std_dev`` : Array of 
