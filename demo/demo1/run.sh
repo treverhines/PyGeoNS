@@ -1,7 +1,5 @@
 # This script demonstrates using the PyGeoNS executables to calculate
-# strain from four GPS time series, which are saved in data.csv. The
-# strain solution is interpolated to a regular grid whos points are
-# saved in pos.txt.
+# strain from four GPS time series, which are saved in data.csv.
 
 # Define the parameters describing the prior Gaussian processes used
 # to temporally smooth and differentiate displacements and then
@@ -21,9 +19,6 @@ VEL_STD=100.0  # Standard deviation of the prior Gaussian process for
 VEL_ORDER=1    # Order of the polynomial null space. Setting this to 1
                # means that constant and linear trends in the data
                # will not be damped out in the smoothed solution.
-
-POS_FILE="pos.txt" # text file containing the coordinates where strain
-                   # is to be interpolated
 
 # make a work directory to store intermediate files and move the csv
 # file into it
