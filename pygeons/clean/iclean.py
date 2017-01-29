@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import division
 import numpy as np
 from pygeons.plot.iview import InteractiveViewer
@@ -82,7 +81,7 @@ Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and
 Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
   and 100 respectively).
           
-R : Eedraw figures.
+R : Redraw figures.
 
 H : Hide station marker.
 
