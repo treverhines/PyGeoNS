@@ -1,7 +1,5 @@
-PyGeoNS (Python-based Geodetic Network Smoother)
-++++++++++++++++++++++++++++++++++++++++++++++++
-
-<<<<<<< HEAD
+PyGeoNS (Python-based Geodetic Network Strain software)
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PyGeoNS is a suite of command line executables that are used to smooth 
 and differentiate GPS data in both space and time.  This analysis is 
 performed in a Bayesian framework, using Gaussian process regression, 
@@ -22,13 +20,6 @@ your study region, then the map projection used by PyGeoNS
 is unable to handle data sampling frequencies that are greater daily. 
 If this conflicts with your project needs, then it may be better to 
 directly interface with the *RBF* package.
-=======
-PyGeoNS is a suite of command line executables that are used to 
-estimate time dependent strain from geodetic data. This package is 
-primarily intended to be used with daily GPS position timeseries, but 
-it is also possible to bolster strain estimates with data from 
-borehole/laser strain meters.
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
 
 Note: This document is currently under construction. More 
 documentation will be coming soon.
@@ -57,11 +48,6 @@ these functions with a '-h' flag to see more information.
 
 Text Data Format
 ================
-<<<<<<< HEAD
-Currently, PyGeoNS is able to read in GPS 
-There 
-=======
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
 
 PBO CSV
 -------
@@ -92,19 +78,11 @@ HDF5 file must contain the following entries
   if ``time_exponent`` is -1 and *space_exponent* is 1 then the units 
   should be in meters per day. If data is missing for a particular 
   time and station then it should be set to nan.
-<<<<<<< HEAD
 * ``east_std_dev``, ``north_std_dev``, ``vertical_std_dev`` : Array of 
   floats with shape (Nt,Nx). One standard deviation uncertainties for 
   each component of the data.  The units should be the same as those 
   used for the data components. If data is missing for a particular 
   time and station then it should be set to inf.
-=======
-* ``east_std``, ``north_std``, ``vertical_std`` : Array of floats with 
-  shape (Nt,Nx). One standard deviation uncertainties for each 
-  component of the data.  The units should be the same as those used 
-  for the data components. If data is missing for a particular time 
-  and station then it should be set to inf.
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
 * ``time_exponent`` : Integer. This indicates the power of the time 
   units for the data. -1 indicates that the data is a rate, -2 indicates 
   an acceleration, etc.

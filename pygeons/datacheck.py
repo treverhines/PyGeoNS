@@ -1,5 +1,4 @@
 ''' 
-
 This module contains functions that check the consistency of data 
 dictionaries. A valid dictionary will contain the following entries
 

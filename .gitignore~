@@ -1,7 +1,6 @@
 build
-demo/*/work/*
+demo/*/work
 *~
 *.pyc
-demo/junk
 *.h5
 

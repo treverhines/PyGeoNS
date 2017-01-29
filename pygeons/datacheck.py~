@@ -1,5 +1,4 @@
 ''' 
-
 This module contains functions that check the consistency of data 
 dictionaries. A valid dictionary will contain the following entries
 
@@ -53,11 +52,7 @@ def check_entries(data):
   Checks if all the entries exist in the data dictionary
   '''
   keys = ['time','id','longitude','latitude','east','north',
-<<<<<<< HEAD
           'vertical','east_std_dev','north_std_dev','vertical_std_dev',
-=======
-          'vertical','east_std','north_std','vertical_std',
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
           'time_exponent','space_exponent']
   for k in keys:
     if not data.has_key(k):
@@ -77,12 +72,8 @@ def check_shapes(data):
       raise DataError('*%s* has shape %s but it should have shape %s' 
                       % (k,data[k].shape,(Nx,)))
   
-<<<<<<< HEAD
   keys = ['east','north','vertical',
           'east_std_dev','north_std_dev','vertical_std_dev']
-=======
-  keys = ['east','north','vertical','east_std','north_std','vertical_std']
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
   for k in keys:     
     if not data[k].shape == (Nt,Nx):
       raise DataError('*%s* has shape %s but it should have shape %s' 
@@ -93,11 +84,7 @@ def check_positive_uncertainties(data):
   ''' 
   Checks if all the uncertainties are positive.
   '''
-<<<<<<< HEAD
   keys = ['east_std_dev','north_std_dev','vertical_std_dev']
-=======
-  keys = ['east_std','north_std','vertical_std']
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
   for k in keys:
     if np.any(data[k] <= 0.0):
       raise DataError('*%s* contains zeros or negative values' % k)
@@ -112,20 +99,12 @@ def check_missing_data(data):
   dirs = ['east','north','vertical']
   for d in dirs:
     mu = data[d] 
-<<<<<<< HEAD
     sigma = data[d + '_std_dev'] 
-=======
-    sigma = data[d + '_std'] 
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
     is_nan = np.isnan(mu)
     is_inf = np.isinf(sigma)
     if not np.all(is_nan == is_inf):
       raise DataError('nan values in *%s* do not correspond to inf '
-<<<<<<< HEAD
                       'values in *%s*' % (d,d+'_std_dev'))
-=======
-                      'values in *%s*' % (d,d+'_std'))
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
     
     # make sure that there are no nans in the uncertainties or infs in 
     # the means
@@ -135,11 +114,7 @@ def check_missing_data(data):
       raise DataError('inf values found in *%s*' % d)
 
     if np.any(is_nan):
-<<<<<<< HEAD
       raise DataError('nan values found in *%s*_std_dev' % d)
-=======
-      raise DataError('nan values found in *%s*_std' % d)
->>>>>>> f6de35f34434b7f0f3644e3fee3f9ea663905244
       
 
 def check_data(data):
