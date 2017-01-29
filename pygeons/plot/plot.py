@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import logging
 from matplotlib.ticker import FuncFormatter,MaxNLocator
-from pygeons.plot.iview import interactive_viewer
+from pygeons.plot.iview import interactive_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
 from pygeons.datacheck import check_data,check_compatibility
@@ -104,6 +104,11 @@ def _setup_map_ax(bm,ax):
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
+                           inverse=True)
+  scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0
+  bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,scale_size,
+                  ax=ax,barstyle='fancy',fontsize=10)
   return
                      
 
@@ -264,10 +269,6 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
-  # XXXXXX  DRAW MAP SCALE  XXXXXX
-  #scale_lon,scale_lat = bm(*map_ax.transData.inverted().transform(map_ax.transAxes.transform([0.15,0.1])),inverse=True)
-  #bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,150,ax=map_ax,barstyle='fancy',fontsize=10)
-  # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_strain_viewer(

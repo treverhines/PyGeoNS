@@ -74,7 +74,7 @@ figures.
                alpha=0.2,
                vertices=100,
                key_magnitude=None,
-               key_position=(0.1,0.1)):
+               key_position=(0.15,0.2)):
     ''' 
     interactively views strain which is time and space dependent
     

@@ -120,13 +120,9 @@ def parse_csv(file_str):
   space_exponent = units.split()[0].split('**')[1]
   time_exponent = units.split()[1].split('**')[1]
   start = _get_field('begin date',file_str,delim=delim)
-  stop = _get_field('end date',file_str,delim=delim)
   # index of the first character in the data block
   data_start_idx = file_str.rfind(start)
-  # index for last newline character in data block
-  data_stop_idx = file_str.find('\n',file_str.rfind(stop))
-  # extract just the data block
-  data = file_str[data_start_idx:data_stop_idx]
+  data = file_str[data_start_idx:]
   data = np.genfromtxt(data.split('\n'),
                        converters={0:date_conv},
                        delimiter=delim,

@@ -3,39 +3,39 @@ PyGeoNS (Python-based Geodetic Network Strain software)
 
 What PyGeoNS can do
 ===================
-PyGeoNS is a suite of command line executables that are used to smooth 
-and differentiate GPS data in both space and time.  This analysis is 
-performed in a Bayesian framework, using Gaussian process regression, 
-and thus the uncertainties on the data products are well-quantified 
-and meaningful. This software is primarily intended for estimating 
-time dependent strain rates from GPS networks with several hundred 
-stations.
+*PyGeoNS* is a suite of command line executables that are used to 
+smooth and differentiate geodetic GPS data in both space and time.  
+This analysis is performed in a Bayesian framework, using Gaussian 
+process regression, and thus the uncertainties on the data products 
+are well-quantified and meaningful. This software is primarily 
+intended for estimating time dependent strain rates from GPS networks 
+with tens to hundreds of stations.
 
 What PyGeoNS does not do
 ========================
-The core processing algorithms used by PyGeoNS come from the *RBF* 
+The core processing algorithms used by *PyGeoNS* come from the *RBF* 
 python package, which can be found `here 
-<http://www.github.com/treverhines/RBF>`_. PyGeoNS mostly does the 
+<http://www.github.com/treverhines/RBF>`_. *PyGeoNS* mostly does the 
 requisit data munging, and it provides functions to interactively view 
 and clean the data. There are several assumptions that have been hard 
-coded into PyGeoNS which may make this software inapplicable to your 
+coded into *PyGeoNS* which may make this software inapplicable to your 
 project. In particular, if the Earth's curvature is non-negligible in 
-your study region, then the map projection used by PyGeoNS 
-(transverse-mercator) would not be appropriate. Additionally, PyGeoNS 
+your study region, then the map projection used by *PyGeoNS* 
+(transverse-mercator) would not be appropriate. Additionally, *PyGeoNS* 
 is designed to handle data with daily sampling rates. Less frequent 
-sampling rates can be handled, such as for campaign GPS, but PyGeoNS 
+sampling rates can be handled, such as for campaign GPS, but *PyGeoNS* 
 cannot use data that has been sampled at higher frequencies. If these 
 limitations conflict with your project needs, then it may be better to 
 directly interface with the *RBF* package. Finally, the plotting 
-functions in PyGeoNS are intended to be a convenient way of 
+functions in *PyGeoNS* are intended to be a convenient way of 
 interactively viewing GPS data, but they are not intended to be 
 customizable to meet everyones plotting needs. 
 
 Installation
 ============
-PyGeoNS requires the standard scientific python packages, which can be 
+*PyGeoNS* requires the standard scientific python packages, which can be 
 found in the base Anaconda python installation 
-(http://www.continuum.io/downloads). Additionally, PyGeoNS requires 
+(http://www.continuum.io/downloads). Additionally, *PyGeoNS* requires 
 that the *RBF* package be installed 
 (http://www.github.com/treverhines/RBF). Once these dependencies are 
 satisfied, this package can be downloaded and installed with the 
@@ -48,7 +48,7 @@ following commands
 
 Executables
 ===========
-PyGeoNS contains the following command line executable functions. Call 
+*PyGeoNS* contains the following command line executable functions. Call 
 these functions with a '-h' flag to see more information.
 
 * ``pygeons-toh5`` : Converts data from a text file to an hdf5 file.
@@ -67,8 +67,8 @@ these functions with a '-h' flag to see more information.
 
 Text Data Format
 ================
-PyGeoNS is currently able to read three text file formats: PBO csv 
-files, PBO pos files, and a csv file format designed for PyGeoNS. See 
+*PyGeoNS* is currently able to read three text file formats: PBO csv 
+files, PBO pos files, and a csv file format designed for *PyGeoNS*. See 
 www.unavco.org for information on the PBO data file formats. An 
 example of each file format is provided below.
 
@@ -141,10 +141,10 @@ PBO POS
 
 PyGeoNS CSV
 -----------
-The PyGeoNS CSV file only contains information that PyGeoNS uses, 
+The *PyGeoNS* CSV file only contains information that *PyGeoNS* uses, 
 making it unambigous which fields can influence the results. For 
-example, there is no reference frame information in the PyGeoNS csv 
-format because PyGeoNS does not ever use that information. 
+example, there is no reference frame information in the *PyGeoNS* csv 
+format because *PyGeoNS* does not ever use that information. 
 
 .. code-block::
 
@@ -162,7 +162,7 @@ format because PyGeoNS does not ever use that information.
 
 HDF5 Data Format
 ================
-To cut out overhead associated with reading and writing, most PyGeoNS 
+To cut out overhead associated with reading and writing, most *PyGeoNS* 
 executables read from and write to HDF5 files. Any of the above text 
 file formats can be converted to an HDF5 file by doing the following. 
 First, concatenate the data files for each station into one file 
@@ -174,13 +174,13 @@ concatenated with the following sed incantation
 
   $ sed -s 'a***' *.csv | sed '$d' > data.csv 
 
-Second, convert the new text file to an HDF5 file with the PyGeoNS 
+Second, convert the new text file to an HDF5 file with the *PyGeoNS* 
 command ``pygeons-toh5`` and use the ``--file_type`` flag followed by 
 either ``csv``, ``pbocsv``, or ``pbopos``. By default, this is set to 
-``csv``, indicating the file is a PyGeoNS csv file. Once you have 
+``csv``, indicating the file is a *PyGeoNS* csv file. Once you have 
 converted the data to an HDF5 file, it can be passed as an argument to 
-the remaining PyGeoNS executables for analysis and processing. An HDF5 
-file can be converted back to a PyGeoNS csv file using 
+the remaining *PyGeoNS* executables for analysis and processing. An HDF5 
+file can be converted back to a *PyGeoNS* csv file using 
 ``pygeons-totext`` followed by the file name. 
 
 An HDF5 file can be read using, for example, the h5py package in 
@@ -212,4 +212,18 @@ python. Each HDF5 file contain the following entries
   
 Demonstration
 =============
-See the demonstations in the ``demo`` directory.
+
+See the bash scripts``demo/demo1/run.sh`` and ``demo/demo2/run.sh`` 
+for examples of how to use PyGeoNS.  These scripts will open several 
+interactive figures. Use the arrow keys to scroll between stations and 
+time epochs. Additional instructions will be printed out when the 
+figures open. Here is a figure produced from ``demo/demo2/run.sh``, 
+which shows the estimate strain rates during a recent slow slip event 
+in Washington.
+
+Map view of strain rates during a slow slip event
+.. image:: demo/demo2/figures/map_view.png
+
+Time series of strain rate at the station indicated by the black dot
+.. image:: demo/demo2/figures/time_series.png
+

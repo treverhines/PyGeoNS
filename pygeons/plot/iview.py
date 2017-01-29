@@ -129,7 +129,7 @@ figures.
                units=None,
                quiver_key_length=None,
                quiver_scale=None,
-               quiver_key_pos=(0.2,0.1),
+               quiver_key_pos=(0.15,0.2),
                scatter_size=100,
                image_clim=None,
                image_cmap=None,
