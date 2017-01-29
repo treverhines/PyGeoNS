@@ -1,5 +1,7 @@
 PyGeoNS (Python-based Geodetic Network Strain software)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+What PyGeoNS can do
+===================
 PyGeoNS is a suite of command line executables that are used to smooth 
 and differentiate GPS data in both space and time.  This analysis is 
 performed in a Bayesian framework, using Gaussian process regression, 
@@ -8,24 +10,44 @@ and meaningful. This software is primarily intended for estimating
 time dependent strain rates from GPS networks with several hundred 
 stations.
 
+What PyGeoNS does not do
+========================
 The core processing algorithms used by PyGeoNS come from the *RBF* 
 python package, which can be found `here 
 <http://www.github.com/treverhines/RBF>`_. PyGeoNS mostly does the 
 requisit data munging, and it provides functions to interactively view 
 and clean the data. There are several assumptions that have been hard 
-coded into PyGeoNS which may make this software inapplicable for your 
+coded into PyGeoNS which may make this software inapplicable to your 
 project. In particular, if the Earth's curvature is non-negligible in 
 your study region, then the map projection used by PyGeoNS 
 (transverse-mercator) would not be appropriate. Additionally, PyGeoNS 
-is unable to handle data sampling frequencies that are greater daily. 
-If this conflicts with your project needs, then it may be better to 
-directly interface with the *RBF* package.
+is designed to handle data with daily sampling rates. Less frequent 
+sampling rates can be handled, such as for campaign GPS, but PyGeoNS 
+cannot use data that has been sampled at higher frequencies. If these 
+limitations conflict with your project needs, then it may be better to 
+directly interface with the *RBF* package. Finally, the plotting 
+functions in PyGeoNS are intended to be a convenient way of 
+interactively viewing GPS data, but they are not intended to be 
+customizable to meet everyones plotting needs. 
 
 Note: This document is currently under construction. More 
 documentation will be coming soon.
 
 Installation
 ============
+PyGeoNS requires the standard scientific python packages, which can be 
+found in the base Anaconda python installation 
+(http://www.continuum.io/downloads). Additionally, PyGeoNS requires 
+that the *RBF* package be installed 
+(http://www.github.com/treverhines/RBF). Once these dependencies are 
+satisfied, this package can be downloaded and installed with the 
+following commands
+
+.. code-block:: bash
+
+  $ git clone http://www.github.com/treverhines/PyGeoNS.git
+  $ python setupy.py install
+
 
 Executables
 ===========
@@ -88,7 +110,6 @@ HDF5 file must contain the following entries
   an acceleration, etc.
 * ``space_exponent`` : Integer. Indicates the power of the spatial 
   units for the data.
-
   
 Demonstration
 =============
