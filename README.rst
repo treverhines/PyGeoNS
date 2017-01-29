@@ -213,7 +213,7 @@ python. Each HDF5 file contain the following entries
 Demonstration
 =============
 
-See the bash scripts``demo/demo1/run.sh`` and ``demo/demo2/run.sh`` 
+See the bash scripts ``demo/demo1/run.sh`` and ``demo/demo2/run.sh`` 
 for examples of how to use PyGeoNS.  These scripts will open several 
 interactive figures. Use the arrow keys to scroll between stations and 
 time epochs. Additional instructions will be printed out when the 

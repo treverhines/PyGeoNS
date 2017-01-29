@@ -222,8 +222,10 @@ which shows the estimate strain rates during a recent slow slip event
 in Washington.
 
 Map view of strain rates during a slow slip event
+
 .. image:: demo/demo2/figures/map_view.png
 
 Time series of strain rate at the station indicated by the black dot
+
 .. image:: demo/demo2/figures/time_series.png
 
