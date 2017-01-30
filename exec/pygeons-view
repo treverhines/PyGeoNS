@@ -7,8 +7,9 @@ p = argparse.ArgumentParser(
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
-Runs the PyGeoNS Interactive Viewer.  Multiple data files can be 
-provided to this function for side-by-side comparison.
+Runs the PyGeoNS Interactive Viewer. This function can take multiple 
+data files as arguments, which allows for side-by-side comparison of 
+data sets.
 
 '''
 )

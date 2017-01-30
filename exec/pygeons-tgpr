@@ -10,9 +10,9 @@ p = argparse.ArgumentParser(
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
-Temporally smooths or differentiates the data file with Gaussian 
-process regression. The user must specify two distribution parameters 
-for the prior Gaussian process. The first is the variance of the prior 
+Temporally smooths or differentiates the dataset with Gaussian process 
+regression. The user must specify two distribution parameters for the 
+prior Gaussian process. The first is the variance of the prior 
 Gaussian process, and the second is the characteristic time scale, 
 which controls the temporal covariance. The user may also specify the 
 order of the polynomial null space, which is described below.

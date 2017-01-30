@@ -6,12 +6,25 @@ help documentation for each executable.
 from argparse import RawDescriptionHelpFormatter
 
 #####################################################################
+INPUT_TEXT_FILE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the input data file. This should be a text file containing the 
+content of station files separated by three asterisks, ***. The 
+station files can have the PBO csv format, the PBO pos format, or the 
+PyGeoNS csv format. The format is specified with the *file_type* 
+argument.
+'''
+}
+#####################################################################
 INPUT_FILE = {
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
-Input file name. 
+Name of the input data file. This should be an HDF5 file.  
 '''
 }
 #####################################################################
@@ -21,8 +34,7 @@ INPUT_FILES = {
 'metavar':'STR',
 'help':
 ''' 
-Input file names. Multiple files can be specified as long as they 
-describe deformation at the same times and stations. 
+Names of the input data files. These should be HDF5 files. 
 '''
 }
 #####################################################################
@@ -31,9 +43,9 @@ XDIFF_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input file containing the x derivatives of a displacement 
-or velocity field. This should be the output of pygeons-sfilter with 
-the argument "--diff 1 0".
+Name of the input HDF5 file containing the x derivatives of a 
+displacement or velocity field. This should be the output of 
+pygeons-sfilter with the argument '--diff 1 0'.
 '''
 }
 #####################################################################
@@ -42,9 +54,9 @@ YDIFF_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input file containing the y derivatives of a displacement 
-or velocity field. This should be the output of pygeons-sfilter with 
-the argument "--diff 0 1".
+Name of the input HDF5 file containing the y derivatives of a 
+displacement or velocity field. This should be the output of 
+pygeons-sfilter with the argument '--diff 0 1'.
 '''
 }
 #####################################################################
@@ -54,9 +66,9 @@ FILE_TYPE = {
 'default':'csv',
 'help':
 ''' 
-The format for the input file. This can either be "csv", "pbocsv", 
-"pbopos", or "tdecsv". See the main documentation for a description of 
-each format. Defaults to "csv".
+The format for the station files. This can either be 'csv', 'pbocsv', 
+'pbopos', or 'tdecsv'. See the README for a description of each 
+format. Defaults to 'csv'.
 '''
 }
 #####################################################################
@@ -408,7 +420,7 @@ S_DIFF = {
 'metavar':'INT', 
 'help': 
 ''' 
-Derivative order for each dimension. For example, "--diff 1 0" 
+Derivative order for each dimension. For example, '--diff 1 0' 
 computes the first derivative in the x direction. If nothing is 
 provided then no derivatives will be computed.
 '''
@@ -420,7 +432,7 @@ T_DIFF = {
 'metavar':'INT', 
 'help': 
 ''' 
-Derivative order. For example, "--diff 1" computes the first time 
+Derivative order. For example, '--diff 1' computes the first time 
 derivative. If nothing is provided then no derivatives will be 
 computed.
 '''
@@ -458,8 +470,8 @@ FILL = {
 'metavar':'STR',
 'help':
 ''' 
-Indicates how to handle missing data. either "none", "interpolate", or 
-"extrapolate"
+Indicates how to handle missing data. either 'none', 'interpolate', or 
+'extrapolate'
 '''
 }
 #####################################################################
@@ -485,6 +497,7 @@ crosses the boundary.
 #####################################################################
 
 GLOSSARY = {
+'input_text_file':INPUT_TEXT_FILE,
 'input_file':INPUT_FILE,
 'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,

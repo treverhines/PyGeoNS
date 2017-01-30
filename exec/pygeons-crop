@@ -9,12 +9,12 @@ def change_extension(f,ext):
 p = argparse.ArgumentParser(
   description=
 ''' 
-Limits the spatial and temporal extent of the data set. The dates 
-contained in the resulting data set will be each day ranging from 
-*start_date* to *end_date*. The stations in the resulting data sets 
+Limits the spatial and temporal extent of the dataset. The dates 
+contained in the resulting dataset will be each day ranging from 
+*start_date* to *end_date*. The stations in the resulting datasets 
 will be within the bounds set by *min/max_lon/lat*. Unlike for 
 *pygeons-clean*, this function removes the dates and stations from the 
-resulting data file, rather than masking the out of bounds data.
+datset, rather than masking the out of bounds data.
 
 ''')
   
