@@ -3,13 +3,13 @@ PyGeoNS (Python-based Geodetic Network Strain software)
 
 What PyGeoNS can do
 ===================
-*PyGeoNS* is a suite of command line executables that are used to 
-smooth and differentiate geodetic GPS data in both space and time.  
-This analysis is performed in a Bayesian framework, using Gaussian 
-process regression, and thus the uncertainties on the data products 
-are well-quantified and meaningful. This software is primarily 
-intended for estimating time dependent strain rates from GPS networks 
-with tens to hundreds of stations.
+*PyGeoNS* (pronounced like the bird) is a suite of command line 
+executables that are used to smooth and differentiate geodetic GPS 
+data in both space and time.  This analysis is performed in a Bayesian 
+framework, using Gaussian process regression, and thus the 
+uncertainties on the data products are well-quantified and meaningful. 
+This software is primarily intended for estimating time dependent 
+strain rates from GPS networks with tens to hundreds of stations.
 
 What PyGeoNS does not do
 ========================
@@ -44,6 +44,7 @@ following commands
 .. code-block:: bash
 
   $ git clone http://www.github.com/treverhines/PyGeoNS.git
+  $ cd PyGeoNS 
   $ python setupy.py install
 
 Executables
