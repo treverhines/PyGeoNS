@@ -10,7 +10,11 @@ p = argparse.ArgumentParser(
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
-Converts a HDF5 data file to a csv file.
+Converts an HDF5 data file to a PyGeoNS csv file. If a station is 
+missing data for each component, north, east, and vertical, for a 
+particular day, then that day will not be written to the text file. If 
+all the data for a station is missing then that station will not be in 
+the resulting text file.
 
 '''
 )

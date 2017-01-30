@@ -10,7 +10,20 @@ p = argparse.ArgumentParser(
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
-Converts a text data file to an HDF5 file
+Converts a text data file to an HDF5 file. The input text file should 
+contain the content of each individual GPS station file separated by 
+three asterisks, ***. The GPS station files can have one of three 
+formats: the PBO csv format, the PBO pos format, or the PyGeoNS csv 
+format. Indicate the file format by specifying either 'pbocsv', 
+'pbopos', or 'csv' for *file_type*. See the README file or 
+www.unavco.org for more information on these file formats.
+
+The resulting HDF5 file will contain data entries for each station in 
+the text file and for each day ranging from the earliest observation 
+in the text file to the latest. If data does not exist in the input 
+text file for a particular station and day then it will be assigned a 
+value of NaN with INF uncertainty in the HDF5 file. This indicates 
+that the data is missing.
 
 '''
 )
