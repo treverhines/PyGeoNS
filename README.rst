@@ -44,6 +44,7 @@ following commands
 .. code-block:: bash
 
   $ git clone http://www.github.com/treverhines/PyGeoNS.git
+  $ cd PyGeoNS 
   $ python setupy.py install
 
 Executables

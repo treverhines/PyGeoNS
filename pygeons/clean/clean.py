@@ -48,6 +48,7 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     output data dictionary
 
   '''
+  logger.info('Cropping data set ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -81,7 +82,6 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     out[dir] = out[dir][:,idx]
     out[dir + '_std_dev'] = out[dir + '_std_dev'][:,idx]
     
-  check_data(out) 
   return out
 
 
@@ -108,6 +108,7 @@ def pygeons_clean(data,resolution='i',
       output data dictionary 
     
   '''
+  logger.info('Cleaning data set ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -154,7 +155,6 @@ def pygeons_clean(data,resolution='i',
   out['east_std_dev'] = clean_data[3]/conv
   out['north_std_dev'] = clean_data[4]/conv
   out['vertical_std_dev'] = clean_data[5]/conv
-  check_data(out)
   return out
 
 

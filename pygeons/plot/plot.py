@@ -12,10 +12,62 @@ from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.plot.iview import interactive_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
-from pygeons.datacheck import check_data,check_compatibility
+from pygeons.datacheck import check_data
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_space_vert_smp
 logger = logging.getLogger(__name__)
+
+
+def _common_context(data_list):
+  ''' 
+  Expands the input data dictionaries so that they each have the same 
+  context (i.e. stations and observation times).
+  '''
+  # check for consisten units
+  time_exp = data_list[0]['time_exponent']
+  if not all(time_exp == d['time_exponent'] for d in data_list):
+    raise ValueError('Data sets do not have consistent units')
+
+  space_exp = data_list[0]['space_exponent']
+  if not all(space_exp == d['space_exponent'] for d in data_list):
+    raise ValueError('Data sets do not have consistent units')
+  
+  all_ids = np.hstack([d['id'] for d in data_list])
+  all_lons = np.hstack([d['longitude'] for d in data_list])
+  all_lats = np.hstack([d['latitude'] for d in data_list])
+  all_times = np.hstack([d['time'] for d in data_list])
+  unique_ids,idx = np.unique(all_ids,return_index=True)
+  unique_lons = all_lons[idx]
+  unique_lats = all_lats[idx]
+  unique_times = np.arange(all_times.min(),all_times.max()+1)
+  Nt,Nx = unique_times.shape[0],unique_ids.shape[0]
+  out_list = []
+  # create LUTs
+  time_dict = dict(zip(unique_times,range(Nt)))
+  id_dict = dict(zip(unique_ids,range(Nx)))
+  for d in data_list:
+    p = {}
+    p['time_exponent'] = d['time_exponent']
+    p['space_exponent'] = d['space_exponent']
+    p['time'] = unique_times
+    p['id'] = unique_ids 
+    p['longitude'] = unique_lons
+    p['latitude'] = unique_lats
+    # find the indices that map the times and stations from d onto the 
+    # unique times and stations
+    tidx = [time_dict[i] for i in d['time']]
+    sidx = [id_dict[i] for i in d['id']]
+    for dir in ['east','north','vertical']:    
+      p[dir] = np.empty((Nt,Nx))
+      p[dir][...] = np.nan
+      p[dir][np.ix_(tidx,sidx)] = d[dir]
+      p[dir + '_std_dev'] = np.empty((Nt,Nx))
+      p[dir + '_std_dev'][...] = np.inf
+      p[dir + '_std_dev'][np.ix_(tidx,sidx)] = d[dir + '_std_dev']
+      
+    out_list += [p]
+      
+  return out_list
 
 
 def _unit_string(space_exponent,time_exponent):
@@ -169,8 +221,9 @@ def pygeons_view(data_list,resolution='i',
       gets passed to pygeons.plot.view.interactive_view
 
   '''
+  logger.info('Viewing vector data sets ...')
   for d in data_list: check_data(d)
-  for d in data_list[1:]: check_compatibility(data_list[0],d)
+  data_list = _common_context(data_list)
 
   t = data_list[0]['time']
   lon = data_list[0]['longitude']
@@ -235,9 +288,10 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
       gets passed to pygeons.strain.view
 
   '''
+  logger.info('Viewing strain data ...')
   check_data(data_dx)
   check_data(data_dy)
-  check_compatibility(data_dx,data_dy)
+  data_dx,data_dy = _common_context([data_dx,data_dy])
   
   if (data_dx['space_exponent'] != 0) | data_dy['space_exponent'] != 0:
     raise ValueError('data sets cannot have spatial units')

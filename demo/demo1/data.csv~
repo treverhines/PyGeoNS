@@ -1,7 +1,3 @@
-#################################################
-Additional comments can be added anywhere as long as it does not break 
-the data block. Or if it follows a comma after a field
-#################################################
 4-character id, STA1
 begin date, 2000-01-01
 end date, 2000-02-01
@@ -41,10 +37,8 @@ date, north, east, vertical, north std. deviation, east std. deviation, vertical
 2000-01-30, 2.054916e-02, 1.247813e-02, 8.532812e-04, 1.000000e-03, 1.000000e-03, 1.000000e-03
 2000-01-31, 2.395930e-02, 1.292382e-02, 2.137828e-03, 1.000000e-03, 1.000000e-03, 1.000000e-03
 2000-02-01, 2.009397e-02, 1.152207e-02, 8.527041e-04, 1.000000e-03, 1.000000e-03, 1.000000e-03
-***     
-
-
-4-character id, STA2 
+*** 
+4-character id, STA1
 begin date, 2000-01-01 
 end date, 2000-02-01
 longitude, -82.75 E
@@ -124,7 +118,7 @@ date, north, east, vertical, north std. deviation, east std. deviation, vertical
 2000-01-31, 8.934395e-03, 4.063092e-02, -1.755926e-03, 1.000000e-03, 1.000000e-03, 1.000000e-03
 2000-02-01, 9.955027e-03, 4.229672e-02, -1.538793e-03, 1.000000e-03, 1.000000e-03, 1.000000e-03
 ***
-4-character id, STA4
+4-character id, STA3
 begin date, 2000-01-01
 end date, 2000-02-01
 longitude, -83.36 E

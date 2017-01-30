@@ -27,25 +27,25 @@ cp data.csv work/data.csv
 
 # convert the csv file to a hdf5 file. The default output file name is
 # the input file name but with the extension changed to .h5
-pygeons-toh5 work/data.csv --file_type csv
+pygeons-toh5 work/data.csv --file_type csv -vv
 
 # uncomment to view the input data set
 #pygeons-view work/data.h5
 
 # Temporally smooth and differentiate the data set using Gaussian
 # process regression (GPR)
-pygeons-tgpr work/data.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1
+pygeons-tgpr work/data.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1 -vv
 
 # Spatially smooth and differentiate the data set using GPR. This
 # produces the deformation gradients at the interpolation points
 pygeons-sgpr work/data.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/xdiff.h5 \
-             --order $VEL_ORDER --diff 1 0
+             --order $VEL_ORDER --diff 1 0 -vv
 pygeons-sgpr work/data.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/ydiff.h5 \
-             --order $VEL_ORDER --diff 0 1
+             --order $VEL_ORDER --diff 0 1 -vv
 
 # Save the deformation gradients as text files
-pygeons-totext work/xdiff.h5
-pygeons-totext work/ydiff.h5
+pygeons-totext work/xdiff.h5 -vv
+pygeons-totext work/ydiff.h5 -vv
 
 # view the estimated strain
-pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4
+pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv

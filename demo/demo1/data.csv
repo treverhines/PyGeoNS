@@ -38,7 +38,7 @@ date, north, east, vertical, north std. deviation, east std. deviation, vertical
 2000-01-31, 2.395930e-02, 1.292382e-02, 2.137828e-03, 1.000000e-03, 1.000000e-03, 1.000000e-03
 2000-02-01, 2.009397e-02, 1.152207e-02, 8.527041e-04, 1.000000e-03, 1.000000e-03, 1.000000e-03
 *** 
-4-character id, STA2 
+4-character id, STA2
 begin date, 2000-01-01 
 end date, 2000-02-01
 longitude, -82.75 E

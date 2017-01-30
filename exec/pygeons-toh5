@@ -25,6 +25,7 @@ output_file = p.pop('output_file')
 file_type = p.pop('file_type')
 verbose = p.pop('verbose')
 logging.basicConfig(level=30-10*verbose)
+
 if output_file is None:
   output_file = change_extension(input_file,'h5')
 

@@ -74,6 +74,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     the input data set.
     
   '''
+  logger.info('Performing temporal Gaussian process regression ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
   
@@ -104,7 +105,6 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   # set the time units
   out['time_exponent'] -= sum(diff)
   out['time'] = output_times
-  check_data(out)
   return out
   
 
@@ -141,6 +141,7 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     input data set. 
     
   '''
+  logger.info('Performing spatial Gaussian process regression ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -177,7 +178,6 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   out['longitude'] = output_positions[:,0]
   out['latitude'] = output_positions[:,1]
   out['id'] = output_id
-  check_data(out)
   return out
   
 
@@ -186,6 +186,7 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
   ''' 
   time smoothing
   '''
+  logger.info('Performing temporal RBF-FD filtering ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())  
 
@@ -203,7 +204,6 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
 
   # set the time units
   out['time_exponent'] -= sum(diff)
-  check_data(out)
   return out
 
 
@@ -213,6 +213,7 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
   ''' 
   space smoothing
   '''
+  logger.info('Performing spatial RBF-FD filtering ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -235,6 +236,5 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
 
   # set the space units
   out['space_exponent'] -= sum(diff)
-  check_data(out)
   return out
 

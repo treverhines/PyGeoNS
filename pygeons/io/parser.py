@@ -1,25 +1,19 @@
 ''' 
 This module contains functions which parse a text file for a single 
-station and return a dictionary with the following entries. The data 
-in the text file can be displacements or any of its spatial or 
-temporal derivatives, e.g. velocities or deformation gradients. The 
-units for the data have bases of meters and days and the exponents are 
-indicated with *space_exponent* and *time_exponent*. For example, if 
-the text file contains velocity data in meters per day, then 
-*space_exponent* and *time_exponent* should be 1 and -1, respectively.
+station and return a dictionary with the following entries. 
 
-  id : 4-character station name
-  longitude : 
-  latitude :
-  time : array of observation times in Modified Julian Date (MJD)
-  east : array of easting observations in meters**p * days**q
-  north :               '' 
-  vertical :            ''
-  east_std_dev : standard deviation in meters**p * days**q
-  north_std_dev :           ''
-  vertical_std_dev :        ''
-  space_exponent : the exponent for the spatial unit 
-  time_exponent : the exponent for the temporal unit
+  * id : 4-character station name
+  * longitude : 
+  * latitude :
+  * time : array of observation times in Modified Julian Date (MJD)
+  * east : array of easting observations in meters**p * days**q
+  * north :               '' 
+  * vertical :            ''
+  * east_std_dev : standard deviation in meters**p * days**q
+  * north_std_dev :           ''
+  * vertical_std_dev :        ''
+  * space_exponent : the exponent for the spatial unit 
+  * time_exponent : the exponent for the temporal unit
 
 The parser function should be able to fill in any required information 
 that is not in the text file.

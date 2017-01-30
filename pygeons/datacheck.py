@@ -1,39 +1,7 @@
 ''' 
 This module contains functions that check the consistency of data 
-dictionaries. A valid dictionary will contain the following entries
-
-  time : (Nt,) array
-    Array of observation times. These are integer values of modified 
-    Julian dates. Days are used instead of years because there is no 
-    ambiguity about the length of a day
-        
-  id : (Nx,) array
-    Array of 4-character IDs for each station
-
-  longitude : (Nx,) array
-    Longitude for each station in degrees
-        
-  latitude : (Nx,) array
-    Latitude for each station in degrees
-
-  east,north,vertical : (Nt,Nx) array
-    data components. The units should be in terms of meters and days 
-    and should be consistent with the values specified for 
-    *space_exponent* and *time_exponent*. For example, if 
-    *time_exponent* is -1 and *space_exponent* is 1 then the units 
-    should be in meters per day.
-
-  east_std_dev,north_std_dev,vertical_std_dev : (Nt,Nx) array
-    One standard deviation uncertainty. These should have the same 
-    units as the data components
-
-  time_exponent : int
-    Indicates the power of the time units for the data. -1 
-    indicates that the data is a rate, -2 is an acceleration etc.
-
-  space_exponent : int
-    Indicates the power of the spatial units for the data
-
+dictionaries. See the README.rst for a description of a valid data 
+dictionary.
 '''
 import copy
 import numpy as np
@@ -117,6 +85,24 @@ def check_missing_data(data):
       raise DataError('nan values found in *%s*_std_dev' % d)
       
 
+def check_unique_stations(data):
+  ''' 
+  makes sure each station id is unique
+  '''
+  unique_ids = list(set(data['id']))
+  if len(data['id']) != len(unique_ids):
+    # there are duplicate stations, now find them
+    duplicates = []
+    for i in unique_ids:
+      if sum(data['id'] == i) > 1:
+        duplicates += [i]
+        
+    duplicates = ', '.join(duplicates)
+    raise DataError(
+      'Dataset contains the following duplicate station IDs : %s ' 
+      % duplicates) 
+  
+
 def check_data(data):
   ''' 
   Runs all data consistency check
@@ -126,31 +112,7 @@ def check_data(data):
   check_shapes(data)
   check_positive_uncertainties(data)
   check_missing_data(data)
+  check_unique_stations(data)
   logger.debug('ok')
   
   
-def check_compatibility(data1,data2):
-  ''' 
-  Makes sure that two data sets have the same sizes, times, stations, 
-  and units
-  '''
-  logger.debug('checking data compatibility ... ')
-  if data1['time'].shape[0] != data2['time'].shape[0]:
-    raise DataError('Data sets have inconsistent number of time epochs')
-
-  if data1['id'].shape[0] != data2['id'].shape[0]:
-    raise DataError('Data sets have inconsistent number of stations')
-
-  if not np.all(data1['time'] == data2['time']):
-    raise DataError('Data sets have inconsistent time epochs')
-    
-  if not np.all(data1['id'] == data2['id']):
-    raise DataError('Data sets have inconsistent stations')
-
-  if data1['time_exponent'] != data2['time_exponent']:
-    raise DataError('Data sets have inconsistent units')
-
-  if data1['space_exponent'] != data2['space_exponent']:
-    raise DataError('Data sets have inconsistent units')
-
-  logger.debug('ok')
