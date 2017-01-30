@@ -4,6 +4,7 @@ import numpy as np
 from pygeons.plot.rin import restricted_input
 from pygeons.plot.quiver import Quiver
 from matplotlib.cm import ScalarMappable
+from matplotlib.colors import ListedColormap
 from rbf.basis import phs1
 import logging
 import scipy.interpolate
@@ -14,6 +15,10 @@ except ImportError:
   from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
   
 logger = logging.getLogger(__name__)
+
+# this is an entirely white colormap. This is used to hide the 
+# vertical deformation.
+_blank_cmap = ListedColormap([[1.0,1.0,1.0]])
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array
@@ -106,7 +111,9 @@ R : Redraw figures
         
 C : Cycle the ordering of the data sets
 
-H : Hide station marker
+V : Toggles whether to hide the vertical component of deformation.
+
+H : Toggles whether to hide the station marker
         
 Enter : Disables figures and allows configurable parameters to be 
   edited through the command line. Variables can be defined using any 
@@ -132,7 +139,7 @@ figures.
                quiver_key_pos=(0.15,0.2),
                scatter_size=100,
                image_clim=None,
-               image_cmap=None,
+               image_cmap='viridis',
                image_array_size=300,
                station_labels=None,
                time_labels=None,
@@ -796,75 +803,63 @@ figures.
 
   def on_key_press(self,event):
     if event.key == 'right':
-      self.config['tidx'] += 1
       Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.config['tidx'] = (self.config['tidx'] + 1)%Nt
       self.update()
 
     elif event.key == 'ctrl+right':
-      self.config['tidx'] += 10
       Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.config['tidx'] = (self.config['tidx'] + 10)%Nt
       self.update()
 
     elif event.key == 'alt+right':
-      self.config['tidx'] += 100
       Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.config['tidx'] = (self.config['tidx'] + 100)%Nt
       self.update()
 
     elif event.key == 'left':
-      self.config['tidx'] -= 1
       Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.config['tidx'] = (self.config['tidx'] - 1)%Nt
       self.update()
 
     elif event.key == 'ctrl+left':
-      self.config['tidx'] -= 10
       Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.config['tidx'] = (self.config['tidx'] - 10)%Nt
       self.update()
 
     elif event.key == 'alt+left':
-      self.config['tidx'] -= 100
       Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.config['tidx'] = (self.config['tidx'] - 100)%Nt
       self.update()
 
     elif event.key == 'up':
-      self.config['xidx'] += 1
       Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.config['xidx'] = (self.config['xidx'] + 1)%Nx
       self.update()
 
     elif event.key == 'ctrl+up':
-      self.config['xidx'] += 10
       Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.config['xidx'] = (self.config['xidx'] + 10)%Nx
       self.update()
 
     elif event.key == 'alt+up':
-      self.config['xidx'] += 100
       Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.config['xidx'] = (self.config['xidx'] + 100)%Nx
       self.update()
 
     elif event.key == 'down':
-      self.config['xidx'] -= 1
       Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.config['xidx'] = (self.config['xidx'] - 1)%Nx
       self.update()
 
     elif event.key == 'ctrl+down':
-      self.config['xidx'] -= 10
       Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.config['xidx'] = (self.config['xidx'] - 10)%Nx
       self.update()
 
     elif event.key == 'alt+down':
-      self.config['xidx'] -= 100
       Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.config['xidx'] = (self.config['xidx'] - 100)%Nx
       self.update()
 
     elif event.key == 'h':
@@ -878,6 +873,16 @@ figures.
       self.sigma_sets = _roll(self.sigma_sets)
       self.update()
       
+    elif event.key == 'v':
+      if self.config['image_cmap'] is _blank_cmap:
+        self.config['image_cmap'] = self._previous_cmap
+      
+      else:
+        self._previous_cmap = self.config['image_cmap']
+        self.config['image_cmap'] = _blank_cmap  
+        
+      self.hard_update()
+
     elif event.key == 'r':
       # refresh  
       self.hard_update()

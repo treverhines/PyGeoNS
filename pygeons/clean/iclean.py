@@ -83,7 +83,9 @@ Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10
           
 R : Redraw figures.
 
-H : Hide station marker.
+V : Toggle whether to hide the vertical deformation.
+
+H : Toggle whether to hide the station marker.
 
 D : Enables outlier removal mode while pressed.  Click and drag on the
   time series axes to remove outliers within a time interval.

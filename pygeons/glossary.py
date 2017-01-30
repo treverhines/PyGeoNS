@@ -45,7 +45,7 @@ XDIFF_FILE = {
 ''' 
 Name of the input HDF5 file containing the x derivatives of a 
 displacement or velocity field. This should be the output of 
-pygeons-sfilter with the argument '--diff 1 0'.
+pygeons-sgpr with *diff* set to '1 0'.
 '''
 }
 #####################################################################
@@ -56,7 +56,7 @@ YDIFF_FILE = {
 ''' 
 Name of the input HDF5 file containing the y derivatives of a 
 displacement or velocity field. This should be the output of 
-pygeons-sfilter with the argument '--diff 0 1'.
+pygeons-sgpr with *diff* set to '0 1'.
 '''
 }
 #####################################################################
@@ -82,14 +82,14 @@ will be the input file name but with a new extension.
 '''
 }
 #####################################################################
-OUTPUT_POSITIONS = {
+POSITIONS = {
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
 Name of the file containing latitudes and longitudes of the output 
 positions. If this is not specified then the output positions will be 
-the same as the positions in the input file.
+the same as the positions in the input dataset.
 '''
 }
 #####################################################################
@@ -99,6 +99,15 @@ VERBOSE = {
 'help':
 ''' 
 Controls verbosity.
+'''
+}
+#####################################################################
+SAMPLE_PRIOR = {
+'action':'store_true',
+'help':
+''' 
+If this flag is raised then the returned dataset be a samples of the 
+prior Gaussian process.  
 '''
 }
 #####################################################################
@@ -305,7 +314,8 @@ START_DATE = {
 'metavar':'STR',
 'help':
 ''' 
-Start date for the output data set in YYYY-MM-DD.
+Start date for the output dataset in YYYY-MM-DD. This defaults to the 
+start date for the input dataset.
 '''
 }
 #####################################################################
@@ -314,7 +324,8 @@ STOP_DATE = {
 'metavar':'STR',
 'help':
 ''' 
-Stop date for the output data set in YYYY-MM-DD.
+Stop date for the output data set in YYYY-MM-DD. This defaults to the 
+stop date for the input dataset.
 '''
 }
 #####################################################################
@@ -420,8 +431,8 @@ S_DIFF = {
 'metavar':'INT', 
 'help': 
 ''' 
-Derivative order for each dimension. For example, '--diff 1 0' 
-computes the first derivative in the x direction. If nothing is 
+Derivative order for each dimension. For example, setting *diff* to '1 
+0' computes the first derivative in the x direction. If nothing is 
 provided then no derivatives will be computed.
 '''
 }
@@ -432,9 +443,9 @@ T_DIFF = {
 'metavar':'INT', 
 'help': 
 ''' 
-Derivative order. For example, '--diff 1' computes the first time 
-derivative. If nothing is provided then no derivatives will be 
-computed.
+Derivative order. For example, setting *diff* to '1' computes the 
+first time derivative. If nothing is provided then no derivatives will 
+be computed.
 '''
 }
 #####################################################################
@@ -501,7 +512,8 @@ GLOSSARY = {
 'input_file':INPUT_FILE,
 'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,
-'output_positions':OUTPUT_POSITIONS,
+'positions':POSITIONS,
+'sample_prior':SAMPLE_PRIOR,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,
