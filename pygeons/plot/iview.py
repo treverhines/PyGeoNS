@@ -638,17 +638,17 @@ figures.
                       self.t,self.data_sets[si][:,self.config['xidx'],0],
                       color=self.color_cycle[si],
                       label=self.data_set_labels[si],
-                      marker='.')
+                      marker='None')
       self.line2 += self.ts_ax[1].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],1],
                       color=self.color_cycle[si],
                       label=self.data_set_labels[si],
-                      marker='.')
+                      marker='None')
       self.line3 += self.ts_ax[2].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],2],
                       color=self.color_cycle[si],
                       label=self.data_set_labels[si],
-                      marker='.')
+                      marker='None')
     
   def _update_lines(self):
     # Updates the deformation time series for changes in *tidx* or 

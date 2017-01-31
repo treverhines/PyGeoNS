@@ -39,10 +39,10 @@ the observations in the input file to create a continuous,
 analytically differentiable, posterior estimate of the vector field. 
 The a priori assumptions will have a significant influence on the 
 resulting data set, and it is therefor important that the user 
-believes the prior to be sensible.  To help gauge the sensibility of 
+believes that the prior is sensible.  To help gauge the sensibility of 
 the prior, it is possible to use this function to output samples of 
 the prior, ignoring the input data set. This can be done by raising 
-the *sample_prior* flag.
+the *do_not_condition* and *return_sample* flag.
 
 '''
 )

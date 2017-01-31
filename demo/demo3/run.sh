@@ -1,40 +1,60 @@
-# This script demonstrates how to draw a prior sample from pygeons-gpr 
-# and interpolate the solution onto a regular grid
+# This script demonstrates how to assess the suitability of a prior
+# for Gaussian process regression. It shows the PyGeoNS commands to
+# view a temporally correlated prior Gaussian process and a sample of
+# it alongside the observed data. By comparing the prior to the
+# observations, we can visually assess whether the prior is
+# appropriate for temporally smoothing the data.
 
-# characteristic length scale of the prior Gaussian process
-CLS=0.01
-# standard deviation of the prior Gaussian process
+# Characteristic time scale in years of the prior Gaussian process.
+CLS=0.05
+# Standard deviation in mm of the prior Gaussian process.
 STD=5.0
+# Order of the polynomial null space
+ORDER=1
 
-mkdir -p work
-
-# convert the csv file to a HDF5 file
-pygeons-toh5 data.csv --file_type csv --output_file work/data.h5 
-#pygeons-view work/data.h5 -vv
-
-# make a csv file containing a regular grid of points
-rm -rf pos.txt
-touch pos.txt
-for lon in `seq -87.0 0.3 -81.0`
+## Download sample data set
+rm -rf work/csv
+mkdir -p work/csv
+for i in `cat urls.txt`
   do
-  for lat in `seq 41.0 0.3 47.0`
-    do
-    echo $lon $lat >> pos.txt
-    done
+  wget -P work/csv $i
   done
 
+# use sed to concatenate all the data files and separate them with ***
+sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
-# the --sample_prior flag means that the the returned data set will 
-# just be a sample of the prior, making the data in work/data.h5 
-# irrelevant. The times and position in data.h5 are used to determine 
-# where the prior samples will be evaluated. Note that prior Gaussian 
-# process used by sgpr has no time correlation.
-pygeons-tgpr work/data.h5 $STD $CLS -v -o work/out1.h5 --do_not_condition
-pygeons-tgpr work/data.h5 $STD $CLS -v -o work/out2.h5 --do_not_condition --return_sample
-#pygeons-sgpr work/data.h5 $STD $CLS --positions pos.txt --do_not_condition --return_sample -v -o work/out2.h5
-#pygeons-tgpr work/data.h5 $STD $CLS --sample_prior -vv --start_date 2000-01-01 --stop_date 2001-01-01
+# convert the csv file to a HDF5 file
+pygeons-toh5 work/data.csv --file_type pbocsv --output_file work/data.h5
 
-pygeons-view work/data.h5 work/out1.h5 work/out2.h5 -v
+# crop out data prior to 2015-01-01 and after 2017-01-01
+pygeons-crop work/data.h5 --start_date 2015-01-01 --stop_date 2017-01-01 -v
+
+# create a dataset that contains the prior expected value and
+# uncertainty. If order > -1 then the expected value of the prior is
+# set to the best fitting polynomial trend of the data.
+pygeons-tgpr work/data.crop.h5 $STD $CLS --do_not_condition \
+             --output_file work/prior.h5 --order $ORDER -v
+
+# generate a sample of the prior. Note that generating a sample can be
+# expensive for large data sets.
+pygeons-tgpr work/data.crop.h5 $STD $CLS --do_not_condition --return_sample \
+             --output_file work/prior_sample.h5 --order $ORDER -v
+
+# Compare the data to the prior and the prior sample. Make sure that
+# the prior confidence interval overlaps any potential signal in the
+# data. Also make sure that the wavelength of the sample is comparable
+# to the wavelength of any potential signal.
+pygeons-view work/data.crop.h5 work/prior.h5 work/prior_sample.h5 \
+             --data_set_labels data prior sample -v
+
+# After verifying that the prior is appropriate, we can now condition
+# the prior with the data
+pygeons-tgpr work/data.crop.h5 $STD $CLS \
+             --output_file work/posterior.h5 --order $ORDER -v
+
+# View the data and the posterior
+pygeons-view work/data.crop.h5 work/posterior.h5 \
+             --data_set_labels data posterior
 
 
 

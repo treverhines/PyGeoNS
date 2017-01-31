@@ -12,8 +12,9 @@
 
 # Define the parameters describing the prior Gaussian processes used
 # to temporally smooth and differentiate displacements and then
-# spatially smooth and differentiate velocities.
-DISP_CLS=0.1   # Characteristic time scale of the prior Gaussian
+# spatially smooth and differentiate velocities. See demo/demo3/run.py
+# for a demonstration of how these values were chosen.
+DISP_CLS=0.05  # Characteristic time scale of the prior Gaussian
                # process for displacements. This is in years.
 DISP_STD=5.0   # Standard deviation of the prior Gaussian process for
                # displacements. This is in mm.
@@ -45,39 +46,25 @@ for i in `cat urls.txt`
 sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
 # convert the csv file to an hdf5 file
-pygeons-toh5 work/data.csv --file_type pbocsv -vv
+pygeons-toh5 work/data.csv --file_type pbocsv -v
 
 # crop out data prior to 2015-01-01 and after 2017-01-01
-pygeons-crop work/data.h5 --start_date 2015-01-01 --stop_date 2017-01-01 -vv
-
-# Temporally smooth the displacement dataset
-pygeons-tgpr work/data.crop.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 0 -vv
-
-# Compare the smoothed displacement dataset to the original. If the
-# smoothed dataset does not faithfully represent the trends in the
-# original dataset then change the prior distribution parameters.
-pygeons-view work/data.crop.h5 work/data.crop.tgpr.h5 --data_set_labels original smoothed -vv
+pygeons-crop work/data.h5 --start_date 2015-01-01 --stop_date 2017-01-01 -v
 
 # Temporally differentiate the displacement dataset
-pygeons-tgpr work/data.crop.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1 -vv
-
-# Spatially smooth the velocity dataset
-pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --order $VEL_ORDER --diff 0 0 -vv
-
-# Compare the smoothed velocity dataset to the original
-pygeons-view work/data.crop.tgpr.h5 work/data.crop.tgpr.sgpr.h5 --data_set_labels original smoothed -vv
+pygeons-tgpr work/data.crop.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1 -v
 
 # Spatially differentiate the dataset
 pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/xdiff.h5 \
-             --order $VEL_ORDER --diff 1 0 -vv
+             --order $VEL_ORDER --diff 1 0 -v
 pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/ydiff.h5 \
-             --order $VEL_ORDER --diff 0 1 -vv
+             --order $VEL_ORDER --diff 0 1 -v
 
 # Save the deformation gradients as text files
-pygeons-totext work/xdiff.h5 -vv
-pygeons-totext work/ydiff.h5 -vv
+pygeons-totext work/xdiff.h5 -v
+pygeons-totext work/ydiff.h5 -v
 
 # view the estimated strain
-pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv
+pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -v
 
 
