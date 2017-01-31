@@ -5,7 +5,6 @@ from pygeons.plot.rin import restricted_input
 from pygeons.plot.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import ListedColormap
-from rbf.basis import phs1
 import logging
 import scipy.interpolate
 from scipy.spatial import cKDTree
@@ -133,27 +132,14 @@ figures.
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None, 
-               units=None,
-               quiver_key_length=None,
-               quiver_scale=None,
-               quiver_key_pos=(0.15,0.2),
-               scatter_size=100,
-               image_clim=None,
-               image_cmap='RdBu_r',
-               image_array_size=200,
-               station_labels=None,
-               time_labels=None,
-               data_set_labels=None,
-               ts_ax=None,
-               ts_title=None,
-               fontsize=10,
-               map_ax=None,
-               map_title=None,
-               map_ylim=None,
-               map_xlim=None,
-               color_cycle=None):
+               station_labels=None,time_labels=None,data_set_labels=None,
+               quiver_key_length=None,quiver_scale=None,quiver_key_pos=(0.15,0.2),
+               image_clim=None,image_cmap='RdBu_r',image_array_size=200,
+               map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
+               ts_ax=None,ts_title=None,
+               units=None,scatter_size=100,fontsize=10,color_cycle=None):
     ''' 
-    interactively views vector valued data which is time and space 
+    Interactively views vector valued data which is time and space 
     dependent
     
     Parameters
@@ -299,19 +285,16 @@ figures.
       self.ts_fig = ts_ax[0].get_figure()
       self.ts_ax = ts_ax   
       
-    # colorbar axis
-    self.cax = None
-      
     # station names used for the time series plots
     if station_labels is None:
-      station_labels = ['%04d' % i for i in range(len(self.x))]
+      station_labels = ['%04d' % m for m in range(len(self.x))]
 
     if time_labels is None:
       time_labels = np.array(self.t).astype(str)
 
     # data set names used for the legends
     if data_set_labels is None:
-      data_set_labels = ['data set %s' % i for i in range(len(self.data_sets))]
+      data_set_labels = ['data set %s' % n for n in range(len(self.data_sets))]
 
     self.station_labels = station_labels
     self.time_labels = time_labels
@@ -366,7 +349,11 @@ figures.
     self.map_fig.canvas.mpl_connect('pick_event',self.on_pick)
 
   def _init_ts_ax(self):
-    # call after _init_lines
+    # Initially configures the time series axes. This involves setting 
+    # titles, labels, and scaling to fit the displayed data
+    #
+    # CALL THIS AFTER *_init_lines*
+    #
     if self.config['units'] is None:
       ts_ylabel_0 = 'east'
       ts_ylabel_1 = 'north'
@@ -417,11 +404,12 @@ figures.
     self.ts_ax[2].autoscale_view()
     
   def _update_ts_ax(self):
-    # call after _update_lines
+    # Updates the time series axes for changes in *tidx* or *xidx*. 
+    # This involves changing the axes titles and rescaling for the new 
+    # data being displayed. 
     #
-    # updates for:
-    #   xidx
-    #   ts_title
+    # CALL THIS AFTER *_update_lines*
+    # 
     if self.config['ts_title'] is None:
       name = self.station_labels[self.config['xidx']]
       self.ts_ax[0].set_title('station : %s' % name,
@@ -442,7 +430,11 @@ figures.
     self.ts_ax[2].autoscale_view()
 
   def _init_map_ax(self): 
-    # call after _init_scatter
+    # Initially configures the map view axis. This involves setting 
+    # titles, labels, and scaling to fit the plotted data 
+    #
+    # CALL THIS AFTER *_init_scatter*
+    # 
     self.map_ax.set_aspect('equal')
     self.map_ax.tick_params(labelsize=self.config['fontsize'])
     if self.config['map_title'] is None:
@@ -464,9 +456,8 @@ figures.
     self.map_ax.set_ylim(self.config['map_ylim'])
       
   def _update_map_ax(self):
-    # updates for:
-    #   map_title
-    #   tidx
+    # Updates the map axis for changes in *xidx* or *tidx*. This 
+    # involves changing the title to display the current date
     if self.config['map_title'] is None:
       time_label = self.time_labels[self.config['tidx']]
       self.map_ax.set_title('time : %s' % time_label,
@@ -476,14 +467,16 @@ figures.
                             fontsize=self.config['fontsize'])
 
   def _init_image(self):
-    # call after _init_map_ax    
+    # Initially plots the vertical deformation image.
+    #
+    # CALL THIS AFTER *_init_map_ax*
+    #
     self.x_itp = [np.linspace(self.config['map_xlim'][0],
                               self.config['map_xlim'][1],
                               self.config['image_array_size']),
                   np.linspace(self.config['map_ylim'][0],
                               self.config['map_ylim'][1],
                               self.config['image_array_size'])]
-                              
     data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
     if self.config['image_clim'] is None:
@@ -501,14 +494,12 @@ figures.
                    vmin=image_clim[0],vmax=image_clim[1],
                    cmap=self.config['image_cmap'],
                    zorder=0)
-
-    # make colorbar     
-    # if a color bar axis has not already been made then make one
-    if self.cax is None:
+    # Allocate a space in the figure for the colorbar if a colorbar 
+    # has not already been generated.
+    if not hasattr(self,'cbar'):
       self.cbar = self.map_fig.colorbar(self.image,ax=self.map_ax)  
-      self.cax = self.cbar.ax
     else:
-      self.cbar = self.map_fig.colorbar(self.image,cax=self.cax)  
+      self.cbar = self.map_fig.colorbar(self.image,cax=self.cbar.ax)  
       
     if self.config['units'] is None:
       image_clabel = 'vertical'
@@ -516,24 +507,20 @@ figures.
       image_clabel = 'vertical [%s]' % self.config['units']
       
     self.cbar.set_clim(image_clim)
-    self.cbar.set_label(image_clabel,
-                        fontsize=self.config['fontsize'])
+    self.cbar.set_label(image_clabel,fontsize=self.config['fontsize'])
     self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
     self.cbar.solids.set_rasterized(True)
 
   def _update_image(self):
-    # updates for:
-    #   tidx
-    #   image_clim
+    # Update the vertical deformation image for changes in *tidx* or 
+    # *xidx*. This changes the data for the image and updates the 
+    # colorbar
     data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
-                                 self.x,
-                                 self.x_itp[0],
-                                 self.x_itp[1])
+                                 self.x,self.x_itp[0],self.x_itp[1])
     self.image.set_data(data_itp)
-    
     if self.config['image_clim'] is None:
-      # self.image_clim are the user specified color bounds. if they 
-      # are None then the color bounds will be updated each time the 
+      # *image_clim* are the user specified color bounds. if they are 
+      # None then the color bounds will be updated each time the 
       # artists are redrawn
       image_clim = data_itp.min(),data_itp.max()
     else:  
@@ -543,7 +530,12 @@ figures.
     self.cbar.set_clim(image_clim)
     
   def _init_scatter(self):
-    # call after _init_image
+    # Plots the scatter points at the base of each vector showing the 
+    # vertical deformation for the second data set. If there is only 
+    # one data set then this function does nothing.
+    # 
+    # CALL THIS AFTER *_init_image*
+    #
     if len(self.data_sets) < 2:
       self.scatter = None 
       return
@@ -551,19 +543,16 @@ figures.
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
     # use scatter points to show z for second data set 
     colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
-    self.scatter = self.map_ax.scatter(
-                     self.x[:,0],self.x[:,1],
-                     c=colors,
-                     s=self.config['scatter_size'],
-                     zorder=1,
-                     edgecolor=self.color_cycle[1])
+    self.scatter = self.map_ax.scatter(self.x[:,0],self.x[:,1],
+                                       c=colors,s=self.config['scatter_size'],
+                                       zorder=1,edgecolor=self.color_cycle[1])
 
   def _update_scatter(self):
-    # call after _update_image
+    # Updates the scatter points for changes in *tidx* or *xidx*. This 
+    # just changes the face color
     # 
-    # updates for:
-    #   tidx
-    #   image_clim
+    # CALL THIS AFTER *_update_image*
+    #
     if len(self.data_sets) < 2:
       return
 
@@ -572,19 +561,21 @@ figures.
     self.scatter.set_facecolors(colors)
 
   def _init_marker(self):
+    # Creates a marker indicating the location of the station 
+    # currently plotted in the time series axes.
     self.marker = self.map_ax.plot(self.x[self.config['xidx'],0],
                                    self.x[self.config['xidx'],1],'ko',
                                    markersize=20*self.config['highlight'])[0]
 
   def _update_marker(self):
-    # updates for:
-    #   xidx
-    #   highlight
+    # Updates the marker for changes in *tidx* or *xidx*. This changes 
+    # the location of the marker to the new current station
     self.marker.set_data(self.x[self.config['xidx'],0],
                          self.x[self.config['xidx'],1])
     self.marker.set_markersize(20*self.config['highlight'])
 
   def _init_quiver(self):
+    # Initially plots the horizontal deformation vectors and a key
     self.quiver = []
     for si in range(len(self.data_sets)):
       q = Quiver(self.map_ax,self.x[:,0],self.x[:,1],
@@ -614,14 +605,11 @@ figures.
                      self.config['quiver_key_pos'][0],
                      self.config['quiver_key_pos'][1],
                      self.config['quiver_key_length'],
-                     quiver_key_label,
-                     zorder=2,
-                     labelsep=0.05,
+                     quiver_key_label,zorder=2,labelsep=0.05,
                      fontproperties={'size':self.config['fontsize']})
                      
   def _update_quiver(self):
-    # updates for:
-    #   tidx
+    # Updates the deformation vectors for changes in *tidx* or *xidx* 
     for si in range(len(self.data_sets)):
       self.quiver[si].set_UVC(
                         self.data_sets[si][self.config['tidx'],:,0],
@@ -631,7 +619,9 @@ figures.
                                np.zeros(self.x.shape[0])))
 
   def _init_pickers(self):
-    # pickable artists
+    # Initially plots the picker artists, which are used to select 
+    # station by clicking on them. These pickers never change and so 
+    # there is no corresponding update function
     self.pickers = []
     for xi in self.x:
       self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
@@ -639,43 +629,41 @@ figures.
                                        markersize=0)
 
   def _init_lines(self):
+    # Initially plots the time series for each component of 
+    # deformation
     self.line1,self.line2,self.line3 = [],[],[]
     for si in range(len(self.data_sets)):
       self.line1 += self.ts_ax[0].plot(
-                   self.t,
-                   self.data_sets[si][:,self.config['xidx'],0],
-                   color=self.color_cycle[si],
-                   label=self.data_set_labels[si],
-                   marker='.')
+                      self.t,self.data_sets[si][:,self.config['xidx'],0],
+                      color=self.color_cycle[si],
+                      label=self.data_set_labels[si],
+                      marker='.')
       self.line2 += self.ts_ax[1].plot(
-                   self.t,
-                   self.data_sets[si][:,self.config['xidx'],1],
-                   color=self.color_cycle[si],
-                   label=self.data_set_labels[si],
-                   marker='.')
+                      self.t,self.data_sets[si][:,self.config['xidx'],1],
+                      color=self.color_cycle[si],
+                      label=self.data_set_labels[si],
+                      marker='.')
       self.line3 += self.ts_ax[2].plot(
-                   self.t,
-                   self.data_sets[si][:,self.config['xidx'],2],
-                   color=self.color_cycle[si],
-                   label=self.data_set_labels[si],
-                   marker='.')
+                      self.t,self.data_sets[si][:,self.config['xidx'],2],
+                      color=self.color_cycle[si],
+                      label=self.data_set_labels[si],
+                      marker='.')
     
   def _update_lines(self):
-    # updates for:
-    #   xidx
+    # Updates the deformation time series for changes in *tidx* or 
+    # *xidx*.
     for si in range(len(self.data_sets)):
-      self.line1[si].set_data(self.t,
-                              self.data_sets[si][:,self.config['xidx'],0])
+      self.line1[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
       self.line1[si].set_label(self.data_set_labels[si])                     
-      self.line2[si].set_data(self.t,
-                              self.data_sets[si][:,self.config['xidx'],1])
+      self.line2[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],1])
       self.line2[si].set_label(self.data_set_labels[si])                     
-      self.line3[si].set_data(self.t,
-                              self.data_sets[si][:,self.config['xidx'],2])
+      self.line3[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],2])
       self.line3[si].set_label(self.data_set_labels[si])                     
   
   def _init_fill(self):
+    # Initially plots the confidence interval for each deformation 
+    # component.
     self.fill1,self.fill2,self.fill3 = [],[],[]
     for si in range(len(self.data_sets)):
       self.fill1 += [self.ts_ax[0].fill_between(
@@ -704,14 +692,16 @@ figures.
                      color=self.color_cycle[si],alpha=0.5)]
   
   def _update_fill(self):
-    # updates for:
-    #   xidx
+    # Updates the confidence intervals for changes in *xidx* or 
+    # *tidx*. Unfortunately, the only way to update these artists is 
+    # to remove and replot them.
     for f in self.fill1: f.remove()
     for f in self.fill2: f.remove()
     for f in self.fill3: f.remove()
     self._init_fill()
 
   def _remove_artists(self):
+    # This function should remove EVERY artist
     for f in self.fill1: f.remove()
     for f in self.fill2: f.remove()
     for f in self.fill3: f.remove()
@@ -726,9 +716,10 @@ figures.
     if self.scatter is not None:
       self.scatter.remove()        
 
-    self.cax.clear()
+    self.cbar.ax.clear()
 
   def _init(self):
+    # Calls every _init function
     self._init_marker()
     self._init_pickers()
     self._init_map_ax()
@@ -738,12 +729,12 @@ figures.
     self._init_image()
     self._init_scatter()
     self._init_ts_ax()
-    #self.map_fig.tight_layout()
     self.map_fig.canvas.draw()
     self.ts_fig.tight_layout()
     self.ts_fig.canvas.draw()
 
   def update(self):
+    # Calls every _update function
     self._update_marker()
     self._update_map_ax()
     self._update_quiver()
@@ -756,12 +747,16 @@ figures.
     self.map_fig.canvas.draw()
 
   def hard_update(self):
-    # clears all axes and redraws everything
+    # Removes all artists and replots them. This is slower but it 
+    # properly updates the figures for any changes to the configurable 
+    # parameters.
     self._remove_artists()
     self._init()
     
   @without_interactivity
   def command_line_configure(self):
+    # Provides a prompt which allows the user to set the configurable 
+    # properties via the command line
     while True:
       try:
         key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
@@ -794,6 +789,7 @@ figures.
     self.config[key] = new_val
   
   def on_pick(self,event):
+    # This function is called when the mouse is clicked
     for i,v in enumerate(self.pickers):
       if event.artist == v:
         self.config['xidx'] = i
@@ -802,6 +798,7 @@ figures.
     self.update()    
 
   def on_key_press(self,event):
+    # This function is called when a key is pressed
     if event.key == 'right':
       Nt = self.data_sets[0].shape[0]
       self.config['tidx'] = (self.config['tidx'] + 1)%Nt
@@ -863,17 +860,19 @@ figures.
       self.update()
 
     elif event.key == 'h':
+      # toggle station marker
       self.config['highlight'] = not self.config['highlight']
-      self.update()
+      self.hard_update()
 
     elif event.key == 'c':
       # cycle data arrays 
       self.data_sets = _roll(self.data_sets)
       self.data_set_labels = _roll(self.data_set_labels)
       self.sigma_sets = _roll(self.sigma_sets)
-      self.update()
+      self.hard_update()
       
     elif event.key == 'v':
+      # toggle vertical deformation 
       if self.config['image_cmap'] is _blank_cmap:
         self.config['image_cmap'] = self._previous_cmap
       

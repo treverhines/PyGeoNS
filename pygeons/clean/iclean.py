@@ -243,7 +243,6 @@ figures
     if event.inaxes is None: return
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
-
     self._mouse_is_pressed = True
     self._t1 = event.xdata
     self.rects = []
@@ -291,7 +290,6 @@ figures
     if event.button != 1: return
     # do nothing is a mouse button was not clicked in the axis
     if not self._mouse_is_pressed: return
-
     self._mouse_is_pressed = False
     # remove the rectangles no matter where the button was released
     for r,v in zip(self.rects,self.vlines):
@@ -299,15 +297,13 @@ figures
       v.remove()
 
     self.ts_fig.canvas.draw()  
-
     # only act on this event if the following conditions are met
     # ignore if the event was not in an axis
     if event.inaxes is None: return
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
-
     self._t2 = event.xdata
-    # act according to the self._mode at the time of release
+    # act according to self._mode at the time of release
     if self._mode == 'OUTLIER_REMOVAL':
       mint = min(self._t1,self._t2)
       maxt = max(self._t1,self._t2)
@@ -320,8 +316,8 @@ figures
       xlims = [i.get_xlim() for i in self.ts_ax]      
       ylims = [i.get_ylim() for i in self.ts_ax]      
       self.update()   
-      [i.set_xlim(j) for i,j in zip(self.ts_ax,xlims)]
-      [i.set_ylim(j) for i,j in zip(self.ts_ax,ylims)]
+      for i,j in zip(self.ts_ax,xlims): i.set_xlim(j)
+      for i,j in zip(self.ts_ax,ylims): i.set_ylim(j)
       self.ts_fig.canvas.draw()  
 
     elif self._mode == 'JUMP_REMOVAL':
@@ -334,8 +330,8 @@ figures
       xlims = [i.get_xlim() for i in self.ts_ax]      
       ylims = [i.get_ylim() for i in self.ts_ax]      
       self.update()   
-      [i.set_xlim(j) for i,j in zip(self.ts_ax,xlims)]
-      [i.set_ylim(j) for i,j in zip(self.ts_ax,ylims)]
+      for i,j in zip(self.ts_ax,xlims): i.set_xlim(j)
+      for i,j in zip(self.ts_ax,ylims): i.set_ylim(j)
       self.ts_fig.canvas.draw()  
     
     else: 
@@ -344,12 +340,12 @@ figures
   def _set_mode(self,name):
     if self._mode is None:
       self._mode = name
-      print('enabled %s mode\n' % name) 
+      logger.info('enabled %s mode\n' % name) 
 
   def _unset_mode(self,name):
     if self._mode is name:
       self._mode = None
-      print('disabled %s mode\n' % name) 
+      logger.info('disabled %s mode\n' % name) 
   
   def on_key_press(self,event):
     # disable c
@@ -365,7 +361,7 @@ figures
       self.on_mouse_move(event)
 
     elif event.key == 'a':
-      print('enabled APPLY_TO_ALL\n')
+      logger.info('cleaning operations will be applied to all stations\n')
       self._apply_to_all = True
       
     else:
@@ -381,7 +377,7 @@ figures
       self.on_mouse_move(event)
 
     elif event.key == 'a':
-      print('disabled APPLY_TO_ALL\n')
+      logger.info('cleaning operations will be applied to the current station\n')
       self._apply_to_all = False
   
 
