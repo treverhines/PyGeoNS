@@ -54,7 +54,7 @@ def check_positive_uncertainties(data):
   '''
   keys = ['east_std_dev','north_std_dev','vertical_std_dev']
   for k in keys:
-    if np.any(data[k] <= 0.0):
+    if np.any(data[k] < 0.0):
       raise DataError('*%s* contains zeros or negative values' % k)
      
 
