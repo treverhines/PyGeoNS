@@ -66,7 +66,7 @@ def _common_context(data_list):
       p[dir + '_std_dev'][np.ix_(tidx,sidx)] = d[dir + '_std_dev']
       
     out_list += [p]
-      
+
   return out_list
 
 

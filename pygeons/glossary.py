@@ -102,12 +102,23 @@ Controls verbosity.
 '''
 }
 #####################################################################
-SAMPLE_PRIOR = {
+DO_NOT_CONDITION = {
 'action':'store_true',
 'help':
 ''' 
-If this flag is raised then the returned dataset be a samples of the 
-prior Gaussian process.  
+If True, then the prior Gaussian process will not be conditioned with 
+the data and the returned dataset will just be the prior or its 
+specified derivative.
+'''
+}
+#####################################################################
+RETURN_SAMPLE = {
+'action':'store_true',
+'help':
+''' 
+If True, then the returned dataset will be a random sample of the 
+posterior (or prior if *do_not_condition* is True), rather than its 
+expected value and uncertainty.
 '''
 }
 #####################################################################
@@ -513,7 +524,8 @@ GLOSSARY = {
 'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,
 'positions':POSITIONS,
-'sample_prior':SAMPLE_PRIOR,
+'do_not_condition':DO_NOT_CONDITION,
+'return_sample':RETURN_SAMPLE,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,

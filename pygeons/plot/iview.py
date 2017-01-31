@@ -301,14 +301,15 @@ figures.
     self.data_set_labels = data_set_labels
 
     if quiver_key_length is None: 
-      # find the average length of unmasked data
-      mags = np.linalg.norm(self.data_sets[0],axis=2)  
+      # This is an Nt,Nx,S array of vector lengths for each data set
+      mags = [np.linalg.norm(d,axis=2) for d in self.data_sets]
+      # find the average length of unmasked vectors
       mag = max(np.nanmean(mags),1e-10)
       # round to leading sigfig
       quiver_key_length = one_sigfig(mag)
       
     if quiver_scale is None:
-      mags = np.linalg.norm(self.data_sets[0],axis=2)  
+      mags = [np.linalg.norm(d,axis=2) for d in self.data_sets]
       mag = max(np.nanmean(mags),1e-10)
       # find the average shortest distance between points
       if Nx <= 1:

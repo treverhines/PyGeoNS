@@ -14,10 +14,8 @@ from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
-                 procs=0,
-                 sample_prior=False,
-                 start_date=None,
-                 stop_date=None):
+                 do_not_condition=False,return_sample=False,
+                 start_date=None,stop_date=None,procs=0):
   ''' 
   Temporal Gaussian process regression
   
@@ -43,9 +41,16 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   procs : int, optional
     Number of subprocesses to spawn.
   
-  sample_prior : bool, optional
-    If True, then the returned dataset will be a sample of the prior.
+  do_not_condition : bool, optional
+    If True, then the prior Gaussian process will not be conditioned 
+    with the data and the returned dataset will just be the prior or 
+    its specified derivative.
 
+  return_sample : bool, optional
+    If True, then the returned dataset will be a random sample of the 
+    posterior (or prior if *do_not_condition* is False), rather than 
+    its expected value and uncertainty.
+    
   start_date : str, optional
     Start date for the output data set, defaults to the start date for 
     the input data set.
@@ -79,8 +84,9 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                         data['time'][:,None],data[dir].T,
                         data[dir+'_std_dev'].T,(0.0,sigma**2,cls),
                         x=time[:,None],basis=rbf.basis.ga,
-                        order=order,sample_prior=sample_prior,
-                        diff=diff,procs=procs)
+                        order=order,condition=(not do_not_condition),
+                        return_sample=return_sample,diff=diff,
+                        procs=procs)
     out[dir] = post.T
     out[dir+'_std_dev'] = post_sigma.T
 
@@ -91,9 +97,8 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   
 
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
-                 procs=0,
-                 sample_prior=False,
-                 positions=None):
+                 do_not_condition=False,return_sample=False,
+                 positions=None,procs=0):
   ''' 
   Temporal Gaussian process regression
   
@@ -119,8 +124,15 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   procs : int, optional
     Number of subprocesses to spawn.
 
-  sample_prior : bool, optional
-    If True then the returned dataset will be a sample of the prior. 
+  do_not_condition : bool, optional
+    If True, then the prior Gaussian process will not be conditioned 
+    with the data and the returned dataset will just be the prior or 
+    its specified derivative.
+
+  return_sample : bool, optional
+    If True, then the returned dataset will be a random sample of the 
+    posterior (or prior if *do_not_condition* is False), rather than 
+    its expected value and uncertainty.
 
   positions : (N,2) array, optional
     Positions for the output data set, defaults to positions in the 
@@ -154,8 +166,9 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                         xy,data[dir],data[dir+'_std_dev'],
                         (0.0,sigma**2,cls),
                         x=output_xy,basis=rbf.basis.ga,
-                        order=order,sample_prior=sample_prior,
-                        diff=diff,procs=procs)
+                        order=order,condition=(not do_not_condition),
+                        return_sample=return_sample,diff=diff,
+                        procs=procs)
     out[dir] = post
     out[dir+'_std_dev'] = post_sigma
 
