@@ -173,7 +173,7 @@ concatenated with the following sed incantation
 
 .. code-block::
 
-  $ sed -s 'a***' *.csv | sed '$d' > data.csv 
+  $ sed -s '$a***' *.csv | sed '$d' > data.csv 
 
 Second, convert the new text file to an HDF5 file with the PyGeoNS 
 command ``pygeons-toh5`` and use the ``--file_type`` flag followed by 
