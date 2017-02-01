@@ -1,9 +1,6 @@
 # This script demonstrates how to assess the suitability of a prior
-# for Gaussian process regression. It shows the PyGeoNS commands to
-# view a temporally correlated prior Gaussian process and a sample of
-# it alongside the observed data. By comparing the prior to the
-# observations, we can visually assess whether the prior is
-# appropriate for temporally smoothing the data.
+# Gaussian process. It shows the PyGeoNS commands to view a prior
+# Gaussian process and a sample of it alongside the observed data.
 
 # Characteristic time scale in years of the prior Gaussian process.
 CLS=0.05
@@ -12,17 +9,17 @@ STD=5.0
 # Order of the polynomial null space
 ORDER=1
 
-## Download sample data set
-rm -rf work/csv
-mkdir -p work/csv
-for i in `cat urls.txt`
-  do
-  wget -P work/csv $i
-  done
-
-# use sed to concatenate all the data files and separate them with ***
-sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
-
+### Download sample data set
+#rm -rf work/csv
+#mkdir -p work/csv
+#for i in `cat urls.txt`
+#  do
+#  wget -P work/csv $i
+#  done
+#
+## use sed to concatenate all the data files and separate them with ***
+#sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+#
 # convert the csv file to a HDF5 file
 pygeons-toh5 work/data.csv --file_type pbocsv --output_file work/data.h5
 
@@ -45,7 +42,10 @@ pygeons-tgpr work/data.crop.h5 $STD $CLS --do_not_condition --return_sample \
 # data. Also make sure that the wavelength of the sample is comparable
 # to the wavelength of any potential signal.
 pygeons-view work/data.crop.h5 work/prior.h5 work/prior_sample.h5 \
-             --data_set_labels data prior sample -v
+             --data_set_labels 'data' 'prior' 'sample' \
+             --colors 'k' 'b' 'b' \
+             --line_styles 'None' 'solid' 'dashed' \
+             --line_markers '.' 'None' 'None'
 
 # After verifying that the prior is appropriate, we can now condition
 # the prior with the data
@@ -54,7 +54,10 @@ pygeons-tgpr work/data.crop.h5 $STD $CLS \
 
 # View the data and the posterior
 pygeons-view work/data.crop.h5 work/posterior.h5 \
-             --data_set_labels data posterior
+             --colors 'k' 'g' \
+             --data_set_labels 'data' 'posterior' \
+             --line_styles 'None' 'solid' \
+             --line_markers '.' 'None'
 
 
 

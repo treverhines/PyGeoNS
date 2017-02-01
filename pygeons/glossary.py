@@ -122,13 +122,41 @@ expected value and uncertainty.
 '''
 }
 #####################################################################
-COLOR_CYCLE = {
+COLORS = {
 'nargs':'+',
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
-Sets the colors of the data sets. 
+Color string for each dataset. This can be any valid matplotlib color 
+string (e.g. 'r', 'g', or 'b' for red green or blue). There must be at 
+least as many specified colors as there are datasets.
+'''
+}
+#####################################################################
+LINE_STYLES = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Line style string for each dataset. This can be almost any valid 
+matplotlib line style string (e.g. '-', 'dashed', ':'). Note that 
+'--' conflicts with the command line argument parsing utility and so 
+'dashed' must be used instead. There must be at least as many 
+specified line styles as there are datasets.
+'''
+}
+#####################################################################
+LINE_MARKERS = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Marker string for each dataset. This can be any valid matplotlib 
+marker string (e.g. 'o', '.','p'). There must be at least as many 
+specified markers as there are datasets.
 '''
 }
 #####################################################################
@@ -530,7 +558,9 @@ GLOSSARY = {
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,
 'ydiff_file':YDIFF_FILE,
-'color_cycle':COLOR_CYCLE,
+'colors':COLORS,
+'line_styles':LINE_STYLES,
+'line_markers':LINE_MARKERS,
 'data_set_labels':DATA_SET_LABELS,
 'quiver_scale':QUIVER_SCALE,
 'scale':SCALE,

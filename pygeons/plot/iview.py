@@ -112,7 +112,7 @@ C : Cycle the ordering of the data sets
 
 V : Toggles whether to hide the vertical component of deformation.
 
-H : Toggles whether to hide the station marker
+H : Toggles whether to hide the station highlighter
         
 Enter : Disables figures and allows configurable parameters to be 
   edited through the command line. Variables can be defined using any 
@@ -137,7 +137,8 @@ figures.
                image_clim=None,image_cmap='RdBu_r',image_array_size=200,
                map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
                ts_ax=None,ts_title=None,
-               units=None,scatter_size=100,fontsize=10,color_cycle=None):
+               units=None,scatter_size=100,fontsize=10,
+               colors=None,line_styles=None,line_markers=None):
     ''' 
     Interactively views vector valued data which is time and space 
     dependent
@@ -244,10 +245,24 @@ figures.
         'provided values of u, v, z, su, sv, and sz must have the '
         'same length')
 
-    if color_cycle is None:
-      self.color_cycle = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
+    if colors is None:
+      colors = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
+      self.colors = [colors[i%7] for i in range(S)]
     else:
-      self.color_cycle = color_cycle
+      # replace the standard 'g' with a more neon green
+      colors = [(0.0,0.7,0.0) if (i == 'g') else i for i in colors]
+      self.colors = colors
+      
+    
+    if line_styles is None:
+      self.line_styles = ['solid']*S
+    else:
+      self.line_styles = line_styles    
+
+    if line_markers is None:
+      self.line_markers = ['None']*S
+    else:
+      self.line_markers = line_markers    
 
     # merge u,v,z and su,sv,sz into data_sets and sigma_sets for 
     # compactness
@@ -546,7 +561,7 @@ figures.
     colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
     self.scatter = self.map_ax.scatter(self.x[:,0],self.x[:,1],
                                        c=colors,s=self.config['scatter_size'],
-                                       zorder=1,edgecolor=self.color_cycle[1])
+                                       zorder=1,edgecolor=self.colors[1])
 
   def _update_scatter(self):
     # Updates the scatter points for changes in *tidx* or *xidx*. This 
@@ -561,19 +576,19 @@ figures.
     colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
     self.scatter.set_facecolors(colors)
 
-  def _init_marker(self):
-    # Creates a marker indicating the location of the station 
+  def _init_highlighter(self):
+    # Creates a highlighter indicating the location of the station 
     # currently plotted in the time series axes.
-    self.marker = self.map_ax.plot(self.x[self.config['xidx'],0],
+    self.highlighter = self.map_ax.plot(self.x[self.config['xidx'],0],
                                    self.x[self.config['xidx'],1],'ko',
                                    markersize=20*self.config['highlight'])[0]
 
-  def _update_marker(self):
-    # Updates the marker for changes in *tidx* or *xidx*. This changes 
-    # the location of the marker to the new current station
-    self.marker.set_data(self.x[self.config['xidx'],0],
+  def _update_highlighter(self):
+    # Updates the highlighter for changes in *tidx* or *xidx*. This changes 
+    # the location of the highlighter to the new current station
+    self.highlighter.set_data(self.x[self.config['xidx'],0],
                          self.x[self.config['xidx'],1])
-    self.marker.set_markersize(20*self.config['highlight'])
+    self.highlighter.set_markersize(20*self.config['highlight'])
 
   def _init_quiver(self):
     # Initially plots the horizontal deformation vectors and a key
@@ -587,7 +602,7 @@ figures.
                  sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
                         self.sigma_sets[si][self.config['tidx'],:,1],
                         np.zeros(self.x.shape[0])), 
-                 color=self.color_cycle[si],
+                 color=self.colors[si],
                  ellipse_kwargs={'edgecolors':'k','zorder':1+si},
                  zorder=2+si)
       self.map_ax.add_collection(q,autolim=True)
@@ -636,19 +651,22 @@ figures.
     for si in range(len(self.data_sets)):
       self.line1 += self.ts_ax[0].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],0],
-                      color=self.color_cycle[si],
+                      color=self.colors[si],
                       label=self.data_set_labels[si],
-                      marker='None')
+                      linestyle=self.line_styles[si],
+                      marker=self.line_markers[si])
       self.line2 += self.ts_ax[1].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],1],
-                      color=self.color_cycle[si],
+                      color=self.colors[si],
                       label=self.data_set_labels[si],
-                      marker='None')
+                      linestyle=self.line_styles[si],
+                      marker=self.line_markers[si])
       self.line3 += self.ts_ax[2].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],2],
-                      color=self.color_cycle[si],
+                      color=self.colors[si],
                       label=self.data_set_labels[si],
-                      marker='None')
+                      linestyle=self.line_styles[si],
+                      marker=self.line_markers[si])
     
   def _update_lines(self):
     # Updates the deformation time series for changes in *tidx* or 
@@ -674,7 +692,7 @@ figures.
                      self.data_sets[si][:,self.config['xidx'],0] +
                      self.sigma_sets[si][:,self.config['xidx'],0],
                      edgecolor='none',
-                     color=self.color_cycle[si],alpha=0.5)]
+                     color=self.colors[si],alpha=0.2)]
       self.fill2 += [self.ts_ax[1].fill_between(
                      self.t,
                      self.data_sets[si][:,self.config['xidx'],1] -
@@ -682,7 +700,7 @@ figures.
                      self.data_sets[si][:,self.config['xidx'],1] +
                      self.sigma_sets[si][:,self.config['xidx'],1],
                      edgecolor='none',
-                     color=self.color_cycle[si],alpha=0.5)]
+                     color=self.colors[si],alpha=0.2)]
       self.fill3 += [self.ts_ax[2].fill_between(
                      self.t,
                      self.data_sets[si][:,self.config['xidx'],2] -
@@ -690,7 +708,7 @@ figures.
                      self.data_sets[si][:,self.config['xidx'],2] +
                      self.sigma_sets[si][:,self.config['xidx'],2],
                      edgecolor='none',
-                     color=self.color_cycle[si],alpha=0.5)]
+                     color=self.colors[si],alpha=0.2)]
   
   def _update_fill(self):
     # Updates the confidence intervals for changes in *xidx* or 
@@ -712,7 +730,7 @@ figures.
     for q in self.quiver: q.remove()
     for p in self.pickers: p.remove()
     self.key.remove()
-    self.marker.remove()
+    self.highlighter.remove()
     self.image.remove()
     if self.scatter is not None:
       self.scatter.remove()        
@@ -721,7 +739,7 @@ figures.
 
   def _init(self):
     # Calls every _init function
-    self._init_marker()
+    self._init_highlighter()
     self._init_pickers()
     self._init_map_ax()
     self._init_quiver()
@@ -736,7 +754,7 @@ figures.
 
   def update(self):
     # Calls every _update function
-    self._update_marker()
+    self._update_highlighter()
     self._update_map_ax()
     self._update_quiver()
     self._update_lines()
@@ -861,7 +879,7 @@ figures.
       self.update()
 
     elif event.key == 'h':
-      # toggle station marker
+      # toggle station highlighter
       self.config['highlight'] = not self.config['highlight']
       self.hard_update()
 
