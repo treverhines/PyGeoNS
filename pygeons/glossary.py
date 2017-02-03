@@ -3,7 +3,6 @@ This module defines a glossary of terms used in the help
 documentation. This is used to aid in building and maintaining the 
 help documentation for each executable.
 '''
-from argparse import RawDescriptionHelpFormatter
 
 #####################################################################
 INPUT_TEXT_FILE = {
@@ -177,6 +176,73 @@ RESOLUTION = {
 ''' 
 Sets the basemap resolution. Can be either 'c', 'i', or 'h' for 
 coarse, intermediate, or high resolution.
+'''
+}
+#####################################################################
+SNR_MASK = {
+'action':'store_true',
+'help':
+''' 
+If this flag is raised, then strain glyphs will only be plotted if 
+their signal to noise ratio (SNR) is greater than 1.0. 
+'''
+}
+#####################################################################
+ALPHA = {
+'type':float,
+'metavar':'float',
+'help':
+''' 
+Opacity of the strain confidence intervals. 0.0 is transparent and 1.0 
+is opaque.
+'''
+}
+#####################################################################
+VERTICES = {
+'type':int,
+'metavar':'INT',
+'help':
+''' 
+Number of vertices used in plotting the strain glyphs. Making this 
+number lower will decrease the rendering time at the expense of lower 
+quality glyphs.
+'''
+}
+#####################################################################
+COMPRESSION_COLOR = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+String indicating the color for the compressional strain.
+'''
+}
+#####################################################################
+EXTENSION_COLOR = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+String indicating the color for the extensional strain.
+'''
+}
+#####################################################################
+KEY_POSITION = {
+'type':float,
+'nargs':2,
+'metavar':'FLOAT',
+'help':
+''' 
+Sets the position of the key. This should be in axis coordinates.
+'''
+}
+#####################################################################
+KEY_MAGNITUDE = {
+'type':float,
+'metavar':'FLOAT',
+'help':
+''' 
+Controls the magnitude of strain in the strain glyph. 
 '''
 }
 #####################################################################
@@ -558,6 +624,13 @@ GLOSSARY = {
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,
 'ydiff_file':YDIFF_FILE,
+'key_magnitude':KEY_MAGNITUDE,
+'key_position':KEY_POSITION,
+'compression_color':COMPRESSION_COLOR,
+'extension_color':EXTENSION_COLOR,
+'vertices':VERTICES,
+'alpha':ALPHA,
+'snr_mask':SNR_MASK,
 'colors':COLORS,
 'line_styles':LINE_STYLES,
 'line_markers':LINE_MARKERS,

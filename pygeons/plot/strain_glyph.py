@@ -5,7 +5,7 @@ from matplotlib.container import Container
 def strain_glyph(x,strain,sigma=None,
                  ext_color='b',cmp_color='r',
                  alpha=0.2,linewidth=1.0,vert=500,
-                 scale=1.0):
+                 scale=1.0,snr_mask=True):
     ''' 
     Returns a container of artists making up a strain glyph.
     
@@ -42,6 +42,17 @@ def strain_glyph(x,strain,sigma=None,
 
     scale : float, optional
       Scales the strain and uncertainty. 
+    
+    snr_mask : bool, optional
+      If True, then the strain glyph transparency will be determined 
+      by the signal-to-noise ratio (SNR). In this case, the SNR is the 
+      ratio of the strain magnitude to its uncertainty. The strain 
+      magnitude is the inner product of the strain matrix with itself. 
+      If the SNR is less than 1.0, then nothing will be returned. The 
+      glyph will be increasingly opaque for SNR ratios between 1.0 and 
+      2.0. If the SNR is greater than 2.0 then the expected value 
+      lines will be opaque and the uncertainty field will be as 
+      specified with *alpha*.
 
     Returns
     -------
@@ -85,23 +96,29 @@ def strain_glyph(x,strain,sigma=None,
     if ~np.all(np.isfinite(strain)) | ~np.all(np.isfinite(cov)):
       return Container([])
     
-    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    # If the signal to noise ratio is too high then return an empty 
-    # container
-    stn = np.linalg.norm(strain/np.sqrt(np.diag(cov)))
-    if stn < 1.0:
-      return Container([])
-    if (stn >= 1.0) & (stn < 2.0):
-      stn_alpha = (stn - 1.0)
-    else:  
-      stn_alpha = 1.0
-    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    
+    if snr_mask:
+      # strain magnitude # (3,) array
+      mag = np.sqrt(strain[0]**2 + strain[1]**2 + 2*strain[2]**2)
+      # Jacobian of strain magnitude. used for error propagation 
+      jac = np.array([strain[0]/mag,strain[1]/mag,2*strain[2]/mag])
+      mag_sigma = np.sqrt(jac.dot(cov).dot(jac))
+      snr = mag/mag_sigma
+      if snr < 1.0:
+        # return no glyph if snr is less than 1.0
+        return Container([])
+      elif (snr >= 1.0) & (snr < 2.0):
+        # return faded glyph if snr is between 1.0 and 2.0
+        snr_alpha = snr - 1.0
+      else:
+        # do not fade if snr > 2,0
+        snr_alpha = 1.0
+    else:
+      # if snr_mask is False, then dont change glyph transparency
+      snr_alpha = 1.0
     
     # scale the data
     strain = scale*strain
     cov = scale**2*cov
-
     # angles for each normal vector
     theta = np.linspace(0.0,2*np.pi,vert)
     # normal vectors
@@ -110,6 +127,7 @@ def strain_glyph(x,strain,sigma=None,
     # along each direction in *n*
     G = np.array([n[:,0]**2, n[:,1]**2,2*n[:,0]*n[:,1]]).T
     mean = G.dot(strain)
+    # just compute the diagonals of the covariance matrix
     sigma = np.sqrt(np.sum(G.dot(cov)*G,axis=1))
 
     artists = []
@@ -131,13 +149,12 @@ def strain_glyph(x,strain,sigma=None,
     sigma_vert_ext = np.vstack((ub_vert_ext,lb_vert_ext[::-1]))
     # make the vertices defining the 1-sigma compression field
     sigma_vert_cmp = np.vstack((ub_vert_cmp,lb_vert_cmp[::-1]))
-
     if mean_vert_ext.shape[0] != 0:
       artists += [Polygon(x + mean_vert_ext,
                           edgecolor=ext_color,
                           facecolor='none',
                           linewidth=linewidth,
-                          alpha=stn_alpha,
+                          alpha=snr_alpha,
                           label='extensional mean')]
 
     if mean_vert_cmp.shape[0] != 0:
@@ -145,14 +162,14 @@ def strain_glyph(x,strain,sigma=None,
                           edgecolor=cmp_color,
                           facecolor='none',
                           linewidth=linewidth,
-                          alpha=stn_alpha,
+                          alpha=snr_alpha,
                           label='compressional mean')]
 
     if sigma_vert_ext.shape[0] != 0:
       artists += [Polygon(x + sigma_vert_ext,
                           facecolor=ext_color,
                           edgecolor='none',
-                          alpha=alpha*stn_alpha,
+                          alpha=alpha*snr_alpha,
                           linewidth=linewidth,
                           label='extensional confidence interval')]
 
@@ -160,7 +177,7 @@ def strain_glyph(x,strain,sigma=None,
       artists += [Polygon(x + sigma_vert_cmp,
                           facecolor=cmp_color,
                           edgecolor='none',
-                          alpha=alpha*stn_alpha,
+                          alpha=alpha*snr_alpha,
                           linewidth=linewidth,
                           label='compressional confidence interval')]
 

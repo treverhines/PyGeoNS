@@ -74,7 +74,8 @@ figures.
                alpha=0.2,
                vertices=100,
                key_magnitude=None,
-               key_position=(0.15,0.2)):
+               key_position=(0.15,0.2),
+               snr_mask=True):
     ''' 
     interactively views strain which is time and space dependent
     
@@ -200,6 +201,7 @@ figures.
     self.config['vertices'] = vertices
     self.config['key_magnitude'] = key_magnitude
     self.config['key_position'] = key_position
+    self.config['snr_mask'] = snr_mask
     self._init()
     disable_default_key_bindings()
     print(self.__doc__)
@@ -305,10 +307,10 @@ figures.
     if self.config['map_title'] is None:
       time_label = self.time_labels[self.config['tidx']]
       self.map_ax.set_title('time : %s' % time_label,
-                        fontsize=self.config['fontsize'])
+                            fontsize=self.config['fontsize'])
     else:
       self.map_ax.set_title(self.config['map_title'],
-                        fontsize=self.config['fontsize'])
+                            fontsize=self.config['fontsize'])
 
     # do not dynamically update the axis limits
     if self.config['map_xlim'] is None:
@@ -324,10 +326,10 @@ figures.
     if self.config['map_title'] is None:
       time_label = self.time_labels[self.config['tidx']]
       self.map_ax.set_title('time : %s' % time_label,
-                        fontsize=self.config['fontsize'])
+                            fontsize=self.config['fontsize'])
     else:
       self.map_ax.set_title(self.config['map_title'],
-                        fontsize=self.config['fontsize'])
+                            fontsize=self.config['fontsize'])
 
   def _init_marker(self):
     self.marker, = self.map_ax.plot(self.x[self.config['xidx'],0],
@@ -399,7 +401,8 @@ figures.
                                   ext_color=self.config['extension_color'],
                                   cmp_color=self.config['compression_color'],
                                   alpha=self.config['alpha'],
-                                  vert=self.config['vertices'])
+                                  vert=self.config['vertices'],
+                                  snr_mask=self.config['snr_mask'])
        
     for a in self.glyphs: self.map_ax.add_artist(a)
 
