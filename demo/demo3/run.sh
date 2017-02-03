@@ -10,16 +10,16 @@ STD=5.0
 ORDER=1
 
 ### Download sample data set
-#rm -rf work/csv
-#mkdir -p work/csv
-#for i in `cat urls.txt`
-#  do
-#  wget -P work/csv $i
-#  done
-#
-## use sed to concatenate all the data files and separate them with ***
-#sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
-#
+rm -rf work/csv
+mkdir -p work/csv
+for i in `cat urls.txt`
+  do
+  wget -P work/csv $i
+  done
+
+# use sed to concatenate all the data files and separate them with ***
+sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+
 # convert the csv file to a HDF5 file
 pygeons-toh5 work/data.csv --file_type pbocsv --output_file work/data.h5
 

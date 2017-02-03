@@ -85,6 +85,19 @@ def strain_glyph(x,strain,sigma=None,
     if ~np.all(np.isfinite(strain)) | ~np.all(np.isfinite(cov)):
       return Container([])
     
+    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    # If the signal to noise ratio is too high then return an empty 
+    # container
+    stn = np.linalg.norm(strain/np.sqrt(np.diag(cov)))
+    if stn < 1.0:
+      return Container([])
+    if (stn >= 1.0) & (stn < 2.0):
+      stn_alpha = (stn - 1.0)
+    else:  
+      stn_alpha = 1.0
+    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    
+    
     # scale the data
     strain = scale*strain
     cov = scale**2*cov
@@ -124,6 +137,7 @@ def strain_glyph(x,strain,sigma=None,
                           edgecolor=ext_color,
                           facecolor='none',
                           linewidth=linewidth,
+                          alpha=stn_alpha,
                           label='extensional mean')]
 
     if mean_vert_cmp.shape[0] != 0:
@@ -131,13 +145,14 @@ def strain_glyph(x,strain,sigma=None,
                           edgecolor=cmp_color,
                           facecolor='none',
                           linewidth=linewidth,
+                          alpha=stn_alpha,
                           label='compressional mean')]
 
     if sigma_vert_ext.shape[0] != 0:
       artists += [Polygon(x + sigma_vert_ext,
                           facecolor=ext_color,
                           edgecolor='none',
-                          alpha=alpha,
+                          alpha=alpha*stn_alpha,
                           linewidth=linewidth,
                           label='extensional confidence interval')]
 
@@ -145,7 +160,7 @@ def strain_glyph(x,strain,sigma=None,
       artists += [Polygon(x + sigma_vert_cmp,
                           facecolor=cmp_color,
                           edgecolor='none',
-                          alpha=alpha,
+                          alpha=alpha*stn_alpha,
                           linewidth=linewidth,
                           label='compressional confidence interval')]
 
