@@ -4,18 +4,20 @@ executables.
 '''
 from __future__ import division
 import numpy as np
-import rbf.filter
-import rbf.gpr
 import logging
+import rbf
+from pygeons.filter.gpr import gpr
 from pygeons.mjd import mjd_inv,mjd
 from pygeons.datacheck import check_data
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
+
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                  do_not_condition=False,return_sample=False,
-                 start_date=None,stop_date=None,procs=0):
+                 start_date=None,stop_date=None,procs=0,
+                 outlier_tol=2.5):
   ''' 
   Temporal Gaussian process regression
   
@@ -58,6 +60,11 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   stop_date : str, optional
     Stop date for the output data set, defaults to the stop date for 
     the input data set.
+  
+  outlier_tol : float, optional
+    Tolerance for outlier detection. Smaller values make the detection 
+    algorithm more sensitive. This should not be set any lower than 
+    about 2.0.
     
   '''
   logger.info('Performing temporal Gaussian process regression ...')
@@ -78,13 +85,13 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   stop_time = mjd(stop_date,'%Y-%m-%d')  
   time = np.arange(start_time,stop_time+1)
   for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.gpr.gpr(
+    post,post_sigma = gpr(
                         data['time'][:,None],data[dir].T,
                         data[dir+'_std_dev'].T,(0.0,sigma**2,cls),
-                        x=time[:,None],basis=rbf.basis.ga,
+                        x=time[:,None],basis=rbf.basis.se,
                         order=order,condition=(not do_not_condition),
                         return_sample=return_sample,diff=diff,
-                        procs=procs)
+                        tol=outlier_tol,procs=procs)
     out[dir] = post.T
     out[dir+'_std_dev'] = post_sigma.T
 
@@ -96,7 +103,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
 
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                  do_not_condition=False,return_sample=False,
-                 positions=None,procs=0):
+                 positions=None,procs=0,outlier_tol=2.5):
   ''' 
   Temporal Gaussian process regression
   
@@ -139,6 +146,11 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     the same length. This defaults to the positions in the input data 
     set.
 
+  outlier_tol : float, optional
+    Tolerance for outlier detection. Smaller values make the detection 
+    algorithm more sensitive. This should not be set any lower than 
+    about 2.0.
+
   '''
   logger.info('Performing spatial Gaussian process regression ...')
   check_data(data)
@@ -161,13 +173,13 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   output_x,output_y = bm(output_lon,output_lat)
   output_xy = np.array([output_x,output_y]).T 
   for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.gpr.gpr(
+    post,post_sigma = gpr(
                         xy,data[dir],data[dir+'_std_dev'],
                         (0.0,sigma**2,cls),
-                        x=output_xy,basis=rbf.basis.ga,
+                        x=output_xy,basis=rbf.basis.se,
                         order=order,condition=(not do_not_condition),
                         return_sample=return_sample,diff=diff,
-                        procs=procs)
+                        tol=outlier_tol,procs=procs)
     out[dir] = post
     out[dir+'_std_dev'] = post_sigma
 
