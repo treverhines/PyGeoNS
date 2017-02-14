@@ -90,7 +90,9 @@ def strain_glyph(x,strain,sigma=None,
       # if sigma was specified as a (3,) standard deviation 
       # uncertainty vector then convert it to a covariance matrix
       cov = np.diag(sigma**2)
-
+    else:
+      raise ValueError('*sigma* must be a (3,) or (3,3) array')
+      
     # if either strain or cov are not finite then silently return an 
     # empty container
     if ~np.all(np.isfinite(strain)) | ~np.all(np.isfinite(cov)):

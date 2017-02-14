@@ -6,6 +6,7 @@ from pygeons.plot.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import ListedColormap
 import logging
+import os
 import scipy.interpolate
 from scipy.spatial import cKDTree
 try:
@@ -807,6 +808,20 @@ figures.
         
     self.config[key] = new_val
   
+  def save_frames(self,dir):
+    ''' 
+    saves each frame as a jpeg image in the direction *dir*
+    '''
+    Nt = self.data_sets[0].shape[0]
+    for i in range(Nt):
+      self.config['tidx'] = i
+      self.update()
+      fname = '%06d.jpeg' % i
+      print('saving file %s/%s' % (dir,fname))
+      plt.savefig(dir+'/'+fname)
+
+    print('done')
+
   def on_pick(self,event):
     # This function is called when the mouse is clicked
     for i,v in enumerate(self.pickers):
@@ -900,6 +915,12 @@ figures.
         self.config['image_cmap'] = _blank_cmap  
         
       self.hard_update()
+
+    elif event.key == 's':
+      if not os.path.exists('frames'):
+        os.mkdir('frames')
+
+      self.save_frames('frames')
 
     elif event.key == 'r':
       # refresh  
