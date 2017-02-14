@@ -19,7 +19,7 @@ if __name__ == '__main__':
                  'exec/pygeons-toh5',
                  'exec/pygeons-totext'],
         packages=['pygeons','pygeons.io','pygeons.plot',
-                  'pygeons.clean'],
+                  'pygeons.clean','pygeons.filter'],
         license='MIT')
 
 

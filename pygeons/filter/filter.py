@@ -4,14 +4,15 @@ executables.
 '''
 from __future__ import division
 import numpy as np
-import rbf.filter
-import rbf.gpr
 import logging
+import rbf
+from pygeons.filter.gpr import gpr
 from pygeons.mjd import mjd_inv,mjd
 from pygeons.datacheck import check_data
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
+
 
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                  do_not_condition=False,return_sample=False,
@@ -80,10 +81,10 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   time = np.arange(start_time,stop_time+1)
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.gpr.gpr(
+    post,post_sigma = gpr(
                         data['time'][:,None],data[dir].T,
                         data[dir+'_std_dev'].T,(0.0,sigma**2,cls),
-                        x=time[:,None],basis=rbf.basis.ga,
+                        x=time[:,None],basis=rbf.basis.se,
                         order=order,condition=(not do_not_condition),
                         return_sample=return_sample,diff=diff,
                         procs=procs)
@@ -162,10 +163,10 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   output_xy = np.array([output_x,output_y]).T 
   # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.gpr.gpr(
+    post,post_sigma = gpr(
                         xy,data[dir],data[dir+'_std_dev'],
                         (0.0,sigma**2,cls),
-                        x=output_xy,basis=rbf.basis.ga,
+                        x=output_xy,basis=rbf.basis.se,
                         order=order,condition=(not do_not_condition),
                         return_sample=return_sample,diff=diff,
                         procs=procs)
