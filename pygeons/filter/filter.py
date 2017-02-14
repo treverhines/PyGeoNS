@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                  do_not_condition=False,return_sample=False,
-                 start_date=None,stop_date=None,procs=0):
+                 start_date=None,stop_date=None,procs=0,
+                 outlier_tol=2.5):
   ''' 
   Temporal Gaussian process regression
   
@@ -59,6 +60,11 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   stop_date : str, optional
     Stop date for the output data set, defaults to the stop date for 
     the input data set.
+  
+  outlier_tol : float, optional
+    Tolerance for outlier detection. Smaller values make the detection 
+    algorithm more sensitive. This should not be set any lower than 
+    about 2.0.
     
   '''
   logger.info('Performing temporal Gaussian process regression ...')
@@ -85,7 +91,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                         x=time[:,None],basis=rbf.basis.se,
                         order=order,condition=(not do_not_condition),
                         return_sample=return_sample,diff=diff,
-                        procs=procs)
+                        tol=outlier_tol,procs=procs)
     out[dir] = post.T
     out[dir+'_std_dev'] = post_sigma.T
 
@@ -97,7 +103,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
 
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                  do_not_condition=False,return_sample=False,
-                 positions=None,procs=0):
+                 positions=None,procs=0,outlier_tol=2.5):
   ''' 
   Temporal Gaussian process regression
   
@@ -140,6 +146,11 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     the same length. This defaults to the positions in the input data 
     set.
 
+  outlier_tol : float, optional
+    Tolerance for outlier detection. Smaller values make the detection 
+    algorithm more sensitive. This should not be set any lower than 
+    about 2.0.
+
   '''
   logger.info('Performing spatial Gaussian process regression ...')
   check_data(data)
@@ -168,7 +179,7 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                         x=output_xy,basis=rbf.basis.se,
                         order=order,condition=(not do_not_condition),
                         return_sample=return_sample,diff=diff,
-                        procs=procs)
+                        tol=outlier_tol,procs=procs)
     out[dir] = post
     out[dir+'_std_dev'] = post_sigma
 

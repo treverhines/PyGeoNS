@@ -500,6 +500,18 @@ q=-1, so the units for this argument should be in mm/yr.
 '''
 }
 #####################################################################
+OUTLIER_TOL = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Tolerance for outlier detection. Detected outliers will be ignored 
+when calculating the posterior solution. Smaller values make the 
+detection algorithm more sensitive. This should not be any lower than 
+about 2.0.
+'''
+}
+#####################################################################
 S_CLS = {
 'type':float, 
 'metavar':'FLOAT', 
@@ -662,6 +674,7 @@ GLOSSARY = {
 't_cutoff':T_CUTOFF,
 's_cutoff':S_CUTOFF,
 'sigma':SIGMA,
+'outlier_tol':OUTLIER_TOL,
 's_cls':S_CLS,
 't_cls':T_CLS,
 'order':ORDER,

@@ -9,10 +9,10 @@ from rbf.gpr import PriorGaussianProcess
 import logging
 logger = logging.getLogger(__name__)
 
-def _get_trend(y,d,sigma,x,order,diff):
+def _get_trend(y,d,s,x,order,diff):
   ''' 
   returns the best fitting polynomial to observations *d*, which were 
-  made at *y* and have uncertainties *sigma*. The polynomial has order 
+  made at *y* and have uncertainties *s*. The polynomial has order 
   *order*, is evaluated at *x*, and then differentiated by *diff*.
   '''
   if y.shape[0] == 0:
@@ -22,14 +22,14 @@ def _get_trend(y,d,sigma,x,order,diff):
 
   powers = rbf.poly.powers(order,y.shape[1])
   Gobs = rbf.poly.mvmonos(y,powers) # system matrix
-  W = np.diag(1.0/sigma) # weight matrix
+  W = np.diag(1.0/s) # weight matrix
   coeff = np.linalg.lstsq(W.dot(Gobs),W.dot(d))[0]
   Gitp = rbf.poly.mvmonos(x,powers,diff)
   trend = Gitp.dot(coeff) # evaluated trend at interpolation points
   return trend
 
 
-def gpr(y,d,sigma,coeff,x=None,basis=rbf.basis.se,order=1,
+def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=2.0,
         diff=None,procs=0,condition=True,return_sample=False):
   '''     
   Performs Guassian process regression on the observed data. This is a 
@@ -46,7 +46,7 @@ def gpr(y,d,sigma,coeff,x=None,basis=rbf.basis.se,order=1,
   d : (...,N) array
     Observed data at *y*.
   
-  sigma : (...,N) array
+  s : (...,N) array
     Data uncertainty. *np.inf* can be used to indicate that the data 
     is missing, which will cause the corresponding value in *d* to be 
     ignored.
@@ -72,7 +72,7 @@ def gpr(y,d,sigma,coeff,x=None,basis=rbf.basis.se,order=1,
     Distribute the tasks among this many subprocesses. This defaults 
     to 0 (i.e. the parent process does all the work).  Each task is to 
     perform Gaussian process regression for one of the (N,) arrays in 
-    *d* and *sigma*. So if *d* and *sigma* are (N,) arrays then using 
+    *d* and *s*. So if *d* and *s* are (N,) arrays then using 
     multiple process will not provide any speed improvement.
   
   condition : bool, optional
@@ -101,7 +101,7 @@ def gpr(y,d,sigma,coeff,x=None,basis=rbf.basis.se,order=1,
   '''
   y = np.asarray(y,dtype=float)
   d = np.asarray(d,dtype=float)
-  sigma = np.asarray(sigma,dtype=float)
+  s = np.asarray(s,dtype=float)
   if diff is None:
     diff = np.zeros(y.shape[1],dtype=int)
 
@@ -113,49 +113,67 @@ def gpr(y,d,sigma,coeff,x=None,basis=rbf.basis.se,order=1,
   q = int(np.prod(bcast_shape))
   n = y.shape[0]
   d = d.reshape((q,n))
-  sigma = sigma.reshape((q,n))
+  s = s.reshape((q,n))
 
-  def doit(i):
-    logger.debug('Performing GPR on data set %s of %s ...' % (i+1,q))
+  def task(i):
+    logger.debug('Processing dataset %s of %s ...' % (i+1,q))
     gp = PriorGaussianProcess(coeff,basis=basis,order=order,dim=x.shape[1])
-    # ignore data that has infinite uncertainty
-    is_finite = ~np.isinf(sigma[i])
+    # if the uncertainty is inf then the data is considered missing
+    is_missing = np.isinf(s[i])
+    # start by just ignoring missing data
+    ignore = np.copy(is_missing)
     if condition:
-      gp = gp.recursive_condition(y[is_finite],d[i,is_finite],
-                                  sigma=sigma[i,is_finite])
-
+      # iteratively condition and identify outliers
+      while True:
+        gpi = gp.recursive_condition(y[~ignore],d[i,~ignore],
+                                     sigma=s[i,~ignore])
+        res = np.abs(gpi.mean(y) - d[i])/s[i]
+        # give missing data infinite residuals
+        res[is_missing] = np.inf
+        rms = np.sqrt(np.mean(res[~ignore]**2))
+        if np.all(ignore == (res > tol*rms)):
+          logger.debug('Detected %s outliers or missing observations' % np.sum(ignore))
+          break
+        else:  
+          ignore = (res > tol*rms)
+      
+      gp = gpi    
+               
     gp = gp.differentiate(diff)
-    try:
-      if return_sample:
-        out_mean_i = gp.draw_sample(x)
-        out_sigma_i = np.zeros_like(out_mean_i)
-      else:
-        out_mean_i,out_sigma_i = gp.mean_and_uncertainty(x)
+    if return_sample:
+      out_mean_i = gp.draw_sample(x)
+      out_sigma_i = np.zeros_like(out_mean_i)
+    else:
+      out_mean_i,out_sigma_i = gp.mean_and_uncertainty(x)
 
-      if gp.order != -1:
-        # Read note 3 in the GaussianProcess documentation. If a 
-        # polynomial null space exists, then I am setting the monomial 
-        # coefficients to be the coefficients that best fit the data. 
-        # This deviates from the default behavior for a GaussianProcess, 
-        # which sets the monomial coefficients to zero.
-        trend = _get_trend(y[is_finite],d[i,is_finite],
-                           sigma[i,is_finite],x,order,diff)
-        out_mean_i += trend
-
-    except np.linalg.LinAlgError:
-      logger.info(
-        'Could not compute the expected values and uncertainties for '
-        'the Gaussian process. This may be due to insufficient data. '
-        'The returned expected values and uncertainties will be NaN '
-        'and INF, respectively.')
-      out_mean_i = np.empty(x.shape[0])
-      out_mean_i[:] = np.nan
-      out_sigma_i = np.empty(x.shape[0])
-      out_sigma_i[:] = np.inf
+    if gp.order != -1:
+      # Read note 3 in the GaussianProcess documentation. If a 
+      # polynomial null space exists, then I am setting the monomial 
+      # coefficients to be the coefficients that best fit the data. 
+      # This deviates from the default behavior for a 
+      # GaussianProcess, which sets the monomial coefficients to 
+      # zero. Note, that there is no attempt to identify outliers 
+      # when determining the trend
+      trend = _get_trend(y[~ignore],d[i,~ignore],
+                         s[i,~ignore],x,order,diff)
+      out_mean_i += trend
 
     return out_mean_i,out_sigma_i
+    
+  def task_with_error_catch(i):    
+    try:
+      return task(i)
 
-  out = parmap(doit,range(q),workers=procs)
+    except np.linalg.LinAlgError:  
+      logger.info(
+        'Could not process dataset %s. This may be due to '
+        'insufficient data. The returned expected values and '
+        'uncertainties will be NaN and INF, respectively.' % (i+1))
+      out_mean_i = np.full(x.shape[0],np.nan)
+      out_sigma_i = np.full(x.shape[0],np.inf)
+      return out_mean_i,out_sigma_i
+
+  out = parmap(task_with_error_catch,range(q),workers=procs)
   out_mean = np.array([k[0] for k in out])
   out_sigma = np.array([k[1] for k in out])
   out_mean = out_mean.reshape(bcast_shape + (m,))
