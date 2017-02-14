@@ -64,7 +64,6 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   logger.info('Performing temporal Gaussian process regression ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-  
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
   # convert units of cls from years to days
@@ -79,7 +78,6 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   start_time = mjd(start_date,'%Y-%m-%d')  
   stop_time = mjd(stop_date,'%Y-%m-%d')  
   time = np.arange(start_time,stop_time+1)
-  # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = gpr(
                         data['time'][:,None],data[dir].T,
@@ -135,15 +133,17 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     posterior (or prior if *do_not_condition* is False), rather than 
     its expected value and uncertainty.
 
-  positions : (N,2) array, optional
-    Positions for the output data set, defaults to positions in the 
-    input data set. 
-    
+  positions : (str array,float array,float array), optional
+    Positions for the output data set. This is a list with three 
+    elements: a string array of position IDs, a float array of 
+    longitudes, and a float array of latitudes. Each array must have 
+    the same length. This defaults to the positions in the input data 
+    set.
+
   '''
   logger.info('Performing spatial Gaussian process regression ...')
   check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
   # convert units of cls from km to m
@@ -153,15 +153,14 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   xy = np.array([x,y]).T
   # set output positions
   if positions is None:
-    positions = np.array([data['longitude'],data['latitude']],copy=True).T
-    ids = np.array(data['id'],copy=True)
+    output_id = np.array(data['id'],copy=True)
+    output_lon = np.array(data['longitude'],copy=True)
+    output_lat = np.array(data['latitude'],copy=True)
   else:  
-    positions = np.asarray(positions)
-    ids = np.array(['%04d' % i for i in range(positions.shape[0])])
+    output_id,output_lon,output_lat = positions
 
-  output_x,output_y = bm(positions[:,0],positions[:,1])
+  output_x,output_y = bm(output_lon,output_lat)
   output_xy = np.array([output_x,output_y]).T 
-  # scaling factor for numerical stability
   for dir in ['east','north','vertical']:
     post,post_sigma = gpr(
                         xy,data[dir],data[dir+'_std_dev'],
@@ -176,9 +175,9 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   # set the space units
   out['space_exponent'] -= sum(diff)
   # set the new lon lat and id if positions was given
-  out['longitude'] = positions[:,0]
-  out['latitude'] = positions[:,1]
-  out['id'] = ids
+  out['longitude'] = output_lon
+  out['latitude'] = output_lat
+  out['id'] = output_id
   return out
   
 

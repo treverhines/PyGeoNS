@@ -65,11 +65,15 @@ verbose = p.pop('verbose')
 logging.basicConfig(level=30-10*verbose)
 input_file = p.pop('input_file')
 output_file = p.pop('output_file')
-# swap output_lonlat from a file name to a numpy array
+# swap positions from a file name to numpy arrays
 if p['positions'] is not None:
-  p['positions'] = np.loadtxt(p['positions'],dtype=float)
-  
-# throw out any Nones and let the lower level functions determine the defaults
+  pos = np.loadtxt(p['positions'],dtype=str)
+  # pos = id,longitude,latitude
+  pos = pos[:,0],pos[:,1].astype(float),pos[:,2].astype(float)
+  p['positions'] = pos
+    
+# throw out any Nones and let the lower level functions determine the 
+# defaults
 for k in p.keys():
   if p[k] is None:
     p.pop(k)

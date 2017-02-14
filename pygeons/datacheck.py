@@ -3,9 +3,9 @@ This module contains functions that check the consistency of data
 dictionaries. See the README.rst for a description of a valid data 
 dictionary.
 '''
-import copy
 import numpy as np
 import logging
+from pygeons.mjd import mjd_inv
 logger = logging.getLogger(__name__)
 
 class DataError(Exception):
@@ -101,6 +101,23 @@ def check_unique_stations(data):
     raise DataError(
       'Dataset contains the following duplicate station IDs : %s ' 
       % duplicates) 
+
+def check_unique_dates(data):
+  ''' 
+  makes sure each station id is unique
+  '''
+  unique_days = list(set(data['time']))
+  if len(data['time']) != len(unique_days):
+    # there are duplicate dates, now find them
+    duplicates = []
+    for i in unique_days:
+      if sum(data['time'] == i) > 1:
+        duplicates += [mjd_inv(i,'%Y-%m-%d')]
+        
+    duplicates = ', '.join(duplicates)
+    raise DataError(
+      'Dataset contains the following duplicate dates : %s ' 
+      % duplicates) 
   
 
 def check_data(data):
@@ -113,6 +130,7 @@ def check_data(data):
   check_positive_uncertainties(data)
   check_missing_data(data)
   check_unique_stations(data)
+  check_unique_dates(data)
   logger.debug('ok')
   
   

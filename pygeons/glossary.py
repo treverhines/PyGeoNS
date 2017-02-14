@@ -86,9 +86,9 @@ POSITIONS = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the file containing latitudes and longitudes of the output 
-positions. If this is not specified then the output positions will be 
-the same as the positions in the input dataset.
+Name of the file containing ids, latitudes, and longitudes of the 
+output positions. If this is not specified then the output positions 
+will be the same as the positions in the input dataset.
 '''
 }
 #####################################################################

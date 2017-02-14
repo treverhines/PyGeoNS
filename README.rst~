@@ -187,10 +187,10 @@ file can be converted back to a PyGeoNS csv file using
 An HDF5 file can be read using, for example, the h5py package in 
 python. Each HDF5 file contain the following entries
 
-* ``time`` : Array of integers with shape (Nt,). Integer values of 
-  modified Julian dates.
-* ``id`` : Array of strings with shape (Nx,). 4-character IDs for each 
-  station.
+* ``time`` : Array of unique integers with shape (Nt,). Integer values 
+  of modified Julian dates.
+* ``id`` : Array of unique strings with shape (Nx,). 4-character IDs 
+  for each station.
 * ``longitude``, ``latitude`` : Array of floats with shape (Nx,). 
   Coordinates for each station.
 * ``east``, ``north``, ``vertical`` : Array of floats with shape 
