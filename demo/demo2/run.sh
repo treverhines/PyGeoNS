@@ -52,7 +52,7 @@ pygeons-toh5 work/data.csv --file_type pbocsv -vv
 pygeons-crop work/data.h5 --start_date 2015-01-01 --stop_date 2017-01-01 -vv
 
 # Temporally differentiate the displacement dataset
-pygeons-tgpr work/data.crop.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1 -vv
+pygeons-tgpr work/data.crop.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1 -vv 
 
 # Spatially differentiate the dataset
 pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/xdiff.h5 \

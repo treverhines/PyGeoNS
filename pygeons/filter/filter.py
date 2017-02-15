@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
                  do_not_condition=False,return_sample=False,
                  start_date=None,stop_date=None,procs=0,
-                 outlier_tol=2.5):
+                 outlier_tol=3.0):
   ''' 
   Temporal Gaussian process regression
   
@@ -103,7 +103,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
 
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                  do_not_condition=False,return_sample=False,
-                 positions=None,procs=0,outlier_tol=2.5):
+                 positions=None,procs=0,outlier_tol=3.0):
   ''' 
   Temporal Gaussian process regression
   

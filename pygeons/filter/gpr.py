@@ -5,7 +5,7 @@ specialized for PyGeoNS
 import numpy as np
 import rbf
 from pygeons.mp import parmap
-from rbf.gpr import PriorGaussianProcess
+from rbf.gauss import PriorGaussianProcess
 import logging
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def _get_trend(y,d,s,x,order,diff):
   return trend
 
 
-def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=2.0,
+def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=3.0,
         diff=None,procs=0,condition=True,return_sample=False):
   '''     
   Performs Guassian process regression on the observed data. This is a 
@@ -125,14 +125,17 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=2.0,
     if condition:
       # iteratively condition and identify outliers
       while True:
-        gpi = gp.recursive_condition(y[~ignore],d[i,~ignore],
-                                     sigma=s[i,~ignore])
+        gpi = gp.recursive_condition(y[~ignore],d[i,~ignore],sigma=s[i,~ignore])
         res = np.abs(gpi.mean(y) - d[i])/s[i]
         # give missing data infinite residuals
         res[is_missing] = np.inf
         rms = np.sqrt(np.mean(res[~ignore]**2))
         if np.all(ignore == (res > tol*rms)):
-          logger.debug('Detected %s outliers or missing observations' % np.sum(ignore))
+          # compile data satistics
+          missing_count = np.sum(is_missing)
+          outlier_count = np.sum(ignore) - missing_count
+          data_count = len(ignore) - missing_count
+          logger.debug('observations: %s, detected outliers: %s' % (data_count,outlier_count))
           break
         else:  
           ignore = (res > tol*rms)

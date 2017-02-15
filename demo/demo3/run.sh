@@ -9,7 +9,7 @@ STD=5.0
 # Order of the polynomial null space
 ORDER=1
 
-### Download sample data set
+# Download sample data set
 rm -rf work/csv
 mkdir -p work/csv
 for i in `cat urls.txt`
@@ -50,7 +50,7 @@ pygeons-view work/data.crop.h5 work/prior.h5 work/prior_sample.h5 \
 # After verifying that the prior is appropriate, we can now condition
 # the prior with the data
 pygeons-tgpr work/data.crop.h5 $STD $CLS \
-             --output_file work/posterior3.h5 --order $ORDER -vv
+             --output_file work/posterior.h5 --order $ORDER -vv
 
 # View the data and the posterior
 pygeons-view work/data.crop.h5 work/posterior.h5 \

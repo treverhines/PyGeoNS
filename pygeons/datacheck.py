@@ -82,7 +82,7 @@ def check_missing_data(data):
       raise DataError('inf values found in *%s*' % d)
 
     if np.any(is_nan):
-      raise DataError('nan values found in *%s*_std_dev' % d)
+      raise DataError('nan values found in *%s_std_dev*' % d)
       
 
 def check_unique_stations(data):
