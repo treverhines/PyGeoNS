@@ -125,7 +125,7 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=3.0,
     if condition:
       # iteratively condition and identify outliers
       while True:
-        gpi = gp.recursive_condition(y[~ignore],d[i,~ignore],sigma=s[i,~ignore])
+        gpi = gp.condition(y[~ignore],d[i,~ignore],sigma=s[i,~ignore])
         res = np.abs(gpi.mean(y) - d[i])/s[i]
         # give missing data infinite residuals
         res[is_missing] = np.inf
