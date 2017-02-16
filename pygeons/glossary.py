@@ -434,12 +434,24 @@ stop date for the input dataset.
 '''
 }
 #####################################################################
+STATIONS = {
+'type':str, 
+'nargs':'+',
+'metavar':'STR', 
+'help': 
+''' 
+List of stations that will not be included in the output dataset. This 
+is in addition to the stations that will be excluded by the 
+longitude/latitude bounds.
+'''
+}
+#####################################################################
 MIN_LAT = {
 'type':float, 
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Minimum station latitude in the ouput data set.
+Minimum latitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
@@ -448,7 +460,7 @@ MAX_LAT = {
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Maximum station latitude in the ouput data set.
+Maximum latitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
@@ -457,7 +469,7 @@ MIN_LON = {
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Minimum station longitude in the ouput data set.
+Minimum longitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
@@ -466,7 +478,7 @@ MAX_LON = {
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Maximum station longitude in the ouput data set.
+Maximum longitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
@@ -667,6 +679,7 @@ GLOSSARY = {
 'break_dates':BREAK_DATES,
 'start_date':START_DATE,
 'stop_date':STOP_DATE,
+'stations':STATIONS,
 'min_lat':MIN_LAT,
 'max_lat':MAX_LAT,
 'min_lon':MIN_LON,

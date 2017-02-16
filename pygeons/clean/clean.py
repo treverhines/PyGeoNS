@@ -6,7 +6,6 @@ from __future__ import division
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
-from pygeons.datacheck import check_data
 from pygeons.mjd import mjd,mjd_inv
 from pygeons.basemap import make_basemap
 from pygeons.clean.iclean import interactive_cleaner
@@ -20,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 def pygeons_crop(data,start_date=None,stop_date=None,
                  min_lat=-np.inf,max_lat=np.inf,
-                 min_lon=-np.inf,max_lon=np.inf):
+                 min_lon=-np.inf,max_lon=np.inf,
+                 stations=None):
   ''' 
   Sets the time span of the data set to be between *start_date* and 
   *stop_date*. Sets the stations to be within the latitude and 
@@ -41,6 +41,10 @@ def pygeons_crop(data,start_date=None,stop_date=None,
       
   min_lon, max_lon, min_lat, max_lat : float, optional
     Spatial bounds on the output data set
+  
+  stations : str list, optional
+    List of stations to be removed from the dataset. This is in 
+    addition to the station removed by the lon/lat bounds.
     
   Returns
   -------
@@ -49,7 +53,6 @@ def pygeons_crop(data,start_date=None,stop_date=None,
 
   '''
   logger.info('Cropping data set ...')
-  check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   if start_date is None:
@@ -57,6 +60,9 @@ def pygeons_crop(data,start_date=None,stop_date=None,
 
   if stop_date is None:
     stop_date = mjd_inv(data['time'].max(),'%Y-%m-%d')
+  
+  if stations is None:
+    stations = []  
 
   # remove times that are not within the bounds of *start_date* and 
   # *stop_date*
@@ -69,11 +75,15 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     out[dir] = out[dir][idx,:]
     out[dir + '_std_dev'] = out[dir + '_std_dev'][idx,:]
     
-  # remove stations that are not within the bounds 
-  idx = ((data['longitude'] > min_lon) &
-         (data['longitude'] < max_lon) &
-         (data['latitude'] > min_lat) &
-         (data['latitude'] < max_lat))
+  # find stations that are within the bounds
+  in_bounds = ((data['longitude'] > min_lon) &
+               (data['longitude'] < max_lon) &
+               (data['latitude'] > min_lat) &
+               (data['latitude'] < max_lat))
+  # find stations that are in the list of stations to be removed                
+  in_list = np.array([i in stations for i in data['id']])
+  # keep stations that are in bounds and not in the list
+  idx, = (in_bounds & ~in_list).nonzero()
          
   out['id'] = out['id'][idx]
   out['longitude'] = out['longitude'][idx]
@@ -109,7 +119,6 @@ def pygeons_clean(data,resolution='i',
     
   '''
   logger.info('Cleaning data set ...')
-  check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',

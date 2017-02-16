@@ -16,6 +16,7 @@ if __name__ == '__main__':
                  'exec/pygeons-crop',
                  'exec/pygeons-view',
                  'exec/pygeons-strain',
+                 'exec/pygeons-info',
                  'exec/pygeons-toh5',
                  'exec/pygeons-totext'],
         packages=['pygeons','pygeons.io','pygeons.plot',

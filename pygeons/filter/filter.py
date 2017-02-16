@@ -8,7 +8,6 @@ import logging
 import rbf
 from pygeons.filter.gpr import gpr
 from pygeons.mjd import mjd_inv,mjd
-from pygeons.datacheck import check_data
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
@@ -68,7 +67,6 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     
   '''
   logger.info('Performing temporal Gaussian process regression ...')
-  check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
@@ -153,7 +151,6 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
 
   '''
   logger.info('Performing spatial Gaussian process regression ...')
-  check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
   # convert units of sigma from mm**p years**q to m**p days**q
   sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
@@ -198,7 +195,6 @@ def pygeons_tfilter(data,diff=(0,),fill='none',
   time smoothing
   '''
   logger.info('Performing temporal RBF-FD filtering ...')
-  check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())  
 
   vert,smp = make_time_vert_smp(break_dates)
@@ -225,10 +221,8 @@ def pygeons_sfilter(data,diff=(0,0),fill='none',
   space smoothing
   '''
   logger.info('Performing spatial RBF-FD filtering ...')
-  check_data(data)
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
-  data.check_self_consistency()
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T

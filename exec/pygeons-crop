@@ -14,7 +14,7 @@ contained in the resulting dataset will be each day ranging from
 *start_date* to *end_date*. The stations in the resulting datasets 
 will be within the bounds set by *min/max_lon/lat*. Unlike for 
 *pygeons-clean*, this function removes the dates and stations from the 
-datset, rather than masking the out of bounds data.
+datset, rather than masking them.
 
 ''')
   
@@ -22,6 +22,7 @@ p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-o','--output_file',**GLOSSARY['output_file'])
 p.add_argument('--start_date',**GLOSSARY['start_date'])
 p.add_argument('--stop_date',**GLOSSARY['stop_date'])
+p.add_argument('--stations',**GLOSSARY['stations'])
 p.add_argument('--min_lat',**GLOSSARY['min_lat'])
 p.add_argument('--max_lat',**GLOSSARY['max_lat'])
 p.add_argument('--min_lon',**GLOSSARY['min_lon'])

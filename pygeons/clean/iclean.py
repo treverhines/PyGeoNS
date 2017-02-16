@@ -172,8 +172,7 @@ figures
     InteractiveViewer.connect(self)
         
   def remove_jump(self,jump_time,radius):
-    data = self.data_sets[0]
-    # expand sigma to the size of data
+    data = np.copy(self.data_sets[0])
     sigma = self.sigma_sets[0]
 
     xidx = self.config['xidx']
@@ -182,30 +181,24 @@ figures
     tidx_left, = np.nonzero((self.t < jump_time) & 
                             (self.t >= (jump_time-radius)))
 
-    mean_right,sigma_right = weighted_mean(data[tidx_right,xidx],
-                                           sigma[tidx_right,xidx],
-                                           axis=0)
-    mean_left,sigma_left = weighted_mean(data[tidx_left,xidx],
-                                         sigma[tidx_left,xidx],
-                                         axis=0)
+    mean_right,_ = weighted_mean(data[tidx_right,xidx,:],
+                                 sigma[tidx_right,xidx,:],
+                                 axis=0)
+    mean_left,_ = weighted_mean(data[tidx_left,xidx,:],
+                                sigma[tidx_left,xidx,:],
+                                axis=0)
     # jump for each component
     jump = mean_right - mean_left
-    # uncertainty in the jump estimate
-    jump_sigma = np.sqrt(sigma_right**2 + sigma_left**2)
-    # find indices of all times after the jump
+    # only remove jumps where a jump can be calculated
+    finite_idx, = np.isfinite(jump).nonzero()
     all_tidx_right, = np.nonzero(self.t > jump_time)
-    # remove jump from observations made after the jump 
-    new_pos = data[all_tidx_right,xidx] - jump[None]
-    # increase uncertainty 
-    new_var = sigma[all_tidx_right,xidx]**2 + jump_sigma[None]**2
-    new_sigma = np.sqrt(new_var)
+    new_pos = data[all_tidx_right,xidx,:]
+    new_pos[:,finite_idx] -= jump[finite_idx] 
     self.data_sets[0][all_tidx_right,xidx] = new_pos
-    self.sigma_sets[0][all_tidx_right,xidx] = new_sigma
     name = self.station_labels[xidx]
     logger.info('removed jump at time %g for station %s using data from time %g to %g\n' % 
                 (jump_time,name,jump_time-radius,jump_time+radius))
       
-    
   def remove_outliers(self,start_time,end_time):
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
@@ -213,7 +206,6 @@ figures
     self.sigma_sets[0][tidx,xidx] = np.inf
     name = self.station_labels[xidx]
     logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
-          
 
   def remove_jump_all(self,jump_time,radius):
     xidx = self.config['xidx']
@@ -223,7 +215,6 @@ figures
       self.remove_jump(jump_time,radius)
 
     self.config['xidx'] = xidx
-
 
   def remove_outliers_all(self,start_time,end_time):
     xidx = self.config['xidx']

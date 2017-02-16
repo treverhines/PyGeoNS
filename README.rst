@@ -54,6 +54,7 @@ these functions with a '-h' flag to see more information.
 
 * ``pygeons-toh5`` : Converts data from a text file to an hdf5 file.
 * ``pygeons-totext`` : Converts data from a hdf5 file to a csv file.
+* ``pygeons-info`` : Prints metadata from a data file to stdout.
 * ``pygeons-view`` : Starts an interactive map view and time series 
   view of vector data sets (e.g. displacements, deformation gradients, 
   etc.).
