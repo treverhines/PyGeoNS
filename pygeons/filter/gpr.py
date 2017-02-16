@@ -29,7 +29,7 @@ def _get_trend(y,d,s,x,order,diff):
   return trend
 
 
-def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=3.0,
+def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
         diff=None,procs=0,condition=True,return_sample=False):
   '''     
   Performs Guassian process regression on the observed data. This is a 
