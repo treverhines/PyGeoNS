@@ -134,7 +134,7 @@ figures.
                su=None,sv=None,sz=None, 
                station_labels=None,time_labels=None,data_set_labels=None,
                quiver_key_length=None,quiver_scale=None,quiver_key_pos=(0.15,0.2),
-               image_clim=None,image_cmap='RdBu_r',image_resolution=200,
+               image_clim=None,image_cmap='RdBu_r',image_resolution=300,
                map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
                ts_ax=None,ts_title=None,
                units=None,scatter_size=100,fontsize=10,

@@ -214,7 +214,6 @@ python. Each HDF5 file contain the following entries
   
 Demonstration
 =============
-
 See the scripts named ``run.sh`` in the ``demo`` directory for 
 examples of how to use PyGeoNS. The below commands run through the 
 script ``demo/demo4/run.sh``. In this demonstration we will be looking 
@@ -225,8 +224,8 @@ or near the Olympic Peninsula in Washington.
 Downloading and formatting data
 -------------------------------
 We begin by downloading GPS data from UNAVCO's FTP repository. We have 
-the URLs for the station files saved in ``urls.csv``. The contents of 
-``urls.csv`` are in the following code block
+the URLs for the station files saved in ``urls.txt``. Below are the contents of 
+``urls.txt``
 
 .. code-block::
 
@@ -278,7 +277,7 @@ light-weight.
   $ pygeons-toh5 work/data.csv \
                  --file_type pbocsv \
                  --output_file work/data.h5
-  $ pygeons-crop work/data.csv \
+  $ pygeons-crop work/data.h5 \
                  --start_date 2015-01-01 \
                  --stop_date 2017-01-01 \
                  --output_file work/data.h5
@@ -328,7 +327,8 @@ then done by
 
 .. code-block:: 
   
-  $ pygeons-tgpr work/data.h5 10.0 0.05 --output_file work/smooth_disp.h5 -vv
+  $ pygeons-tgpr work/data.h5 10.0 0.05 \
+                 --output_file work/smooth_disp.h5 -vv
 
 We can compare the observed and smoothed data to make sure that our 
 prior was not too restrictive with the following command
@@ -342,8 +342,9 @@ To calculate velocities we call ``pygeons-tgpr`` again but with the
 
 .. code-block::
   
-  $ pygeons-tgpr work/data.h5 10.0 0.05 --diff 1 --output_file work/velocity.h5 -vv
-
+  $ pygeons-tgpr work/data.h5 10.0 0.05 \
+                 --diff 1 \
+                 --output_file work/velocity.h5 -vv
 
 We then spatially smooth and differentiate the velocities. We assume 
 that surface velocities resulting from slow slip events have a 
@@ -355,15 +356,20 @@ direction with two commands.
 
 .. code-block::
   
-  $ pygeons-sgpr work/data.h5 100.0 150.0 --diff 1 0 --output_file work/xdiff.h5 -vv
-  $ pygeons-sgpr work/data.h5 100.0 150.0 --diff 0 1 --output_file work/ydiff.h5 -vv
+  $ pygeons-sgpr work/velocity.h5 100.0 150.0 \
+                 --diff 1 0 \
+                 --output_file work/xdiff.h5 -vv
+  $ pygeons-sgpr work/velocity.h5 100.0 150.0 \
+                 --diff 0 1 \
+                 --output_file work/ydiff.h5 -vv
 
 We now have two HDF5 data files which contain the deformation 
 gradients. We can interactively view the strain rates with command
 
-  $ pygeons-strain work/xdiff.h5 work/ydiff.h5
+  $ pygeons-strain work/xdiff.h5 work/ydiff.h5 \
                    --scale 1e4 \
                    --key_magnitude 1.0 \
+                   --key_position 0.1 0.9
 
 Lastly, if you would prefer a human readable format for the 
 deformation gradients, the HDF5 files can be converted to csv files by
