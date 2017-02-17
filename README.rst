@@ -366,6 +366,8 @@ direction with two commands.
 We now have two HDF5 data files which contain the deformation 
 gradients. We can interactively view the strain rates with command
 
+.. code-block::
+
   $ pygeons-strain work/xdiff.h5 work/ydiff.h5 \
                    --scale 1e4 \
                    --key_magnitude 1.0 \
@@ -373,6 +375,8 @@ gradients. We can interactively view the strain rates with command
 
 Lastly, if you would prefer a human readable format for the 
 deformation gradients, the HDF5 files can be converted to csv files by
+
+.. code-block::
 
   $ pygeons-totext work/xdiff.h5 
   $ pygeons-totext work/ydiff.h5 
