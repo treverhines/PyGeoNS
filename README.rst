@@ -380,7 +380,7 @@ Which will produce the following figures
   compression and blue indicates extension. The shaded region 
   indicates the 68% confidence interval in the normal strain rates. 
 
-.. figure:: demo/demo4/figures/time_series.png
+.. figure:: demo/demo4/figures/time_series_view.png
 
   Time series of each component of the strain rate tensor at the 
   station indicated by the black dot. The shaded region indicates the 

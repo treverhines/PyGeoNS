@@ -380,7 +380,7 @@ Which will produce the following figures
   compression and blue indicates extension. The shaded region 
   indicates the 68% confidence interval in the normal strain rates. 
 
-.. figure:: demo/demo4/figures/time_series.png
+.. figure:: demo/demo4/figures/time_series_view.png
 
   Time series of each component of the strain rate tensor at the 
   station indicated by the black dot. The shaded region indicates the 
@@ -390,9 +390,6 @@ Which will produce the following figures
   that station is not used to calculate the deformation gradient. As a 
   result, the deformation gradient has small jumps whenever a station 
   is flagged.
-  
-  which causes station with anomalously high 
-  velocities to be ignored when computing the deformation gradients.from some detected outlier being
 
 Lastly, if you would prefer a human-readable format for the 
 deformation gradients, the HDF5 files can be converted to text files by
