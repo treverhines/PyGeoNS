@@ -215,8 +215,127 @@ python. Each HDF5 file contain the following entries
 Demonstration
 =============
 
-See the bash scripts ``demo/demo1/run.sh`` and ``demo/demo2/run.sh`` 
-for examples of how to use PyGeoNS.  These scripts will open several 
+See the scripts named ``run.sh`` in the ``demo`` directory for 
+examples of how to use PyGeoNS. The below commands run through the 
+script ``demo/demo4/run.sh``.  
+
+Downloading and formatting data
+-------------------------------
+
+We begin by downloading GPS data from UNAVCO's FTP repository. We have 
+the URLs for the station files saved in ``urls.csv``. The contents of 
+``urls.csv`` are in the following code block
+
+.. code-block::
+
+  ftp://data-out.unavco.org/pub/products/position/TWHL/TWHL.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/SEDR/SEDR.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/SEAT/SEAT.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/SC03/SC03.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/SC02/SC02.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/PCOL/PCOL.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/PABH/PABH.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P816/P816.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P815/P815.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P439/P439.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P438/P438.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P437/P437.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P436/P436.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P435/P435.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P426/P426.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P424/P424.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P423/P423.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P419/P419.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P418/P418.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P403/P403.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P402/P402.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P401/P401.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P400/P400.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P399/P399.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/P064/P064.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/NEAH/NEAH.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/KTBW/KTBW.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/BLYN/BLYN.pbo.nam08.csv
+  ftp://data-out.unavco.org/pub/products/position/ALBH/ALBH.pbo.nam08.csv
+
+Use UNAVCOs data archive interface, which can be found at 
+www.unavco.org, to find the URLs for other GPS stations. We use 
+``wget`` and ``sed`` to download the station files and merge them into 
+a single csv file.
+
+.. code-block::
+
+  $ mkdir -p work/csv
+  $ for i in `cat urls.txt`; do wget -P work/csv $i; done 
+  $ sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+
+The csv file ``work/data.csv`` is then converted to an HDF5 data file
+
+.. code-block::
+
+  $ pygeons-toh5 work/data.csv \
+                 --file_type pbocsv \
+                 --output_file work/data.h5
+
+Metadata for the newly created data file can be viewed with the 
+following command
+
+.. code-block::
+  
+  $ pygeons-info work/data.h5
+
+  units : meters**1 days**0
+  stations : 29
+  times : 732
+  time range : 2015-01-01, 2017-01-01
+  longitude range : -124.624907154, -122.223847947
+  latitude range : 47.0159055879, 48.7081927394
+  station names : ALBH, BLYN, KTBW, NEAH, P064, P399, P400, P401, P402, P403, P418, P419, P423, P424, P426, P435, P436, P437, P438, P439, P815, P816, PABH, PCOL, SC02, SC03, SEAT, SEDR, TWHL
+
+The data set can be interactively viewed with the command
+
+.. code-block::
+  
+  $ pygeons-view work/data.h5
+  
+This will open up two interactive figures. Use the left/right arrow 
+keys to scroll through time and the up/down arrow keys to scroll 
+through stations. More instructions will be printed to the screen when 
+the interactive figures are displayed. 
+
+PyGeoNS is primarily intended for calculating strain rates from GPS 
+displacement time series. This is done in two steps. First, the 
+displacements are temporally smoothed and differentiated with 
+``pygeons-tgpr``. Then the resulting velocities are spatially smoothed 
+and differentiated with ``pygeons-sgpr`` to get the deformation 
+gradients. Viewing the strain rates is done by calling 
+``pygeons-strain``. The below code blocks demonstrate this process 
+using the dataset created above.  We first specify a prior for the 
+underlying signal which we are trying to recover from the displacement 
+time series. We assume that the signal has a characteristic time-scale 
+of 0.05 years, and the standard deviation of the signals amplitude is 
+10 mm. Temporal smoothing is done by
+
+.. code-block::
+  
+  $ pygeons-tgpr work/data.h5 10.0 0.05 --output_file work/smooth_disp.h5 -vv
+
+We can compare the observed and smoothed data to make sure that our 
+prior was not too restrictive with following command
+
+.. code-block::
+  
+  $ pygeons-view work/data.h5 work/smooth_disp.h5
+
+Temporal differention is done by calling ``pygeons-tgpr`` again but 
+with the ``diff`` argument 
+
+.. code-block::
+  
+  $ pygeons-tgpr work/data.h5 10.0 0.05 --diff 1 --output_file work/velocity.h5 -vv
+
+
+These scripts will open several 
 interactive figures. Use the arrow keys to scroll between stations and 
 time epochs. Additional instructions will be printed out when the 
 figures open. Here is a figure produced from ``demo/demo2/run.sh``, 
