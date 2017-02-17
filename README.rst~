@@ -221,8 +221,6 @@ for elevated strain rates resulting from slow slip events in the
 Cascadia subduction zone. The stations we will use are all located on 
 or near the Olympic Peninsula in Washington.
 
-Downloading and formatting data
--------------------------------
 We begin by downloading GPS data from UNAVCO's FTP repository. We have 
 the URLs for the station files saved in ``urls.txt``. Below are the contents of 
 ``urls.txt``
@@ -317,8 +315,8 @@ gradients. Viewing the strain rates is done by calling
 ``pygeons-strain``. The below code blocks demonstrate this process 
 using the dataset created above. 
 
-We first specify a prior for the underlying signal which we are trying 
-to recover. That signal is the deformation resulting from slow slip 
+We specify a prior for the underlying signal which we are trying to 
+recover. That signal is the deformation resulting from slow slip 
 events. We assume that slow slip events have a characteristic 
 time-scale of 0.05 years, and the standard deviation of the signals 
 amplitude is 10 mm (which is roughly the magnitude of observed 
@@ -328,14 +326,14 @@ then done by
 .. code-block:: 
   
   $ pygeons-tgpr work/data.h5 10.0 0.05 \
-                 --output_file work/smooth_disp.h5 -vv
+                 --output_file work/smooth.h5 -vv
 
 We can compare the observed and smoothed data to make sure that our 
 prior was not too restrictive with the following command
 
 .. code-block::
   
-  $ pygeons-view work/data.h5 work/smooth_disp.h5
+  $ pygeons-view work/data.h5 work/smooth.h5
 
 To calculate velocities we call ``pygeons-tgpr`` again but with the 
 ``diff`` argument
@@ -364,15 +362,19 @@ direction with two commands.
                  --output_file work/ydiff.h5 -vv
 
 We now have two HDF5 data files which contain the deformation 
-gradients. We can interactively view the strain rates with command
+gradients. We can interactively view the strain rates with the command
+
+.. code-block::
 
   $ pygeons-strain work/xdiff.h5 work/ydiff.h5 \
                    --scale 1e4 \
                    --key_magnitude 1.0 \
                    --key_position 0.1 0.9
 
-Lastly, if you would prefer a human readable format for the 
-deformation gradients, the HDF5 files can be converted to csv files by
+Lastly, if you would prefer a human-readable format for the 
+deformation gradients, the HDF5 files can be converted to text files by
+
+.. code-block::
 
   $ pygeons-totext work/xdiff.h5 
   $ pygeons-totext work/ydiff.h5 
