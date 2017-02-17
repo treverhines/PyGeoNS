@@ -371,6 +371,29 @@ gradients. We can interactively view the strain rates with the command
                    --key_magnitude 1.0 \
                    --key_position 0.1 0.9
 
+Which will produce the following figures
+
+.. figure:: demo/demo4/figures/map_view.png
+
+  Map view of strain rates during a slow slip event. The glyphs show 
+  the normal strain rates along each azimuth, where red indicates 
+  compression and blue indicates extension. The shaded region 
+  indicates the 68% confidence interval in the normal strain rates. 
+
+.. figure:: demo/demo4/figures/time_series.png
+
+  Time series of each component of the strain rate tensor at the 
+  station indicated by the black dot. The shaded region indicates the 
+  68% confidence interval. The jaggedness in the solution is a result 
+  of the outlier detection algorithm. When the outlier detection 
+  algorithm flags a station for having anomalously high velocities, 
+  that station is not used to calculate the deformation gradient. As a 
+  result, the deformation gradient has small jumps whenever a station 
+  is flagged.
+  
+  which causes station with anomalously high 
+  velocities to be ignored when computing the deformation gradients.from some detected outlier being
+
 Lastly, if you would prefer a human-readable format for the 
 deformation gradients, the HDF5 files can be converted to text files by
 
@@ -378,17 +401,3 @@ deformation gradients, the HDF5 files can be converted to text files by
 
   $ pygeons-totext work/xdiff.h5 
   $ pygeons-totext work/ydiff.h5 
-
-.. figure:: demo/demo2/figures/map_view.png
-
-  Map view of strain rates during a slow slip event. The glyphs show 
-  the normal strain rates along each azimuth, where red indicates 
-  compression and blue indicates extension. The shaded region 
-  indicates the 68% confidence interval in the normal strain rates.
-
-.. figure:: demo/demo2/figures/time_series.png
-
-  Time series of each component of the strain rate tensor at the 
-  station indicated by the black dot. The shaded region indicates the 
-  68% confidence interval.
-
