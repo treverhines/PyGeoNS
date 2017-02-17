@@ -217,11 +217,13 @@ Demonstration
 
 See the scripts named ``run.sh`` in the ``demo`` directory for 
 examples of how to use PyGeoNS. The below commands run through the 
-script ``demo/demo4/run.sh``.  
+script ``demo/demo4/run.sh``. In this demonstration we will be looking 
+for elevated strain rates resulting from slow slip events in the 
+Cascadia subduction zone. The stations we will use are all located on 
+or near the Olympic Peninsula in Washington.
 
 Downloading and formatting data
 -------------------------------
-
 We begin by downloading GPS data from UNAVCO's FTP repository. We have 
 the URLs for the station files saved in ``urls.csv``. The contents of 
 ``urls.csv`` are in the following code block
@@ -258,10 +260,8 @@ the URLs for the station files saved in ``urls.csv``. The contents of
   ftp://data-out.unavco.org/pub/products/position/BLYN/BLYN.pbo.nam08.csv
   ftp://data-out.unavco.org/pub/products/position/ALBH/ALBH.pbo.nam08.csv
 
-Use UNAVCOs data archive interface, which can be found at 
-www.unavco.org, to find the URLs for other GPS stations. We use 
-``wget`` and ``sed`` to download the station files and merge them into 
-a single csv file.
+We use ``wget`` and ``sed`` to download the station files and merge 
+them into a single csv file.
 
 .. code-block::
 
@@ -269,12 +269,18 @@ a single csv file.
   $ for i in `cat urls.txt`; do wget -P work/csv $i; done 
   $ sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
-The csv file ``work/data.csv`` is then converted to an HDF5 data file
+The csv file ``work/data.csv`` is then converted to an HDF5 data file 
+and temporally cropped to keep this demonstration computationally 
+light-weight.
 
 .. code-block::
 
   $ pygeons-toh5 work/data.csv \
                  --file_type pbocsv \
+                 --output_file work/data.h5
+  $ pygeons-crop work/data.csv \
+                 --start_date 2015-01-01 \
+                 --stop_date 2017-01-01 \
                  --output_file work/data.h5
 
 Metadata for the newly created data file can be viewed with the 
@@ -301,7 +307,7 @@ The data set can be interactively viewed with the command
 This will open up two interactive figures. Use the left/right arrow 
 keys to scroll through time and the up/down arrow keys to scroll 
 through stations. More instructions will be printed to the screen when 
-the interactive figures are displayed. 
+the interactive figures are displayed.
 
 PyGeoNS is primarily intended for calculating strain rates from GPS 
 displacement time series. This is done in two steps. First, the 
@@ -310,36 +316,60 @@ displacements are temporally smoothed and differentiated with
 and differentiated with ``pygeons-sgpr`` to get the deformation 
 gradients. Viewing the strain rates is done by calling 
 ``pygeons-strain``. The below code blocks demonstrate this process 
-using the dataset created above.  We first specify a prior for the 
-underlying signal which we are trying to recover from the displacement 
-time series. We assume that the signal has a characteristic time-scale 
-of 0.05 years, and the standard deviation of the signals amplitude is 
-10 mm. Temporal smoothing is done by
+using the dataset created above. 
 
-.. code-block::
+We first specify a prior for the underlying signal which we are trying 
+to recover. That signal is the deformation resulting from slow slip 
+events. We assume that slow slip events have a characteristic 
+time-scale of 0.05 years, and the standard deviation of the signals 
+amplitude is 10 mm (which is roughly the magnitude of observed 
+displacements resulting from slow slip events). Temporal smoothing is 
+then done by
+
+.. code-block:: 
   
   $ pygeons-tgpr work/data.h5 10.0 0.05 --output_file work/smooth_disp.h5 -vv
 
 We can compare the observed and smoothed data to make sure that our 
-prior was not too restrictive with following command
+prior was not too restrictive with the following command
 
 .. code-block::
   
   $ pygeons-view work/data.h5 work/smooth_disp.h5
 
-Temporal differention is done by calling ``pygeons-tgpr`` again but 
-with the ``diff`` argument 
+To calculate velocities we call ``pygeons-tgpr`` again but with the 
+``diff`` argument
 
 .. code-block::
   
   $ pygeons-tgpr work/data.h5 10.0 0.05 --diff 1 --output_file work/velocity.h5 -vv
 
-These scripts will open several 
-interactive figures. Use the arrow keys to scroll between stations and 
-time epochs. Additional instructions will be printed out when the 
-figures open. Here is a figure produced from ``demo/demo2/run.sh``, 
-which shows the estimate strain rates during a recent slow slip event 
-in Washington.
+
+We then spatially smooth and differentiate the velocities. We assume 
+that surface velocities resulting from slow slip events have a 
+characteristic length-scale of 150 km, and the standard deviation of 
+the signals amplitude is 100 mm/yr (which is roughly the magnitude of 
+velocities resulting from slow slip events). We spatially 
+differentiate the velocities along the east (x) and north (y) 
+direction with two commands.
+
+.. code-block::
+  
+  $ pygeons-sgpr work/data.h5 100.0 150.0 --diff 1 0 --output_file work/xdiff.h5 -vv
+  $ pygeons-sgpr work/data.h5 100.0 150.0 --diff 0 1 --output_file work/ydiff.h5 -vv
+
+We now have two HDF5 data files which contain the deformation 
+gradients. We can interactively view the strain rates with command
+
+  $ pygeons-strain work/xdiff.h5 work/ydiff.h5
+                   --scale 1e4 \
+                   --key_magnitude 1.0 \
+
+Lastly, if you would prefer a human readable format for the 
+deformation gradients, the HDF5 files can be converted to csv files by
+
+  $ pygeons-totext work/xdiff.h5 
+  $ pygeons-totext work/ydiff.h5 
 
 .. figure:: demo/demo2/figures/map_view.png
 
