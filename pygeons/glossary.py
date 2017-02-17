@@ -169,7 +169,7 @@ Label for each data sets.
 '''
 }
 #####################################################################
-RESOLUTION = {
+MAP_RESOLUTION = {
 'type':str,
 'metavar':'STR',
 'help':
@@ -311,7 +311,7 @@ Colormap for the vertical deformation.
 '''
 }
 #####################################################################
-IMAGE_ARRAY_SIZE = {
+IMAGE_RESOLUTION = {
 'type':int,
 'metavar':'INT',
 'help':
@@ -666,8 +666,8 @@ GLOSSARY = {
 'scatter_size':SCATTER_SIZE,
 'image_clim':IMAGE_CLIM,
 'image_cmap':IMAGE_CMAP,
-'image_array_size':IMAGE_ARRAY_SIZE,
-'resolution':RESOLUTION,
+'image_resolution':IMAGE_RESOLUTION,
+'map_resolution':MAP_RESOLUTION,
 'ts_title':TS_TITLE,
 'map_title':MAP_TITLE,
 'map_xlim':MAP_XLIM,

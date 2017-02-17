@@ -12,7 +12,6 @@ from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.plot.iview import interactive_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
-from pygeons.datacheck import check_data
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_space_vert_smp
 logger = logging.getLogger(__name__)
@@ -222,7 +221,6 @@ def pygeons_view(data_list,resolution='i',
 
   '''
   logger.info('Viewing vector data sets ...')
-  for d in data_list: check_data(d)
   data_list = _common_context(data_list)
 
   t = data_list[0]['time']
@@ -289,8 +287,6 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
 
   '''
   logger.info('Viewing strain data ...')
-  check_data(data_dx)
-  check_data(data_dy)
   data_dx,data_dy = _common_context([data_dx,data_dy])
   
   if (data_dx['space_exponent'] != 0) | data_dy['space_exponent'] != 0:

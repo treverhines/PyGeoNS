@@ -196,7 +196,7 @@ def _setup_ts_ax(ax_lst):
   return
 
 
-def pygeons_view(data_list,resolution='i',
+def pygeons_view(data_list,map_resolution='i',
                  break_lons=None,break_lats=None,
                  break_conn=None,**kwargs):
   ''' 
@@ -207,7 +207,7 @@ def pygeons_view(data_list,resolution='i',
     data_list : (N,) list of dicts
       list of data dictionaries being plotted
       
-    resolution : str
+    map_resolution : str
       basemap resolution
     
     break_lons : (N,) array
@@ -242,7 +242,7 @@ def pygeons_view(data_list,resolution='i',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-  bm = make_basemap(lon,lat,resolution=resolution)
+  bm = make_basemap(lon,lat,resolution=map_resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
   vert,smp = make_space_vert_smp(break_lons,break_lats,
@@ -261,7 +261,7 @@ def pygeons_view(data_list,resolution='i',
   return
 
 
-def pygeons_strain(data_dx,data_dy,resolution='i',
+def pygeons_strain(data_dx,data_dy,map_resolution='i',
                    break_lons=None,break_lats=None,
                    break_conn=None,**kwargs):
   ''' 
@@ -273,7 +273,7 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
 
     data_dy : y derivative data dictionaries 
       
-    resolution : str
+    map_resolution : str
       basemap resolution
       
     break_lons : (N,) array
@@ -312,7 +312,7 @@ def pygeons_strain(data_dx,data_dy,resolution='i',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-  bm = make_basemap(lon,lat,resolution=resolution)
+  bm = make_basemap(lon,lat,resolution=map_resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
   vert,smp = make_space_vert_smp(break_lons,break_lats,break_conn,bm)

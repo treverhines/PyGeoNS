@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import matplotlib.pyplot as plt
 import numpy as np
 from pygeons.plot.rin import restricted_input
@@ -135,7 +134,7 @@ figures.
                su=None,sv=None,sz=None, 
                station_labels=None,time_labels=None,data_set_labels=None,
                quiver_key_length=None,quiver_scale=None,quiver_key_pos=(0.15,0.2),
-               image_clim=None,image_cmap='RdBu_r',image_array_size=200,
+               image_clim=None,image_cmap='RdBu_r',image_resolution=200,
                map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
                ts_ax=None,ts_title=None,
                units=None,scatter_size=100,fontsize=10,
@@ -182,7 +181,7 @@ figures.
       image_cmap : Colormap instance
         colormap for vertical deformation
 
-      image_array_size : int
+      image_resolution : int
         number of columns and rows in the matrix passed to plt.imshow. 
         Larger number produces crisper Voronoi cells
 
@@ -345,7 +344,7 @@ figures.
     self.config['units'] = units
     self.config['image_cmap'] = image_cmap
     self.config['image_clim'] = image_clim
-    self.config['image_array_size'] = image_array_size
+    self.config['image_resolution'] = image_resolution
     self.config['quiver_scale'] = quiver_scale
     self.config['quiver_key_pos'] = quiver_key_pos        
     self.config['quiver_key_length'] = quiver_key_length
@@ -490,10 +489,10 @@ figures.
     #
     self.x_itp = [np.linspace(self.config['map_xlim'][0],
                               self.config['map_xlim'][1],
-                              self.config['image_array_size']),
+                              self.config['image_resolution']),
                   np.linspace(self.config['map_ylim'][0],
                               self.config['map_ylim'][1],
-                              self.config['image_array_size'])]
+                              self.config['image_resolution'])]
     data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
     if self.config['image_clim'] is None:
