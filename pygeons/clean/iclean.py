@@ -151,8 +151,9 @@ figures
                                data_set_labels=data_set_labels,
                                **kwargs)
     self._mode = None
-    self._apply_to_all = False
     self._mouse_is_pressed = False
+    # record of all removed jumps and outliers  
+    self.log = []
 
   def get_data(self):
     u = self.data_sets[0][:,:,0]
@@ -171,60 +172,46 @@ figures
     self.map_fig.canvas.mpl_connect('key_release_event',self.on_key_release)
     InteractiveViewer.connect(self)
         
-  def remove_jump(self,jump_time,radius):
-    data = np.copy(self.data_sets[0])
-    sigma = self.sigma_sets[0]
-
+  def remove_jump(self,jump_time,delta):
+    ''' 
+    estimates and removes a jump at time *jump_time*. The jump size is 
+    the difference between the mean values over an interval *delta* 
+    before and after the jump. If no data is available over these 
+    intervals then no changes will be made.
+    '''
     xidx = self.config['xidx']
-    tidx_right, = np.nonzero((self.t > jump_time) & 
-                             (self.t <= (jump_time+radius)))
+    tidx_right, = np.nonzero((self.t >= jump_time) & 
+                             (self.t < (jump_time+delta)))
     tidx_left, = np.nonzero((self.t < jump_time) & 
-                            (self.t >= (jump_time-radius)))
-
-    mean_right,_ = weighted_mean(data[tidx_right,xidx,:],
-                                 sigma[tidx_right,xidx,:],
+                            (self.t >= (jump_time-delta)))
+    mean_right,_ = weighted_mean(self.data_sets[0][tidx_right,xidx,:],
+                                 self.sigma_sets[0][tidx_right,xidx,:],
                                  axis=0)
-    mean_left,_ = weighted_mean(data[tidx_left,xidx,:],
-                                sigma[tidx_left,xidx,:],
+    mean_left,_ = weighted_mean(self.data_sets[0][tidx_left,xidx,:],
+                                self.sigma_sets[0][tidx_left,xidx,:],
                                 axis=0)
     # jump for each component
     jump = mean_right - mean_left
-    # only remove jumps where a jump can be calculated
+    # only remove jumps when a jump can be calculated
     finite_idx, = np.isfinite(jump).nonzero()
-    all_tidx_right, = np.nonzero(self.t > jump_time)
-    new_pos = data[all_tidx_right,xidx,:]
-    new_pos[:,finite_idx] -= jump[finite_idx] 
+    all_tidx_right, = np.nonzero(self.t >= jump_time)
+    new_pos = self.data_sets[0][all_tidx_right,xidx,:]
+    new_pos[:,finite_idx] = new_pos[:,finite_idx] - jump[finite_idx] 
     self.data_sets[0][all_tidx_right,xidx] = new_pos
-    name = self.station_labels[xidx]
-    logger.info('removed jump at time %g for station %s using data from time %g to %g\n' % 
-                (jump_time,name,jump_time-radius,jump_time+radius))
+    self.log.append(('jump',xidx,jump_time,delta))
+    logger.info('removed jump for station %s at time %s' % (xidx,jump_time))
       
   def remove_outliers(self,start_time,end_time):
+    ''' 
+    masks data data between *start_time* and *end_time*
+    '''
     xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
     self.data_sets[0][tidx,xidx] = np.nan
     self.sigma_sets[0][tidx,xidx] = np.inf
-    name = self.station_labels[xidx]
-    logger.info('removed data from time %g to %g for station %s\n' % (start_time,end_time,name))
+    self.log.append(('outliers',xidx,start_time,end_time))
+    logger.info('removed outliers for station %s from time %s to %s' % (xidx,start_time,end_time))
 
-  def remove_jump_all(self,jump_time,radius):
-    xidx = self.config['xidx']
-    N = self.data_sets[0].shape[1]
-    for i in range(N):
-      self.config['xidx'] = i
-      self.remove_jump(jump_time,radius)
-
-    self.config['xidx'] = xidx
-
-  def remove_outliers_all(self,start_time,end_time):
-    xidx = self.config['xidx']
-    N = self.data_sets[0].shape[1]
-    for i in range(N):
-      self.config['xidx'] = i
-      self.remove_outliers(start_time,end_time)
-
-    self.config['xidx'] = xidx
-     
   def on_mouse_press(self,event):
     # ignore if not the left button
     if event.button != 1: return
@@ -252,7 +239,6 @@ figures
     if event.inaxes is None: return
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
-
     self._t2 = event.xdata
     for r,v in zip(self.rects,self.vlines):
       if self._mode == 'OUTLIER_REMOVAL':
@@ -296,11 +282,7 @@ figures
     if self._mode == 'OUTLIER_REMOVAL':
       mint = min(self._t1,self._t2)
       maxt = max(self._t1,self._t2)
-      if self._apply_to_all:
-        self.remove_outliers_all(mint,maxt) 
-      else:
-        self.remove_outliers(mint,maxt) 
-        
+      self.remove_outliers(mint,maxt) 
       # keep the time series axis limits fixed
       xlims = [i.get_xlim() for i in self.ts_ax]      
       ylims = [i.get_ylim() for i in self.ts_ax]      
@@ -310,11 +292,7 @@ figures
       self.ts_fig.canvas.draw()  
 
     elif self._mode == 'JUMP_REMOVAL':
-      if self._apply_to_all:
-        self.remove_jump_all(self._t1,abs(self._t2-self._t1))
-      else:
-        self.remove_jump(self._t1,abs(self._t2-self._t1))
-        
+      self.remove_jump(self._t1,abs(self._t2-self._t1))
       # keep the time series axis limits fixed
       xlims = [i.get_xlim() for i in self.ts_ax]      
       ylims = [i.get_ylim() for i in self.ts_ax]      
@@ -329,12 +307,12 @@ figures
   def _set_mode(self,name):
     if self._mode is None:
       self._mode = name
-      logger.info('enabled %s mode\n' % name) 
+      logger.info('enabled %s mode' % name) 
 
   def _unset_mode(self,name):
     if self._mode is name:
       self._mode = None
-      logger.info('disabled %s mode\n' % name) 
+      logger.info('disabled %s mode' % name) 
   
   def on_key_press(self,event):
     # disable c
@@ -349,10 +327,6 @@ figures
       self._set_mode('JUMP_REMOVAL')
       self.on_mouse_move(event)
 
-    elif event.key == 'a':
-      logger.info('cleaning operations will be applied to all stations\n')
-      self._apply_to_all = True
-      
     else:
       InteractiveViewer.on_key_press(self,event)
         
@@ -365,10 +339,6 @@ figures
       self._unset_mode('JUMP_REMOVAL')
       self.on_mouse_move(event)
 
-    elif event.key == 'a':
-      logger.info('cleaning operations will be applied to the current station\n')
-      self._apply_to_all = False
-  
 
 def interactive_cleaner(*args,**kwargs):
   ''' 
@@ -376,7 +346,6 @@ def interactive_cleaner(*args,**kwargs):
   '''
   ic = InteractiveCleaner(*args,**kwargs)
   ic.connect()
-  plt.show()
   return ic.get_data()
   
                                       

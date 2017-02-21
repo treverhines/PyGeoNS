@@ -3,12 +3,13 @@ Defines functions which are called by the PyGeoNS executables. These
 functions are for data cleaning.
 '''
 from __future__ import division
+import os
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
 from pygeons.mjd import mjd,mjd_inv
 from pygeons.basemap import make_basemap
-from pygeons.clean.iclean import interactive_cleaner
+from pygeons.clean.iclean import InteractiveCleaner
 from pygeons.breaks import make_space_vert_smp
 from pygeons.plot.plot import (_unit_string,
                                _unit_conversion,
@@ -96,6 +97,8 @@ def pygeons_crop(data,start_date=None,stop_date=None,
 
 
 def pygeons_clean(data,resolution='i',
+                  input_edits_file=None,
+                  output_edits_file=None,
                   break_lons=None,break_lats=None,
                   break_conn=None,**kwargs):
   ''' 
@@ -108,6 +111,13 @@ def pygeons_clean(data,resolution='i',
 
     resolution : str
       basemap resolution    
+    
+    input_edits_file : str
+      Name of the file containing edits which will automatically be 
+      applied before opening up the interactive viewer.
+    
+    output_edits_file : str
+      Name of the file where all edits will be recorded.   
       
     **kwargs : 
       gets passed to pygeons.clean.clean
@@ -150,14 +160,74 @@ def pygeons_clean(data,resolution='i',
   su = conv*data['east_std_dev']
   sv = conv*data['north_std_dev']
   sz = conv*data['vertical_std_dev']
-  clean_data = interactive_cleaner(
-                 t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
-                 map_ax=map_ax,ts_ax=ts_ax,
-                 time_labels=dates,
-                 units=units,
-                 station_labels=data['id'],
-                 **kwargs)
+  ic = InteractiveCleaner(
+         t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
+         map_ax=map_ax,ts_ax=ts_ax,
+         time_labels=dates,
+         units=units,
+         station_labels=data['id'],
+         **kwargs)
 
+  # make edits to the data set prior to displaying it
+  if input_edits_file is not None:
+    with open(input_edits_file,'r') as fin:
+      for line in fin: 
+        type,sta,a,b = line.strip().split()
+        # set the current station in *ic* to the station for this edit
+        xidx, = (data['id'] == sta).nonzero()
+        if len(xidx) == 0:
+          # continue because the station does not exist in this 
+          # dataset
+          continue
+          
+        ic.config['xidx'] = xidx[0]
+        if type == 'outliers':
+          start_time = mjd(a,'%Y-%m-%d')
+          stop_time = mjd(b,'%Y-%m-%d')
+          ic.remove_outliers(start_time,stop_time)
+        elif type == 'jump':
+          jump_time = mjd(a,'%Y-%m-%d')
+          delta = int(b)
+          ic.remove_jump(jump_time,delta)
+        else:
+          raise ValueError(
+            'edit type must be either "outliers" or "jump"')
+
+  ic.update()
+  ic.connect()
+  # save edits to output file
+  if output_edits_file is None:
+    output_edits_file = 'edits.log'
+    # make sure an existing file is not overwritten
+    count = 0
+    while os.path.exists(output_edits_file):
+      count += 1
+      output_edits_file = 'edits%s.log' % count
+  
+  with open(output_edits_file,'w') as fout:
+    for i in ic.log:
+      type,xidx,a,b = i
+      if type == 'outliers':
+        station = data['id'][xidx]
+        if np.ceil(a) > np.floor(b): 
+          # if the interval does not have a single integer then ignore 
+          # this entry
+          continue
+          
+        start_date = mjd_inv(int(np.ceil(a)),'%Y-%m-%d')
+        stop_date = mjd_inv(int(np.floor(b)),'%Y-%m-%d')
+        fout.write('outliers %s %s %s\n' % (station,start_date,stop_date))
+      elif type == 'jump':
+        station = data['id'][xidx]
+        jump_date = mjd_inv(int(np.ceil(a)),'%Y-%m-%d')
+        delta = int(np.ceil(b))
+        fout.write('jump     %s %s %s\n' % (station,jump_date,delta))
+      else:
+        raise ValueError(
+          'edit type must be either "outliers" or "jump"')
+        
+  logger.info('edits saved to %s' % output_edits_file)
+  clean_data  = ic.get_data()                 
   out['east'] = clean_data[0]/conv
   out['north'] = clean_data[1]/conv
   out['vertical'] = clean_data[2]/conv

@@ -363,6 +363,7 @@ figures.
     self.ts_fig.canvas.mpl_connect('pick_event',self.on_pick)
     self.map_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
     self.map_fig.canvas.mpl_connect('pick_event',self.on_pick)
+    plt.show()
 
   def _init_ts_ax(self):
     # Initially configures the time series axes. This involves setting 
@@ -940,6 +941,5 @@ def interactive_viewer(*args,**kwargs):
   '''
   iv = InteractiveViewer(*args,**kwargs)
   iv.connect()
-  plt.show()
   return   
 

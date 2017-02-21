@@ -81,6 +81,26 @@ will be the input file name but with a new extension.
 '''
 }
 #####################################################################
+OUTPUT_EDITS_FILE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the file where edits will be logged. Defaults to "edits.log".
+'''
+}
+#####################################################################
+INPUT_EDITS_FILE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the file containing edits that will be applied to the dataset. 
+This can be the name of the output edits file from a previous 
+cleaning.
+'''
+}
+#####################################################################
 POSITIONS = {
 'type':str,
 'metavar':'STR',
@@ -641,6 +661,8 @@ GLOSSARY = {
 'input_file':INPUT_FILE,
 'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,
+'input_edits_file':INPUT_EDITS_FILE,
+'output_edits_file':OUTPUT_EDITS_FILE,
 'positions':POSITIONS,
 'do_not_condition':DO_NOT_CONDITION,
 'return_sample':RETURN_SAMPLE,
