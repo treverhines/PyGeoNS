@@ -99,18 +99,19 @@ def strain_glyph(x,strain,sigma=None,
       return Container([])
     
     if snr_mask:
+      min_snr = 1.0
       # strain magnitude # (3,) array
       mag = np.sqrt(strain[0]**2 + strain[1]**2 + 2*strain[2]**2)
       # Jacobian of strain magnitude. used for error propagation 
       jac = np.array([strain[0]/mag,strain[1]/mag,2*strain[2]/mag])
       mag_sigma = np.sqrt(jac.dot(cov).dot(jac))
       snr = mag/mag_sigma
-      if snr < 1.0:
+      if snr < min_snr:
         # return no glyph if snr is less than 1.0
         return Container([])
-      elif (snr >= 1.0) & (snr < 2.0):
+      elif (snr >= min_snr) & (snr < (min_snr+1.0)):
         # return faded glyph if snr is between 1.0 and 2.0
-        snr_alpha = snr - 1.0
+        snr_alpha = snr - min_snr
       else:
         # do not fade if snr > 2,0
         snr_alpha = 1.0

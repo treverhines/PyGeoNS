@@ -131,16 +131,13 @@ def pygeons_clean(data,resolution='i',
   logger.info('Cleaning data set ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
-  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
-                              facecolor='white')
+  ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
   _setup_ts_ax(ts_ax)
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-  bm = make_basemap(data['longitude'],data['latitude'],
-                    resolution=resolution)
+  bm = make_basemap(data['longitude'],data['latitude'],resolution=resolution)
   _setup_map_ax(bm,map_ax)
   # draw breaks if there are any
-  vert,smp = make_space_vert_smp(break_lons,break_lats,
-                                 break_conn,bm)
+  vert,smp = make_space_vert_smp(break_lons,break_lats,break_conn,bm)
   for s in smp:
     map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
 
@@ -148,12 +145,8 @@ def pygeons_clean(data,resolution='i',
   pos = np.array([x,y]).T
   t = data['time']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
-
-  conv = _unit_conversion(data['space_exponent'],
-                          data['time_exponent'])
-  units = _unit_string(data['space_exponent'],
-                       data['time_exponent'])
-
+  conv = _unit_conversion(data['space_exponent'],data['time_exponent'])
+  units = _unit_string(data['space_exponent'],data['time_exponent'])
   u = conv*data['east']
   v = conv*data['north']
   z = conv*data['vertical']
@@ -190,8 +183,7 @@ def pygeons_clean(data,resolution='i',
           delta = int(b)
           ic.remove_jump(jump_time,delta)
         else:
-          raise ValueError(
-            'edit type must be either "outliers" or "jump"')
+          raise ValueError('edit type must be either "outliers" or "jump"')
 
   ic.update()
   ic.connect()
@@ -223,8 +215,7 @@ def pygeons_clean(data,resolution='i',
         delta = int(np.ceil(b))
         fout.write('jump     %s %s %s\n' % (station,jump_date,delta))
       else:
-        raise ValueError(
-          'edit type must be either "outliers" or "jump"')
+        raise ValueError('edit type must be either "outliers" or "jump"')
         
   logger.info('edits saved to %s' % output_edits_file)
   clean_data  = ic.get_data()                 

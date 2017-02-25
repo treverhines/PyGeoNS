@@ -94,9 +94,6 @@ J : Enables jump removal mode while pressed. Jumps are estimated by
   taking a weighted mean of the data over a time interval before and 
   after the jump. Click on the time series axes to identify a jump and 
   drag the cursor over the desired time interval.
-
-A : If pressed while holding down D or J, then jumps or outliers are 
-  removed for all stations.
     
 Notes
 -----

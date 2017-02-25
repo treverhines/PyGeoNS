@@ -147,7 +147,7 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
       out_mean_i = gp.draw_sample(x)
       out_sigma_i = np.zeros_like(out_mean_i)
     else:
-      out_mean_i,out_sigma_i = gp.mean_and_uncertainty(x)
+      out_mean_i,out_sigma_i = gp.mean_and_sigma(x)
 
     if gp.order != -1:
       # Read note 3 in the GaussianProcess documentation. If a 
