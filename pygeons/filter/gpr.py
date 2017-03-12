@@ -5,7 +5,7 @@ specialized for PyGeoNS
 import numpy as np
 import rbf
 from pygeons.mp import parmap
-from rbf.gauss import PriorGaussianProcess
+from rbf.gauss import gpiso,gppoly
 import logging
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    gp = PriorGaussianProcess(coeff,basis=basis,order=order,dim=x.shape[1])
+    gp = gpiso(basis,coeff,dim=x.shape[1]) + gppoly(order)
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
     # start by just ignoring missing data
@@ -149,17 +149,17 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
     else:
       out_mean_i,out_sigma_i = gp.mean_and_sigma(x)
 
-    if gp.order != -1:
-      # Read note 3 in the GaussianProcess documentation. If a 
-      # polynomial null space exists, then I am setting the monomial 
-      # coefficients to be the coefficients that best fit the data. 
-      # This deviates from the default behavior for a 
-      # GaussianProcess, which sets the monomial coefficients to 
-      # zero. Note, that there is no attempt to identify outliers 
-      # when determining the trend
-      trend = _get_trend(y[~ignore],d[i,~ignore],
-                         s[i,~ignore],x,order,diff)
-      out_mean_i += trend
+#    if gp.order != -1:
+#      # Read note 3 in the GaussianProcess documentation. If a 
+#      # polynomial null space exists, then I am setting the monomial 
+#      # coefficients to be the coefficients that best fit the data. 
+#      # This deviates from the default behavior for a 
+#      # GaussianProcess, which sets the monomial coefficients to 
+#      # zero. Note, that there is no attempt to identify outliers 
+#      # when determining the trend
+#      trend = _get_trend(y[~ignore],d[i,~ignore],
+#                         s[i,~ignore],x,order,diff)
+#      out_mean_i += trend
 
     return out_mean_i,out_sigma_i
     
