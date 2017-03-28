@@ -5,38 +5,69 @@ specialized for PyGeoNS
 import numpy as np
 import rbf
 from pygeons.mp import parmap
-from rbf.gauss import gpiso,gppoly
+from rbf.gauss import (gpbfci,gpiso,gppoly,gpexp,GaussianProcess,
+                       _zero_mean,_zero_covariance,_empty_basis)
 import logging
 logger = logging.getLogger(__name__)
 
-def _get_trend(y,d,s,x,order,diff):
+def gpnull():
+  return GaussianProcess(_zero_mean,_zero_covariance,basis=_empty_basis)
+
+def gpseasonal(annual,semiannual):
   ''' 
-  returns the best fitting polynomial to observations *d*, which were 
-  made at *y* and have uncertainties *s*. The polynomial has order 
-  *order*, is evaluated at *x*, and then differentiated by *diff*.
+  Returns a *GaussianProcess* with annual and semiannual terms as
+  improper basis functions.
   '''
-  if y.shape[0] == 0:
-    # lstsq is unable to handle when y.shape[0]==0. In this case, 
-    # return an array of zeros with shape equal to x.shape[0]
-    return np.zeros(x.shape[0])
+  def basis(x):
+    out = np.zeros((x.shape[0],0))
+    if annual:
+      # note that x is in days
+      terms = np.array([np.sin(2*np.pi*x[:,0]/365.25),
+                        np.cos(2*np.pi*x[:,0]/365.25)]).T
+      out = np.hstack((out,terms))
+      
+    if semiannual:
+      terms = np.array([np.sin(4*np.pi*x[:,0]/365.25),
+                        np.cos(4*np.pi*x[:,0]/365.25)]).T
+      out = np.hstack((out,terms))
+    
+    return out
+    
+  return gpbfci(basis,dim=1)
 
-  powers = rbf.poly.powers(order,y.shape[1])
-  Gobs = rbf.poly.mvmonos(y,powers) # system matrix
-  W = np.diag(1.0/s) # weight matrix
-  coeff = np.linalg.lstsq(W.dot(Gobs),W.dot(d))[0]
-  Gitp = rbf.poly.mvmonos(x,powers,diff)
-  trend = Gitp.dot(coeff) # evaluated trend at interpolation points
-  return trend
 
+def gpfogm(s,fc):
+  ''' 
+  Returns a *GaussianProcess* describing an first-order Gauss-Markov
+  process. The autocovariance function is
+    
+     K(t) = s^2/(4*pi*fc) * exp(-2*pi*fc*|t|)  
+   
+  which has the corresponding power spectrum 
+  
+     P(f) = s^2/(4*pi^2 * (f^2 + fc^2))
+  
+  *fc* can be interpretted as a cutoff frequency which marks the
+  transition to a flat power spectrum and a power spectrum that decays
+  with a spectral index of two. Thus, when *fc* is close to zero, the
+  power spectrum resembles that of Brownian motion.
+  '''
+  coeff = s**2/(4*np.pi*fc)
+  cls   = 1.0/(2*np.pi*fc)
+  return gpexp((0.0,coeff,cls))
 
-def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
-        diff=None,procs=0,condition=True,return_sample=False):
-  '''     
-  Performs Guassian process regression on the observed data. This is a 
-  convenience function which initiates a *PriorGaussianProcess*, 
-  conditions it with the observations, differentiates it (if 
-  specified), and then evaluates the resulting *GaussianProcess* at 
-  *x*. 
+     
+def gpr(y,d,s,se_params,x=None,
+        order=1,
+        diff=None,
+        fogm_params=None,
+        annual=False,
+        semiannual=False,
+        tol=4.0,
+        procs=0,
+        return_sample=False):
+  ''' 
+  Performs Guassian process regression. 
   
   Parameters
   ----------
@@ -51,23 +82,35 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
     is missing, which will cause the corresponding value in *d* to be 
     ignored.
   
-  coeff : 3-tuple
-    Variance, mean, and characteristic length scale for the prior 
-    Gaussian process.
-  
   x : (M,D) array, optional
     Evaluation points, defaults to *y*.
+
+  se_params : 2-tuple
+    Hyperparameters for the squared-exponential prior model. The first
+    indicates the standard deviation, and the second indicates the
+    characteristic length-scale.
   
-  basis : RBF instance, optional      
-    Radial basis function which describes the prior covariance 
-    structure. Defaults to *rbf.basis.ga*.
-    
   order : int, optional
-    Order of the prior null space.
+    Order of the polynomial improper basis functions.
 
   diff : (D,), optional         
     Specifies the derivative of the returned values. 
 
+  fogm_params : 2-tuple, optional
+    Hyperparameters for the first-order Gauss-Markov (FOGM) noise
+    model. The first indicates the standard deviation of the driving
+    white noise, and the second indiates the cutoff frequency.
+    
+  annual : bool, optional  
+    Indicates whether to include annual sinusoids in the noise model.
+
+  semiannual : bool, optional  
+    Indicates whether to include semiannual sinusoids in the noise
+    model.
+    
+  tol : float, optional
+    Tolerance for the outlier detection algorithm.
+    
   procs : int, optional
     Distribute the tasks among this many subprocesses. This defaults 
     to 0 (i.e. the parent process does all the work).  Each task is to 
@@ -75,30 +118,12 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
     *d* and *s*. So if *d* and *s* are (N,) arrays then using 
     multiple process will not provide any speed improvement.
   
-  condition : bool, optional
-    If False then the prior Gaussian process will not be conditioned 
-    with the data and the output will just be the prior or its 
-    specified derivative. If the prior contains a polynomial null 
-    space (i.e. order > -1), then the monomial coefficients will be 
-    set to those that best fit the data. See note 3 in the 
-    GaussianProcess documentation.
-    
   return_sample : bool, optional
     If True then *out_mean* is a sample of the posterior, rather than 
     its expected value. *out_sigma* will then be an array of zeros, 
-    since a sample has no associated uncertainty. If *return_sample* 
-    is True and *condition* is False then a sample of the prior will 
-    be returned.
-    
-  Returns 
-  ------- 
-  out_mean : (...,M) array
-    Mean of the posterior at *x*.
+    since a sample has no associated uncertainty.
 
-  out_sigma : (...,M) array  
-    One standard deviation of the posterior at *x*.
-
-  '''
+  '''  
   y = np.asarray(y,dtype=float)
   d = np.asarray(d,dtype=float)
   s = np.asarray(s,dtype=float)
@@ -117,49 +142,49 @@ def gpr(y,d,s,coeff,x=None,basis=rbf.basis.se,order=1,tol=4.0,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    gp = gpiso(basis,coeff,dim=x.shape[1]) + gppoly(order)
+    prior_gp  = gpiso(rbf.basis.se,(0.0,se_params[0]**2,se_params[1]),dim=x.shape[1]) 
+    prior_gp += gppoly(order)
+    noise_gp  = gpnull()
+    if annual | semiannual:
+      noise_gp  += gpseasonal(annual,semiannual)
+
+    if fogm_params is not None:
+      noise_gp += gpfogm(*fogm_params)
+      
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
     # start by just ignoring missing data
     ignore = np.copy(is_missing)
-    if condition:
-      # iteratively condition and identify outliers
-      while True:
-        gpi = gp.condition(y[~ignore],d[i,~ignore],sigma=s[i,~ignore])
-        res = np.abs(gpi.mean(y) - d[i])/s[i]
-        # give missing data infinite residuals
-        res[is_missing] = np.inf
-        rms = np.sqrt(np.mean(res[~ignore]**2))
-        if np.all(ignore == (res > tol*rms)):
-          # compile data satistics
-          missing_count = np.sum(is_missing)
-          outlier_count = np.sum(ignore) - missing_count
-          data_count = len(ignore) - missing_count
-          logger.debug('observations: %s, detected outliers: %s' % (data_count,outlier_count))
-          break
-        else:  
-          ignore = (res > tol*rms)
-      
-      gp = gpi    
-               
-    gp = gp.differentiate(diff)
+    # iteratively condition and identify outliers
+    while True:
+      yi,di,si = y[~ignore],d[i,~ignore],s[i,~ignore]
+      # create noise covariance matrix
+      sigma = np.diag(si**2) + noise_gp.covariance(yi,yi)
+      # create improper noise basis vectors
+      p = noise_gp.basis(yi)
+      # condition the prior
+      post_gp = prior_gp.condition(yi,di,sigma=sigma,p=p)
+      # compute residuals using all the data
+      res = np.abs(post_gp.mean(y) - d[i])/s[i]
+      # give missing data infinite residuals
+      res[is_missing] = np.inf
+      rms = np.sqrt(np.mean(res[~ignore]**2))
+      if np.all(ignore == (res > tol*rms)):
+        # compile data satistics
+        missing_count = np.sum(is_missing)
+        outlier_count = np.sum(ignore) - missing_count
+        data_count = len(ignore) - missing_count
+        logger.debug('observations: %s, detected outliers: %s' % (data_count,outlier_count))
+        break
+      else:  
+        ignore = (res > tol*rms)
+    
+    post_gp = post_gp.differentiate(diff)
     if return_sample:
-      out_mean_i = gp.draw_sample(x)
+      out_mean_i = post_gp.sample(x)
       out_sigma_i = np.zeros_like(out_mean_i)
     else:
-      out_mean_i,out_sigma_i = gp.mean_and_sigma(x)
-
-#    if gp.order != -1:
-#      # Read note 3 in the GaussianProcess documentation. If a 
-#      # polynomial null space exists, then I am setting the monomial 
-#      # coefficients to be the coefficients that best fit the data. 
-#      # This deviates from the default behavior for a 
-#      # GaussianProcess, which sets the monomial coefficients to 
-#      # zero. Note, that there is no attempt to identify outliers 
-#      # when determining the trend
-#      trend = _get_trend(y[~ignore],d[i,~ignore],
-#                         s[i,~ignore],x,order,diff)
-#      out_mean_i += trend
+      out_mean_i,out_sigma_i = post_gp.meansd(x)
 
     return out_mean_i,out_sigma_i
     

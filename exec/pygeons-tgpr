@@ -10,51 +10,52 @@ p = argparse.ArgumentParser(
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
-Temporally smooths or differentiates the dataset with Gaussian process 
-regression. The user must specify two distribution parameters for the 
-prior Gaussian process. The first is the variance of the prior 
-Gaussian process, and the second is the characteristic time scale, 
-which controls the temporal covariance. The user may also specify the 
-order of the polynomial null space, which is described below.
+Temporally smooths or differentiates a displacement dataset. It is
+assumed that each displacement timeseries can be described as the sum
+of:
 
-Details
--------
-It is assumed, a priori, that the underlying function from which the 
-data is being sampled can be described as
+  (1) a Gaussian process with zero mean, and a squared-exponential
+      covariance function, 
 
-u(t) = g(t) + p(t), 
+        cov(t,t') = a^2*exp(-(|t - t'|/b)^2),
+      
+      where *a* and *b* are user-specified hyper-parameters
+      controlling the standard deviation and the characteristic
+      time-scale, respectively.
+  
+  (2) an unknown polynomial with a user specified order.
+  
+  (3) sinusoids with annual and semiannual frequencies and unknown
+      amplitudes.
+  
+  (4) a Gaussian process with zero mean, and an exponential covariance
+      function, 
+      
+        cov(t,t') = c^2/(4*pi*d)*exp(-2*pi*d*|t - t'|),
 
-where p(t) is a random function that is equally likely to be any 
-polynomial of the user specified degree,
-
-g ~ Normal( 0 , cov(t1,t2) ),
-
-and
-
-cov(t1,t2) = sigma*exp(-(||t1 - t2||/cls)**2).
-
-*sigma* and *cls* are the two prior distribution parameters that the 
-user must specify. This function combines the a priori assumption with 
-the observations in the input file to create a continuous, 
-analytically differentiable, posterior estimate of the vector field. 
-The a priori assumptions will have a significant influence on the 
-resulting data set, and it is therefor important that the user 
-believes that the prior is sensible.  To help gauge the sensibility of 
-the prior, it is possible to use this function to output samples of 
-the prior, ignoring the input data set. This can be done by raising 
-the *do_not_condition* and *return_sample* flag.
-
+      where *c* and *d* are user-specified hyperparameters. This is
+      often referred to as an Ornstein-Uhlenbeck process or a
+      first-order Gauss-Markov (FOGM) process. *c* can be interpretted
+      as the standard deviation of the white noise driving the FOGM
+      process, and *b* can be interpretted as a cutoff frequency.
+  
+  (5) Uncorrelated noise described by the formal data uncertainties.    
+  
+We consider (1) and (2) to be signal, and the remaining terms are
+considered noise. This function requires the user to specify the name
+of the data file and the two hyperparameters for (1).
 '''
 )
 p.add_argument('input_file',**GLOSSARY['input_file'])
-p.add_argument('sigma',**GLOSSARY['sigma'])
+p.add_argument('sigma',**GLOSSARY['t_sigma'])
 p.add_argument('cls',**GLOSSARY['t_cls'])
 p.add_argument('--order',**GLOSSARY['order'])
-p.add_argument('--fill',**GLOSSARY['fill'])
 p.add_argument('--diff',**GLOSSARY['t_diff'])
+p.add_argument('--fogm',**GLOSSARY['fogm'])
 p.add_argument('--procs',**GLOSSARY['procs'])
+p.add_argument('--no_annual',**GLOSSARY['no_annual'])
+p.add_argument('--no_semiannual',**GLOSSARY['no_semiannual'])
 p.add_argument('-t','--outlier_tol',**GLOSSARY['outlier_tol'])
-p.add_argument('-c','--do_not_condition',**GLOSSARY['do_not_condition'])
 p.add_argument('-s','--return_sample',**GLOSSARY['return_sample'])
 p.add_argument('-a','--start_date',**GLOSSARY['start_date'])
 p.add_argument('-b','--stop_date',**GLOSSARY['stop_date'])

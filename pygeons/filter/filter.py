@@ -13,12 +13,13 @@ from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 
-def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
-                 do_not_condition=False,return_sample=False,
-                 start_date=None,stop_date=None,procs=0,
-                 outlier_tol=4.0):
+def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
+                 no_annual=True,no_semiannual=True,
+                 outlier_tol=4.0,procs=0,return_sample=False,
+                 start_date=None,stop_date=None):
   ''' 
-  Temporal Gaussian process regression
+  Temporal Gaussian process regression. This is used to temporally
+  smooth or differentiate displacements.
   
   Parameters
   ----------
@@ -26,27 +27,39 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     Data dictionary.
 
   sigma : float
-    Prior standard deviation. Units of millimeters**p years**q, where 
-    p and q are *time_exponent* and *space_exponent* from the data 
-    dictionary.
+    Prior hyperparameter describing the standard deviation of
+    displacements (mm)
   
   cls : float
-    Characteristic length-scale in years.
+    Prior hyperparameter describing the characteristic time-scale (yr)
   
   order : int, optional
-    Order of the polynomial null space.
+    Order of the polynomial basis functions.
   
   diff : int, optional
     Derivative order.
   
+  fogm : 2-tuple, optional
+    Hyperparameters for the FOGM noise model. The first parameter is
+    the standard deviation of the white noise driving the process
+    (mm/yr^0.5), and the second parameter is the cutoff frequency
+    (1/yr).
+    
+  no_annual : bool, optional  
+    Indicates whether to include annual sinusoids in the noise model.
+
+  no_semiannual : bool, optional  
+    Indicates whether to include semiannual sinusoids in the noise
+    model.
+
+  outlier_tol : float, optional
+    Tolerance for outlier detection. Smaller values make the detection 
+    algorithm more sensitive. This should not be set any lower than 
+    about 2.0.
+
   procs : int, optional
     Number of subprocesses to spawn.
   
-  do_not_condition : bool, optional
-    If True, then the prior Gaussian process will not be conditioned 
-    with the data and the returned dataset will just be the prior or 
-    its specified derivative.
-
   return_sample : bool, optional
     If True, then the returned dataset will be a random sample of the 
     posterior (or prior if *do_not_condition* is False), rather than 
@@ -60,18 +73,26 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
     Stop date for the output data set, defaults to the stop date for 
     the input data set.
   
-  outlier_tol : float, optional
-    Tolerance for outlier detection. Smaller values make the detection 
-    algorithm more sensitive. This should not be set any lower than 
-    about 2.0.
     
   '''
+  print(fogm)
   logger.info('Performing temporal Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-  # convert units of sigma from mm**p years**q to m**p days**q
-  sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
-  # convert units of cls from years to days
+  # make sure that the data units are displacements
+  if not ((data['space_exponent'] == 1) & 
+          (data['time_exponent'] == 0)):
+    raise ValueError('The input dataset must have units of displacement')
+  
+  # convert se_sigma from mm to m
+  sigma *= 1.0/1000.0
+  # convert se_cls from yr to days
   cls *= 365.25
+  fogm_sigma,fogm_fc = fogm
+  # convert fogm_sigma from mm/yr^0.5 to m/days^0.5
+  fogm_sigma *= (1.0/1000.0)*np.sqrt(1.0/365.25)
+  # convert fogm_fc from 1/yr to 1/days
+  fogm_fc *= 1.0/365.25
+  
   # set output times
   if start_date is None:
     start_date = mjd_inv(np.min(data['time']),'%Y-%m-%d')
@@ -83,13 +104,19 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   stop_time = mjd(stop_date,'%Y-%m-%d')  
   time = np.arange(start_time,stop_time+1)
   for dir in ['east','north','vertical']:
-    post,post_sigma = gpr(
-                        data['time'][:,None],data[dir].T,
-                        data[dir+'_std_dev'].T,(0.0,sigma**2,cls),
-                        x=time[:,None],basis=rbf.basis.se,
-                        order=order,condition=(not do_not_condition),
-                        return_sample=return_sample,diff=diff,
-                        tol=outlier_tol,procs=procs)
+    post,post_sigma = gpr(data['time'][:,None],
+                          data[dir].T,
+                          data[dir+'_std_dev'].T,
+                          (sigma,cls),
+                          x=time[:,None],
+                          order=order,
+                          diff=diff,
+                          fogm_params=(fogm_sigma,fogm_fc),
+                          annual=(not no_annual),
+                          semiannual=(not no_semiannual),
+                          procs=procs,
+                          return_sample=return_sample,
+                          tol=outlier_tol)
     out[dir] = post.T
     out[dir+'_std_dev'] = post_sigma.T
 
@@ -98,12 +125,12 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),
   out['time'] = time
   return out
   
-
 def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
-                 do_not_condition=False,return_sample=False,
-                 positions=None,procs=0,outlier_tol=3.0):
+                 return_sample=False,positions=None,
+                 procs=0,outlier_tol=4.0):
   ''' 
-  Temporal Gaussian process regression
+  Spatial Gaussian process regression. This is used to spatially
+  smooth or differentiate displacements or velocities.
   
   Parameters
   ----------
@@ -111,12 +138,11 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     Data dictionary.
 
   sigma : float
-    Prior standard deviation. Units of millimeters**p years**q, where 
-    p and q are *time_exponent* and *space_exponent* from the data 
-    dictionary.
+    Prior hyperparameter describing standard deviation in mm or mm/yr.
   
   cls : float
-    Characteristic length-scale in kilometers.
+    Prior hyperparameter describing the characteristic length-scale in
+    km.
   
   order : int, optional
     Order of the polynomial null space.
@@ -126,11 +152,6 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   
   procs : int, optional
     Number of subprocesses to spawn.
-
-  do_not_condition : bool, optional
-    If True, then the prior Gaussian process will not be conditioned 
-    with the data and the returned dataset will just be the prior or 
-    its specified derivative.
 
   return_sample : bool, optional
     If True, then the returned dataset will be a random sample of the 
@@ -152,10 +173,17 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   '''
   logger.info('Performing spatial Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-  # convert units of sigma from mm**p years**q to m**p days**q
-  sigma *= 0.001**data['space_exponent']*365.25**data['time_exponent']
-  # convert units of cls from km to m
+  # make sure that the data units are displacements or velocities
+  if not ( (data['space_exponent'] == 1) & 
+           ( (data['time_exponent'] ==  0) | 
+             (data['time_exponent'] == -1) ) ):
+    raise ValueError('The input dataset must have units of displacement or velocity')
+    
+  # convert units of se_sigma from mm or mm/yr to m or mm/day
+  sigma *= (1.0/1000.0)*365.25**data['time_exponent']
+  # convert units of se_cls from km to m
   cls *= 1000.0  
+  
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
@@ -170,13 +198,16 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   output_x,output_y = bm(output_lon,output_lat)
   output_xy = np.array([output_x,output_y]).T 
   for dir in ['east','north','vertical']:
-    post,post_sigma = gpr(
-                        xy,data[dir],data[dir+'_std_dev'],
-                        (0.0,sigma**2,cls),
-                        x=output_xy,basis=rbf.basis.se,
-                        order=order,condition=(not do_not_condition),
-                        return_sample=return_sample,diff=diff,
-                        tol=outlier_tol,procs=procs)
+    post,post_sigma = gpr(xy,
+                          data[dir],
+                          data[dir+'_std_dev'],
+                          (sigma,cls),
+                          x=output_xy,
+                          order=order,
+                          return_sample=return_sample,
+                          diff=diff,
+                          tol=outlier_tol,
+                          procs=procs)
     out[dir] = post
     out[dir+'_std_dev'] = post_sigma
 

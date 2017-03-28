@@ -44,7 +44,7 @@ XDIFF_FILE = {
 ''' 
 Name of the input HDF5 file containing the x derivatives of a 
 displacement or velocity field. This should be the output of 
-pygeons-sgpr with *diff* set to '1 0'.
+pygeons-sgpr with the flag "--diff 1 0".
 '''
 }
 #####################################################################
@@ -55,7 +55,7 @@ YDIFF_FILE = {
 ''' 
 Name of the input HDF5 file containing the y derivatives of a 
 displacement or velocity field. This should be the output of 
-pygeons-sgpr with *diff* set to '0 1'.
+pygeons-sgpr with the flag "--diff 0 1".
 '''
 }
 #####################################################################
@@ -117,17 +117,7 @@ VERBOSE = {
 'default':0,
 'help':
 ''' 
-Controls verbosity.
-'''
-}
-#####################################################################
-DO_NOT_CONDITION = {
-'action':'store_true',
-'help':
-''' 
-If True, then the prior Gaussian process will not be conditioned with 
-the data and the returned dataset will just be the prior or its 
-specified derivative.
+Controls verbosity. 
 '''
 }
 #####################################################################
@@ -135,9 +125,8 @@ RETURN_SAMPLE = {
 'action':'store_true',
 'help':
 ''' 
-If True, then the returned dataset will be a random sample of the 
-posterior (or prior if *do_not_condition* is True), rather than its 
-expected value and uncertainty.
+If True, then the returned dataset will be a random sample of the
+posterior, rather than its expected value and standard deviation.
 '''
 }
 #####################################################################
@@ -179,7 +168,7 @@ specified markers as there are datasets.
 '''
 }
 #####################################################################
-DATA_SET_LABELS = {
+DATASET_LABELS = {
 'nargs':'+',
 'type':str,
 'metavar':'STR',
@@ -502,6 +491,37 @@ Maximum longitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
+NO_ANNUAL = {
+'action':'store_true',
+'help':
+''' 
+If this flag is raised, then annual sinusoids will not be included in
+the noise model.
+'''
+}
+#####################################################################
+NO_SEMIANNUAL = {
+'action':'store_false',
+'help':
+''' 
+If this flag is raised, then semi-annual sinusoids will not be
+included in the noise model.
+'''
+}
+#####################################################################
+FOGM = {
+'type':float,
+'nargs':2,
+'metavar':'FLOAT',
+'help':
+''' 
+Hyperparameters for the FOGM noise model. The first hyperparameter is
+the standard deviation of the white noise driving the process in units
+of mm/yr^0.5. The second hyperparameter is the cutoff frequency in
+units of 1/yr. Defaults to (0.5, 0.2).
+'''
+}
+#####################################################################
 S_CUTOFF = {
 'type':float, 
 'metavar':'FLOAT', 
@@ -520,37 +540,23 @@ Cutoff frequency in 1/days.
 '''
 }
 #####################################################################
-SIGMA = {
+T_SIGMA = {
 'type':float, 
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Standard deviation of the prior Gaussian process. This is in units of 
-mm**p year**q, where p and q are exponents determined the input data 
-type. For example, If the input data describes velocities then p=1 and 
-q=-1, so the units for this argument should be in mm/yr.
+First hyperparameter for the prior model. This describes the standard
+deviation of displacements in units of mm.
 '''
 }
 #####################################################################
-OUTLIER_TOL = {
+S_SIGMA = {
 'type':float, 
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Tolerance for outlier detection. Detected outliers will be ignored 
-when calculating the posterior solution. Smaller values make the 
-detection algorithm more sensitive. This should not be any lower than 
-about 2.0.
-'''
-}
-#####################################################################
-S_CLS = {
-'type':float, 
-'metavar':'FLOAT', 
-'help': 
-''' 
-Characteristic length-scale of the prior Gaussian process. This is in 
-units of kilometers.
+First hyperparameter for the prior model. This describes the standard
+deviation of displacements (velocities) in units of mm (mm/yr).
 '''
 }
 #####################################################################
@@ -559,8 +565,30 @@ T_CLS = {
 'metavar':'FLOAT', 
 'help': 
 ''' 
-Characteristic time-scale of the prior Gaussian process. This is in 
-units of years.
+Second hyperparameter for the prior model. This describes the
+Characteristic time-scale of displacements in units of yr.
+'''
+}
+#####################################################################
+S_CLS = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Second hyperparameter for the prior model. This describes the
+Characteristic length-scale for displacements (velocities) in units of
+km.
+'''
+}
+#####################################################################
+OUTLIER_TOL = {
+'type':float, 
+'metavar':'FLOAT', 
+'help': 
+''' 
+Tolerance for outlier detection. Smaller values make the detection
+algorithm more sensitive. This should not be any lower than about 2.0.
+Defaults to 4.0.
 '''
 }
 #####################################################################
@@ -570,7 +598,7 @@ ORDER = {
 'metavar':'INT', 
 'help': 
 ''' 
-Order of the polynomial null space.
+Order of the polynomial basis functions. Defaults to 1.
 '''
 }
 #####################################################################
@@ -580,9 +608,9 @@ S_DIFF = {
 'metavar':'INT', 
 'help': 
 ''' 
-Derivative order for each dimension. For example, setting *diff* to '1 
-0' computes the first derivative in the x direction. If nothing is 
-provided then no derivatives will be computed.
+Derivative order for each dimension. For example, setting *diff* to (1, 
+0) computes the first derivative in the x direction. Defaults to (0, 0), 
+meanings that no derivatives will be computed.
 '''
 }
 #####################################################################
@@ -592,9 +620,9 @@ T_DIFF = {
 'metavar':'INT', 
 'help': 
 ''' 
-Derivative order. For example, setting *diff* to '1' computes the 
-first time derivative. If nothing is provided then no derivatives will 
-be computed.
+Derivative order. For example, setting *diff* to 1 computes the first
+time derivative. Defaults to 0, meaning that no derivative will be
+computed.
 '''
 }
 #####################################################################
@@ -603,7 +631,8 @@ PROCS = {
 'metavar':'INT',
 'help':
 ''' 
-Number of subprocesses to use. 
+Number of subprocesses to use. Defaults to 0, meaning that no
+subprocesses will be spawned.
 '''
 }
 #####################################################################
@@ -664,7 +693,6 @@ GLOSSARY = {
 'input_edits_file':INPUT_EDITS_FILE,
 'output_edits_file':OUTPUT_EDITS_FILE,
 'positions':POSITIONS,
-'do_not_condition':DO_NOT_CONDITION,
 'return_sample':RETURN_SAMPLE,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
@@ -680,7 +708,7 @@ GLOSSARY = {
 'colors':COLORS,
 'line_styles':LINE_STYLES,
 'line_markers':LINE_MARKERS,
-'data_set_labels':DATA_SET_LABELS,
+'dataset_labels':DATASET_LABELS,
 'quiver_scale':QUIVER_SCALE,
 'scale':SCALE,
 'quiver_key_length':QUIVER_KEY_LENGTH,
@@ -708,10 +736,14 @@ GLOSSARY = {
 'max_lon':MAX_LON,
 't_cutoff':T_CUTOFF,
 's_cutoff':S_CUTOFF,
-'sigma':SIGMA,
-'outlier_tol':OUTLIER_TOL,
-'s_cls':S_CLS,
+'t_sigma':T_SIGMA,
+'s_sigma':S_SIGMA,
 't_cls':T_CLS,
+'s_cls':S_CLS,
+'outlier_tol':OUTLIER_TOL,
+'fogm':FOGM,
+'no_annual':NO_ANNUAL,
+'no_semiannual':NO_SEMIANNUAL,
 'order':ORDER,
 't_diff':T_DIFF,
 's_diff':S_DIFF,
