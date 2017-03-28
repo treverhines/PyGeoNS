@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import argparse
 import logging
 from pygeons import *
@@ -10,14 +12,14 @@ p = argparse.ArgumentParser(
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 ''' 
-Temporally smooths or differentiates a displacement dataset. It is
+Temporally smoothes or differentiates a displacement dataset. It is
 assumed that each displacement timeseries can be described as the sum
 of:
 
   (1) a Gaussian process with zero mean, and a squared-exponential
       covariance function, 
 
-        cov(t,t') = a^2*exp(-(|t - t'|/b)^2),
+        cov(t,t') = a² exp(-|t - t'|²/b²),
       
       where *a* and *b* are user-specified hyper-parameters
       controlling the standard deviation and the characteristic
@@ -31,7 +33,7 @@ of:
   (4) a Gaussian process with zero mean, and an exponential covariance
       function, 
       
-        cov(t,t') = c^2/(4*pi*d)*exp(-2*pi*d*|t - t'|),
+        cov(t,t') = c²/(4 π d) exp(-2 π d |t - t'|),
 
       where *c* and *d* are user-specified hyperparameters. This is
       often referred to as an Ornstein-Uhlenbeck process or a

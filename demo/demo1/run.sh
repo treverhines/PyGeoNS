@@ -27,7 +27,7 @@ cp data.csv work/data.csv
 
 # convert the csv file to a hdf5 file. The default output file name is
 # the input file name but with the extension changed to .h5
-pygeons-toh5 work/data.csv --file_type csv -vv
+pygeons-toh5 work/data.csv --file_type csv -v
 
 # uncomment to view the input data set
 #pygeons-view work/data.h5
@@ -37,14 +37,14 @@ pygeons-toh5 work/data.csv --file_type csv -vv
 pygeons-tgpr work/data.h5 $DISP_STD $DISP_CLS \
              --fogm 0.0 1.0 \
              --no_annual --no_semiannual \
-             --order $DISP_ORDER --diff 1 -vv
+             --order $DISP_ORDER --diff 1 -v
 
 # Spatially smooth and differentiate the data set using GPR. This
 # produces the deformation gradients at the interpolation points
 pygeons-sgpr work/data.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/xdiff.h5 \
-             --order $VEL_ORDER --diff 1 0 -vv
+             --order $VEL_ORDER --diff 1 0 -v
 pygeons-sgpr work/data.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/ydiff.h5 \
-             --order $VEL_ORDER --diff 0 1 -vv
+             --order $VEL_ORDER --diff 0 1 -v
 
 # Save the deformation gradients as text files
 pygeons-totext work/xdiff.h5 -vv

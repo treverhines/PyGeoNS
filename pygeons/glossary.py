@@ -566,7 +566,7 @@ T_CLS = {
 'help': 
 ''' 
 Second hyperparameter for the prior model. This describes the
-Characteristic time-scale of displacements in units of yr.
+characteristic time-scale of displacements in units of yr.
 '''
 }
 #####################################################################
@@ -576,7 +576,7 @@ S_CLS = {
 'help': 
 ''' 
 Second hyperparameter for the prior model. This describes the
-Characteristic length-scale for displacements (velocities) in units of
+characteristic length-scale for displacements (velocities) in units of
 km.
 '''
 }

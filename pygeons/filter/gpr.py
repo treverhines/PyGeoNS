@@ -4,14 +4,27 @@ specialized for PyGeoNS
 '''
 import numpy as np
 import rbf
-from pygeons.mp import parmap
-from rbf.gauss import (gpbfci,gpiso,gppoly,gpexp,GaussianProcess,
-                       _zero_mean,_zero_covariance,_empty_basis)
 import logging
+from scipy.optimize import fmin
+from pygeons.mp import parmap
+from rbf.gauss import (gpbfci,gppoly,gpse,gpexp,GaussianProcess,
+                       _zero_mean,_zero_covariance,_empty_basis)
 logger = logging.getLogger(__name__)
+
+
+def fmin_pos(func,x0,*args,**kwargs):
+  '''fmin with positivity constraint and multiple start points'''
+  def pos_func(x,*blargs):
+    return func(np.exp(x),*blargs)
+
+  xopt,fopt,_,_,_ = fmin(pos_func,np.log(x0),*args,full_output=True,**kwargs)
+  xopt = np.exp(xopt)
+  return xopt,fopt
+
 
 def gpnull():
   return GaussianProcess(_zero_mean,_zero_covariance,basis=_empty_basis)
+
 
 def gpseasonal(annual,semiannual):
   ''' 
@@ -78,17 +91,13 @@ def gpr(y,d,s,se_params,x=None,
     Observed data at *y*.
   
   s : (...,N) array
-    Data uncertainty. *np.inf* can be used to indicate that the data 
-    is missing, which will cause the corresponding value in *d* to be 
-    ignored.
+    Data uncertainty.
   
   x : (M,D) array, optional
-    Evaluation points, defaults to *y*.
+    Evaluation points.
 
   se_params : 2-tuple
-    Hyperparameters for the squared-exponential prior model. The first
-    indicates the standard deviation, and the second indicates the
-    characteristic length-scale.
+    Hyperparameters for the squared-exponential prior model.
   
   order : int, optional
     Order of the polynomial improper basis functions.
@@ -98,8 +107,7 @@ def gpr(y,d,s,se_params,x=None,
 
   fogm_params : 2-tuple, optional
     Hyperparameters for the first-order Gauss-Markov (FOGM) noise
-    model. The first indicates the standard deviation of the driving
-    white noise, and the second indiates the cutoff frequency.
+    model. 
     
   annual : bool, optional  
     Indicates whether to include annual sinusoids in the noise model.
@@ -112,16 +120,10 @@ def gpr(y,d,s,se_params,x=None,
     Tolerance for the outlier detection algorithm.
     
   procs : int, optional
-    Distribute the tasks among this many subprocesses. This defaults 
-    to 0 (i.e. the parent process does all the work).  Each task is to 
-    perform Gaussian process regression for one of the (N,) arrays in 
-    *d* and *s*. So if *d* and *s* are (N,) arrays then using 
-    multiple process will not provide any speed improvement.
+    Distribute the tasks among this many subprocesses. 
   
   return_sample : bool, optional
-    If True then *out_mean* is a sample of the posterior, rather than 
-    its expected value. *out_sigma* will then be an array of zeros, 
-    since a sample has no associated uncertainty.
+    If True then *out_mean* is a sample of the posterior.
 
   '''  
   y = np.asarray(y,dtype=float)
@@ -142,11 +144,11 @@ def gpr(y,d,s,se_params,x=None,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    prior_gp  = gpiso(rbf.basis.se,(0.0,se_params[0]**2,se_params[1]),dim=x.shape[1]) 
+    prior_gp  = gpse((0.0,se_params[0]**2,se_params[1]),dim=x.shape[1]) 
     prior_gp += gppoly(order)
     noise_gp  = gpnull()
     if annual | semiannual:
-      noise_gp  += gpseasonal(annual,semiannual)
+      noise_gp += gpseasonal(annual,semiannual)
 
     if fogm_params is not None:
       noise_gp += gpfogm(*fogm_params)
@@ -208,3 +210,115 @@ def gpr(y,d,s,se_params,x=None,
   out_sigma = out_sigma.reshape(bcast_shape + (m,))
   return out_mean,out_sigma
 
+
+def reml(y,d,s,params,
+         fix=None, 
+         order=1,
+         restarts=1,
+         annual=False,
+         semiannual=False,
+         procs=0):
+  ''' 
+  Returns the Restricted Maximum Likelihood (REML) estimatates of the
+  unknown hyperparameters.
+
+  Parameters
+  ----------
+  y : (N,D) array
+    Observation points.
+
+  d : (...,N) array
+    Observed data at *y*.
+  
+  s : (...,N) array
+    Data uncertainty.
+  
+  params : (4,) array
+    Initial guess for the hyperparameters.
+  
+  fix : (P,) int array
+    Indices of the parameters which will be fixed at the initial guess
+  
+  order : int, optional
+    Order of the polynomial improper basis functions.
+  
+  restarts : int, optional
+    Number of restarts
+    
+  guess_range : float, optional
+    Range of values used for the initial guesses in log space.
+
+  annual : bool, optional  
+    Indicates whether to include annual sinusoids in the noise model.
+
+  semiannual : bool, optional  
+    Indicates whether to include semiannual sinusoids in the noise
+    model.
+
+  procs : int, optional
+    Distribute the tasks among this many subprocesses. 
+
+  Returns
+  -------
+  out : (...,4) array
+    hyperparameters for each dataset. The hyperparameters are the
+    standard deviation for the SE, the characteristic-length scale for
+    the SE, the standard deviation for the FOGM, and the cutoff
+    frequency for the FOGM.
+    
+  '''
+  params = np.asarray(params,dtype=float)
+  y = np.asarray(y,dtype=float)
+  d = np.asarray(d,dtype=float)
+  s = np.asarray(s,dtype=float)
+  if fix is None:
+    fix = np.zeros(0,dtype=int)
+
+  bcast_shape = d.shape[:-1]
+  q = int(np.prod(bcast_shape))
+  n = y.shape[0]
+  d = d.reshape((q,n))
+  s = s.reshape((q,n))
+
+  # index of parameters that will be estimated
+  is_free = np.ones(len(params),dtype=bool)
+  is_free[fix] = False
+  dof = np.sum(is_free)
+
+  def objective(theta,pos,data,sigma):
+    test_params = np.copy(params)
+    test_params[is_free] = theta 
+    model  = gpse((0.0,test_params[0]**2,test_params[1])) 
+    model += gpfogm(test_params[2],test_params[3])
+    model += gppoly(order)
+    if annual | semiannual:
+      model += gpseasonal(annual,semiannual)
+    
+    # return negative log likelihood
+    return -model.likelihood(pos,data,sigma)  
+
+  def task(i):
+    logger.debug('Finding REML hyperparameters for dataset %s of %s ...' % (i+1,q))
+    # if the uncertainty is inf then the data is considered missing
+    is_missing = np.isinf(s[i])
+    yi,di,si = y[~is_missing],d[i,~is_missing],s[i,~is_missing]
+    opt = fmin_pos(objective,params[is_free],args=(yi,di,si))
+    out_params = np.copy(params)
+    out_params[is_free] = opt
+    return out_params
+
+  def task_with_error_catch(i):    
+    try:
+      return task(i)
+
+    except np.linalg.LinAlgError:  
+      logger.info(
+        'Could not process dataset %s. This may be due to '
+        'insufficient data. The returned hyperparameters will '
+        'be NaN.' % (i+1))
+      return np.full(len(params),np.nan)
+  
+  out = parmap(task,range(q),workers=procs)
+  out = np.array(out)
+  out = out.reshape(bcast_shape + (len(params),))
+  return out

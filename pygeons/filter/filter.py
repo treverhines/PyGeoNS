@@ -18,8 +18,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
                  outlier_tol=4.0,procs=0,return_sample=False,
                  start_date=None,stop_date=None):
   ''' 
-  Temporal Gaussian process regression. This is used to temporally
-  smooth or differentiate displacements.
+  Performs temporal Gaussian process regression.
   
   Parameters
   ----------
@@ -27,11 +26,10 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
     Data dictionary.
 
   sigma : float
-    Prior hyperparameter describing the standard deviation of
-    displacements (mm)
+    hyperparameter for the prior
   
   cls : float
-    Prior hyperparameter describing the characteristic time-scale (yr)
+    hyperparameter for the prior 
   
   order : int, optional
     Order of the polynomial basis functions.
@@ -40,39 +38,28 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
     Derivative order.
   
   fogm : 2-tuple, optional
-    Hyperparameters for the FOGM noise model. The first parameter is
-    the standard deviation of the white noise driving the process
-    (mm/yr^0.5), and the second parameter is the cutoff frequency
-    (1/yr).
+    Hyperparameters for the FOGM noise model. 
     
   no_annual : bool, optional  
-    Indicates whether to include annual sinusoids in the noise model.
+    Include annual sinusoids in the noise model.
 
   no_semiannual : bool, optional  
-    Indicates whether to include semiannual sinusoids in the noise
-    model.
+    Include semiannual sinusoids in the noise model.
 
   outlier_tol : float, optional
-    Tolerance for outlier detection. Smaller values make the detection 
-    algorithm more sensitive. This should not be set any lower than 
-    about 2.0.
+    Tolerance for outlier detection.
 
   procs : int, optional
     Number of subprocesses to spawn.
   
   return_sample : bool, optional
-    If True, then the returned dataset will be a random sample of the 
-    posterior (or prior if *do_not_condition* is False), rather than 
-    its expected value and uncertainty.
+    Returned a sample of the posterior.
     
   start_date : str, optional
-    Start date for the output data set, defaults to the start date for 
-    the input data set.
+    Start date for the output data set.
     
   stop_date : str, optional
-    Stop date for the output data set, defaults to the stop date for 
-    the input data set.
-  
+    Stop date for the output data set.
     
   '''
   logger.info('Performing temporal Gaussian process regression ...')
@@ -128,8 +115,7 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
                  return_sample=False,positions=None,
                  procs=0,outlier_tol=4.0):
   ''' 
-  Spatial Gaussian process regression. This is used to spatially
-  smooth or differentiate displacements or velocities.
+  Performs temporal Gaussian process regression.
   
   Parameters
   ----------
@@ -137,11 +123,10 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     Data dictionary.
 
   sigma : float
-    Prior hyperparameter describing standard deviation in mm or mm/yr.
+    Hyperparameter for the prior.
   
   cls : float
-    Prior hyperparameter describing the characteristic length-scale in
-    km.
+    Hyperparameter for the prior.
   
   order : int, optional
     Order of the polynomial null space.
@@ -153,21 +138,13 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     Number of subprocesses to spawn.
 
   return_sample : bool, optional
-    If True, then the returned dataset will be a random sample of the 
-    posterior (or prior if *do_not_condition* is False), rather than 
-    its expected value and uncertainty.
+    Return a sample of the posterior.
 
   positions : (str array,float array,float array), optional
-    Positions for the output data set. This is a list with three 
-    elements: a string array of position IDs, a float array of 
-    longitudes, and a float array of latitudes. Each array must have 
-    the same length. This defaults to the positions in the input data 
-    set.
+    Positions for the output data set. 
 
   outlier_tol : float, optional
-    Tolerance for outlier detection. Smaller values make the detection 
-    algorithm more sensitive. This should not be set any lower than 
-    about 2.0.
+    Tolerance for outlier detection. 
 
   '''
   logger.info('Performing spatial Gaussian process regression ...')
