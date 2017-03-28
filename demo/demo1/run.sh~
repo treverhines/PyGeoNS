@@ -34,7 +34,10 @@ pygeons-toh5 work/data.csv --file_type csv -vv
 
 # Temporally smooth and differentiate the data set using Gaussian
 # process regression (GPR)
-pygeons-tgpr work/data.h5 $DISP_STD $DISP_CLS --fogm 0.0 1.0 --order $DISP_ORDER --diff 1 -vv
+pygeons-tgpr work/data.h5 $DISP_STD $DISP_CLS \
+             --fogm 0.0 1.0 \
+             --no_annual --no_semiannual \
+             --order $DISP_ORDER --diff 1 -vv
 
 # Spatially smooth and differentiate the data set using GPR. This
 # produces the deformation gradients at the interpolation points

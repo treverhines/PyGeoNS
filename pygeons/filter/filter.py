@@ -75,7 +75,6 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
   
     
   '''
-  print(fogm)
   logger.info('Performing temporal Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
   # make sure that the data units are displacements

@@ -1,4 +1,4 @@
-# This script contains the commands from the demonstration in 
+# This script contains the commands from the demonstration in
 # README.rst
 rm -r work
 mkdir -p work/csv

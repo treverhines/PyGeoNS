@@ -501,7 +501,7 @@ the noise model.
 }
 #####################################################################
 NO_SEMIANNUAL = {
-'action':'store_false',
+'action':'store_true',
 'help':
 ''' 
 If this flag is raised, then semi-annual sinusoids will not be
