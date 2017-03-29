@@ -9,10 +9,10 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
+  usage='%(prog)s STR FLOAT FLOAT [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-''' 
-Spatially smoothes or differentiates a displacement or velocity
+'''Spatially smoothes or differentiates a displacement or velocity
 dataset. It is assumed that the deformation at each epoch can be
 described as the sum of:
 
@@ -35,8 +35,7 @@ the two hyperparameters for (1).
 '''
 )
 p.add_argument('input_file',**GLOSSARY['input_file'])
-p.add_argument('sigma',**GLOSSARY['s_sigma'])
-p.add_argument('cls',**GLOSSARY['s_cls'])
+p.add_argument('prior',**GLOSSARY['s_prior'])
 p.add_argument('--order',**GLOSSARY['order'])
 p.add_argument('--diff',**GLOSSARY['s_diff'])
 p.add_argument('--procs',**GLOSSARY['procs'])

@@ -515,10 +515,10 @@ FOGM = {
 'metavar':'FLOAT',
 'help':
 ''' 
-Hyperparameters for the FOGM noise model. The first hyperparameter is
-the standard deviation of the white noise driving the process in units
-of mm/yr^0.5. The second hyperparameter is the cutoff frequency in
-units of 1/yr. Defaults to (0.5, 0.2).
+Hyperparameters for the FOGM noise model. The first entry is the
+standard deviation of the white noise driving the process in units of
+mm/yr^0.5. The second entry is the cutoff frequency in units of 1/yr.
+Defaults to (0.5, 0.2).
 '''
 }
 #####################################################################
@@ -540,43 +540,27 @@ Cutoff frequency in 1/days.
 '''
 }
 #####################################################################
-T_SIGMA = {
-'type':float, 
-'metavar':'FLOAT', 
+T_PRIOR = {
+'type':float,
+'nargs':2,
+'metavar':'FLOAT FLOAT',
 'help': 
 ''' 
-First hyperparameter for the prior model. This describes the standard
-deviation of displacements in units of mm.
+Hyperparameters for the prior model. The first entry describes the
+standard deviation of displacements in units of mm. The second entry
+describes the characteristic time-scale in yr.
 '''
 }
 #####################################################################
-S_SIGMA = {
-'type':float, 
-'metavar':'FLOAT', 
+S_PRIOR = {
+'type':float,
+'nargs':2,
+'metavar':'FLOAT FLOAT',
 'help': 
 ''' 
-First hyperparameter for the prior model. This describes the standard
-deviation of displacements (velocities) in units of mm (mm/yr).
-'''
-}
-#####################################################################
-T_CLS = {
-'type':float, 
-'metavar':'FLOAT', 
-'help': 
-''' 
-Second hyperparameter for the prior model. This describes the
-characteristic time-scale of displacements in units of yr.
-'''
-}
-#####################################################################
-S_CLS = {
-'type':float, 
-'metavar':'FLOAT', 
-'help': 
-''' 
-Second hyperparameter for the prior model. This describes the
-characteristic length-scale for displacements (velocities) in units of
+Hyperparameters for the prior model. The first entry describes the
+standard deviation of displacements (velocities) in units of mm
+(mm/yr). The second entry describes the characteristic length-scale in
 km.
 '''
 }
@@ -736,10 +720,8 @@ GLOSSARY = {
 'max_lon':MAX_LON,
 't_cutoff':T_CUTOFF,
 's_cutoff':S_CUTOFF,
-'t_sigma':T_SIGMA,
-'s_sigma':S_SIGMA,
-'t_cls':T_CLS,
-'s_cls':S_CLS,
+'t_prior':T_PRIOR,
+'s_prior':S_PRIOR,
 'outlier_tol':OUTLIER_TOL,
 'fogm':FOGM,
 'no_annual':NO_ANNUAL,

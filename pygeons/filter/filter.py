@@ -7,13 +7,92 @@ import numpy as np
 import logging
 import rbf
 from pygeons.filter.gpr import gpr
+from pygeons.filter.reml import reml
 from pygeons.mjd import mjd_inv,mjd
 from pygeons.basemap import make_basemap
 from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 
-def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
+def pygeons_treml(data,params,fix=(),order=1,
+                  no_annual=False,no_semianual=False,
+                  procs=0):
+  ''' 
+  Restricted maximum likelihood estimation of temporal
+  hyperparameters.
+  
+  Parameters
+  ----------
+  data : dict
+    Data dictionary.
+
+  params : (4,) float array
+    Hyperparameters for SE and FOGM
+  
+  fix : (P,) int array
+    Indices of the parameters which will be fixed
+    
+  order : int, optional
+    Order of the polynomial basis functions.
+  
+  no_annual : bool, optional  
+    Include annual sinusoids in the noise model.
+
+  no_semiannual : bool, optional  
+    Include semiannual sinusoids in the noise model.
+
+  procs : int, optional
+    Number of subprocesses to spawn.
+  
+  '''
+  logger.info('Performing temporal restricted maximum likelihood estimation ...')
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+  # make sure that the data units are displacements
+  if not ((data['space_exponent'] == 1) & 
+          (data['time_exponent'] == 0)):
+    raise ValueError('The input dataset must have units of displacement')
+
+  # make a copy of params and then change the units
+  params = np.copy(params)
+  # convert SE sigma from mm to m
+  params[0] *= 1.0/1000.0
+  # convert se cls from yr to days
+  params[1] *= 365.25
+  fogm_sigma,fogm_fc = fogm
+  # convert fogm_sigma from mm/yr^0.5 to m/days^0.5
+  fogm_sigma *= (1.0/1000.0)*np.sqrt(1.0/365.25)
+  # convert fogm_fc from 1/yr to 1/days
+  fogm_fc *= 1.0/365.25
+
+def pygeons_sreml(data,params,fix=(),order=1,
+                  procs=0):
+  ''' 
+  Restricted maximum likelihood estimation of temporal
+  hyperparameters.
+  
+  Parameters
+  ----------
+  data : dict
+    Data dictionary.
+
+  params : (4,) float array
+    Hyperparameters for SE and FOGM
+  
+  fix : (P,) int array
+    Indices of the parameters which will be fixed
+    
+  order : int, optional
+    Order of the polynomial basis functions.
+  
+  procs : int, optional
+    Number of subprocesses to spawn.
+  
+  '''
+  logger.info('Performing spatial restricted maximum likelihood estimation ...')
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
+
+def pygeons_tgpr(data,prior,order=1,diff=(0,),fogm=(0.5,0.2),
                  no_annual=True,no_semiannual=True,
                  outlier_tol=4.0,procs=0,return_sample=False,
                  start_date=None,stop_date=None):
@@ -25,11 +104,8 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
   data : dict
     Data dictionary.
 
-  sigma : float
-    hyperparameter for the prior
-  
-  cls : float
-    hyperparameter for the prior 
+  prior : (2,) float array
+    hyperparameters for the prior
   
   order : int, optional
     Order of the polynomial basis functions.
@@ -69,15 +145,16 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
           (data['time_exponent'] == 0)):
     raise ValueError('The input dataset must have units of displacement')
   
-  # convert se_sigma from mm to m
-  sigma *= 1.0/1000.0
-  # convert se_cls from yr to days
-  cls *= 365.25
-  fogm_sigma,fogm_fc = fogm
+  prior = np.copy(prior)
+  # convert sigma from mm to m
+  prior[0] *= 1.0/1000.0
+  # convert cls from yr to days
+  prior[1] *= 365.25
+  fogm = np.copy(fogm)
   # convert fogm_sigma from mm/yr^0.5 to m/days^0.5
-  fogm_sigma *= (1.0/1000.0)*np.sqrt(1.0/365.25)
+  fogm[0] *= (1.0/1000.0)*np.sqrt(1.0/365.25)
   # convert fogm_fc from 1/yr to 1/days
-  fogm_fc *= 1.0/365.25
+  fogm[1] *= 1.0/365.25
   
   # set output times
   if start_date is None:
@@ -93,11 +170,11 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
     post,post_sigma = gpr(data['time'][:,None],
                           data[dir].T,
                           data[dir+'_std_dev'].T,
-                          (sigma,cls),
+                          prior,
                           x=time[:,None],
                           order=order,
                           diff=diff,
-                          fogm_params=(fogm_sigma,fogm_fc),
+                          fogm_params=fogm,
                           annual=(not no_annual),
                           semiannual=(not no_semiannual),
                           procs=procs,
@@ -111,7 +188,7 @@ def pygeons_tgpr(data,sigma,cls,order=1,diff=(0,),fogm=(0.5,0.2),
   out['time'] = time
   return out
   
-def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
+def pygeons_sgpr(data,prior,order=1,diff=(0,0),
                  return_sample=False,positions=None,
                  procs=0,outlier_tol=4.0):
   ''' 
@@ -122,11 +199,8 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
   data : dict
     Data dictionary.
 
-  sigma : float
-    Hyperparameter for the prior.
-  
-  cls : float
-    Hyperparameter for the prior.
+  prior : (2,) float array
+    Hyperparameters for the prior.
   
   order : int, optional
     Order of the polynomial null space.
@@ -155,10 +229,11 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
              (data['time_exponent'] == -1) ) ):
     raise ValueError('The input dataset must have units of displacement or velocity')
     
+  prior = np.copy(prior)
   # convert units of se_sigma from mm or mm/yr to m or mm/day
-  sigma *= (1.0/1000.0)*365.25**data['time_exponent']
+  prior[0] *= (1.0/1000.0)*365.25**data['time_exponent']
   # convert units of se_cls from km to m
-  cls *= 1000.0  
+  prior[1] *= 1000.0  
   
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -177,7 +252,7 @@ def pygeons_sgpr(data,sigma,cls,order=1,diff=(0,0),
     post,post_sigma = gpr(xy,
                           data[dir],
                           data[dir+'_std_dev'],
-                          (sigma,cls),
+                          prior,
                           x=output_xy,
                           order=order,
                           return_sample=return_sample,

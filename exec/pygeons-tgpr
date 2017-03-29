@@ -9,10 +9,10 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
+  usage='%(prog)s STR FLOAT FLOAT [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-''' 
-Temporally smoothes or differentiates a displacement dataset. It is
+'''Temporally smoothes or differentiates a displacement dataset. It is
 assumed that each displacement timeseries can be described as the sum
 of:
 
@@ -49,8 +49,7 @@ of the data file and the two hyperparameters for (1).
 '''
 )
 p.add_argument('input_file',**GLOSSARY['input_file'])
-p.add_argument('sigma',**GLOSSARY['t_sigma'])
-p.add_argument('cls',**GLOSSARY['t_cls'])
+p.add_argument('prior',**GLOSSARY['t_prior'])
 p.add_argument('--order',**GLOSSARY['order'])
 p.add_argument('--diff',**GLOSSARY['t_diff'])
 p.add_argument('--fogm',**GLOSSARY['fogm'])

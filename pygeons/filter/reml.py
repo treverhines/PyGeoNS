@@ -21,7 +21,7 @@ def fmin_pos(func,x0,*args,**kwargs):
 
 
 def reml(y,d,s,params,
-         fix=None, 
+         fix=(), 
          order=1,
          annual=False,
          semiannual=False,
@@ -79,8 +79,7 @@ def reml(y,d,s,params,
   d = np.asarray(d,dtype=float)
   s = np.asarray(s,dtype=float)
   params = np.asarray(params,dtype=float)
-  if fix is None:
-    fix = np.zeros(0,dtype=int)
+  fix = np.asarray(fix,dtype=int)
 
   # index of parameters that will be estimated
   is_free = np.ones(params.shape,dtype=bool)
