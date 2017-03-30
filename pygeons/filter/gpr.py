@@ -132,14 +132,14 @@ def gpr(y,d,s,se_params,x=None,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    prior_gp  = gpse((0.0,se_params[0]**2,se_params[1]),dim=x.shape[1]) 
+    prior_gp  = gpse((0.0,se_params[0]**2,se_params[1])) 
     prior_gp += gppoly(order)
     noise_gp  = gpnull()
     if annual | semiannual:
       noise_gp += gpseasonal(annual,semiannual)
 
     if fogm_params is not None:
-      noise_gp += gpfogm(*fogm_params)
+      noise_gp += gpfogm(fogm_params[0],fogm_params[1])
       
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])

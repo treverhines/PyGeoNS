@@ -15,6 +15,30 @@ from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 
+def _unit_string(space_exponent,time_exponent):
+  ''' 
+  returns a string indicating the units. This is different from the
+  function in pygeons.plot.plot.py, because it does not convert strain
+  to microstrain
+  '''
+  if space_exponent == 0:
+    # if the space exponent is 0 then use units of microstrain
+    space_str = '1'
+  elif space_exponent == 1:
+    space_str = 'mm'
+  else:
+    space_str = 'mm^%s' % space_exponent
+
+  if time_exponent == 0:
+    time_str = ''
+  elif time_exponent == -1:
+    time_str = '/yr'
+  else:
+    time_str = '/yr^%s' % -time_exponent
+
+  return space_str + time_str
+                                                
+
 def pygeons_treml(data,model,params,fix=(),order=1,
                   annual=True,semiannual=True,
                   procs=0,output_file=None):
@@ -54,11 +78,6 @@ def pygeons_treml(data,model,params,fix=(),order=1,
   
   '''
   logger.info('Performing temporal restricted maximum likelihood estimation ...')
-  # make sure that the data units are displacements
-  if not ((data['space_exponent'] == 1) & 
-          (data['time_exponent'] == 0)):
-    raise ValueError('The input dataset must have units of displacement')
-
   # make output file
   if output_file is None:
     output_file = 'parameters.txt'
@@ -68,25 +87,30 @@ def pygeons_treml(data,model,params,fix=(),order=1,
       count += 1
       output_file = 'parameters.%s.txt' % count
 
-  domain_conv = 1.0/365.25 # convert from to days to yr
-  range_conv = 1000.0 # convert from m to mm
+  # convert the domain units from days to years
+  domain_conv = 1.0/365.25 
+  domain_units = 'yr'
+  # convert the range units from m**a day**b to mm**a yr**b
+  range_conv = (1000.0**data['space_exponent'] *
+                (1.0/365.25)**data['time_exponent'])
+  range_units = _unit_string(data['space_exponent'],data['time_exponent'])                 
   for dir in ['east','north','vertical']:
     # optimal hyperparameters for each timeseries, coresponding
     # likelihoods and data counts.
-    opts,likes,counts,units = reml(data['time'][:,None]*domain_conv,  
-                                data[dir].T*range_conv,                    
-                                data[dir+'_std_dev'].T*range_conv,
-                                model,
-                                params,                                
-                                fix=fix,
-                                order=order,
-                                annual=annual,
-                                semiannual=semiannual,
-                                procs=procs)
+    opts,likes,counts,param_units = reml(data['time'][:,None]*domain_conv,  
+                                         data[dir].T*range_conv,                    
+                                         data[dir+'_std_dev'].T*range_conv,
+                                         model,
+                                         params,                                
+                                         fix=fix,
+                                         order=order,
+                                         annual=annual,
+                                         semiannual=semiannual,
+                                         procs=procs)
     if dir == 'east':                                
       with open(output_file,'w') as fout:
         header = '%-15s%-15s%-15s' % ('station','component','count') 
-        header += "".join(['%-15s' % i.format('mm','yr') for i in units])
+        header += "".join(['%-15s' % i.format(range_units,domain_units) for i in param_units])
         header += '%-15s\n' % 'likelihood'
         fout.write(header)
         fout.flush()
@@ -130,12 +154,6 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
   
   '''
   logger.info('Performing spatial restricted maximum likelihood estimation ...')
-  # make sure that the data units are displacements or velocities
-  if not ( (data['space_exponent'] == 1) & 
-           ( (data['time_exponent'] ==  0) | 
-             (data['time_exponent'] == -1) ) ):
-    raise ValueError('The input dataset must have units of displacement or velocity')
-
   # make output file
   if output_file is None:
     output_file = 'parameters.txt'
@@ -148,28 +166,30 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
-  domain_conv = 1.0/1000.0 # convert from m to km
-  range_conv = 1000.0*(1.0/365.25)**data['time_exponent'] # convert from m*day**a to mm*yr**a
+
+  # convert the domain units from m to km
+  domain_conv = 1.0/1000.0
+  domain_units = 'km'
+  # convert the range units from m**a day**b to mm**a yr**b
+  range_conv = (1000.0**data['space_exponent'] *
+                (1.0/365.25)**data['time_exponent'])
+  range_units = _unit_string(data['space_exponent'],data['time_exponent'])                 
   for dir in ['east','north','vertical']:
     # optimal hyperparameters for each timeseries, coresponding
     # likelihoods and data counts.
-    opts,likes,counts = reml(xy*domain_conv, 
-                             data[dir]*range_conv, 
-                             data[dir+'_std_dev']*range_conv,
-                             model,
-                             params,
-                             fix=fix,
-                             order=order,
-                             procs=procs)
+    opts,likes,counts,param_units = reml(xy*domain_conv, 
+                                         data[dir]*range_conv, 
+                                         data[dir+'_std_dev']*range_conv,
+                                         model,
+                                         params,
+                                         fix=fix,
+                                         order=order,
+                                         procs=procs)
                              
     if dir == 'east':                                
       with open(output_file,'w') as fout:
         header = '%-15s%-15s%-15s' % ('station','component','count') 
-        if data['time_exponent'] == 0: 
-          header += "".join(['%-15s' % i.format('mm','km') for i in units])
-        elif data['time_exponent'] == -1: 
-          header += "".join(['%-15s' % i.format('mm/yr','km') for i in units])
-          
+        header += "".join(['%-15s' % i.format(range_units,domain_units) for i in param_units])
         header += '%-15s\n' % 'likelihood'
         fout.write(header)
         fout.flush()
@@ -232,10 +252,6 @@ def pygeons_tgpr(data,prior,order=1,diff=(0,),fogm=(0.5,0.2),
   '''
   logger.info('Performing temporal Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-  # make sure that the data units are displacements
-  if not ((data['space_exponent'] == 1) & 
-          (data['time_exponent'] == 0)):
-    raise ValueError('The input dataset must have units of displacement')
   
   # set output times
   if start_date is None:
@@ -247,8 +263,11 @@ def pygeons_tgpr(data,prior,order=1,diff=(0,),fogm=(0.5,0.2),
   start_time = mjd(start_date,'%Y-%m-%d')  
   stop_time = mjd(stop_date,'%Y-%m-%d')  
   time = np.arange(start_time,stop_time+1)
-  domain_conv = 1.0/365.25 # convert from days to yr
-  range_conv = 1000.0 # convert from m to mm
+  # convert the domain units from days to years
+  domain_conv = 1.0/365.25 
+  # convert the range units from m**a day**b to mm**a yr**b
+  range_conv = (1000.0**data['space_exponent'] *
+                (1.0/365.25)**data['time_exponent'])
   for dir in ['east','north','vertical']:
     post,post_sigma = gpr(data['time'][:,None]*domain_conv,
                           data[dir].T*range_conv,
@@ -309,11 +328,6 @@ def pygeons_sgpr(data,prior,order=1,diff=(0,0),
   '''
   logger.info('Performing spatial Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-  # make sure that the data units are displacements or velocities
-  if not ( (data['space_exponent'] == 1) & 
-           ( (data['time_exponent'] ==  0) | 
-             (data['time_exponent'] == -1) ) ):
-    raise ValueError('The input dataset must have units of displacement or velocity')
     
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -328,8 +342,11 @@ def pygeons_sgpr(data,prior,order=1,diff=(0,0),
 
   output_x,output_y = bm(output_lon,output_lat)
   output_xy = np.array([output_x,output_y]).T 
-  domain_conv = 1.0/1000.0 # convert from m to km
-  range_conv = 1000.0*(1.0/365.25)**data['time_exponent'] # convert from m*day**a to mm*yr**a
+  # convert the domain units from m to km
+  domain_conv = 1.0/1000.0
+  # convert the range units from m**a day**b to mm**a yr**b
+  range_conv = (1000.0**data['space_exponent'] *
+                (1.0/365.25)**data['time_exponent'])
   for dir in ['east','north','vertical']:
     post,post_sigma = gpr(xy*domain_conv,
                           data[dir]*range_conv,

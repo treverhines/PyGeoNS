@@ -100,18 +100,21 @@ def reml(y,d,s,model,params,
   s = s.reshape((q,n))
 
   if model == 'se':
+    units = np.array(['a[{0}]','b[{1}]'])
     if len(params) != 2:
       raise ValueError(
         'exactly 2 parameters must be specified for the *se* '
         'covariance function')
 
   elif model == 'fogm': 
+    units = np.array(['c[{0}*{1}^-0.5]','d[{1}^-1]'])
     if len(params) != 2:
       raise ValueError(
         'exactly 2 parameters must be specified for the *fogm* '
         'covariance function')
 
   elif (model == 'se+fogm'):
+    units = np.array(['a[{0}]','b[{1}]','c[{0}*{1}^-0.5]','d[{1}^-1]'])
     if len(params) != 4:
       raise ValueError(
         'exactly 4 parameters must be specified for the *se+fogm* '
@@ -166,14 +169,4 @@ def reml(y,d,s,model,params,
   # number of observations 
   c = np.array([i[2] for i in out])
   c = c.reshape(bcast_shape)
-  # create units strings
-  if model == 'se':
-    units = np.array(['a[{0}]','b[{1}]'])
-
-  elif model == 'fogm':
-    units = np.array(['c[{0}*{1}^-0.5]','d[{1}^-1]'])
-
-  elif model == 'se+fogm':
-    units = np.array(['a[{0}]','b[{1}]','c[{0}*{1}^-0.5]','d[{1}^-1]'])
-  
   return a,b,c,units
