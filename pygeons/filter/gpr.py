@@ -5,59 +5,9 @@ specialized for PyGeoNS
 import numpy as np
 import logging
 from pygeons.mp import parmap
-from rbf.gauss import (gpbfci,gppoly,gpse,gpexp,GaussianProcess,
-                       _zero_mean,_zero_covariance,_empty_basis)
+from pygeons.filter.gprocs import *
 logger = logging.getLogger(__name__)
 
-
-def gpnull():
-  return GaussianProcess(_zero_mean,_zero_covariance,basis=_empty_basis)
-
-
-def gpseasonal(annual,semiannual):
-  ''' 
-  Returns a *GaussianProcess* with annual and semiannual terms as
-  improper basis functions.
-  '''
-  def basis(x):
-    out = np.zeros((x.shape[0],0))
-    if annual:
-      # note that x is in days
-      terms = np.array([np.sin(2*np.pi*x[:,0]),
-                        np.cos(2*np.pi*x[:,0])]).T
-      out = np.hstack((out,terms))
-      
-    if semiannual:
-      terms = np.array([np.sin(4*np.pi*x[:,0]),
-                        np.cos(4*np.pi*x[:,0])]).T
-      out = np.hstack((out,terms))
-    
-    return out
-    
-  return gpbfci(basis,dim=1)
-
-
-def gpfogm(s,fc):
-  ''' 
-  Returns a *GaussianProcess* describing an first-order Gauss-Markov
-  process. The autocovariance function is
-    
-     K(t) = s^2/(4*pi*fc) * exp(-2*pi*fc*|t|)  
-   
-  which has the corresponding power spectrum 
-  
-     P(f) = s^2/(4*pi^2 * (f^2 + fc^2))
-  
-  *fc* can be interpretted as a cutoff frequency which marks the
-  transition to a flat power spectrum and a power spectrum that decays
-  with a spectral index of two. Thus, when *fc* is close to zero, the
-  power spectrum resembles that of Brownian motion.
-  '''
-  coeff = s**2/(4*np.pi*fc)
-  cls   = 1.0/(2*np.pi*fc)
-  return gpexp((0.0,coeff,cls))
-
-     
 def gpr(y,d,s,se_params,x=None,
         order=1,
         diff=None,
@@ -132,7 +82,7 @@ def gpr(y,d,s,se_params,x=None,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    prior_gp  = gpse((0.0,se_params[0]**2,se_params[1])) 
+    prior_gp  = gpse(se_params[0],se_params[1]) 
     prior_gp += gppoly(order)
     noise_gp  = gpnull()
     if annual | semiannual:

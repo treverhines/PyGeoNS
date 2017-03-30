@@ -7,7 +7,7 @@ import numpy as np
 import logging
 from scipy.optimize import fmin
 from pygeons.mp import parmap
-from pygeons.filter.gpr import gpseasonal,gpfogm,gppoly,gpse                       
+from pygeons.filter.gprocs import *
 logger = logging.getLogger(__name__)
 
 
@@ -99,7 +99,21 @@ def reml(y,d,s,model,params,
   d = d.reshape((q,n))
   s = s.reshape((q,n))
 
-  if model == 'se':
+  if model == 'bm':
+    units = np.array(['e[{0}*{1}^-0.5]'])
+    if len(params) != 1:
+      raise ValueError(
+        'exactly 1 parameters must be specified for the *bm* '
+        'covariance function')
+
+  elif model == 'ibm':
+    units = np.array(['f[{0}*{1}^-1.5]'])
+    if len(params) != 1:
+      raise ValueError(
+        'exactly 1 parameters must be specified for the *ibm* '
+        'covariance function')
+
+  elif model == 'se':
     units = np.array(['a[{0}]','b[{1}]'])
     if len(params) != 2:
       raise ValueError(
@@ -129,9 +143,15 @@ def reml(y,d,s,model,params,
   def objective(theta,pos,data,sigma):
     test_params = np.copy(params)
     test_params[is_free] = theta 
+    if model == 'bm':
+      gp = gpbm(test_params[0]) 
+
+    if model == 'ibm':
+      gp = gpibm(test_params[0]) 
+
     if model == 'se':
       # cov(t,t') = a^2 exp(-|t - t'|^2/b^2)
-      gp = gpse((0.0,test_params[0]**2,test_params[1])) 
+      gp = gpse(test_params[0],test_params[1]) 
       
     elif model == 'fogm':
       #cov(t,t') = c^2/(4 pi d) exp(-2 pi d |t - t'|)
@@ -139,7 +159,7 @@ def reml(y,d,s,model,params,
 
     elif model == 'se+fogm':
       # cov(t,t') = a^2 exp(-|t - t'|^2/b^2) + c^2/(4 pi d) exp(-2 pi d |t - t'|)
-      gp  = gpse((0.0,test_params[0]**2,test_params[1])) 
+      gp  = gpse(test_params[0],test_params[1])
       gp += gpfogm(test_params[2],test_params[3])
     
     gp += gppoly(order)
