@@ -151,10 +151,10 @@ def _setup_map_ax(bm,ax):
   mer,par =  _get_meridians_and_parallels(bm,3)
   bm.drawmeridians(mer,
                    labels=[0,0,0,1],dashes=[2,2],
-                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+                   ax=ax,zorder=0.1,color=(0.3,0.3,0.3,1.0))
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
-                   ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+                   ax=ax,zorder=0.1,color=(0.3,0.3,0.3,1.0))
   scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
                            inverse=True)
   scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0
@@ -248,7 +248,7 @@ def pygeons_view(data_list,map_resolution='i',
   vert,smp = make_space_vert_smp(break_lons,break_lats,
                                  break_conn,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=0.2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
@@ -318,7 +318,7 @@ def pygeons_strain(data_dx,data_dy,map_resolution='i',
   # draw breaks if there are any
   vert,smp = make_space_vert_smp(break_lons,break_lats,break_conn,bm)
   for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
+    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=0.2)
 
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T

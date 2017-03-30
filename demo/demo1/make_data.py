@@ -14,8 +14,8 @@ def make_data(pos,times):
   x,y = pos.T
   _,xg = np.meshgrid(times,x,indexing='ij')
   tg,yg = np.meshgrid(times,y,indexing='ij')
-  u = 0.0*ms*tg*xg + 1.0*ms*tg*yg
-  v = 1.0*ms*tg*xg + 0.0*ms*tg*yg
+  u = 0.0*ms*tg*xg + 0.0*ms*tg*yg
+  v = 0.0*ms*tg*xg + 3.0*ms*tg*yg
   z = 0.0*tg
   u = u - u[0,:]
   v = v - v[0,:]

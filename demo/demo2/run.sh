@@ -46,18 +46,18 @@ for i in `cat urls.txt`
 sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
 # convert the csv file to an hdf5 file
-pygeons-toh5 work/data.csv --file_type pbocsv -vv
+pygeons-toh5 work/data.csv --file-type pbocsv -vv
 
 # crop out data prior to 2015-01-01 and after 2017-01-01
-pygeons-crop work/data.h5 --start_date 2015-01-01 --stop_date 2017-01-01 -vv
+pygeons-crop work/data.h5 --start-date 2015-01-01 --stop-date 2017-01-01 -vv
 
 # Temporally differentiate the displacement dataset
 pygeons-tgpr work/data.crop.h5 $DISP_STD $DISP_CLS --order $DISP_ORDER --diff 1 -vv 
 
 # Spatially differentiate the dataset
-pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/xdiff.h5 \
+pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output-file work/xdiff.h5 \
              --order $VEL_ORDER --diff 1 0 -vv
-pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output_file work/ydiff.h5 \
+pygeons-sgpr work/data.crop.tgpr.h5 $VEL_STD $VEL_CLS --output-file work/ydiff.h5 \
              --order $VEL_ORDER --diff 0 1 -vv
 
 # Save the deformation gradients as text files
@@ -66,5 +66,3 @@ pygeons-totext work/ydiff.h5 -vv
 
 # view the estimated strain
 pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv
-
-

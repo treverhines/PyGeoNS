@@ -416,17 +416,20 @@ figures.
                     self.t,
                     self.data_set[:,self.config['xidx'],0],
                     color='k',
-                    ls='-')
+                    linestyle='-',
+                    linewidth=1.0)
     self.line2, = self.ts_ax[1].plot(
                     self.t,
                     self.data_set[:,self.config['xidx'],1],
                     color='k',
-                    ls='-')
+                    linestyle='-',
+                    linewidth=1.0)
     self.line3, = self.ts_ax[2].plot(
                     self.t,
                     self.data_set[:,self.config['xidx'],2],
                     color='k',
-                    ls='-')
+                    linestyle='-',
+                    linewidth=1.0)
 
   def _update_lines(self):
     # updates for:
@@ -447,7 +450,7 @@ figures.
                    self.data_set[:,self.config['xidx'],0] +
                    self.sigma_set[:,self.config['xidx'],0],
                    edgecolor='none',
-                   color='k',alpha=0.5)
+                   color='k',alpha=0.2)
     self.fill2 = self.ts_ax[1].fill_between(
                    self.t,
                    self.data_set[:,self.config['xidx'],1] -
@@ -455,7 +458,7 @@ figures.
                    self.data_set[:,self.config['xidx'],1] +
                    self.sigma_set[:,self.config['xidx'],1],
                    edgecolor='none',
-                   color='k',alpha=0.5)
+                   color='k',alpha=0.2)
     self.fill3 = self.ts_ax[2].fill_between(
                    self.t,
                    self.data_set[:,self.config['xidx'],2] -
@@ -463,7 +466,7 @@ figures.
                    self.data_set[:,self.config['xidx'],2] +
                    self.sigma_set[:,self.config['xidx'],2],
                    edgecolor='none',
-                   color='k',alpha=0.5)
+                   color='k',alpha=0.2)
 
   def _update_fill(self):
     # updates for:
