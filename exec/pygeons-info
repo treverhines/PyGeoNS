@@ -5,11 +5,10 @@ import numpy as np
 from pygeons import *
 
 p = argparse.ArgumentParser(
+  usage='%(prog)s STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-''' 
-Prints metadata for an HDF5 data file to stdout. 
-
+'''Prints metadata for an HDF5 data file to stdout. 
 '''
 )
 

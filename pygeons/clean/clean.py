@@ -189,31 +189,25 @@ def pygeons_clean(data,resolution='i',
   ic.connect()
   # save edits to output file
   if output_edits_file is None:
-    output_edits_file = 'edits.log'
+    output_edits_file = 'edits.txt'
     # make sure an existing file is not overwritten
     count = 0
     while os.path.exists(output_edits_file):
       count += 1
-      output_edits_file = 'edits%s.log' % count
+      output_edits_file = 'edits.%s.txt' % count
   
   with open(output_edits_file,'w') as fout:
     for i in ic.log:
       type,xidx,a,b = i
       if type == 'outliers':
         station = data['id'][xidx]
-        if np.ceil(a) > np.floor(b): 
-          # if the interval does not have a single integer then ignore 
-          # this entry
-          continue
-          
-        start_date = mjd_inv(int(np.ceil(a)),'%Y-%m-%d')
-        stop_date = mjd_inv(int(np.floor(b)),'%Y-%m-%d')
+        start_date = mjd_inv(a,'%Y-%m-%d')
+        stop_date = mjd_inv(b,'%Y-%m-%d')
         fout.write('outliers %s %s %s\n' % (station,start_date,stop_date))
       elif type == 'jump':
         station = data['id'][xidx]
-        jump_date = mjd_inv(int(np.ceil(a)),'%Y-%m-%d')
-        delta = int(np.ceil(b))
-        fout.write('jump     %s %s %s\n' % (station,jump_date,delta))
+        jump_date = mjd_inv(a,'%Y-%m-%d')
+        fout.write('jump     %s %s %s\n' % (station,jump_date,b))
       else:
         raise ValueError('edit type must be either "outliers" or "jump"')
         

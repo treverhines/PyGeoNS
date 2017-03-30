@@ -7,12 +7,11 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])    
 
 p = argparse.ArgumentParser(
+  usage='%(prog)s STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-''' 
-Runs the PyGeoNS interactive cleaner which is used to remove jumps and 
+'''Runs the PyGeoNS interactive cleaner which is used to remove jumps and 
 outliers.
-
 '''
 )
 p.add_argument('input_file',**GLOSSARY['input_file'])

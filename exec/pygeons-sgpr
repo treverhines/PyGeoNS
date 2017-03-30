@@ -21,9 +21,9 @@ described as the sum of:
 
         cov(x,x') = a² exp(-|x - x'|²/b²),
       
-      where *a* and *b* are user-specified hyper-parameters
-      controlling the standard deviation and the characteristic
-      length-scale, respectively.
+      where *a* and *b* are user-specified hyperparameters controlling
+      the standard deviation and the characteristic length-scale,
+      respectively.
   
   (2) an unknown polynomial with a user specified order.
   

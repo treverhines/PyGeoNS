@@ -23,13 +23,13 @@ def gpseasonal(annual,semiannual):
     out = np.zeros((x.shape[0],0))
     if annual:
       # note that x is in days
-      terms = np.array([np.sin(2*np.pi*x[:,0]/365.25),
-                        np.cos(2*np.pi*x[:,0]/365.25)]).T
+      terms = np.array([np.sin(2*np.pi*x[:,0]),
+                        np.cos(2*np.pi*x[:,0])]).T
       out = np.hstack((out,terms))
       
     if semiannual:
-      terms = np.array([np.sin(4*np.pi*x[:,0]/365.25),
-                        np.cos(4*np.pi*x[:,0]/365.25)]).T
+      terms = np.array([np.sin(4*np.pi*x[:,0]),
+                        np.cos(4*np.pi*x[:,0])]).T
       out = np.hstack((out,terms))
     
     return out

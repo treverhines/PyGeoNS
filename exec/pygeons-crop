@@ -7,15 +7,15 @@ def change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 p = argparse.ArgumentParser(
+  usage='%(prog)s STR [options]',
   description=
-''' 
-Limits the spatial and temporal extent of the dataset. The dates 
-contained in the resulting dataset will be each day ranging from 
-*start_date* to *end_date*. The stations in the resulting datasets 
-will be within the bounds set by *min/max_lon/lat*. Unlike for 
-*pygeons-clean*, this function removes the dates and stations from the 
-datset, rather than masking them.
 
+'''Limits the spatial and temporal extent of the dataset. The dates
+contained in the resulting dataset will be each day ranging from
+*start_date* to *end_date*. The stations in the resulting datasets
+will be within the bounds set by *min/max_lon/lat*. Unlike for
+*pygeons-clean*, this function removes the dates and stations from the
+datset, rather than masking them.
 ''')
   
 p.add_argument('input_file',**GLOSSARY['input_file'])

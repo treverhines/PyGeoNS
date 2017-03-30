@@ -4,13 +4,12 @@ import logging
 from pygeons import *
 
 p = argparse.ArgumentParser(
+  usage='%(prog)s STR [STR ...] [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-''' 
-Runs the PyGeoNS Interactive Viewer. This function can take multiple 
+'''Runs the PyGeoNS Interactive Viewer. This function can take multiple 
 data files as arguments, which allows for side-by-side comparison of 
-data sets.
-
+datasets.
 '''
 )
 p.add_argument('input_files',**GLOSSARY['input_files'])

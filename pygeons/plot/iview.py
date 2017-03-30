@@ -132,7 +132,7 @@ figures.
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None, 
-               station_labels=None,time_labels=None,data_set_labels=None,
+               station_labels=None,time_labels=None,dataset_labels=None,
                quiver_key_length=None,quiver_scale=None,quiver_key_pos=(0.15,0.2),
                image_clim=None,image_cmap='RdBu_r',image_resolution=300,
                map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
@@ -173,7 +173,7 @@ figures.
 
       station_labels : (Nx,) str array
       
-      data_set_labels : (Ns,) str array
+      dataset_labels : (Ns,) str array
       
       image_clim : float
         minimum and maximum vertical color value      
@@ -308,12 +308,12 @@ figures.
       time_labels = np.array(self.t).astype(str)
 
     # data set names used for the legends
-    if data_set_labels is None:
-      data_set_labels = ['data set %s' % n for n in range(len(self.data_sets))]
+    if dataset_labels is None:
+      dataset_labels = ['dataset %s' % n for n in range(len(self.data_sets))]
 
     self.station_labels = station_labels
     self.time_labels = time_labels
-    self.data_set_labels = data_set_labels
+    self.dataset_labels = dataset_labels
 
     if quiver_key_length is None: 
       # This is an Nt,Nx,S array of vector lengths for each data set
@@ -442,7 +442,7 @@ figures.
     self.ts_ax[0].relim()
     self.ts_ax[1].relim()
     self.ts_ax[2].relim()
-    self.ts_ax[0].autoscale_view()
+    self.ts_ax[0].autoscale_view(tight=True)
     self.ts_ax[1].autoscale_view()
     self.ts_ax[2].autoscale_view()
 
@@ -653,21 +653,24 @@ figures.
       self.line1 += self.ts_ax[0].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],0],
                       color=self.colors[si],
-                      label=self.data_set_labels[si],
+                      label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
-                      marker=self.line_markers[si])
+                      marker=self.line_markers[si],
+                      linewidth=1.0)
       self.line2 += self.ts_ax[1].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],1],
                       color=self.colors[si],
-                      label=self.data_set_labels[si],
+                      label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
-                      marker=self.line_markers[si])
+                      marker=self.line_markers[si],
+                      linewidth=1.0)
       self.line3 += self.ts_ax[2].plot(
                       self.t,self.data_sets[si][:,self.config['xidx'],2],
                       color=self.colors[si],
-                      label=self.data_set_labels[si],
+                      label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
-                      marker=self.line_markers[si])
+                      marker=self.line_markers[si],
+                      linewidth=1.0)
     
   def _update_lines(self):
     # Updates the deformation time series for changes in *tidx* or 
@@ -675,11 +678,11 @@ figures.
     for si in range(len(self.data_sets)):
       self.line1[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],0])
       # relabel in case the data_set order has switched
-      self.line1[si].set_label(self.data_set_labels[si])                     
+      self.line1[si].set_label(self.dataset_labels[si])                     
       self.line2[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],1])
-      self.line2[si].set_label(self.data_set_labels[si])                     
+      self.line2[si].set_label(self.dataset_labels[si])                     
       self.line3[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],2])
-      self.line3[si].set_label(self.data_set_labels[si])                     
+      self.line3[si].set_label(self.dataset_labels[si])                     
   
   def _init_fill(self):
     # Initially plots the confidence interval for each deformation 
@@ -901,7 +904,7 @@ figures.
     elif event.key == 'c':
       # cycle data arrays 
       self.data_sets = _roll(self.data_sets)
-      self.data_set_labels = _roll(self.data_set_labels)
+      self.dataset_labels = _roll(self.dataset_labels)
       self.sigma_sets = _roll(self.sigma_sets)
       self.hard_update()
       

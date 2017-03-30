@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ''' 
 This module defines a glossary of terms used in the help 
 documentation. This is used to aid in building and maintaining the 
@@ -30,7 +31,7 @@ Name of the input data file. This should be an HDF5 file.
 INPUT_FILES = {
 'nargs':'+',
 'type':str,
-'metavar':'STR',
+'metavar':'STR [STR ...]',
 'help':
 ''' 
 Names of the input data files. These should be HDF5 files. 
@@ -42,8 +43,8 @@ XDIFF_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input HDF5 file containing the x derivatives of a 
-displacement or velocity field. This should be the output of 
+Name of the input data file containing the x derivatives of a
+displacement or velocity field. This should be the output of
 pygeons-sgpr with the flag "--diff 1 0".
 '''
 }
@@ -53,7 +54,7 @@ YDIFF_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input HDF5 file containing the y derivatives of a 
+Name of the input data file containing the y derivatives of a 
 displacement or velocity field. This should be the output of 
 pygeons-sgpr with the flag "--diff 0 1".
 '''
@@ -81,12 +82,22 @@ will be the input file name but with a new extension.
 '''
 }
 #####################################################################
+PARAMETERS_FILE = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Name of the file that the optimal hyperparameters will be written to.
+Defaults to "parameters.txt".
+'''
+}
+#####################################################################
 OUTPUT_EDITS_FILE = {
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
-Name of the file where edits will be logged. Defaults to "edits.log".
+Name of the file where edits will be logged. Defaults to "edits.txt".
 '''
 }
 #####################################################################
@@ -174,7 +185,7 @@ DATASET_LABELS = {
 'metavar':'STR',
 'help':
 ''' 
-Label for each data sets.
+Label for each dataset.
 '''
 }
 #####################################################################
@@ -438,7 +449,7 @@ STOP_DATE = {
 'metavar':'STR',
 'help':
 ''' 
-Stop date for the output data set in YYYY-MM-DD. This defaults to the 
+Stop date for the output dataset in YYYY-MM-DD. This defaults to the 
 stop date for the input dataset.
 '''
 }
@@ -491,21 +502,17 @@ Maximum longitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
-NO_ANNUAL = {
-'action':'store_true',
+ANNUAL = {
 'help':
 ''' 
-If this flag is raised, then annual sinusoids will not be included in
-the noise model.
+Indicates whether annual sinusoids will be included in the model.
 '''
 }
 #####################################################################
-NO_SEMIANNUAL = {
-'action':'store_true',
+SEMIANNUAL = {
 'help':
 ''' 
-If this flag is raised, then semi-annual sinusoids will not be
-included in the noise model.
+Indicates whether semi-annual sinusoids will be included in the model.
 '''
 }
 #####################################################################
@@ -537,6 +544,36 @@ T_CUTOFF = {
 'help': 
 ''' 
 Cutoff frequency in 1/days.
+'''
+}
+#####################################################################
+MODEL = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Covariance function. This can either be "se", "fogm", or "se+fogm".
+'''
+}
+#####################################################################
+PARAMS = {
+'type':float,
+'nargs':'+',
+'metavar':'FLOAT [FLOAT ...]',
+'help': 
+'''  
+Initial guesses for the hyperparameters of the chosen covariance
+function.
+'''
+}
+#####################################################################
+FIX = {
+'type':int,
+'nargs':'+',
+'metavar':'INT',
+'help': 
+''' 
+Indices of hyperparameters that should be fixed at the initial guess.
 '''
 }
 #####################################################################
@@ -676,6 +713,7 @@ GLOSSARY = {
 'output_file':OUTPUT_FILE,
 'input_edits_file':INPUT_EDITS_FILE,
 'output_edits_file':OUTPUT_EDITS_FILE,
+'parameters_file':PARAMETERS_FILE,
 'positions':POSITIONS,
 'return_sample':RETURN_SAMPLE,
 'verbose':VERBOSE,
@@ -720,12 +758,15 @@ GLOSSARY = {
 'max_lon':MAX_LON,
 't_cutoff':T_CUTOFF,
 's_cutoff':S_CUTOFF,
+'params':PARAMS,
+'model':MODEL,
+'fix':FIX,
 't_prior':T_PRIOR,
 's_prior':S_PRIOR,
 'outlier_tol':OUTLIER_TOL,
 'fogm':FOGM,
-'no_annual':NO_ANNUAL,
-'no_semiannual':NO_SEMIANNUAL,
+'annual':ANNUAL,
+'semiannual':SEMIANNUAL,
 'order':ORDER,
 't_diff':T_DIFF,
 's_diff':S_DIFF,

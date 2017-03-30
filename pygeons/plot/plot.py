@@ -289,8 +289,9 @@ def pygeons_strain(data_dx,data_dy,map_resolution='i',
   logger.info('Viewing strain data ...')
   data_dx,data_dy = _common_context([data_dx,data_dy])
   
-  if (data_dx['space_exponent'] != 0) | data_dy['space_exponent'] != 0:
-    raise ValueError('data sets cannot have spatial units')
+  if ((data_dx['space_exponent'] != 0) | 
+      (data_dy['space_exponent'] != 0)):
+    raise ValueError('The input datasets cannot have spatial units')
   
   t = data_dx['time']
   id = data_dx['id']

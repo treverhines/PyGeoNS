@@ -141,11 +141,11 @@ figures
     ----
       only one of u, v, and z need to be specified
     '''
-    data_set_labels = kwargs.pop('data_set_labels',['edited data'])
+    dataset_labels = kwargs.pop('dataset_labels',['edited data'])
     InteractiveViewer.__init__(self,t,x,
                                u=[u],v=[v],z=[z],
                                su=[su],sv=[sv],sz=[sz],
-                               data_set_labels=data_set_labels,
+                               dataset_labels=dataset_labels,
                                **kwargs)
     self._mode = None
     self._mouse_is_pressed = False
@@ -171,16 +171,18 @@ figures
         
   def remove_jump(self,jump_time,delta):
     ''' 
-    estimates and removes a jump at time *jump_time*. The jump size is 
-    the difference between the mean values over an interval *delta* 
-    before and after the jump. If no data is available over these 
+    estimates and removes a jump at time *jump_time*. *jump_time* is
+    an integer and indicates the first day of the jump. The jump size
+    is the difference between the mean values over an interval *delta*
+    before and after the jump. If no data is available over these
     intervals then no changes will be made.
+
     '''
     xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t >= jump_time) & 
-                             (self.t < (jump_time+delta)))
-    tidx_left, = np.nonzero((self.t < jump_time) & 
-                            (self.t >= (jump_time-delta)))
+                             (self.t <= (jump_time+delta)))
+    tidx_left,  = np.nonzero((self.t <  jump_time) & 
+                             (self.t >= (jump_time-delta)))
     mean_right,_ = weighted_mean(self.data_sets[0][tidx_right,xidx,:],
                                  self.sigma_sets[0][tidx_right,xidx,:],
                                  axis=0)
@@ -217,11 +219,13 @@ figures
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
     self._mouse_is_pressed = True
-    self._t1 = event.xdata
+    # use integer x data for consistency with the rest of PyGeoNS
+    self._t1 = int(np.round(event.xdata))
     self.rects = []
     self.vlines = []
     for ax in self.ts_ax:
       ymin,ymax = ax.get_ylim()
+      ax.set_ylim((ymin,ymax)) # prevent the ylims from changing after calls to draw
       r = Rectangle((self._t1,ymin),0.0,ymax-ymin,color='none',alpha=0.5,edgecolor=None)
       self.rects += [r]
       self.vlines += [ax.vlines(self._t1,ymin,ymax,color='none')]
@@ -236,7 +240,8 @@ figures
     if event.inaxes is None: return
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
-    self._t2 = event.xdata
+    # use integer x data for consistency with the rest of PyGeoNS
+    self._t2 = int(np.round(event.xdata))
     for r,v in zip(self.rects,self.vlines):
       if self._mode == 'OUTLIER_REMOVAL':
         r.set_width(self._t2 - self._t1) 
@@ -274,7 +279,9 @@ figures
     if event.inaxes is None: return
     # ignore if the event was not in the time series figure
     if not event.inaxes.figure is self.ts_fig: return
-    self._t2 = event.xdata
+    # _t2 needs to be set in the event that the click did not involve
+    # a mouse move
+    self._t2 = int(np.round(event.xdata))
     # act according to self._mode at the time of release
     if self._mode == 'OUTLIER_REMOVAL':
       mint = min(self._t1,self._t2)

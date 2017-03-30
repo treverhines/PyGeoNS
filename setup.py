@@ -10,6 +10,8 @@ if __name__ == '__main__':
         url='www.github.com/treverhines/PyGeoNS',
         scripts=['exec/pygeons-tgpr',
                  'exec/pygeons-sgpr',
+                 'exec/pygeons-treml',
+                 'exec/pygeons-sreml',
                  'exec/pygeons-tfilter',
                  'exec/pygeons-sfilter',
                  'exec/pygeons-clean',
