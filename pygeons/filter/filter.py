@@ -41,7 +41,7 @@ def _unit_string(space_exponent,time_exponent):
 
 def pygeons_treml(data,model,params,fix=(),order=1,
                   annual=True,semiannual=True,
-                  procs=0,output_file=None):
+                  procs=0,parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
   hyperparameters.
@@ -79,13 +79,13 @@ def pygeons_treml(data,model,params,fix=(),order=1,
   '''
   logger.info('Performing temporal restricted maximum likelihood estimation ...')
   # make output file
-  if output_file is None:
-    output_file = 'parameters.txt'
+  if parameters_file is None:
+    parameters_file = 'parameters.txt'
     # make sure an existing file is not overwritten
     count = 0
-    while os.path.exists(output_file):
+    while os.path.exists(parameters_file):
       count += 1
-      output_file = 'parameters.%s.txt' % count
+      parameters_file = 'parameters.%s.txt' % count
 
   # convert the domain units from days to years
   domain_conv = 1.0/365.25 
@@ -108,7 +108,7 @@ def pygeons_treml(data,model,params,fix=(),order=1,
                                          semiannual=semiannual,
                                          procs=procs)
     if dir == 'east':                                
-      with open(output_file,'w') as fout:
+      with open(parameters_file,'w') as fout:
         header = '%-15s%-15s%-15s' % ('station','component','count') 
         header += "".join(['%-15s' % i.format(range_units,domain_units) for i in param_units])
         header += '%-15s\n' % 'likelihood'
@@ -116,7 +116,7 @@ def pygeons_treml(data,model,params,fix=(),order=1,
         fout.flush()
         
     # convert units optimal hyperparameters back to mm and yr   
-    with open(output_file,'a') as fout:
+    with open(parameters_file,'a') as fout:
       for i,sid in enumerate(data['id']):
         entry  = '%-15s%-15s%-15s' % (sid,dir,counts[i])
         entry += "".join(['%-15.4e' % j for j in opts[i,:]])
@@ -127,7 +127,7 @@ def pygeons_treml(data,model,params,fix=(),order=1,
     
 
 def pygeons_sreml(data,model,params,fix=(),order=1,
-                  procs=0,output_file=None):
+                  procs=0,parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
   hyperparameters.
@@ -155,13 +155,13 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
   '''
   logger.info('Performing spatial restricted maximum likelihood estimation ...')
   # make output file
-  if output_file is None:
-    output_file = 'parameters.txt'
+  if parameters_file is None:
+    parameters_file = 'parameters.txt'
     # make sure an existing file is not overwritten
     count = 0
-    while os.path.exists(output_file):
+    while os.path.exists(parameters_file):
       count += 1
-      output_file = 'parameters.%s.txt' % count
+      parameters_file = 'parameters.%s.txt' % count
 
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -187,7 +187,7 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
                                          procs=procs)
                              
     if dir == 'east':                                
-      with open(output_file,'w') as fout:
+      with open(parameters_file,'w') as fout:
         header = '%-15s%-15s%-15s' % ('station','component','count') 
         header += "".join(['%-15s' % i.format(range_units,domain_units) for i in param_units])
         header += '%-15s\n' % 'likelihood'
@@ -195,7 +195,7 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
         fout.flush()
         
     # convert units optimal hyperparameters back to mm and yr   
-    with open(output_file,'a') as fout:
+    with open(parameters_file,'a') as fout:
       for i,sid in enumerate(data['id']):
         entry  = '%-15s%-15s%-15s' % (sid,dir,counts[i])
         entry += "".join(['%-15.4e' % j for j in opts[i,:]])

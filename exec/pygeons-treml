@@ -59,7 +59,7 @@ p.add_argument('--order',**GLOSSARY['order'])
 p.add_argument('--procs',**GLOSSARY['procs'])
 p.add_argument('--no-annual',dest='annual',action='store_false',**GLOSSARY['annual'])
 p.add_argument('--no-semiannual',dest='semiannual',action='store_false',**GLOSSARY['semiannual'])
-p.add_argument('-p','--parameters_file',**GLOSSARY['parameters_file'])
+p.add_argument('-p','--parameters-file',**GLOSSARY['parameters_file'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p = vars(p.parse_args())
 
