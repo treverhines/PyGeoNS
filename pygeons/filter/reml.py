@@ -7,7 +7,7 @@ import numpy as np
 import logging
 from scipy.optimize import fmin
 from pygeons.mp import parmap
-from pygeons.filter.gprocs import *
+from pygeons.filter.gprocs import gpcomp,get_units
 logger = logging.getLogger(__name__)
 
 
@@ -92,80 +92,20 @@ def reml(y,d,s,model,params,
   s = np.asarray(s,dtype=float)
   params = np.asarray(params,dtype=float)
   fix = np.asarray(fix,dtype=int)
+  is_free = np.ones(params.shape,dtype=bool)
+  is_free[fix] = False
 
   bcast_shape = d.shape[:-1]
   q = int(np.prod(bcast_shape))
   n = y.shape[0]
   d = d.reshape((q,n))
   s = s.reshape((q,n))
-
-  if model == 'bm':
-    units = np.array(['e[{0}*{1}^-0.5]'])
-    if len(params) != 1:
-      raise ValueError(
-        'exactly 1 parameters must be specified for the *bm* '
-        'covariance function')
-
-  elif model == 'ibm':
-    units = np.array(['f[{0}*{1}^-1.5]'])
-    if len(params) != 1:
-      raise ValueError(
-        'exactly 1 parameters must be specified for the *ibm* '
-        'covariance function')
-
-  elif model == 'se':
-    units = np.array(['a[{0}]','b[{1}]'])
-    if len(params) != 2:
-      raise ValueError(
-        'exactly 2 parameters must be specified for the *se* '
-        'covariance function')
-
-  elif model == 'fogm': 
-    units = np.array(['c[{0}*{1}^-0.5]','d[{1}^-1]'])
-    if len(params) != 2:
-      raise ValueError(
-        'exactly 2 parameters must be specified for the *fogm* '
-        'covariance function')
-
-  elif (model == 'se+fogm'):
-    units = np.array(['a[{0}]','b[{1}]','c[{0}*{1}^-0.5]','d[{1}^-1]'])
-    if len(params) != 4:
-      raise ValueError(
-        'exactly 4 parameters must be specified for the *se+fogm* '
-        'covariance function')
-        
-  else:
-    raise ValueError('*%s* is not a valid covariance function' % model)
-
-  is_free = np.ones(params.shape,dtype=bool)
-  is_free[fix] = False
+  units = get_units(model)
 
   def objective(theta,pos,data,sigma):
     test_params = np.copy(params)
     test_params[is_free] = theta 
-    if model == 'bm':
-      gp = gpbm(test_params[0]) 
-
-    if model == 'ibm':
-      gp = gpibm(test_params[0]) 
-
-    if model == 'se':
-      # cov(t,t') = a^2 exp(-|t - t'|^2/b^2)
-      gp = gpse(test_params[0],test_params[1]) 
-      
-    elif model == 'fogm':
-      #cov(t,t') = c^2/(4 pi d) exp(-2 pi d |t - t'|)
-      gp = gpfogm(test_params[0],test_params[1])
-
-    elif model == 'se+fogm':
-      # cov(t,t') = a^2 exp(-|t - t'|^2/b^2) + c^2/(4 pi d) exp(-2 pi d |t - t'|)
-      gp  = gpse(test_params[0],test_params[1])
-      gp += gpfogm(test_params[2],test_params[3])
-    
-    gp += gppoly(order)
-    if annual | semiannual:
-      gp += gpseasonal(annual,semiannual)
-    
+    gp = gpcomp(model,test_params)
     # return negative log likelihood
     return -gp.likelihood(pos,data,sigma)  
 

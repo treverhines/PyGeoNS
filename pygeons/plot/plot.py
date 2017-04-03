@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import logging
 from matplotlib.ticker import FuncFormatter,MaxNLocator
+from pygeons.io.convert import dict_from_hdf5
 from pygeons.plot.iview import interactive_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
@@ -196,7 +197,7 @@ def _setup_ts_ax(ax_lst):
   return
 
 
-def pygeons_view(data_list,map_resolution='i',
+def pygeons_view(input_files,map_resolution='i',
                  break_lons=None,break_lats=None,
                  break_conn=None,**kwargs):
   ''' 
@@ -220,6 +221,7 @@ def pygeons_view(data_list,map_resolution='i',
       gets passed to pygeons.plot.view.interactive_view
 
   '''
+  data_list = [dict_from_hdf5(i) for i in input_files]
   logger.info('Viewing vector data sets ...')
   data_list = _common_context(data_list)
 
@@ -261,7 +263,7 @@ def pygeons_view(data_list,map_resolution='i',
   return
 
 
-def pygeons_strain(data_dx,data_dy,map_resolution='i',
+def pygeons_strain(xdiff_file,ydiff_file,map_resolution='i',
                    break_lons=None,break_lats=None,
                    break_conn=None,**kwargs):
   ''' 
@@ -269,9 +271,9 @@ def pygeons_strain(data_dx,data_dy,map_resolution='i',
   
   Parameters
   ----------
-    data_dx : x derivative data dictionaries 
+    xdiff_file : str
 
-    data_dy : y derivative data dictionaries 
+    ydiff_file : str
       
     map_resolution : str
       basemap resolution
@@ -286,6 +288,8 @@ def pygeons_strain(data_dx,data_dy,map_resolution='i',
       gets passed to pygeons.strain.view
 
   '''
+  data_dx = dict_from_hdf5(xdiff_file)  
+  data_dy = dict_from_hdf5(ydiff_file)  
   logger.info('Viewing strain data ...')
   data_dx,data_dy = _common_context([data_dx,data_dy])
   

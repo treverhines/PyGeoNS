@@ -1,40 +1,86 @@
 ''' 
-module of functions that generate GaussianProcesses
+module of functions that construct *GaussianProcess* instances
 '''
 import numpy as np
+import rbf.basis
 from rbf import gauss
-from rbf.gauss import gppoly
 
 
+def set_units(units):
+  # units are specfied as a string consisting of {0} and {1}, where
+  # {0} are the range units and {1} are the domain units
+  def decorator(fin):
+    def fout(*args,**kwargs):
+      return fin(*args,**kwargs)
+
+    fout.units = units
+    fout.n = gauss._get_arg_count(fin)
+    if fout.n != len(fout.units):
+      raise ValueError(
+        'the number of arguments must be equal to the number of unit '
+        'specifications') 
+    
+    return fout  
+
+  return decorator  
+
+@set_units([])
 def gpnull():
   '''Null GaussianProcess'''
   return gauss.GaussianProcess(gauss._zero_mean,
                                gauss._zero_covariance,
                                basis=gauss._empty_basis)
 
-def gpseasonal(annual,semiannual):
+@set_units([])
+def gpconst():
+  '''Gaussian process with a constant basis function'''
+  return gauss.gppoly(0)
+
+@set_units([])
+def gplinear():
+  '''Gaussian process with a linear basis function'''
+  return gauss.gppoly(1)
+
+@set_units([])
+def gpquad():
+  '''Gaussian process with a quadratic basis function'''
+  return gauss.gppoly(2)
+    
+@set_units([])
+def gpseasonal():
   ''' 
   Returns a *GaussianProcess* with annual and semiannual sinusoids as
   improper basis functions. The input times should have units of years
   '''
   def basis(x):
-    out = np.zeros((x.shape[0],0))
-    if annual:
-      # note that x is in years
-      terms = np.array([np.sin(2*np.pi*x[:,0]),
-                        np.cos(2*np.pi*x[:,0])]).T
-      out = np.hstack((out,terms))
-
-    if semiannual:
-      terms = np.array([np.sin(4*np.pi*x[:,0]),
-                        np.cos(4*np.pi*x[:,0])]).T
-      out = np.hstack((out,terms))
-
+    out = np.array([np.sin(2*np.pi*x[:,0]),
+                    np.cos(2*np.pi*x[:,0]),
+                    np.sin(4*np.pi*x[:,0]),
+                    np.cos(4*np.pi*x[:,0])]).T
     return out
 
   return gauss.gpbfci(basis,dim=1)
 
 
+@set_units(['{0}','{1}'])
+def gpmat32(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpiso(rbf.basis.mat32,(0.0,sigma**2,cls))
+
+
+@set_units(['{0}','{1}'])
+def gpmat52(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpse(rbf.basis.mat52,(0.0,sigma**2,cls))
+
+
+@set_units(['{0}','{1}'])
 def gpse(sigma,cls):
   ''' 
   Returns a *GaussianProcess* with zero mean and a squared exponential
@@ -43,6 +89,7 @@ def gpse(sigma,cls):
   return gauss.gpse((0.0,sigma**2,cls))
 
 
+@set_units(['{0}*{1}^-0.5','{1}^-1'])
 def gpfogm(s,fc):
   ''' 
   Returns a *GaussianProcess* describing an first-order Gauss-Markov
@@ -64,6 +111,7 @@ def gpfogm(s,fc):
   return gauss.gpexp((0.0,coeff,cls))
 
 
+@set_units(['{0}*{1}^-0.5'])
 def gpbm(w):
   ''' 
   Returns brownian motion with scale parameter *w*
@@ -79,6 +127,7 @@ def gpbm(w):
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
 
+@set_units(['{0}*{1}^-1.5'])
 def gpibm(w):
   ''' 
   Returns integrated brownian motion with scale parameter *w*
@@ -125,5 +174,56 @@ def gpibm(w):
 
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
+# create a dictionary of all Gaussian process constructors in this
+# module
+CONSTRUCTORS = {'null':gpnull,
+                'seasonal':gpseasonal,
+                'const':gpconst,
+                'linear':gplinear,
+                'quad':gpquad,
+                'mat32':gpmat32,
+                'mat52':gpmat52,
+                'se':gpse,
+                'fogm':gpfogm,
+                'bm':gpbm,
+                'ibm':gpibm}
   
+def gpcomp(model,args):
+  ''' 
+  Returns a composite Gaussian process. The components are specified
+  with the *model* string, and the arguments for each component are
+  specied with *args*. For example,
   
+  >>> gpcomp('fogm+se',(1.0,2.0,3.0,4.0)) 
+  
+  creates a GaussianProcess composed of a FOGM and an SE model. The
+  first two arguments are passed to *gpfogm* and the second two
+  arguments are passed to *se*
+  '''
+  args = list(args)
+  models = model.strip().split('+')
+  cs = [CONSTRUCTORS[m] for m in models] # constructor for each component
+  n  = sum(ci.n for ci in cs)
+  if len(args) != n:
+    raise ValueError(
+      '%s parameters were specified for the model "%s", but it '
+      'requires %s parameters.\n' %(len(args),model,n))
+  
+  gp = gpnull()
+  for ci in cs:
+    gp += ci(*(args.pop(0) for i in range(ci.n)))
+  
+  return gp
+  
+
+def get_units(model):
+  ''' 
+  returns the units for the GaussianProcess parameters
+  '''
+  models = model.strip().split('+')
+  cs = [CONSTRUCTORS[m] for m in models]
+  units = []
+  for ci in cs:
+    units += ci.units
+  
+  return units  

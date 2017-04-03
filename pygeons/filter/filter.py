@@ -1,18 +1,21 @@
 ''' 
 Defines the main filtering functions which are called by the 
-executables.
+PyGeoNS executable.
 '''
 from __future__ import division
 import numpy as np
 import logging
-import rbf
 import os
 from pygeons.filter.gpr import gpr
 from pygeons.filter.reml import reml
 from pygeons.mjd import mjd_inv,mjd
 from pygeons.basemap import make_basemap
-from pygeons.breaks import make_time_vert_smp, make_space_vert_smp
+from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
 logger = logging.getLogger(__name__)
+
+
+def _change_extension(f,ext):
+  return '.'.join(f.split('.')[:-1] + [ext])
 
 
 def _unit_string(space_exponent,time_exponent):
@@ -39,8 +42,7 @@ def _unit_string(space_exponent,time_exponent):
   return space_str + time_str
                                                 
 
-def pygeons_treml(data,model,params,fix=(),order=1,
-                  annual=True,semiannual=True,
+def pygeons_treml(input_file,prior_model,prior_params,fix=(),
                   procs=0,parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
@@ -48,35 +50,20 @@ def pygeons_treml(data,model,params,fix=(),order=1,
   
   Parameters
   ----------
-  data : dict
-    Data dictionary.
+  input_file : str
 
-  model : str
-    Indicates the stochastic model. either 'se', 'fogm', or 'se+fogm'.
+  prior_model : str
     
-  params : (P,) float array
-    Initial guess for the hyperparameters. length depends on the
-    chosen model.
+  prior_params : (P,) float array
   
   fix : (L,) int array
-    Indices of fixed hyperparameters
-    
-  order : int, optional
-    Order of the polynomial basis functions.
-  
-  no_annual : bool, optional  
-    Include annual sinusoids in the noise model.
-
-  no_semiannual : bool, optional  
-    Include semiannual sinusoids in the noise model.
 
   procs : int, optional
-    Number of subprocesses to spawn.
   
   output_file : str, optional
-    Name of the file that results will be written in.
   
   '''
+  data = dict_from_hdf5(input_file)
   logger.info('Performing temporal restricted maximum likelihood estimation ...')
   # make output file
   if parameters_file is None:
@@ -98,14 +85,11 @@ def pygeons_treml(data,model,params,fix=(),order=1,
     # optimal hyperparameters for each timeseries, coresponding
     # likelihoods and data counts.
     opts,likes,counts,param_units = reml(data['time'][:,None]*domain_conv,  
-                                         data[dir].T*range_conv,                    
+                                         data[dir].T*range_conv,     
                                          data[dir+'_std_dev'].T*range_conv,
-                                         model,
-                                         params,                                
+                                         prior_model,
+                                         prior_params,                                
                                          fix=fix,
-                                         order=order,
-                                         annual=annual,
-                                         semiannual=semiannual,
                                          procs=procs)
     if dir == 'east':                                
       with open(parameters_file,'w') as fout:
@@ -125,8 +109,7 @@ def pygeons_treml(data,model,params,fix=(),order=1,
         fout.flush()
 
     
-
-def pygeons_sreml(data,model,params,fix=(),order=1,
+def pygeons_sreml(input_file,prior_model,prior_params,fix=(),
                   procs=0,parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
@@ -134,25 +117,20 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
   
   Parameters
   ----------
-  data : dict
-    Data dictionary.
+  input_file : str
 
-  model : str
-    Covariance function 
+  prior_model : str
     
-  params : (P,) float array
-    Hyperparameters 
+  prior_params : (P,) float array
   
   fix : (L,) int array
     Indices of the parameters which will be fixed
     
-  order : int, optional
-    Order of the polynomial basis functions.
-  
   procs : int, optional
     Number of subprocesses to spawn.
   
   '''
+  data = dict_from_hdf5(input_file)
   logger.info('Performing spatial restricted maximum likelihood estimation ...')
   # make output file
   if parameters_file is None:
@@ -180,10 +158,9 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
     opts,likes,counts,param_units = reml(xy*domain_conv, 
                                          data[dir]*range_conv, 
                                          data[dir+'_std_dev']*range_conv,
-                                         model,
-                                         params,
+                                         prior_model,
+                                         prior_params,
                                          fix=fix,
-                                         order=order,
                                          procs=procs)
                              
     if dir == 'east':                                
@@ -204,52 +181,40 @@ def pygeons_sreml(data,model,params,fix=(),order=1,
         fout.flush()
 
 
-def pygeons_tgpr(data,prior,order=1,diff=(0,),fogm=(0.5,0.2),
-                 annual=True,semiannual=True,
+def pygeons_tgpr(input_file,prior_model,prior_params,
+                 start_date=None,stop_date=None,diff=(0,),
+                 noise_model='null',noise_params=(),
                  outlier_tol=4.0,procs=0,return_sample=False,
-                 start_date=None,stop_date=None):
+                 output_file=None):
   ''' 
   Performs temporal Gaussian process regression.
   
   Parameters
   ----------
-  data : dict
-    Data dictionary.
+  input_file : str
 
-  prior : (2,) float array
-    hyperparameters for the prior
-  
-  order : int, optional
-    Order of the polynomial basis functions.
-  
-  diff : int, optional
-    Derivative order.
-  
-  fogm : 2-tuple, optional
-    Hyperparameters for the FOGM noise model. 
+  prior_model : str
     
-  no_annual : bool, optional  
-    Include annual sinusoids in the noise model.
-
-  no_semiannual : bool, optional  
-    Include semiannual sinusoids in the noise model.
-
-  outlier_tol : float, optional
-    Tolerance for outlier detection.
-
-  procs : int, optional
-    Number of subprocesses to spawn.
+  prior_params : float array
   
-  return_sample : bool, optional
-    Returned a sample of the posterior.
-    
   start_date : str, optional
-    Start date for the output data set.
     
   stop_date : str, optional
-    Stop date for the output data set.
+
+  diff : int, optional
+  
+  noise_model : str, optional
+  
+  noise_params : float array
+    
+  outlier_tol : float, optional
+
+  procs : int, optional
+  
+  return_sample : bool, optional
     
   '''
+  data = dict_from_hdf5(input_file)
   logger.info('Performing temporal Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
   
@@ -272,13 +237,11 @@ def pygeons_tgpr(data,prior,order=1,diff=(0,),fogm=(0.5,0.2),
     post,post_sigma = gpr(data['time'][:,None]*domain_conv,
                           data[dir].T*range_conv,
                           data[dir+'_std_dev'].T*range_conv,
-                          prior,
+                          prior_model,prior_params,
                           x=time[:,None]*domain_conv,
-                          order=order,
                           diff=diff,
-                          fogm_params=fogm,
-                          annual=annual,
-                          semiannual=semiannual,
+                          noise_model=noise_model,
+                          noise_params=noise_params,
                           procs=procs,
                           return_sample=return_sample,
                           tol=outlier_tol)
@@ -291,11 +254,21 @@ def pygeons_tgpr(data,prior,order=1,diff=(0,),fogm=(0.5,0.2),
   # set the time units
   out['time_exponent'] -= sum(diff)
   out['time'] = time
-  return out
   
-def pygeons_sgpr(data,prior,order=1,diff=(0,0),
-                 return_sample=False,positions=None,
-                 procs=0,outlier_tol=4.0):
+  # write to output file
+  if output_file is None:
+    output_file = _change_extension(input_file,'tgpr.h5')
+    
+  hdf5_from_dict(output_file,out)
+  return 
+  
+
+def pygeons_sgpr(input_file,prior_model,prior_params,
+                 positions=None,diff=(0,0),
+                 noise_model='null',noise_params=(),
+                 return_sample=False,
+                 procs=0,outlier_tol=4.0,
+                 output_file=None):
   ''' 
   Performs temporal Gaussian process regression.
   
@@ -304,31 +277,38 @@ def pygeons_sgpr(data,prior,order=1,diff=(0,0),
   data : dict
     Data dictionary.
 
-  prior : (2,) float array
-    Hyperparameters for the prior.
+  prior_model : str
+    String specifying the prior model
   
-  order : int, optional
-    Order of the polynomial null space.
+  prior_params : float array
+    Hyperparameters for the prior  
   
+  positions : str, optional
+    Position file for the output data set. 
+
   diff : int, optional
     Derivative order.
   
-  procs : int, optional
-    Number of subprocesses to spawn.
+  noise_model : str
+    String specifying the noise model
+  
+  noise_params : float array
+    Hyperparameters for the noise
 
   return_sample : bool, optional
     Return a sample of the posterior.
 
-  positions : (str array,float array,float array), optional
-    Positions for the output data set. 
+  procs : int, optional
+    Number of subprocesses to spawn.
 
   outlier_tol : float, optional
     Tolerance for outlier detection. 
 
   '''
+  data = dict_from_hdf5(input_file)
   logger.info('Performing spatial Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
-    
+
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
@@ -338,7 +318,11 @@ def pygeons_sgpr(data,prior,order=1,diff=(0,0),
     output_lon = np.array(data['longitude'],copy=True)
     output_lat = np.array(data['latitude'],copy=True)
   else:  
-    output_id,output_lon,output_lat = positions
+    pos = np.loadtxt(positions,dtype=str)
+    # pos = id,longitude,latitude
+    output_id = pos[:,0]
+    output_lon = pos[:,1].astype(float)
+    output_lat = pos[:,2].astype(float)
 
   output_x,output_y = bm(output_lon,output_lat)
   output_xy = np.array([output_x,output_y]).T 
@@ -351,12 +335,13 @@ def pygeons_sgpr(data,prior,order=1,diff=(0,0),
     post,post_sigma = gpr(xy*domain_conv,
                           data[dir]*range_conv,
                           data[dir+'_std_dev']*range_conv,
-                          prior,
+                          prior_model,prior_params,
                           x=output_xy*domain_conv,
-                          order=order,
-                          return_sample=return_sample,
                           diff=diff,
+                          noise_model=noise_model,
+                          noise_params=noise_params,
                           tol=outlier_tol,
+                          return_sample=return_sample,
                           procs=procs)
     # convert back to m and days
     post /= (range_conv/domain_conv**sum(diff))                   
@@ -370,60 +355,66 @@ def pygeons_sgpr(data,prior,order=1,diff=(0,0),
   out['longitude'] = output_lon
   out['latitude'] = output_lat
   out['id'] = output_id
+
+  # write to output file
+  if output_file is None:
+    output_file = _change_extension(input_file,'sgpr.h5')
+
+  hdf5_from_dict(output_file,out)
   return out
   
 
-def pygeons_tfilter(data,diff=(0,),fill='none',
-                    break_dates=None,**kwargs):
-  ''' 
-  time smoothing
-  '''
-  logger.info('Performing temporal RBF-FD filtering ...')
-  out = dict((k,np.copy(v)) for k,v in data.iteritems())  
-
-  vert,smp = make_time_vert_smp(break_dates)
-  for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.filter.filter(
-                        data['time'][:,None],data[dir].T,
-                        sigma=data[dir+'_std_dev'].T,
-                        diffs=diff,
-                        fill=fill,
-                        vert=vert,smp=smp,
-                        **kwargs)
-    out[dir] = post.T
-    out[dir+'_std_dev'] = post_sigma.T
-
-  # set the time units
-  out['time_exponent'] -= sum(diff)
-  return out
-
-
-def pygeons_sfilter(data,diff=(0,0),fill='none',
-                    break_lons=None,break_lats=None,
-                    break_conn=None,**kwargs):
-  ''' 
-  space smoothing
-  '''
-  logger.info('Performing spatial RBF-FD filtering ...')
-  out = dict((k,np.copy(v)) for k,v in data.iteritems())
-
-  bm = make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  pos = np.array([x,y]).T
-  vert,smp = make_space_vert_smp(break_lons,break_lats,
-                                 break_conn,bm)
-  for dir in ['east','north','vertical']:
-    post,post_sigma = rbf.filter.filter(
-                        pos,data[dir],
-                        sigma=data[dir+'_std_dev'],
-                        diffs=diff,
-                        fill=fill,
-                        vert=vert,smp=smp,     
-                        **kwargs)
-    out[dir] = post
-    out[dir+'_std_dev'] = post_sigma
-
-  # set the space units
-  out['space_exponent'] -= sum(diff)
-  return out
-
+#def pygeons_tfilter(data,diff=(0,),fill='none',
+#                    break_dates=None,**kwargs):
+#  ''' 
+#  time smoothing
+#  '''
+#  logger.info('Performing temporal RBF-FD filtering ...')
+#  out = dict((k,np.copy(v)) for k,v in data.iteritems())  
+#
+#  vert,smp = make_time_vert_smp(break_dates)
+#  for dir in ['east','north','vertical']:
+#    post,post_sigma = rbf.filter.filter(
+#                        data['time'][:,None],data[dir].T,
+#                        sigma=data[dir+'_std_dev'].T,
+#                        diffs=diff,
+#                        fill=fill,
+#                        vert=vert,smp=smp,
+#                        **kwargs)
+#    out[dir] = post.T
+#    out[dir+'_std_dev'] = post_sigma.T
+#
+#  # set the time units
+#  out['time_exponent'] -= sum(diff)
+#  return out
+#
+#
+#def pygeons_sfilter(data,diff=(0,0),fill='none',
+#                    break_lons=None,break_lats=None,
+#                    break_conn=None,**kwargs):
+#  ''' 
+#  space smoothing
+#  '''
+#  logger.info('Performing spatial RBF-FD filtering ...')
+#  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+#
+#  bm = make_basemap(data['longitude'],data['latitude'])
+#  x,y = bm(data['longitude'],data['latitude'])
+#  pos = np.array([x,y]).T
+#  vert,smp = make_space_vert_smp(break_lons,break_lats,
+#                                 break_conn,bm)
+#  for dir in ['east','north','vertical']:
+#    post,post_sigma = rbf.filter.filter(
+#                        pos,data[dir],
+#                        sigma=data[dir+'_std_dev'],
+#                        diffs=diff,
+#                        fill=fill,
+#                        vert=vert,smp=smp,     
+#                        **kwargs)
+#    out[dir] = post
+#    out[dir+'_std_dev'] = post_sigma
+#
+#  # set the space units
+#  out['space_exponent'] -= sum(diff)
+#  return out
+#

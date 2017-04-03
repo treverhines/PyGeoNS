@@ -1,5 +1,5 @@
 ''' 
-Defines functions which are called by the PyGeoNS executables. These 
+Defines functions which are called by the PyGeoNS executable. These 
 functions are for data cleaning.
 '''
 from __future__ import division
@@ -7,6 +7,7 @@ import os
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
+from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
 from pygeons.mjd import mjd,mjd_inv
 from pygeons.basemap import make_basemap
 from pygeons.clean.iclean import InteractiveCleaner
@@ -18,10 +19,14 @@ from pygeons.plot.plot import (_unit_string,
 logger = logging.getLogger(__name__)
 
 
-def pygeons_crop(data,start_date=None,stop_date=None,
+def _change_extension(f,ext):
+  return '.'.join(f.split('.')[:-1] + [ext])
+  
+
+def pygeons_crop(input_file,start_date=None,stop_date=None,
                  min_lat=-np.inf,max_lat=np.inf,
                  min_lon=-np.inf,max_lon=np.inf,
-                 stations=None):
+                 stations=None,output_file=None):
   ''' 
   Sets the time span of the data set to be between *start_date* and 
   *stop_date*. Sets the stations to be within the latitude and 
@@ -53,6 +58,7 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     output data dictionary
 
   '''
+  data = dict_from_hdf5(input_file)
   logger.info('Cropping data set ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -93,14 +99,19 @@ def pygeons_crop(data,start_date=None,stop_date=None,
     out[dir] = out[dir][:,idx]
     out[dir + '_std_dev'] = out[dir + '_std_dev'][:,idx]
     
-  return out
+  if output_file is None:
+    output_file = _change_extension(input_file,'crop.h5')
+  
+  hdf5_from_dict(output_file,out)  
+  return 
 
 
-def pygeons_clean(data,resolution='i',
+def pygeons_clean(input_file,resolution='i',
                   input_edits_file=None,
                   output_edits_file=None,
                   break_lons=None,break_lats=None,
-                  break_conn=None,**kwargs):
+                  break_conn=None,
+                  output_file=None,**kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
   
@@ -128,6 +139,7 @@ def pygeons_clean(data,resolution='i',
       output data dictionary 
     
   '''
+  data = dict_from_hdf5(input_file)
   logger.info('Cleaning data set ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -219,6 +231,9 @@ def pygeons_clean(data,resolution='i',
   out['east_std_dev'] = clean_data[3]/conv
   out['north_std_dev'] = clean_data[4]/conv
   out['vertical_std_dev'] = clean_data[5]/conv
-  return out
 
-
+  if output_file is None:
+    output_file = _change_extension(input_file,'clean.h5')
+  
+  hdf5_from_dict(output_file,out)  
+  return 

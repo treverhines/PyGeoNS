@@ -1,0 +1,409 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import argparse
+import logging
+from pygeons import *
+
+## MAIN PROGRAM
+#####################################################################
+# create the main PyGeoNS argument parser
+main = argparse.ArgumentParser(
+  usage='pygeons SUBCOMMAND ...',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''PyGeoNS is a command-line application for analyzing GPS
+displacement timeseries. PyGeoNS is primarily intended for computing
+time-dependent strain rates which illuminates any transient
+deformation in the dataset. Strain rates are computed using Gaussian
+Process Regression (GPR). PyGeoNS can produce more than just
+strain-rates; it can use GPR to spatially/temporally smooth the GPS
+data or compute its spatial/temporal derivatives. PyGeoNS also
+provides subroutines for interactive viewing and cleaning.''')
+
+main.add_argument('-v','--verbose',**GLOSSARY['verbose'])
+subs = main.add_subparsers(
+  metavar='SUBCOMMAND',
+  help=
+'''PyGeoNS sub-command. This can be one of "info", "toh5", "totext",
+"view", "strain", "clean", "crop", "treml", "sreml", "tgpr", or
+"sgpr". Call "pygeons -h" followed by the sub-command to see more
+information.''')
+
+## TOH5
+#####################################################################
+p = subs.add_parser('toh5',
+  usage='pygeons toh5 STR [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Converts a text data file to an HDF5 file. The text file should
+contain the content of each station file separated by three asterisks,
+***. The station files can have one of three formats: the PBO csv
+format, the PBO pos format, or the PyGeoNS csv format. Indicate the
+file format by specifying either 'pbocsv', 'pbopos', or 'csv' for
+*file_type*. See the README file or www.unavco.org for more
+information on these file formats.
+
+The resulting HDF5 file will contain data entries for each station in
+the text file and for each day ranging from the earliest observation
+to the latest. If data does not exist in the text file for a
+particular station and day then it will be assigned a value of NaN
+with INF uncertainty in the HDF5 file. This indicates that the data is
+missing.''')
+
+p.add_argument('input_text_file',**GLOSSARY['input_text_file'])
+p.add_argument('-f','--file-type',**GLOSSARY['file_type'])
+p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.set_defaults(func=pygeons_toh5)
+
+# TOTEXT
+#####################################################################
+p = subs.add_parser('totext',
+  usage='pygeons totext STR [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Converts an HDF5 data file to a text file. If a station is missing
+data for each component, north, east, and vertical, for a particular
+day, then that day will not be written to the text file. If all the
+data for a station is missing then that station will not be included
+in the resulting text file. The text file will have the PyGeoNS csv
+format.''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.set_defaults(func=pygeons_totext)
+
+# INFO
+#####################################################################
+p = subs.add_parser('info',
+  usage='pygeons info STR [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Prints metadata for an HDF5 data file to stdout.''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.set_defaults(func=pygeons_info)
+
+# VIEW
+#####################################################################
+p = subs.add_parser('view',
+  usage='pygeons view STR [STR ...] [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Runs the PyGeoNS Interactive Viewer. This function can take multiple 
+data files as arguments, which allows for side-by-side comparison of 
+datasets.''')
+p.add_argument('input_files',**GLOSSARY['input_files'])
+p.add_argument('--dataset-labels',**GLOSSARY['dataset_labels'])
+p.add_argument('--colors',**GLOSSARY['colors'])
+p.add_argument('--line-styles',**GLOSSARY['line_styles'])
+p.add_argument('--line-markers',**GLOSSARY['line_markers'])
+p.add_argument('--quiver-scale',**GLOSSARY['quiver_scale'])
+p.add_argument('--quiver-key-length',**GLOSSARY['quiver_key_length'])
+p.add_argument('--quiver-key-pos',**GLOSSARY['quiver_key_pos'])
+p.add_argument('--scatter-size',**GLOSSARY['scatter_size'])
+p.add_argument('--image-clim',**GLOSSARY['image_clim'])
+p.add_argument('--image-cmap',**GLOSSARY['image_cmap'])
+p.add_argument('--image-resolution',**GLOSSARY['image_resolution'])
+p.add_argument('--ts-title',**GLOSSARY['ts_title'])
+p.add_argument('--map-resolution',**GLOSSARY['map_resolution'])
+p.add_argument('--map-title',**GLOSSARY['map_title'])
+p.add_argument('--map-xlim',**GLOSSARY['map_xlim'])
+p.add_argument('--map-ylim',**GLOSSARY['map_ylim'])
+p.add_argument('--fontsize',**GLOSSARY['fontsize'])
+p.add_argument('--break-lons',**GLOSSARY['break_lons'])
+p.add_argument('--break-lats',**GLOSSARY['break_lats'])
+p.add_argument('--break-conn',**GLOSSARY['break_conn'])
+p.set_defaults(func=pygeons_view)
+
+# STRAIN
+#####################################################################
+p = subs.add_parser('strain',
+  usage='pygeons strain STR STR [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Runs the PyGeoNS Interactive Strain Viewer. This function takes two
+data files, which specify the deformation gradients, as arguments.''')
+p.add_argument('xdiff_file',**GLOSSARY['xdiff_file'])
+p.add_argument('ydiff_file',**GLOSSARY['ydiff_file'])
+p.add_argument('--scale',**GLOSSARY['scale'])
+p.add_argument('--key-magnitude',**GLOSSARY['key_magnitude'])
+p.add_argument('--key-position',**GLOSSARY['key_position'])
+p.add_argument('--compression-color',**GLOSSARY['compression_color'])
+p.add_argument('--extension-color',**GLOSSARY['extension_color'])
+p.add_argument('--vertices',**GLOSSARY['vertices'])
+p.add_argument('--alpha',**GLOSSARY['alpha'])
+p.add_argument('--snr-mask',**GLOSSARY['snr_mask'])
+p.add_argument('--ts-title',**GLOSSARY['ts_title'])
+p.add_argument('--map-resolution',**GLOSSARY['map_resolution'])
+p.add_argument('--map-title',**GLOSSARY['map_title'])
+p.add_argument('--map-xlim',**GLOSSARY['map_xlim'])
+p.add_argument('--map-ylim',**GLOSSARY['map_ylim'])
+p.add_argument('--fontsize',**GLOSSARY['fontsize'])
+p.add_argument('--break-lons',**GLOSSARY['break_lons'])
+p.add_argument('--break-lats',**GLOSSARY['break_lats'])
+p.add_argument('--break-conn',**GLOSSARY['break_conn'])
+p.set_defaults(func=pygeons_strain)
+
+# CLEAN
+#####################################################################
+p = subs.add_parser('clean',
+  usage='pygeons clean STR [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Runs the PyGeoNS interactive cleaner which is used to remove jumps and 
+outliers.''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.add_argument('--input-edits-file',**GLOSSARY['input_edits_file'])
+p.add_argument('--output-edits-file',**GLOSSARY['output_edits_file'])
+p.add_argument('--colors',**GLOSSARY['colors'])
+p.add_argument('--line-styles',**GLOSSARY['line_styles'])
+p.add_argument('--line-markers',**GLOSSARY['line_markers'])
+p.add_argument('--quiver-scale',**GLOSSARY['quiver_scale'])
+p.add_argument('--quiver-key-length',**GLOSSARY['quiver_key_length'])
+p.add_argument('--quiver-key-pos',**GLOSSARY['quiver_key_pos'])
+p.add_argument('--scatter-size',**GLOSSARY['scatter_size'])
+p.add_argument('--image-clim',**GLOSSARY['image_clim'])
+p.add_argument('--image-cmap',**GLOSSARY['image_cmap'])
+p.add_argument('--image-resolution',**GLOSSARY['image_resolution'])
+p.add_argument('--ts-title',**GLOSSARY['ts_title'])
+p.add_argument('--map-resolution',**GLOSSARY['map_resolution'])
+p.add_argument('--map-title',**GLOSSARY['map_title'])
+p.add_argument('--map-xlim',**GLOSSARY['map_xlim'])
+p.add_argument('--map-ylim',**GLOSSARY['map_ylim'])
+p.add_argument('--fontsize',**GLOSSARY['fontsize'])
+p.add_argument('--break-lons',**GLOSSARY['break_lons'])
+p.add_argument('--break-lats',**GLOSSARY['break_lats'])
+p.add_argument('--break-conn',**GLOSSARY['break_conn'])
+p.set_defaults(func=pygeons_clean)
+
+# CROP
+#####################################################################
+p = subs.add_parser('crop',
+  usage='pygeons crop STR [options]',
+  description=
+'''Limits the spatial and temporal extent of the dataset. The dates
+contained in the resulting dataset will be each day ranging from
+*start_date* to *end_date*. The stations in the resulting datasets
+will be within the bounds set by *min/max_lon/lat*. Unlike for
+*pygeons-clean*, this function removes the dates and stations from the
+datset, rather than masking them.
+''')  
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.add_argument('--start-date',**GLOSSARY['start_date'])
+p.add_argument('--stop-date',**GLOSSARY['stop_date'])
+p.add_argument('--stations',**GLOSSARY['stations'])
+p.add_argument('--min-lat',**GLOSSARY['min_lat'])
+p.add_argument('--max-lat',**GLOSSARY['max_lat'])
+p.add_argument('--min-lon',**GLOSSARY['min_lon'])
+p.add_argument('--max-lon',**GLOSSARY['max_lon'])
+p.set_defaults(func=pygeons_crop)
+
+# TREML
+#####################################################################
+p = subs.add_parser('treml',
+  usage='pygeons treml STR STR FLOAT [FLOAT ...] [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Estimates the hyperparameters characterizing the temporal
+covariance of displacements for each station. This is done using the
+Restricted Maximum Likelihood (REML) method. The REML method treats
+the observed displacements as realizations of a stochastic function.
+This stochastic function can be described as the sum of:
+
+  (1) an unknown polynomial with a user specified order.
+  
+  (2) sinusoids with annual and semiannual frequencies and unknown
+      amplitudes,
+
+  (3) uncorrelated noise described by the formal data uncertainties,
+
+  (4) a Gaussian process with zero mean, and a covariance function
+      described by one of the following
+      
+      (SE)      cov(t,t';a,b) = 
+
+                a² exp(-|t - t'|²/b²),
+                 
+      (FOGM)    cov(t,t';c,d) = 
+
+                c²/(4 π d) exp(-2 π d |t - t'|),
+      
+      (SE+FOGM) cov(t,t';a,b,c,d) = 
+      
+                a² exp(-|t - t'|²/b²) +
+
+                c²/(4 π d) exp(-2 π d |t - t'|),
+      
+      where *a*, *b*, *c*, and *d* are unknown hyperparameters with
+      units of mm, yr, mm/yr^0.5, and 1/yr, respectively.
+  
+The REML method finds the hyperparameters that maximize the
+probability of realizing the data from the stochastic function. The
+optimal hyperparameters for each station are written to an output text
+file.''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('model',**GLOSSARY['model'])
+p.add_argument('params',**GLOSSARY['params'])
+p.add_argument('--fix',**GLOSSARY['fix'])
+p.add_argument('--procs',**GLOSSARY['procs'])
+p.add_argument('-p','--parameters-file',**GLOSSARY['parameters_file'])
+p.set_defaults(func=pygeons_treml)
+
+# SREML
+#####################################################################
+p = subs.add_parser('sreml',
+  usage='pygeons sreml STR FLOAT FLOAT [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Estimates the hyperparameters characterizing the spatial covariance
+of the deformation for each day. This is done using the Restricted
+Maximum Likelihood (REML) method. The REML method treats the observed
+deformation, which can be displacements or velocities, as realizations
+of a stochastic function. This stochastic function can be described as
+the sum of:
+
+  (1) an unknown polynomial with a user specified order.
+  
+  (2) Uncorrelated noise described by the formal data uncertainties.    
+  
+  (3) a Gaussian process with zero mean, and a covariance function
+      described by one of the following
+      
+      (SE)      cov(x,x';a,b) = 
+
+                a² exp(-|x - x'|²/b²),
+                 
+      (FOGM)    cov(x,x';c,d) = 
+
+                c²/(4 π d) exp(-2 π d |x - x'|),
+      
+      (SE+FOGM) cov(x,x';a,b,c,d) = 
+      
+                a² exp(-|x - x'|²/b²) +
+
+                c²/(4 π d) exp(-2 π d |x - x'|),
+      
+      where *a*, *b*, *c*, and *d* are unknown hyperparameters. If the
+      input dataset describes displacements then the hyperparameter
+      units are mm, km, mm/km^0.5, and 1/km, respectively. If the
+      input dataset describes velocities then the hyperparameter units
+      are mm/yr, km, (mm/yr)/km^0.5, and 1/km, respectively.
+
+The REML method finds the hyperparameters that maximize the
+probability of realizing the data from the stochastic function. The
+optimal hyperparameters for each day are written to an output text
+file.''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('model',**GLOSSARY['model'])
+p.add_argument('params',**GLOSSARY['params'])
+p.add_argument('--fix',**GLOSSARY['fix'])
+p.add_argument('--procs',**GLOSSARY['procs'])
+p.add_argument('-p','--parameters-file',**GLOSSARY['parameters_file'])
+p.set_defaults(func=pygeons_sreml)
+
+# TGPR
+#####################################################################
+p = subs.add_parser('tgpr',
+  usage='pygeons tgpr STR FLOAT FLOAT [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Temporally smoothes or differentiates a displacement dataset. It is
+assumed that each displacement timeseries can be described as the sum
+of:
+
+  (1) a Gaussian process with zero mean, and a squared-exponential
+      covariance function, 
+
+        cov(t,t') = a² exp(-|t - t'|²/b²),
+      
+      where *a* and *b* are user-specified hyperparameters controlling
+      the standard deviation and the characteristic time-scale,
+      respectively.
+  
+  (2) an unknown polynomial with a user specified order.
+  
+  (3) sinusoids with annual and semiannual frequencies and unknown
+      amplitudes.
+  
+  (4) a Gaussian process with zero mean, and an exponential covariance
+      function, 
+      
+        cov(t,t') = c²/(4 π d) exp(-2 π d |t - t'|),
+
+      where *c* and *d* are user-specified hyperparameters. This is
+      often referred to as an Ornstein-Uhlenbeck process or a
+      first-order Gauss-Markov (FOGM) process. *c* can be interpretted
+      as the standard deviation of the white noise driving the FOGM
+      process, and *b* can be interpretted as a cutoff frequency.
+  
+  (5) Uncorrelated noise described by the formal data uncertainties.    
+  
+We consider (1) and (2) to be signal, and the remaining terms are
+considered noise. This function requires the user to specify the name
+of the data file and the two hyperparameters for (1).''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('prior_model',**GLOSSARY['prior_model'])
+p.add_argument('prior_params',**GLOSSARY['prior_params'])
+p.add_argument('--noise-model',**GLOSSARY['noise_model'])
+p.add_argument('--noise-params',**GLOSSARY['noise_params'])
+p.add_argument('--diff',**GLOSSARY['t_diff'])
+p.add_argument('--procs',**GLOSSARY['procs'])
+p.add_argument('-t','--outlier-tol',**GLOSSARY['outlier_tol'])
+p.add_argument('-s','--return-sample',**GLOSSARY['return_sample'])
+p.add_argument('-a','--start-date',**GLOSSARY['start_date'])
+p.add_argument('-b','--stop-date',**GLOSSARY['stop_date'])
+p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.set_defaults(func=pygeons_tgpr)
+
+# SGPR
+#####################################################################
+p = subs.add_parser('sgpr',
+  usage='pygeons tgpr STR FLOAT FLOAT [options]',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  description=
+'''Spatially smoothes or differentiates a displacement or velocity
+dataset. It is assumed that the deformation at each epoch can be
+described as the sum of:
+
+  (1) a Gaussian process with zero mean, and a squared-exponential
+      covariance function, 
+
+        cov(x,x') = a² exp(-|x - x'|²/b²),
+      
+      where *a* and *b* are user-specified hyperparameters controlling
+      the standard deviation and the characteristic length-scale,
+      respectively.
+  
+  (2) an unknown polynomial with a user specified order.
+  
+  (3) Uncorrelated noise described by the formal data uncertainties.    
+  
+We consider (1) and (2) to be signal which we want to recover. This
+function requires the user to specify the name of the data file and
+the two hyperparameters for (1).''')
+p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('prior_model',**GLOSSARY['prior_model'])
+p.add_argument('prior_params',**GLOSSARY['prior_params'])
+p.add_argument('--noise-model',**GLOSSARY['noise_model'])
+p.add_argument('--noise-params',**GLOSSARY['noise_params'])
+p.add_argument('--diff',**GLOSSARY['s_diff'])
+p.add_argument('--procs',**GLOSSARY['procs'])
+p.add_argument('-t','--outlier-tol',**GLOSSARY['outlier_tol'])
+p.add_argument('-s','--return-sample',**GLOSSARY['return_sample'])
+p.add_argument('-p','--positions',**GLOSSARY['positions'])
+p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.set_defaults(func=pygeons_sgpr)
+
+## PARSE ARGS AND RUN SUB-ROUTINE
+#####################################################################
+kwargs = vars(main.parse_args())
+# toss out Nones and let the lower level functions determine the
+# defaults
+for k in kwargs.keys():
+  if kwargs[k] is None:
+    kwargs.pop(k)  
+
+func = kwargs.pop('func')
+verbose = kwargs.pop('verbose')
+logging.basicConfig(level=30-10*verbose)
+func(**kwargs)

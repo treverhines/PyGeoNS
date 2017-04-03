@@ -5,8 +5,8 @@ dictionaries
 import numpy as np
 import logging
 import h5py
-from pygeons.datacheck import check_data
 from pygeons.mjd import mjd_inv
+from pygeons.io.datacheck import check_data
 from pygeons.io.parser import PARSER_DICT
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ def _write_csv(data):
 
   return out             
   
+
 def text_from_dict(outfile,data):
   ''' 
   Writes a text file from a data dictionary. The text file contains a 

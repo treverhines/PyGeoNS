@@ -502,33 +502,6 @@ Maximum longitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
-ANNUAL = {
-'help':
-''' 
-Indicates whether annual sinusoids will be included in the model.
-'''
-}
-#####################################################################
-SEMIANNUAL = {
-'help':
-''' 
-Indicates whether semi-annual sinusoids will be included in the model.
-'''
-}
-#####################################################################
-FOGM = {
-'type':float,
-'nargs':2,
-'metavar':'FLOAT',
-'help':
-''' 
-Hyperparameters for the FOGM noise model. The first entry is the
-standard deviation of the white noise driving the process in units of
-mm/yr^0.5. The second entry is the cutoff frequency in units of 1/yr.
-Defaults to (0.5, 0.2).
-'''
-}
-#####################################################################
 S_CUTOFF = {
 'type':float, 
 'metavar':'FLOAT', 
@@ -547,26 +520,6 @@ Cutoff frequency in 1/days.
 '''
 }
 #####################################################################
-MODEL = {
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Covariance function. This can either be "se", "fogm", or "se+fogm".
-'''
-}
-#####################################################################
-PARAMS = {
-'type':float,
-'nargs':'+',
-'metavar':'FLOAT [FLOAT ...]',
-'help': 
-'''  
-Initial guesses for the hyperparameters of the chosen covariance
-function.
-'''
-}
-#####################################################################
 FIX = {
 'type':int,
 'nargs':'+',
@@ -577,28 +530,63 @@ Indices of hyperparameters that should be fixed at the initial guess.
 '''
 }
 #####################################################################
-T_PRIOR = {
-'type':float,
-'nargs':2,
-'metavar':'FLOAT FLOAT',
+PRIOR_MODEL = {
+'type':str,
+'metavar':'STR',
 'help': 
 ''' 
-Hyperparameters for the prior model. The first entry describes the
-standard deviation of displacements in units of mm. The second entry
-describes the characteristic time-scale in yr.
+String specifying the prior model. This can be any one of %s. A
+composite prior models can be specified by joining models with a '+'.
 '''
 }
 #####################################################################
-S_PRIOR = {
+PRIOR_PARAMS = {
 'type':float,
-'nargs':2,
-'metavar':'FLOAT FLOAT',
+'nargs':'+',
+'metavar':'FLOAT',
 'help': 
 ''' 
-Hyperparameters for the prior model. The first entry describes the
-standard deviation of displacements (velocities) in units of mm
-(mm/yr). The second entry describes the characteristic length-scale in
-km.
+Hyperparameters for the prior model.
+'''
+}
+#####################################################################
+NOISE_MODEL = {
+'type':str,
+'metavar':'STR',
+'help': 
+''' 
+String specifying the noise model. This can be any one of %s. A
+composite noise models can be specified by joining models with a '+'.
+'''
+}
+#####################################################################
+NOISE_PARAMS = {
+'type':float,
+'nargs':'+',
+'metavar':'FLOAT',
+'help': 
+''' 
+Hyperparameters for the noise model.
+'''
+}
+#####################################################################
+MODEL = {
+'type':str,
+'metavar':'STR',
+'help': 
+''' 
+String specifying the model. This can be any one of %s. A composite
+models can be specified by joining models with a '+'.
+'''
+}
+#####################################################################
+PARAMS = {
+'type':float,
+'nargs':'+',
+'metavar':'FLOAT',
+'help': 
+''' 
+Hyperparameters for the model.
 '''
 }
 #####################################################################
@@ -610,16 +598,6 @@ OUTLIER_TOL = {
 Tolerance for outlier detection. Smaller values make the detection
 algorithm more sensitive. This should not be any lower than about 2.0.
 Defaults to 4.0.
-'''
-}
-#####################################################################
-ORDER = {
-'default':1,
-'type':int, 
-'metavar':'INT', 
-'help': 
-''' 
-Order of the polynomial basis functions. Defaults to 1.
 '''
 }
 #####################################################################
@@ -760,14 +738,12 @@ GLOSSARY = {
 's_cutoff':S_CUTOFF,
 'params':PARAMS,
 'model':MODEL,
+'prior_params':PRIOR_PARAMS,
+'prior_model':PRIOR_MODEL,
+'noise_params':NOISE_PARAMS,
+'noise_model':NOISE_MODEL,
 'fix':FIX,
-'t_prior':T_PRIOR,
-'s_prior':S_PRIOR,
 'outlier_tol':OUTLIER_TOL,
-'fogm':FOGM,
-'annual':ANNUAL,
-'semiannual':SEMIANNUAL,
-'order':ORDER,
 't_diff':T_DIFF,
 's_diff':S_DIFF,
 'samples':SAMPLES,

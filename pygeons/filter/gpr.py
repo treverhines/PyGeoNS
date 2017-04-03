@@ -5,15 +5,15 @@ specialized for PyGeoNS
 import numpy as np
 import logging
 from pygeons.mp import parmap
-from pygeons.filter.gprocs import *
+from pygeons.filter.gprocs import gpcomp
 logger = logging.getLogger(__name__)
 
-def gpr(y,d,s,se_params,x=None,
-        order=1,
+def gpr(y,d,s,
+        prior_model,prior_params,
+        x=None,
         diff=None,
-        fogm_params=None,
-        annual=False,
-        semiannual=False,
+        noise_model='null',
+        noise_params=(),
         tol=4.0,
         procs=0,
         return_sample=False):
@@ -31,28 +31,23 @@ def gpr(y,d,s,se_params,x=None,
   s : (...,N) array
     Data uncertainty.
   
+  prior_model : str
+    String specifying the prior model
+  
+  prior_params : 2-tuple
+    Hyperparameters for the prior model.
+  
   x : (M,D) array, optional
     Evaluation points.
-
-  se_params : 2-tuple
-    Hyperparameters for the squared-exponential prior model.
-  
-  order : int, optional
-    Order of the polynomial improper basis functions.
 
   diff : (D,), optional         
     Specifies the derivative of the returned values. 
 
-  fogm_params : 2-tuple, optional
-    Hyperparameters for the first-order Gauss-Markov (FOGM) noise
-    model. 
+  noise_model : str, optional
+    String specifying the noise model
     
-  annual : bool, optional  
-    Indicates whether to include annual sinusoids in the noise model.
-
-  semiannual : bool, optional  
-    Indicates whether to include semiannual sinusoids in the noise
-    model.
+  noise_params : 2-tuple, optional
+    Hyperparameters for the noise model
     
   tol : float, optional
     Tolerance for the outlier detection algorithm.
@@ -82,15 +77,8 @@ def gpr(y,d,s,se_params,x=None,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    prior_gp  = gpse(se_params[0],se_params[1]) 
-    prior_gp += gppoly(order)
-    noise_gp  = gpnull()
-    if annual | semiannual:
-      noise_gp += gpseasonal(annual,semiannual)
-
-    if fogm_params is not None:
-      noise_gp += gpfogm(fogm_params[0],fogm_params[1])
-      
+    prior_gp = gpcomp(prior_model,prior_params)
+    noise_gp = gpcomp(noise_model,noise_params)    
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
     # start by just ignoring missing data
