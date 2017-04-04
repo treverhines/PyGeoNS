@@ -7,8 +7,14 @@ from rbf import gauss
 
 
 def set_units(units):
-  # units are specfied as a string consisting of {0} and {1}, where
-  # {0} are the range units and {1} are the domain units
+  ''' 
+  Wrapper for specifying the hyperparameter units for each
+  GaussianProcess constructor. This is only used for creating the
+  header of the output file from pygeons_treml and pygeons_sreml.
+  Units can be written in terms of '{0}' and '{1}' which are
+  placeholders for the data units (mm, mm/yr, etc.) and the
+  observation space units (km or yr), respectively.
+  '''
   def decorator(fin):
     def fout(*args,**kwargs):
       return fin(*args,**kwargs)
