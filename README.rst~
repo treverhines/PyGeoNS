@@ -1,6 +1,10 @@
 PyGeoNS (Python-based Geodetic Network Strain software)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+NOTE: This package is still being developed. Some of the examples in
+this document and in the ``demo`` directory may not work with the
+latest user interface. 
+
 What PyGeoNS can do
 ===================
 PyGeoNS (pronounced like the bird) is a suite of command line 
