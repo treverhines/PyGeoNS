@@ -22,11 +22,7 @@ def fmin_pos(func,x0,*args,**kwargs):
 
 
 def reml(y,d,s,model,params,
-         fix=(), 
-         order=1,
-         annual=False,
-         semiannual=False,
-         procs=0):
+         fix=(),procs=0):
   ''' 
   Returns the Restricted Maximum Likelihood (REML) estimatates of the
   unknown hyperparameters.
@@ -42,30 +38,15 @@ def reml(y,d,s,model,params,
   s : (...,N) array
     Data uncertainty.
   
-  model : str, optional
-    string indicating the stochastic model being optimized. Can either
-    be 'se','fogm', or 'se+fogm'. The required length of *params* will
-    change depending on the number of hyperparameters in the model.
-    'se' and 'fogm' take 2 hyperparameters, and 'se+fogm' takes 4
-    hyperparameters.
+  model : str,
+    string indicating the stochastic model being optimized.
     
   params : (P,) array 
-    Initial guess for the hyperparameters. If 4 are specified then the
-    model consists of SE and FOGM. If 2 are specified then the model
-    consists of SE
+    Initial guess for the hyperparameters.
   
   fix : (L,) int array
     Indices of hyperparameters that will remain fixed
   
-  order : int, optional
-    Order of the polynomial improper basis functions.
-  
-  annual : bool, optional  
-    Indicates whether to include annual sinusoids in the model.
-
-  semiannual : bool, optional  
-    Indicates whether to include semiannual sinusoids in the model.
-
   procs : int, optional
     Distribute the tasks among this many subprocesses. 
   
@@ -83,7 +64,7 @@ def reml(y,d,s,model,params,
   c : (...) int array
     number of observations used to constrain the hyperparameters
     
-  d : (P,) str array
+  units : (P,) str array
     units of the hyperparameters 
     
   '''
