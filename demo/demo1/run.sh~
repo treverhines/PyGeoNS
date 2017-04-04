@@ -47,8 +47,8 @@ pygeons sgpr work/data.tgpr.h5 $VEL_STD $VEL_CLS --output-file work/ydiff.h5 \
              --order $VEL_ORDER --diff 0 1 -v
 
 # Save the deformation gradients as text files
-pygeons-totext work/xdiff.h5 -vv
-pygeons-totext work/ydiff.h5 -vv
+pygeons totext work/xdiff.h5 -vv
+pygeons totext work/ydiff.h5 -vv
 
 # view the estimated strain
-pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv
+pygeons strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv

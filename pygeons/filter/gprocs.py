@@ -117,6 +117,49 @@ def gpfogm(s,fc):
   return gauss.gpexp((0.0,coeff,cls))
 
 
+@set_units(['MJD'])
+def gpstep(t0):
+  ''' 
+  Returns a *GaussianProcess* with a heaviside function centered at
+  *t0*. The size of the step is unconstrained
+  '''
+  t0 /= 365.25 # convert to years
+  def basis(x,diff):
+    if diff == (0,):
+      out = (x[:,0] >= t0).astype(float)
+    else:
+      # derivative is zero everywhere (ignore the step at t0)
+      out = np.zeros(x.shape[0],dtype=float)  
+    
+    # turn into an (N,1) array
+    out = out[:,None]
+    return out
+
+  return gauss.gpbfci(basis,dim=1)
+
+@set_units(['MJD'])
+def gpramp(t0):
+  ''' 
+  Returns a *GaussianProcess* with a ramp function centered at
+  *t0*. The slope of the ramp is unconstrained
+  '''
+  t0 /= 365.25 # convert to years
+  def basis(x,diff):
+    if diff == (0,):
+      out = (x[:,0] - t0)*((x[:,0] >= t0).astype(float))
+    elif diff == (1,):
+      out = (x[:,0] >= t0).astype(float)
+    else:
+      # derivative is zero everywhere (ignore the step at t0)
+      out = np.zeros(x.shape[0],dtype=float)  
+    
+    # turn into an (N,1) array
+    out = out[:,None]
+    return out
+
+  return gauss.gpbfci(basis,dim=1)
+
+
 @set_units(['{0}*{1}^-0.5','MJD'])
 def gpbm(w,t0):
   ''' 
@@ -196,6 +239,8 @@ CONSTRUCTORS = {'null':gpnull,
                 'const':gpconst,
                 'linear':gplinear,
                 'quad':gpquad,
+                'step':gpstep,
+                'ramp':gpramp,
                 'mat32':gpmat32,
                 'mat52':gpmat52,
                 'se':gpse,

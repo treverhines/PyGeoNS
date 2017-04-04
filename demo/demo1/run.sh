@@ -30,7 +30,7 @@ cp data.csv work/data.csv
 pygeons toh5 work/data.csv --file-type csv -v
 
 # uncomment to view the input data set
-#pygeons-view work/data.h5
+pygeons view work/data.h5
 
 # Temporally smooth and differentiate the data set using Gaussian
 # process regression (GPR)
@@ -51,4 +51,4 @@ pygeons totext work/xdiff.h5 -vv
 pygeons totext work/ydiff.h5 -vv
 
 # view the estimated strain
-pygeons-strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv
+pygeons strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv

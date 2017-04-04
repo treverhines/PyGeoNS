@@ -94,7 +94,7 @@ def pygeons_treml(input_file,model,params,fix=(),
     if dir == 'east':                                
       with open(parameters_file,'w') as fout:
         header = '%-15s%-15s%-15s' % ('station','component','count') 
-        header += "".join(['%-15s' % i.format(range_units,domain_units) for i in param_units])
+        header += "".join(['%-15s' % ('p%s[%s]' % (j,i.format(range_units,domain_units))) for j,i in enumerate(param_units)])
         header += '%-15s\n' % 'likelihood'
         fout.write(header)
         fout.flush()
@@ -166,7 +166,7 @@ def pygeons_sreml(input_file,model,params,fix=(),
     if dir == 'east':                                
       with open(parameters_file,'w') as fout:
         header = '%-15s%-15s%-15s' % ('station','component','count') 
-        header += "".join(['%-15s' % i.format(range_units,domain_units) for i in param_units])
+        header += "".join(['%-15s' % ('p%s[%s]' % (j,i.format(range_units,domain_units))) for j,i in enumerate(param_units)])
         header += '%-15s\n' % 'likelihood'
         fout.write(header)
         fout.flush()

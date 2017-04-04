@@ -4,6 +4,7 @@ specialized for PyGeoNS
 '''
 import numpy as np
 import logging
+from rbf.gauss import clear_caches
 from pygeons.mp import parmap
 from pygeons.filter.gprocs import gpcomp
 logger = logging.getLogger(__name__)
@@ -77,23 +78,19 @@ def gpr(y,d,s,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
-    prior_gp = gpcomp(prior_model,prior_params)
-    noise_gp = gpcomp(noise_model,noise_params)    
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
     # start by just ignoring missing data
     ignore = np.copy(is_missing)
     # iteratively condition and identify outliers
     while True:
+      prior_gp = gpcomp(prior_model,prior_params)
+      noise_gp = gpcomp(noise_model,noise_params)    
+      full_gp  = prior_gp + noise_gp 
       yi,di,si = y[~ignore],d[i,~ignore],s[i,~ignore]
-      # create noise covariance matrix
-      sigma = np.diag(si**2) + noise_gp.covariance(yi,yi)
-      # create improper noise basis vectors
-      p = noise_gp.basis(yi)
-      # condition the prior
-      post_gp = prior_gp.condition(yi,di,sigma=sigma,p=p)
+      fit_gp   = full_gp.condition(yi,di,sigma=si)
       # compute residuals using all the data
-      res = np.abs(post_gp.mean(y) - d[i])/s[i]
+      res = np.abs(fit_gp.mean(y) - d[i])/s[i]
       # give missing data infinite residuals
       res[is_missing] = np.inf
       rms = np.sqrt(np.mean(res[~ignore]**2))
@@ -107,6 +104,9 @@ def gpr(y,d,s,
       else:  
         ignore = (res > tol*rms)
     
+    sigma  = np.diag(si**2) + noise_gp.covariance(yi,yi)
+    p      = noise_gp.basis(yi)
+    post_gp = prior_gp.condition(yi,di,sigma=sigma,p=p)
     post_gp = post_gp.differentiate(diff)
     if return_sample:
       out_mean_i = post_gp.sample(x)
