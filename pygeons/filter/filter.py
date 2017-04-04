@@ -42,7 +42,7 @@ def _unit_string(space_exponent,time_exponent):
   return space_str + time_str
                                                 
 
-def pygeons_treml(input_file,prior_model,prior_params,fix=(),
+def pygeons_treml(input_file,model,params,fix=(),
                   procs=0,parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
@@ -52,9 +52,9 @@ def pygeons_treml(input_file,prior_model,prior_params,fix=(),
   ----------
   input_file : str
 
-  prior_model : str
+  model : str
     
-  prior_params : (P,) float array
+  params : (P,) float array
   
   fix : (L,) int array
 
@@ -87,8 +87,8 @@ def pygeons_treml(input_file,prior_model,prior_params,fix=(),
     opts,likes,counts,param_units = reml(data['time'][:,None]*domain_conv,  
                                          data[dir].T*range_conv,     
                                          data[dir+'_std_dev'].T*range_conv,
-                                         prior_model,
-                                         prior_params,                                
+                                         model,
+                                         params,                                
                                          fix=fix,
                                          procs=procs)
     if dir == 'east':                                
@@ -109,7 +109,7 @@ def pygeons_treml(input_file,prior_model,prior_params,fix=(),
         fout.flush()
 
     
-def pygeons_sreml(input_file,prior_model,prior_params,fix=(),
+def pygeons_sreml(input_file,model,params,fix=(),
                   procs=0,parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
@@ -119,9 +119,9 @@ def pygeons_sreml(input_file,prior_model,prior_params,fix=(),
   ----------
   input_file : str
 
-  prior_model : str
+  model : str
     
-  prior_params : (P,) float array
+  params : (P,) float array
   
   fix : (L,) int array
     Indices of the parameters which will be fixed
@@ -158,8 +158,8 @@ def pygeons_sreml(input_file,prior_model,prior_params,fix=(),
     opts,likes,counts,param_units = reml(xy*domain_conv, 
                                          data[dir]*range_conv, 
                                          data[dir+'_std_dev']*range_conv,
-                                         prior_model,
-                                         prior_params,
+                                         model,
+                                         params,
                                          fix=fix,
                                          procs=procs)
                              

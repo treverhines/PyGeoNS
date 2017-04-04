@@ -111,27 +111,34 @@ def gpfogm(s,fc):
   return gauss.gpexp((0.0,coeff,cls))
 
 
-@set_units(['{0}*{1}^-0.5'])
-def gpbm(w):
+@set_units(['{0}*{1}^-0.5','MJD'])
+def gpbm(w,t0):
   ''' 
-  Returns brownian motion with scale parameter *w*
+  Returns brownian motion with scale parameter *w* and reference time
+  *t0*
   '''
+  t0 /= 365.25 # convert to years
   def mean(x):
     out = np.zeros(x.shape[0])  
     return out 
 
   def cov(x1,x2):
-    out = np.min(np.meshgrid(x1[:,0],x2[:,0],indexing='ij'),axis=0)
+    x1,x2 = np.meshgrid(x1[:,0]-t0,x2[:,0]-t0,indexing='ij')
+    x1[x1<0.0] = 0.0
+    x2[x2<0.0] = 0.0
+    out = np.min([x1,x2],axis=0)
     return w**2*out
   
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
 
-@set_units(['{0}*{1}^-1.5'])
-def gpibm(w):
+@set_units(['{0}*{1}^-1.5','MJD'])
+def gpibm(w,t0):
   ''' 
-  Returns integrated brownian motion with scale parameter *w*
+  Returns integrated brownian motion with scale parameter *w* and
+  reference time *t0*.
   '''
+  t0 /= 365.25 # convert to years
   def mean(x,diff):
     '''mean function which is zero for all derivatives'''
     out = np.zeros(x.shape[0])
@@ -139,7 +146,9 @@ def gpibm(w):
   
   def cov(x1,x2,diff1,diff2):
     '''covariance function and its derivatives'''
-    x1,x2 = np.meshgrid(x1[:,0],x2[:,0],indexing='ij')
+    x1,x2 = np.meshgrid(x1[:,0]-t0,x2[:,0]-t0,indexing='ij')
+    x1[x1<0.0] = 0.0
+    x2[x2<0.0] = 0.0
     if (diff1 == (0,)) & (diff2 == (0,)):
       # integrated brownian motion
       out = (0.5*np.min([x1,x2],axis=0)**2*

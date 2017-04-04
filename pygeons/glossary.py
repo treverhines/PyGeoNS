@@ -4,6 +4,7 @@ This module defines a glossary of terms used in the help
 documentation. This is used to aid in building and maintaining the 
 help documentation for each executable.
 '''
+from pygeons.filter.gprocs import CONSTRUCTORS
 
 #####################################################################
 INPUT_TEXT_FILE = {
@@ -536,14 +537,15 @@ PRIOR_MODEL = {
 'help': 
 ''' 
 String specifying the prior model. This can be any one of %s. A
-composite prior models can be specified by joining models with a '+'.
-'''
+composite can be specified by joining models with a '+'.
+''' % CONSTRUCTORS.keys()
 }
 #####################################################################
 PRIOR_PARAMS = {
 'type':float,
-'nargs':'+',
-'metavar':'FLOAT',
+'nargs':'*',
+'default':(),
+'metavar':'FLOAT [FLOAT ...]',
 'help': 
 ''' 
 Hyperparameters for the prior model.
@@ -556,13 +558,14 @@ NOISE_MODEL = {
 'help': 
 ''' 
 String specifying the noise model. This can be any one of %s. A
-composite noise models can be specified by joining models with a '+'.
-'''
+composite can be specified by joining models with a '+'.
+''' % CONSTRUCTORS.keys()
 }
 #####################################################################
 NOISE_PARAMS = {
 'type':float,
 'nargs':'+',
+'default':(),
 'metavar':'FLOAT',
 'help': 
 ''' 
@@ -576,17 +579,18 @@ MODEL = {
 'help': 
 ''' 
 String specifying the model. This can be any one of %s. A composite
-models can be specified by joining models with a '+'.
-'''
+can be specified by joining models with a '+'.
+''' % CONSTRUCTORS.keys()
 }
 #####################################################################
 PARAMS = {
 'type':float,
-'nargs':'+',
-'metavar':'FLOAT',
+'nargs':'*',
+'default':(),
+'metavar':'FLOAT [FLOAT ...]',
 'help': 
 ''' 
-Hyperparameters for the model.
+Initial guess for the model hyperparameters.
 '''
 }
 #####################################################################

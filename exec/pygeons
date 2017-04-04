@@ -13,20 +13,18 @@ main = argparse.ArgumentParser(
   description=
 '''PyGeoNS is a command-line application for analyzing GPS
 displacement timeseries. PyGeoNS is primarily intended for computing
-time-dependent strain rates which illuminates any transient
+time-dependent strain rates, which illuminates any transient
 deformation in the dataset. Strain rates are computed using Gaussian
 Process Regression (GPR). PyGeoNS can produce more than just
 strain-rates; it can use GPR to spatially/temporally smooth the GPS
 data or compute its spatial/temporal derivatives. PyGeoNS also
 provides subroutines for interactive viewing and cleaning.''')
-
-main.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 subs = main.add_subparsers(
   metavar='SUBCOMMAND',
   help=
-'''PyGeoNS sub-command. This can be one of "info", "toh5", "totext",
-"view", "strain", "clean", "crop", "treml", "sreml", "tgpr", or
-"sgpr". Call "pygeons -h" followed by the sub-command to see more
+'''PyGeoNS sub-command. This can be any of ['info', 'toh5', 'totext',
+'view', 'strain', 'clean', 'crop', 'treml', 'sreml', 'tgpr', 'sgpr'].
+Call "pygeons" followed by the sub-command and '-h' to see more
 information.''')
 
 ## TOH5
@@ -53,6 +51,7 @@ missing.''')
 p.add_argument('input_text_file',**GLOSSARY['input_text_file'])
 p.add_argument('-f','--file-type',**GLOSSARY['file_type'])
 p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_toh5)
 
 # TOTEXT
@@ -69,6 +68,7 @@ in the resulting text file. The text file will have the PyGeoNS csv
 format.''')
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_totext)
 
 # INFO
@@ -79,6 +79,7 @@ p = subs.add_parser('info',
   description=
 '''Prints metadata for an HDF5 data file to stdout.''')
 p.add_argument('input_file',**GLOSSARY['input_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_info)
 
 # VIEW
@@ -111,6 +112,7 @@ p.add_argument('--fontsize',**GLOSSARY['fontsize'])
 p.add_argument('--break-lons',**GLOSSARY['break_lons'])
 p.add_argument('--break-lats',**GLOSSARY['break_lats'])
 p.add_argument('--break-conn',**GLOSSARY['break_conn'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_view)
 
 # STRAIN
@@ -140,6 +142,7 @@ p.add_argument('--fontsize',**GLOSSARY['fontsize'])
 p.add_argument('--break-lons',**GLOSSARY['break_lons'])
 p.add_argument('--break-lats',**GLOSSARY['break_lats'])
 p.add_argument('--break-conn',**GLOSSARY['break_conn'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_strain)
 
 # CLEAN
@@ -173,6 +176,7 @@ p.add_argument('--fontsize',**GLOSSARY['fontsize'])
 p.add_argument('--break-lons',**GLOSSARY['break_lons'])
 p.add_argument('--break-lats',**GLOSSARY['break_lats'])
 p.add_argument('--break-conn',**GLOSSARY['break_conn'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_clean)
 
 # CROP
@@ -196,6 +200,7 @@ p.add_argument('--min-lat',**GLOSSARY['min_lat'])
 p.add_argument('--max-lat',**GLOSSARY['max_lat'])
 p.add_argument('--min-lon',**GLOSSARY['min_lon'])
 p.add_argument('--max-lon',**GLOSSARY['max_lon'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_crop)
 
 # TREML
@@ -247,12 +252,13 @@ p.add_argument('params',**GLOSSARY['params'])
 p.add_argument('--fix',**GLOSSARY['fix'])
 p.add_argument('--procs',**GLOSSARY['procs'])
 p.add_argument('-p','--parameters-file',**GLOSSARY['parameters_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_treml)
 
 # SREML
 #####################################################################
 p = subs.add_parser('sreml',
-  usage='pygeons sreml STR FLOAT FLOAT [options]',
+  usage='pygeons sreml STR STR FLOAT [FLOAT ...] [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 '''Estimates the hyperparameters characterizing the spatial covariance
@@ -299,12 +305,13 @@ p.add_argument('params',**GLOSSARY['params'])
 p.add_argument('--fix',**GLOSSARY['fix'])
 p.add_argument('--procs',**GLOSSARY['procs'])
 p.add_argument('-p','--parameters-file',**GLOSSARY['parameters_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_sreml)
 
 # TGPR
 #####################################################################
 p = subs.add_parser('tgpr',
-  usage='pygeons tgpr STR FLOAT FLOAT [options]',
+  usage='pygeons tgpr STR STR FLOAT [FLOAT ...] [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 '''Temporally smoothes or differentiates a displacement dataset. It is
@@ -353,12 +360,13 @@ p.add_argument('-s','--return-sample',**GLOSSARY['return_sample'])
 p.add_argument('-a','--start-date',**GLOSSARY['start_date'])
 p.add_argument('-b','--stop-date',**GLOSSARY['stop_date'])
 p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_tgpr)
 
 # SGPR
 #####################################################################
 p = subs.add_parser('sgpr',
-  usage='pygeons tgpr STR FLOAT FLOAT [options]',
+  usage='pygeons tgpr STR STR FLOAT [FLOAT ...] [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 '''Spatially smoothes or differentiates a displacement or velocity
@@ -392,6 +400,7 @@ p.add_argument('-t','--outlier-tol',**GLOSSARY['outlier_tol'])
 p.add_argument('-s','--return-sample',**GLOSSARY['return_sample'])
 p.add_argument('-p','--positions',**GLOSSARY['positions'])
 p.add_argument('-o','--output-file',**GLOSSARY['output_file'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_sgpr)
 
 ## PARSE ARGS AND RUN SUB-ROUTINE
