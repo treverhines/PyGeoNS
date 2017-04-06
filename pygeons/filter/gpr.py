@@ -78,6 +78,10 @@ def gpr(y,d,s,
 
   def task(i):
     logger.debug('Processing dataset %s of %s ...' % (i+1,q))
+    if np.any(s[i] <= 0.0):
+      raise ValueError(
+        'At least one datum has zero or negative uncertainty.')
+    
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
     # start by just ignoring missing data
@@ -120,11 +124,12 @@ def gpr(y,d,s,
     try:
       return task(i)
 
-    except np.linalg.LinAlgError:  
+    except Exception as err:  
       logger.info(
-        'Could not process dataset %s. This may be due to '
-        'insufficient data. The returned expected values and '
-        'uncertainties will be NaN and INF, respectively.' % (i+1))
+        'An error was raised when processing dataset %s, "%s", ' 
+        'The returned expected values and uncertainties will be NaN '
+        'and INF, respectively.' % ((i+1),err))
+        
       out_mean_i = np.full(x.shape[0],np.nan)
       out_sigma_i = np.full(x.shape[0],np.inf)
       return out_mean_i,out_sigma_i
