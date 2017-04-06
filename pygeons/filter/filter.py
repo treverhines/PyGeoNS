@@ -93,7 +93,7 @@ def pygeons_treml(input_file,model,params,fix=(),
                                          procs=procs)
     if dir == 'east':                                
       with open(parameters_file,'w') as fout:
-        header = '%-15s%-15s%-15s' % ('station','component','count') 
+        header = '%-15s%-15s%-15s%-15s%-15s' % ('station','longitude','latitude','component','count') 
         header += "".join(['%-15s' % ('p%s[%s]' % (j,i.format(range_units,domain_units))) for j,i in enumerate(param_units)])
         header += '%-15s\n' % 'likelihood'
         fout.write(header)
@@ -102,7 +102,7 @@ def pygeons_treml(input_file,model,params,fix=(),
     # convert units optimal hyperparameters back to mm and yr   
     with open(parameters_file,'a') as fout:
       for i,sid in enumerate(data['id']):
-        entry  = '%-15s%-15s%-15s' % (sid,dir,counts[i])
+        entry  = '%-15s%-15s%-15s%-15s%-15s' % (sid,'%.4f' % data['longitude'][i],'%.4f' % data['latitude'][i],dir,counts[i])
         entry += "".join(['%-15.4e' % j for j in opts[i,:]])
         entry += '%-15.4e\n' % likes[i]
         fout.write(entry)
@@ -165,7 +165,7 @@ def pygeons_sreml(input_file,model,params,fix=(),
                              
     if dir == 'east':                                
       with open(parameters_file,'w') as fout:
-        header = '%-15s%-15s%-15s' % ('station','component','count') 
+        header = '%-15s%-15s%-15s%-15s' % ('date','mjd','component','count') 
         header += "".join(['%-15s' % ('p%s[%s]' % (j,i.format(range_units,domain_units))) for j,i in enumerate(param_units)])
         header += '%-15s\n' % 'likelihood'
         fout.write(header)
@@ -173,8 +173,9 @@ def pygeons_sreml(input_file,model,params,fix=(),
         
     # convert units optimal hyperparameters back to mm and yr   
     with open(parameters_file,'a') as fout:
-      for i,sid in enumerate(data['id']):
-        entry  = '%-15s%-15s%-15s' % (sid,dir,counts[i])
+      for i,day in enumerate(data['time']):
+        date = mjd_inv(day,'%Y-%m-%d')
+        entry  = '%-15s%-15s%-15s%-15s' % (date,day,dir,counts[i])
         entry += "".join(['%-15.4e' % j for j in opts[i,:]])
         entry += '%-15.4e\n' % likes[i]
         fout.write(entry)

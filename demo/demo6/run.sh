@@ -13,42 +13,55 @@
 ## use sed to concatenate all the data files and separate them with ***
 #sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 #
-# convert the csv file to an hdf5 file
-pygeons toh5 'work/data.csv' --file-type 'pbocsv'
-
-# crop out data prior to 2015-01-01 and after 2017-01-01
-pygeons crop 'work/data.h5' \
-             --start-date '2015-01-01' \
-             --stop-date '2017-01-01' \
-             --output-file 'work/data.h5'
-
+## convert the csv file to an hdf5 file
+#pygeons toh5 'work/data.csv' --file-type 'pbocsv'
+#
+## crop out data prior to 2015-01-01 and after 2017-01-01
+#pygeons crop 'work/data.h5' \
+#             --start-date '2015-01-01' \
+#             --stop-date '2017-01-01' \
+#             --output-file 'work/data.h5'
+#
 # estimate the displacements resulting from the slow slip event. We
 # assume that the surface displacements from the slow slip event can
 # be described with integrated Brownian motion which starts at
 # 2015-12-01
 START=57357.0 # start date in MJD
-pygeons tgpr 'work/data.h5' \
-             'ibm' 50.0 $START \
-             --noise-model 'linear+seasonal' \
-             --output-file 'work/sse.h5'
 
-pygeons sgpr 'work/sse.h5' \
-             'linear+mat32' 1.0 200.0 \
-             --output-file 'work/sse.smooth.h5'
+# determine hyperparameters
+#pygeons treml -vv 'work/data.h5' \
+#             'linear+seasonal+ibm' 200 $START \
+#             --fix 1 --procs 5 --parameters-file 'tparams.txt'
 
-pygeons view 'work/sse.h5' 'work/sse.smooth.h5'
+#pygeons tgpr -v 'work/data.h5' \
+#             'ibm' 200.0 $START \
+#             --noise-model 'linear+seasonal' \
+#             --output-file 'work/sse.h5'
 
-## Temporally differentiate the displacement dataset
+# crop out data prior to the start of the slow slip event
+#pygeons crop 'work/sse.h5' \
+#             --start-date 2015-12-02 \
+#             --output-file 'work/sse.h5'
+
+## compute the east derivative
+pygeons sreml -vv 'work/sse.h5' \
+              'linear+mat32' 100.0 100.0 \
+              --parameters-file 'sparams.txt' \
+              --procs 6 
+
+#pygeons sgpr -v 'work/sse.h5' \
+#             'linear+mat32' 100.0 100.0 \
+#             --diff 1 0 \
+#             --output-file 'work/sse.diffx.h5'
 #
-## Spatially differentiate the dataset
-#pygeons sgpr work/data.crop.tgpr.h5 'linear+se' $VEL_STD $VEL_CLS --output-file work/xdiff.h5 \
-#             --diff 1 0 -vv
-#pygeons sgpr work/data.crop.tgpr.h5 'linear+se' $VEL_STD $VEL_CLS --output-file work/ydiff.h5 \
-#             --diff 0 1 -vv
+## compute the north derivative
+#pygeons sgpr -v 'work/sse.h5' \
+#             'linear+mat32' 100.0 100.0 \
+#             --diff 0 1 \
+#             --output-file 'work/sse.diffy.h5'
 #
-## Save the deformation gradients as text files
-#pygeons totext work/xdiff.h5 -vv
-#pygeons totext work/ydiff.h5 -vv
-#
-## view the estimated strain
-#pygeons strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv
+## view the strain
+#pygeons strain 'work/sse.diffx.h5' 'work/sse.diffy.h5' \
+#               --scale 5e5 \
+#               --key-magnitude 0.05 \
+#               --key-position 0.15 0.85

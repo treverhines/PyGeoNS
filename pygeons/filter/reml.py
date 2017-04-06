@@ -88,10 +88,23 @@ def reml(y,d,s,model,params,
     test_params[is_free] = theta 
     gp = gpcomp(model,test_params)
     # return negative log likelihood
-    return -gp.likelihood(pos,data,sigma)  
+    try:
+      return -gp.likelihood(pos,data,sigma)  
+    except Exception as err:
+      logger.info(
+        'An error was raised while evaluating the likelihood for '
+        'parameters %s, "%s". The returned likelihood will be INF' 
+        % (test_params,err))
+      return np.inf
 
   def task(i):
     logger.debug('Finding REML hyperparameters for dataset %s of %s ...' % (i+1,q))
+    if np.any(s[i] <= 0.0):
+      logger.info(
+        'At least one datum has zero or negative uncertainty. The '
+        'returned hyperparameters will be NaN.')
+      return np.full_like(params,np.nan),np.nan,0
+
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
     yi,di,si = y[~is_missing],d[i,~is_missing],s[i,~is_missing]

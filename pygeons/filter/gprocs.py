@@ -117,7 +117,7 @@ def gpfogm(s,fc):
   return gauss.gpexp((0.0,coeff,cls))
 
 
-@set_units(['MJD'])
+@set_units(['mjd'])
 def gpstep(t0):
   ''' 
   Returns a *GaussianProcess* with a heaviside function centered at
@@ -137,7 +137,7 @@ def gpstep(t0):
 
   return gauss.gpbfci(basis,dim=1)
 
-@set_units(['MJD'])
+@set_units(['mjd'])
 def gpramp(t0):
   ''' 
   Returns a *GaussianProcess* with a ramp function centered at
@@ -160,7 +160,7 @@ def gpramp(t0):
   return gauss.gpbfci(basis,dim=1)
 
 
-@set_units(['{0}*{1}^-0.5','MJD'])
+@set_units(['{0}*{1}^-0.5','mjd'])
 def gpbm(w,t0):
   ''' 
   Returns brownian motion with scale parameter *w* and reference time
@@ -181,7 +181,7 @@ def gpbm(w,t0):
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
 
-@set_units(['{0}*{1}^-1.5','MJD'])
+@set_units(['{0}*{1}^-1.5','mjd'])
 def gpibm(w,t0):
   ''' 
   Returns integrated brownian motion with scale parameter *w* and
