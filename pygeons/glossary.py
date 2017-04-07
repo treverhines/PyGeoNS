@@ -102,6 +102,16 @@ Name of the file where edits will be logged. Defaults to "edits.txt".
 '''
 }
 #####################################################################
+NO_DISPLAY = {
+'action':'store_true',
+'help':
+''' 
+If this flag is raised then the interactive cleaner will not open up.
+The edits from *input_edits_file* will be applied and the output data
+file still be generated.
+'''
+}
+#####################################################################
 INPUT_EDITS_FILE = {
 'type':str,
 'metavar':'STR',
@@ -695,6 +705,7 @@ GLOSSARY = {
 'output_file':OUTPUT_FILE,
 'input_edits_file':INPUT_EDITS_FILE,
 'output_edits_file':OUTPUT_EDITS_FILE,
+'no_display':NO_DISPLAY,
 'parameters_file':PARAMETERS_FILE,
 'positions':POSITIONS,
 'return_sample':RETURN_SAMPLE,

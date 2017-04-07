@@ -110,7 +110,7 @@ def pygeons_clean(input_file,resolution='i',
                   input_edits_file=None,
                   output_edits_file=None,
                   break_lons=None,break_lats=None,
-                  break_conn=None,
+                  break_conn=None,no_display=False,
                   output_file=None,**kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
@@ -197,8 +197,10 @@ def pygeons_clean(input_file,resolution='i',
         else:
           raise ValueError('edit type must be either "outliers" or "jump"')
 
-  ic.update()
-  ic.connect()
+  if not no_display:
+    ic.update()
+    ic.connect()
+    
   # save edits to output file
   if output_edits_file is None:
     output_edits_file = 'edits.txt'
