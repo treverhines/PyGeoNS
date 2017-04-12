@@ -4,10 +4,10 @@ specialized for PyGeoNS
 '''
 import numpy as np
 import logging
-from rbf.gauss import clear_caches
 from pygeons.mp import parmap
 from pygeons.filter.gprocs import gpcomp
 logger = logging.getLogger(__name__)
+
 
 def gpr(y,d,s,
         prior_model,prior_params,

@@ -14,6 +14,48 @@ from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
 logger = logging.getLogger(__name__)
 
 
+def _params_dict(b):
+  ''' 
+  coerce the list *b* into a dictionary of hyperparameters for each
+  direction. The dictionary keys are 'east', 'north', and 'vertical'.
+  The dictionary values are each an N array of hyperparameters.
+  
+    >>> b1 = [1.0,2.0]
+    >>> b2 = ['1.0','2.0']
+    >>> b3 = ['east','1.0','2.0','north','1.0','2.0','vertical','1.0','2.0']
+  
+  '''
+  b = list(b)
+  msg = ('the hyperparameters must be a list of N floats or 3 lists '
+         'of N floats where each list is preceded by "east", "north", '
+         'or "vertical"')
+
+  if ('east' in b) & ('north' in b) & ('vertical' in b):
+    if (len(b) % 3) != 0:
+      raise ValueError(msg)
+
+    arr = np.reshape(b,(3,-1))
+    dirs = arr[:,0].astype(str) # directions
+    vals = arr[:,1:].astype(float) # hyperparameter array
+    out = dict(zip(dirs,vals))
+    # make sure the keys contain 'east', 'north', and 'vertical'
+    if set(out.keys()) != set(['east','north','vertical']):
+      raise ValueError(msg)
+
+  else:
+    try:
+      arr = np.array(b,dtype=float)
+    except ValueError:
+      raise ValueError(msg)
+
+    out = {'east':arr,
+           'north':arr,
+           'vertical':arr}
+
+  print(out)
+  return out
+
+
 def _change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
@@ -65,6 +107,9 @@ def pygeons_treml(input_file,model,params,fix=(),
   '''
   data = dict_from_hdf5(input_file)
   logger.info('Performing temporal restricted maximum likelihood estimation ...')
+  # convert params to a dictionary of hyperparameters for each direction
+  params = _params_dict(params)
+
   # make output file
   if parameters_file is None:
     parameters_file = 'parameters.txt'
@@ -88,7 +133,7 @@ def pygeons_treml(input_file,model,params,fix=(),
                                          data[dir].T*range_conv,     
                                          data[dir+'_std_dev'].T*range_conv,
                                          model,
-                                         params,                                
+                                         params[dir],                                
                                          fix=fix,
                                          procs=procs)
     if dir == 'east':                                
@@ -132,6 +177,9 @@ def pygeons_sreml(input_file,model,params,fix=(),
   '''
   data = dict_from_hdf5(input_file)
   logger.info('Performing spatial restricted maximum likelihood estimation ...')
+  # convert params to a dictionary of hyperparameters for each direction
+  params = _params_dict(params)
+
   # make output file
   if parameters_file is None:
     parameters_file = 'parameters.txt'
@@ -159,7 +207,7 @@ def pygeons_sreml(input_file,model,params,fix=(),
                                          data[dir]*range_conv, 
                                          data[dir+'_std_dev']*range_conv,
                                          model,
-                                         params,
+                                         params[dir],
                                          fix=fix,
                                          procs=procs)
                              
@@ -218,6 +266,10 @@ def pygeons_tgpr(input_file,prior_model,prior_params,
   data = dict_from_hdf5(input_file)
   logger.info('Performing temporal Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
+  # convert params to a dictionary of hyperparameters for each direction
+  prior_params = _params_dict(prior_params)
+  noise_params = _params_dict(noise_params)
   
   # set output times
   if start_date is None:
@@ -238,11 +290,11 @@ def pygeons_tgpr(input_file,prior_model,prior_params,
     post,post_sigma = gpr(data['time'][:,None]*domain_conv,
                           data[dir].T*range_conv,
                           data[dir+'_std_dev'].T*range_conv,
-                          prior_model,prior_params,
+                          prior_model,prior_params[dir],
                           x=time[:,None]*domain_conv,
                           diff=diff,
                           noise_model=noise_model,
-                          noise_params=noise_params,
+                          noise_params=noise_params[dir],
                           procs=procs,
                           return_sample=return_sample,
                           tol=outlier_tol)
@@ -310,6 +362,10 @@ def pygeons_sgpr(input_file,prior_model,prior_params,
   logger.info('Performing spatial Gaussian process regression ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
+  # convert params to a dictionary of hyperparameters for each direction
+  prior_params = _params_dict(prior_params)
+  noise_params = _params_dict(noise_params)
+
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
@@ -336,11 +392,11 @@ def pygeons_sgpr(input_file,prior_model,prior_params,
     post,post_sigma = gpr(xy*domain_conv,
                           data[dir]*range_conv,
                           data[dir+'_std_dev']*range_conv,
-                          prior_model,prior_params,
+                          prior_model,prior_params[dir],
                           x=output_xy*domain_conv,
                           diff=diff,
                           noise_model=noise_model,
-                          noise_params=noise_params,
+                          noise_params=noise_params[dir],
                           tol=outlier_tol,
                           return_sample=return_sample,
                           procs=procs)
