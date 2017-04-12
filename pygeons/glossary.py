@@ -552,7 +552,7 @@ composite can be specified by joining models with a '+'.
 }
 #####################################################################
 PRIOR_PARAMS = {
-'type':float,
+'type':str,
 'nargs':'*',
 'default':(),
 'metavar':'FLOAT [FLOAT ...]',
@@ -573,7 +573,7 @@ composite can be specified by joining models with a '+'.
 }
 #####################################################################
 NOISE_PARAMS = {
-'type':float,
+'type':str,
 'nargs':'+',
 'default':(),
 'metavar':'FLOAT',
@@ -594,7 +594,7 @@ can be specified by joining models with a '+'.
 }
 #####################################################################
 PARAMS = {
-'type':float,
+'type':str,
 'nargs':'*',
 'default':(),
 'metavar':'FLOAT [FLOAT ...]',
