@@ -43,7 +43,7 @@ pygeons tgpr -v 'work/data.h5' \
 
 # We now perform a similar fit but we treat *linear*, *seasonal*, and
 # *step* as noise. We also take the time derivative of the fit.
-pygeons tgpr -v 'work/data.h5' \
+pygeons tgpr -vv 'work/data.h5' \
              'ramp+ibm'  $EMC  50.0 $EMC \
              --noise-model 'linear+seasonal+step' --noise-params $EMC \
              --diff 1 \
