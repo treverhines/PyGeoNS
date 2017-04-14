@@ -3,6 +3,7 @@ module of functions that construct *GaussianProcess* instances
 '''
 import numpy as np
 import rbf.basis
+import rbf.poly
 from rbf import gauss
 
 
@@ -231,6 +232,80 @@ def gpibm(w,t0):
     return w**2*out
 
   return gauss.GaussianProcess(mean,cov,dim=1)  
+
+# GaussianProcesses constructors for strain calculation
+def kernel_product(gp1,gp2):
+  def mean(x,diff):
+    return np.zeros(x.shape[0])
+
+  def covariance(x1,x2,diff1,diff2):
+    out  = gp1._covariance(x1[:,[0]],x2[:,[0]],
+                           diff1[[0]],diff2[[0]])
+    out *= gp2._covariance(x1[:,[1,2]],x2[:,[1,2]],
+                           diff1[[1,2]],diff2[[1,2]])
+    return out
+  
+  return gauss.GaussianProcess(mean,covariance)  
+
+@set_units([])
+def gplinear3d():
+  '''Gaussian process with a linear basis function'''
+  def basis(x,diff):
+    powers = [[1,1,0],
+              [1,0,1]]
+    return rbf.poly.mvmonos(x,powers,diff)
+  
+  return gauss.gpbfci(basis,dim=3)    
+
+@set_units(['mm','yr','km'])
+def gpsese(a,b,c):
+  tgp = gpse(a,b)
+  sgp = gpse(1.0,c)
+  return kernel_product(tgp,sgp)
+
+@set_units(['mm*yr^-0.5','yr^-1','km'])
+def gpfogmse(a,b,c):
+  tgp = gpfogm(a,b)
+  sgp = gpse(1.0,c)
+  return kernel_product(tgp,sgp)
+
+@set_units(['mm*yr^-1.5','mjd','km'])
+def gpibmse(a,b,c):
+  tgp = gpibm(a,b)
+  sgp = gpse(1.0,c)
+  return kernel_product(tgp,sgp)
+
+@set_units(['mm*yr^-0.5','mjd','km'])
+def gpbmse(a,b,c):
+  tgp = gpbm(a,b)
+  sgp = gpse(1.0,c)
+  return kernel_product(tgp,sgp)
+
+@set_units(['mm','yr','km'])
+def gpmat32se(a,b,c):
+  tgp = gpmat32(a,b)
+  sgp = gpse(1.0,c)
+  return kernel_product(tgp,sgp)
+
+@set_units(['mm','yr','km'])
+def gpmat52se(a,b,c):
+  tgp = gpmat52(a,b)
+  sgp = gpse(1.0,c)
+  return kernel_product(tgp,sgp)
+
+@set_units(['mm','km'])
+def gpperse(a,b):
+  def basis(x):
+    out = np.array([np.sin(2*np.pi*x[:,0]),
+                    np.cos(2*np.pi*x[:,0]),
+                    np.sin(4*np.pi*x[:,0]),
+                    np.cos(4*np.pi*x[:,0])]).T
+    return out
+  
+  tgp = gauss.gpbfc(basis,[0.0,0.0,0.0,0.0],[1.0,1.0,1.0,1.0])
+  sgp = gpse(a,b)
+  return kernel_product(tgp,sgp)
+    
 
 # create a dictionary of all Gaussian process constructors in this
 # module

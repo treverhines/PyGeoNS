@@ -186,7 +186,9 @@ def gpr3d(t,x,d,s,
           noise_params=(),
           tol=4.0,
           procs=0,
-          return_sample=False):
+          return_sample=False,
+          comm=True,
+          offsets=True):
   ''' 
   Performs Guassian process regression. 
   
@@ -250,8 +252,37 @@ def gpr3d(t,x,d,s,
   if out_x is None:
     out_x = x
 
-  d_flat = d.flatten()
-  s_flat = s.flatten()
+  d = d.flatten()
+  s = s.flatten()
+  t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')  
+  t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')  
+  # flat observation times and positions
+  z = np.array([t_grid.flatten(),
+                x0_grid.flatten(),
+                x1_grid.flatten()]).T
+
+  t_grid,x0_grid = np.meshgrid(out_t,out_x[:,0],indexing='ij')  
+  t_grid,x1_grid = np.meshgrid(out_t,out_x[:,1],indexing='ij')  
+  # flat observation times and positions
+  out_z = np.array([t_grid.flatten(),
+                    x0_grid.flatten(),
+                    x1_grid.flatten()]).T
+
+  # create basis functions for common modes and station offsets
+  p = np.zeros((t.shape[0]*x.shape[0],0))
+  if offsets:
+    # create station offset basis functions
+    offsets_p = np.zeros((t.shape[0],x.shape[0],x.shape[0]))
+    for i in range(x.shape[0]): offsets_p[:,i,i] = 1.0
+    offsets_p = offsets_p.reshape((t.shape[0]*x.shape[0],x.shape[0])).T
+    p = np.hstack((p,offsets_p))
+
+  if comm:
+    # create common mode error basis functions
+    comm_p = np.zeros((t.shape[0],x.shape[0],t.shape[0]))
+    for i in range(t.shape[0]): comm_p[i,:,i] = 1.0
+    comm_p = comm_p.reshape((t.shape[0]*x.shape[0],t.shape[0])).T
+    p = np.hstack((p,comm_p))
   
   # Do a data check to make sure that there are no stations or times
   # with no data? is it needed
@@ -259,32 +290,36 @@ def gpr3d(t,x,d,s,
   # if the uncertainty is inf then the data is considered missing
   # and will be tossed out
   toss = np.isinf(s)
-  ti = y[~toss] 
-  di = d[~toss]
-  si = s[~toss]
+  z = z[~toss] 
+  d = d[~toss]
+  s = s[~toss]
+  p = p[~toss]
 
   prior_gp = gpcomp(prior_model,prior_params)
   noise_gp = gpcomp(noise_model,noise_params)    
   full_gp  = prior_gp + noise_gp 
 
-  full_sigma = full_gp.covariance(yi,yi) # model covariance
-  full_mu = full_gp.mean(yi) # model mean
-  full_p  = full_gp.basis(yi) # model basis functions
-  toss = _is_outlier(di,si,full_sigma,full_mu,full_p,tol)
+  full_sigma = full_gp.covariance(z,z) # model covariance
+  full_mu = full_gp.mean(z) # model mean
+  full_p  = np.hstack((full_gp.basis(z),p))
+  toss = _is_outlier(d,s,full_sigma,full_mu,full_p,tol)
   logger.info('Detected %s outliers out of %s observations' % (sum(toss),len(toss)))
-  yi = yi[~toss] 
-  di = di[~toss]
-  si = si[~toss]
+  z = z[~toss] 
+  d = d[~toss]
+  s = s[~toss]
+  p = p[~toss]
 
-  noise_sigma = np.diag(si**2) + noise_gp.covariance(yi,yi)
-  noise_p     = noise_gp.basis(yi)
+  noise_sigma = np.diag(s**2) + noise_gp.covariance(z,z)
+  noise_p     = np.hstack((noise_gp.basis(z),p))
   # condition the prior with the data
-  post_gp = prior_gp.condition(yi,di,sigma=noise_sigma,p=noise_p)
+  post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
   post_gp = post_gp.differentiate(diff)
   if return_sample:
-    out_mean = post_gp.sample(x)
+    out_mean = post_gp.sample(out_z)
     out_sigma = np.zeros_like(out_mean_i)
   else:
-    out_mean,out_sigma = post_gp.meansd(x)
+    out_mean,out_sigma = post_gp.meansd(out_z)
 
+  out_mean = out_mean.reshape((out_t.shape[0],out_x.shape[0]))
+  out_sigma = out_sigma.reshape((out_t.shape[0],out_x.shape[0]))
   return out_mean,out_sigma
