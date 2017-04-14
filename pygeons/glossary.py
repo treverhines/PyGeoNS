@@ -399,52 +399,6 @@ Fontsize used in all figures
 '''
 }
 #####################################################################
-BREAK_LONS = {
-'nargs':'+',
-'type':float,
-'metavar':'FLOAT',
-'help':
-''' 
-Longitude components of the vertices making up spatial 
-discontinuities.
-'''
-}
-#####################################################################
-BREAK_LATS = {
-'nargs':'+',
-'type':float,
-'metavar':'FLOAT',
-'help':
-''' 
-Latitude components of the vertices making up spatial discontinuities.
-'''
-}
-#####################################################################
-BREAK_CONN = {
-'nargs':'+',
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Connectivity of the spatial discontinuity vertices. This can be one or 
-multiple strings where each string contains the vertex indices making 
-up each discontinuity separated by a '-'. For example, '0-1-2 3-4' 
-indicates that there are two discontinuties, one contains vertices 0, 
-1, and 2 and the other contains vertices 3 and 4.
-'''
-}
-#####################################################################
-BREAK_DATES = {
-'nargs':'+',
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Lists of dates with temporal discontinuities specified as YYYY-MM-DD. 
-These dates should be when the discontinuity is first observed.
-'''
-}
-#####################################################################
 START_DATE = {
 'type':str,
 'metavar':'STR',
@@ -738,10 +692,6 @@ GLOSSARY = {
 'map_xlim':MAP_XLIM,
 'map_ylim':MAP_YLIM,
 'fontsize':FONTSIZE,
-'break_lons':BREAK_LONS,
-'break_lats':BREAK_LATS,
-'break_conn':BREAK_CONN,
-'break_dates':BREAK_DATES,
 'start_date':START_DATE,
 'stop_date':STOP_DATE,
 'stations':STATIONS,

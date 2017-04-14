@@ -83,11 +83,11 @@ def without_interactivity(fin):
   return fout
     
 
-class InteractiveViewer(object):
+class InteractiveVectorViewer(object):
   ''' 
-                   --------------------------------
-                   PyGeoNS Interactive Viewer (PIV)
-                   --------------------------------
+             ----------------------------------------
+             PyGeoNS Interactive Vector Viewer (PIVV)
+             ----------------------------------------
 
 An interactive figure for viewing and comparing the spatial and 
 temporal patterns in data sets.
@@ -938,11 +938,11 @@ figures.
       return
 
 
-def interactive_viewer(*args,**kwargs):
+def interactive_vector_viewer(*args,**kwargs):
   ''' 
   wrapper to initiate and show an InteractiveViewer
   '''
-  iv = InteractiveViewer(*args,**kwargs)
+  iv = InteractiveVectorViewer(*args,**kwargs)
   iv.connect()
   return   
 

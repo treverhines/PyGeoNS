@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import logging
 from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.io.convert import dict_from_hdf5
-from pygeons.plot.iview import interactive_viewer,one_sigfig
+from pygeons.plot.ivector import interactive_vector_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
 from pygeons.basemap import make_basemap
@@ -197,11 +197,11 @@ def _setup_ts_ax(ax_lst):
   return
 
 
-def pygeons_view(input_files,map_resolution='i',
-                 break_lons=None,break_lats=None,
-                 break_conn=None,**kwargs):
+def pygeons_vector_view(input_files,map_resolution='i',
+                        break_lons=None,break_lats=None,
+                        break_conn=None,**kwargs):
   ''' 
-  runs the PyGeoNS interactive Viewer
+  runs the PyGeoNS interactive vector viewer
   
   Parameters
   ----------
@@ -263,9 +263,9 @@ def pygeons_view(input_files,map_resolution='i',
   return
 
 
-def pygeons_strain(xdiff_file,ydiff_file,map_resolution='i',
-                   break_lons=None,break_lats=None,
-                   break_conn=None,**kwargs):
+def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',
+                        break_lons=None,break_lats=None,
+                        break_conn=None,**kwargs):
   ''' 
   runs the PyGeoNS Interactive Strain Viewer
   

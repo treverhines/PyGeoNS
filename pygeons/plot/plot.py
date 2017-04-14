@@ -10,11 +10,10 @@ import matplotlib.pyplot as plt
 import logging
 from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.io.convert import dict_from_hdf5
-from pygeons.plot.iview import interactive_viewer,one_sigfig
+from pygeons.plot.ivector import interactive_vector_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
 from pygeons.basemap import make_basemap
-from pygeons.breaks import make_space_vert_smp
 logger = logging.getLogger(__name__)
 
 
@@ -197,11 +196,9 @@ def _setup_ts_ax(ax_lst):
   return
 
 
-def pygeons_view(input_files,map_resolution='i',
-                 break_lons=None,break_lats=None,
-                 break_conn=None,**kwargs):
+def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
   ''' 
-  runs the PyGeoNS interactive Viewer
+  runs the PyGeoNS interactive vector viewer
   
   Parameters
   ----------
@@ -211,12 +208,6 @@ def pygeons_view(input_files,map_resolution='i',
     map_resolution : str
       basemap resolution
     
-    break_lons : (N,) array
-
-    break_lats : (N,) array
-
-    break_con : (M,) array   
-      
     **kwargs :
       gets passed to pygeons.plot.view.interactive_view
 
@@ -246,12 +237,6 @@ def pygeons_view(input_files,map_resolution='i',
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=map_resolution)
   _setup_map_ax(bm,map_ax)
-  # draw breaks if there are any
-  vert,smp = make_space_vert_smp(break_lons,break_lats,
-                                 break_conn,bm)
-  for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
-
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_viewer(
@@ -263,9 +248,7 @@ def pygeons_view(input_files,map_resolution='i',
   return
 
 
-def pygeons_strain(xdiff_file,ydiff_file,map_resolution='i',
-                   break_lons=None,break_lats=None,
-                   break_conn=None,**kwargs):
+def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
   ''' 
   runs the PyGeoNS Interactive Strain Viewer
   
@@ -278,12 +261,6 @@ def pygeons_strain(xdiff_file,ydiff_file,map_resolution='i',
     map_resolution : str
       basemap resolution
       
-    break_lons : (N,) array
-
-    break_lats : (N,) array
-
-    break_con : (M,) array   
-
     **kwargs :
       gets passed to pygeons.strain.view
 
@@ -319,11 +296,6 @@ def pygeons_strain(xdiff_file,ydiff_file,map_resolution='i',
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(lon,lat,resolution=map_resolution)
   _setup_map_ax(bm,map_ax)
-  # draw breaks if there are any
-  vert,smp = make_space_vert_smp(break_lons,break_lats,break_conn,bm)
-  for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
-
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
   interactive_strain_viewer(
