@@ -1,10 +1,5 @@
 ''' 
-
-module of functions that construct *GaussianProcess* instances. The
-domain of each GaussianProcess consists of time and two-dimensional
-space. 
-
-
+module of functions that construct *GaussianProcess* instances. 
 '''
 import numpy as np
 import rbf.basis
@@ -311,6 +306,11 @@ def p21():
 
 @set_units(['mm','yr','km'])
 def se_se(a,b,c):
+  # convert hyperparameter units to m and days
+  a *= 1.0/1000.0 # mm to m
+  b *= 365.25 # yr to day
+  c *= 1000.0 # km to m
+  
   tgp = se_1d(a,b)
   sgp = se_2d(1.0,c)
   return kernel_product(tgp,sgp)
@@ -318,6 +318,11 @@ def se_se(a,b,c):
 
 @set_units(['mm*yr^-0.5','yr^-1','km'])
 def fogm_se(a,b,c):
+  # convert hyperparameter units to m and days
+  a *= (1.0/1000.0)*(365.25**-0.5) # mm*yr^-0.5 to m*day^-0.5
+  b *= 365.25**-1 # yr^-1 to day^-1
+  c *= 1000.0 # km to m
+
   tgp = fogm_1d(a,b)
   sgp = se_2d(1.0,c)
   return kernel_product(tgp,sgp)
@@ -325,6 +330,10 @@ def fogm_se(a,b,c):
 
 @set_units(['mm*yr^-0.5','mjd','km'])
 def bm_se(a,b,c):
+  # convert hyperparameter units to m and days
+  a *= (1.0/1000.0)*(365.25**-0.5) # mm*yr^-1.5 to m*day^-1.5
+  c *= 1000.0 # km to m
+
   tgp = bm_1d(a,b)
   sgp = se_2d(1.0,c)
   return kernel_product(tgp,sgp)
@@ -332,6 +341,10 @@ def bm_se(a,b,c):
 
 @set_units(['mm*yr^-1.5','mjd','km'])
 def ibm_se(a,b,c):
+  # convert hyperparameter units to m and days
+  a *= (1.0/1000.0)*(365.25**-1.5) # mm*yr^-1.5 to m*day^-1.5
+  c *= 1000.0 # km to m
+
   tgp = ibm_1d(a,b)
   sgp = se_2d(1.0,c)
   return kernel_product(tgp,sgp)
@@ -339,54 +352,75 @@ def ibm_se(a,b,c):
 
 @set_units(['mm','yr','km'])
 def mat32_se(a,b,c):
+  # convert hyperparameter units to m and days
+  a *= 1.0/1000.0 # mm to m
+  b *= 365.25 # yr to day
+  c *= 1000.0 # km to m
+
   tgp = mat32_1d(a,b)
   sgp = se_2d(1.0,c)
   return kernel_product(tgp,sgp)
 
 
 @set_units(['mm','yr','km'])
-def gpmat52_se(a,b,c):
+def mat52_se(a,b,c):
+  # convert hyperparameter units to m and days
+  a *= 1.0/1000.0 # mm to m
+  b *= 365.25 # yr to day
+  c *= 1000.0 # km to m
+
   tgp = mat52_1d(a,b)
-  sgp = se_1d(1.0,c)
+  sgp = se_2d(1.0,c)
   return kernel_product(tgp,sgp)
 
 
 @set_units(['mm','km'])
 def per_se(a,b):
+  # convert hyperparameter units to m and days
+  a *= 1.0/1000.0 # mm to m
+  b *= 365.25 # yr to day
+
   tgp = per_1d()
-  sgp = se_1d(a,c)
+  sgp = se_2d(a,b)
   return kernel_product(tgp,sgp)
 
 
 @set_units(['mm','km'])
 def step_se(a,b):
+  # convert hyperparameter units to m and days
+  a *= 1.0/1000.0 # mm to m
+  b *= 365.25 # yr to day
+
   tgp = step_1d()
-  sgp = se_1d(a,c)
+  sgp = se_2d(a,b)
   return kernel_product(tgp,sgp)
 
 
 @set_units(['mm','km'])
 def ramp_se(a,b):
+  # convert hyperparameter units to m and days
+  a *= 1.0/1000.0 # mm to m
+  b *= 365.25 # yr to day
+
   tgp = ramp_1d()
-  sgp = se_1d(a,c)
+  sgp = se_2d(a,b)
   return kernel_product(tgp,sgp)
     
 
 # create a dictionary of all Gaussian process constructors in this
 # module
-CONSTRUCTORS = {'null':gpnull,
-                'seasonal':gpseasonal,
-                'const':gpconst,
-                'linear':gplinear,
-                'quad':gpquad,
-                'step':gpstep,
-                'ramp':gpramp,
-                'mat32':gpmat32,
-                'mat52':gpmat52,
-                'se':gpse,
-                'fogm':gpfogm,
-                'bm':gpbm,
-                'ibm':gpibm}
+CONSTRUCTORS = {'null':null,
+                'p11':p11,
+                'p21':p21,
+                'se*se':se_se,
+                'fogm*se':fogm_se,
+                'bm*se':bm_se,
+                'ibm*se':ibm_se,
+                'mat32*se':mat32_se,
+                'mat52*se':mat52_se,
+                'per*se':per_se,
+                'step*se':step_se,
+                'ramp*se':ramp_se}
   
 def gpcomp(model,args):
   ''' 
@@ -409,7 +443,7 @@ def gpcomp(model,args):
       '%s parameters were specified for the model "%s", but it '
       'requires %s parameters.\n' %(len(args),model,n))
   
-  gp = gpnull()
+  gp = null()
   for ci in cs:
     gp += ci(*(args.pop(0) for i in range(ci.n)))
   
