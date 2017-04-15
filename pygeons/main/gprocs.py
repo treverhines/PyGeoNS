@@ -36,93 +36,31 @@ def set_units(units):
 
   return decorator  
 
-# 3D GaussianProcess constructors
-#####################################################################
-@set_units([])
-def gpnull():
-  '''Null GaussianProcess'''
-  return gauss.GaussianProcess(gauss._zero_mean,
-                               gauss._zero_covariance,
-                               basis=gauss._empty_basis,
-                               dim=3)
-                               
-
-@set_units([])
-def gpp11():
-  ''' 
-  Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
-  and (1,0,1)
-  '''
-  def basis(x,diff):
-    powers = np.array([[1,0,0],
-                       [1,1,0],
-                       [1,0,1]])
-    out = rbf.poly.mvmonos(x,powers,diff)
-    return out
-
-  return gauss.gpbfci(basis,dim=3)  
-
-
-@set_units([])
-def gpp21():
-  ''' 
-  Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
-  and (1,0,1)
-  '''
-  def basis(x,diff):
-    powers = np.array([[1,0,0],
-                       [1,1,0],
-                       [1,0,1],
-                       [2,0,0],
-                       [2,1,0],
-                       [2,0,1]])
-    out = rbf.poly.mvmonos(x,powers,diff)
-    return out
-  
-  return gauss.gpbfci(basis,dim=3)  
-  
-# 2D GaussianProcess constructors
-#####################################################################
-@set_units(['mm','km'])
-def gpse_2d(sigma,cls):
-  ''' 
-  Returns a *GaussianProcess* with zero mean and a squared exponential
-  covariance
-  '''
-  return gauss.gpse((0.0,sigma**2,cls),dim=2)
-
-@set_units(['mm','km'])
-def gpexp_2d(sigma,cls):
-  ''' 
-  Returns a *GaussianProcess* with zero mean and a squared exponential
-  covariance
-  '''
-  return gauss.gpse((0.0,sigma**2,cls),dim=2)
 
 # 1D GaussianProcess constructors
 #####################################################################
-@set_units([])
-def gpper_1d():
+def per_1d():
   ''' 
-  Returns a *GaussianProcess* with annual and semiannual sinusoids as
-  improper basis functions. The input times should have units of years
+  Returns a *GaussianProcess* with annual and semiannual sinusoid
+  basis functions. The coefficients have zero mean and unit std. dev.
   '''
   def basis(x):
     # no derivatives because im lazy
-    out = np.array([np.sin(2*np.pi*x[:,0]),
-                    np.cos(2*np.pi*x[:,0]),
-                    np.sin(4*np.pi*x[:,0]),
-                    np.cos(4*np.pi*x[:,0])]).T
+    out = np.array([np.sin(2*np.pi*x[:,0]/365.25),
+                    np.cos(2*np.pi*x[:,0]/365.25),
+                    np.sin(4*np.pi*x[:,0]/365.25),
+                    np.cos(4*np.pi*x[:,0]/365.25)]).T
     return out
 
-  return gauss.gpbfci(basis,dim=1)
+  mu = np.zeros(4)
+  sigma = np.ones(4)
+  return gauss.gpbfc(basis,mu,sigma,dim=1)
 
 
-@set_units(['mjd'])
-def gpstep_1d(t0):
+def step_1d(t0):
   ''' 
   Returns a *GaussianProcess* with a heaviside function centered at
-  *t0*. The size of the step is unconstrained
+  *t0*. The size of the step has zero mean and unit std. dev.
   '''
   def basis(x,diff):
     if diff == (0,):
@@ -135,11 +73,12 @@ def gpstep_1d(t0):
     out = out[:,None]
     return out
 
-  return gauss.gpbfci(basis,dim=1)
+  mu = np.zeros(1)
+  sigma = np.ones(1)
+  return gauss.gpbfc(basis,mu,sigma,dim=1)
 
 
-@set_units(['mjd'])
-def gpramp_1d(t0):
+def ramp_1d(t0):
   ''' 
   Returns a *GaussianProcess* with a ramp function centered at
   *t0*. The slope of the ramp is unconstrained
@@ -157,11 +96,12 @@ def gpramp_1d(t0):
     out = out[:,None]
     return out
 
-  return gauss.gpbfci(basis,dim=1)
+  mu = np.zeros(1)
+  sigma = np.ones(1)
+  return gauss.gpbfc(basis,mu,sigma,dim=1)
 
 
-@set_units(['mm','yr'])
-def gpmat32_1d(sigma,cls):
+def mat32_1d(sigma,cls):
   ''' 
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
@@ -169,8 +109,7 @@ def gpmat32_1d(sigma,cls):
   return gauss.gpiso(rbf.basis.mat32,(0.0,sigma**2,cls),dim=1)
 
 
-@set_units(['mm','yr'])
-def gpmat52_1d(sigma,cls):
+def mat52_1d(sigma,cls):
   ''' 
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
@@ -178,16 +117,7 @@ def gpmat52_1d(sigma,cls):
   return gauss.gpse(rbf.basis.mat52,(0.0,sigma**2,cls),dim=1)
 
 
-@set_units(['mm','yr'])
-def gpse_1d(sigma,cls):
-  ''' 
-  Returns a *GaussianProcess* with zero mean and a squared exponential
-  covariance
-  '''
-  return gauss.gpse((0.0,sigma**2,cls),dim=1)
-
-@set_units(['mm','yr'])
-def gpexp_1d(sigma,cls):
+def se_1d(sigma,cls):
   ''' 
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
@@ -195,8 +125,15 @@ def gpexp_1d(sigma,cls):
   return gauss.gpse((0.0,sigma**2,cls),dim=1)
 
 
-@set_units(['mm*yr^-0.5','yr^-1'])
-def gpfogm_1d(s,fc):
+def exp_1d(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpse((0.0,sigma**2,cls),dim=1)
+
+
+def fogm_1d(s,fc):
   ''' 
   Returns a *GaussianProcess* describing an first-order Gauss-Markov
   process. The autocovariance function is
@@ -217,8 +154,7 @@ def gpfogm_1d(s,fc):
   return gauss.gpexp((0.0,coeff,cls),dim=1)
 
 
-@set_units(['mm*yr^-0.5','mjd'])
-def gpbm_1d(w,t0):
+def bm_1d(w,t0):
   ''' 
   Returns brownian motion with scale parameter *w* and reference time
   *t0*
@@ -237,8 +173,7 @@ def gpbm_1d(w,t0):
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
 
-@set_units(['mm*yr^-1.5','mjd'])
-def gpibm_1d(w,t0):
+def ibm_1d(w,t0):
   ''' 
   Returns integrated brownian motion with scale parameter *w* and
   reference time *t0*.
@@ -287,7 +222,40 @@ def gpibm_1d(w,t0):
 
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
+# 2D GaussianProcess constructors
+#####################################################################
+def se_2d(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpse((0.0,sigma**2,cls),dim=2)
 
+def exp_2d(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpse((0.0,sigma**2,cls),dim=2)
+
+def mat32_2d(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpiso(rbf.basis.mat32,(0.0,sigma**2,cls),dim=2)
+
+
+def mat52_2d(sigma,cls):
+  ''' 
+  Returns a *GaussianProcess* with zero mean and a squared exponential
+  covariance
+  '''
+  return gauss.gpse(rbf.basis.mat52,(0.0,sigma**2,cls),dim=2)
+
+
+# 3D GaussianProcess constructors
+#####################################################################
 # GaussianProcesses constructors for strain calculation
 def kernel_product(gp1,gp2):
   def mean(x,diff):
@@ -302,63 +270,105 @@ def kernel_product(gp1,gp2):
   
   return gauss.GaussianProcess(mean,covariance)  
 
+
 @set_units([])
-def gplinear3d():
-  '''Gaussian process with a linear basis function'''
+def null():
+  '''Null GaussianProcess'''
+  return gauss.GaussianProcess(gauss._zero_mean,
+                               gauss._zero_covariance,
+                               basis=gauss._empty_basis,
+                               dim=3)
+                               
+
+@set_units([])
+def p11():
+  ''' 
+  Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
+  and (1,0,1)
+  '''
   def basis(x,diff):
-    powers = [[1,1,0],
-              [1,0,1]]
-    return rbf.poly.mvmonos(x,powers,diff)
-  
-  return gauss.gpbfci(basis,dim=3)    
+    powers = np.array([[1,0,0],[1,1,0],[1,0,1]])
+    out = rbf.poly.mvmonos(x,powers,diff)
+    return out
 
-@set_units(['mm','yr','km'])
-def gpsese(a,b,c):
-  tgp = gpse(a,b)
-  sgp = gpse(1.0,c)
-  return kernel_product(tgp,sgp)
+  return gauss.gpbfci(basis,dim=3)  
 
-@set_units(['mm*yr^-0.5','yr^-1','km'])
-def gpfogmse(a,b,c):
-  tgp = gpfogm(a,b)
-  sgp = gpse(1.0,c)
-  return kernel_product(tgp,sgp)
 
-@set_units(['mm*yr^-1.5','mjd','km'])
-def gpibmse(a,b,c):
-  tgp = gpibm(a,b)
-  sgp = gpse(1.0,c)
-  return kernel_product(tgp,sgp)
-
-@set_units(['mm*yr^-0.5','mjd','km'])
-def gpbmse(a,b,c):
-  tgp = gpbm(a,b)
-  sgp = gpse(1.0,c)
-  return kernel_product(tgp,sgp)
-
-@set_units(['mm','yr','km'])
-def gpmat32se(a,b,c):
-  tgp = gpmat32(a,b)
-  sgp = gpse(1.0,c)
-  return kernel_product(tgp,sgp)
-
-@set_units(['mm','yr','km'])
-def gpmat52se(a,b,c):
-  tgp = gpmat52(a,b)
-  sgp = gpse(1.0,c)
-  return kernel_product(tgp,sgp)
-
-@set_units(['mm','km'])
-def gpperse(a,b):
-  def basis(x):
-    out = np.array([np.sin(2*np.pi*x[:,0]),
-                    np.cos(2*np.pi*x[:,0]),
-                    np.sin(4*np.pi*x[:,0]),
-                    np.cos(4*np.pi*x[:,0])]).T
+@set_units([])
+def p21():
+  ''' 
+  Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
+  (1,0,1), (2,0,0), (2,1,0), and (2,0,1).
+  '''
+  def basis(x,diff):
+    powers = np.array([[1,0,0],[1,1,0],[1,0,1],
+                       [2,0,0],[2,1,0],[2,0,1]])
+    out = rbf.poly.mvmonos(x,powers,diff)
     return out
   
-  tgp = gauss.gpbfc(basis,[0.0,0.0,0.0,0.0],[1.0,1.0,1.0,1.0])
-  sgp = gpse(a,b)
+  return gauss.gpbfci(basis,dim=3)  
+  
+
+@set_units(['mm','yr','km'])
+def se_se(a,b,c):
+  tgp = se_1d(a,b)
+  sgp = se_2d(1.0,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm*yr^-0.5','yr^-1','km'])
+def fogm_se(a,b,c):
+  tgp = fogm_1d(a,b)
+  sgp = se_2d(1.0,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm*yr^-0.5','mjd','km'])
+def bm_se(a,b,c):
+  tgp = bm_1d(a,b)
+  sgp = se_2d(1.0,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm*yr^-1.5','mjd','km'])
+def ibm_se(a,b,c):
+  tgp = ibm_1d(a,b)
+  sgp = se_2d(1.0,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','yr','km'])
+def mat32_se(a,b,c):
+  tgp = mat32_1d(a,b)
+  sgp = se_2d(1.0,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','yr','km'])
+def gpmat52_se(a,b,c):
+  tgp = mat52_1d(a,b)
+  sgp = se_1d(1.0,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','km'])
+def per_se(a,b):
+  tgp = per_1d()
+  sgp = se_1d(a,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','km'])
+def step_se(a,b):
+  tgp = step_1d()
+  sgp = se_1d(a,c)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','km'])
+def ramp_se(a,b):
+  tgp = ramp_1d()
+  sgp = se_1d(a,c)
   return kernel_product(tgp,sgp)
     
 
