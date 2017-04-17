@@ -239,7 +239,7 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
   _setup_map_ax(bm,map_ax)
   x,y = bm(lon,lat)
   pos = np.array([x,y]).T
-  interactive_viewer(
+  interactive_vector_viewer(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
     ts_ax=ts_ax,map_ax=map_ax,
     station_labels=id,time_labels=dates,

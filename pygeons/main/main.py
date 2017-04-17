@@ -133,12 +133,12 @@ def pygeons_reml(input_file,model,params,fix=(),
       fout.flush()
 
 
-def pygeons_gpr(input_file,prior_model,prior_params,
-                start_date=None,stop_date=None,positions=None,
-                noise_model='null',noise_params=(),
-                return_sample=False,
-                outlier_tol=4.0,
-                output_file=None):
+def pygeons_strain(input_file,prior_model,prior_params,
+                   start_date=None,stop_date=None,positions=None,
+                   noise_model='null',noise_params=(),
+                   return_sample=False,
+                   outlier_tol=4.0,
+                   output_file=None):
   ''' 
   Performs temporal Gaussian process regression.
   

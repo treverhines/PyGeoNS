@@ -109,7 +109,7 @@ def mat52_1d(sigma,cls):
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
   '''
-  return gauss.gpse(rbf.basis.mat52,(0.0,sigma**2,cls),dim=1)
+  return gauss.gpiso(rbf.basis.mat52,(0.0,sigma**2,cls),dim=1)
 
 
 def se_1d(sigma,cls):
@@ -125,7 +125,7 @@ def exp_1d(sigma,cls):
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
   '''
-  return gauss.gpse((0.0,sigma**2,cls),dim=1)
+  return gauss.gpexp((0.0,sigma**2,cls),dim=1)
 
 
 def fogm_1d(s,fc):
@@ -231,7 +231,7 @@ def exp_2d(sigma,cls):
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
   '''
-  return gauss.gpse((0.0,sigma**2,cls),dim=2)
+  return gauss.gpexp((0.0,sigma**2,cls),dim=2)
 
 def mat32_2d(sigma,cls):
   ''' 
@@ -246,7 +246,7 @@ def mat52_2d(sigma,cls):
   Returns a *GaussianProcess* with zero mean and a squared exponential
   covariance
   '''
-  return gauss.gpse(rbf.basis.mat52,(0.0,sigma**2,cls),dim=2)
+  return gauss.gpiso(rbf.basis.mat52,(0.0,sigma**2,cls),dim=2)
 
 
 # 3D GaussianProcess constructors

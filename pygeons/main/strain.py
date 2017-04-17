@@ -6,7 +6,7 @@ import numpy as np
 import logging
 import rbf.gauss
 from pygeons.mp import parmap
-from pygeons.filter.gprocs import gpcomp
+from pygeons.main.gprocs import gpcomp
 logger = logging.getLogger(__name__)
 
 
@@ -51,13 +51,11 @@ def strain(t,x,d,s,
            prior_model,prior_params,
            out_t=None,
            out_x=None,
-           diff=None,
            noise_model='null',
            noise_params=(),
            tol=4.0,
            procs=0,
            return_sample=False,
-           comm=False,
            offsets=True):
   ''' 
   Computes deformation gradients from displacement data.
@@ -113,14 +111,17 @@ def strain(t,x,d,s,
   x = np.asarray(x,dtype=float)
   d = np.asarray(d,dtype=float)
   s = np.asarray(s,dtype=float)
-  if diff is None:
-    diff = np.zeros(3,dtype=int)
-
   if out_t is None:
     out_t = t
 
   if out_x is None:
     out_x = x
+
+  # Toss stations with no observations.
+  toss = np.all(np.isinf(s),axis=0) 
+  x = x[~toss]
+  d = d[:,~toss]
+  s = s[:,~toss]
 
   d = d.flatten()
   s = s.flatten()
@@ -138,25 +139,11 @@ def strain(t,x,d,s,
                     x0_grid.flatten(),
                     x1_grid.flatten()]).T
 
-  # create basis functions for common modes and station offsets
-  p = np.zeros((t.shape[0]*x.shape[0],0))
-  if offsets:
-    # create station offset basis functions
-    offsets_p = np.zeros((t.shape[0],x.shape[0],x.shape[0]))
-    for i in range(x.shape[0]): offsets_p[:,i,i] = 1.0
-    offsets_p = offsets_p.reshape((t.shape[0]*x.shape[0],x.shape[0])).T
-    p = np.hstack((p,offsets_p))
-
-  if comm:
-    # create common mode error basis functions
-    comm_p = np.zeros((t.shape[0],x.shape[0],t.shape[0]))
-    for i in range(t.shape[0]): comm_p[i,:,i] = 1.0
-    comm_p = comm_p.reshape((t.shape[0]*x.shape[0],t.shape[0])).T
-    p = np.hstack((p,comm_p))
+  # create basis functions for station offsets
+  p = np.zeros((t.shape[0],x.shape[0],x.shape[0]))
+  for i in range(x.shape[0]): p[:,i,i] = 1.0
+  p = p.reshape((t.shape[0]*x.shape[0],x.shape[0]))
   
-  # Do a data check to make sure that there are no stations or times
-  # with no data? is it needed
-
   # if the uncertainty is inf then the data is considered missing
   # and will be tossed out
   toss = np.isinf(s)
@@ -183,13 +170,23 @@ def strain(t,x,d,s,
   noise_p     = np.hstack((noise_gp.basis(z),p))
   # condition the prior with the data
   post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
-  post_gp = post_gp.differentiate(diff)
+  dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
+  dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
   if return_sample:
-    out_mean = post_gp.sample(out_z)
-    out_sigma = np.zeros_like(out_mean_i)
+    out = []
+    out += post_gp.sample(out_z)
+    out += np.zeros(out_z.shape[0])
+    out += dx_gp.sample(out_z)
+    out += np.zeros(out_z.shape[0])
+    out += dy_gp.sample(out_z)
+    out += np.zeros(out_z.shape[0])
+    
   else:
-    out_mean,out_sigma = post_gp.meansd(out_z)
+    out  = []
+    out += post_gp.meansd(out_z)
+    out += dx_gp.meansd(out_z)
+    out += dy_gp.meansd(out_z)
 
-  out_mean = out_mean.reshape((out_t.shape[0],out_x.shape[0]))
-  out_sigma = out_sigma.reshape((out_t.shape[0],out_x.shape[0]))
-  return out_mean,out_sigma
+  # reshape output arrays
+  out = [i.reshape((out_t.shape[0],out_x.shape[0])) for i in out]
+  return out
