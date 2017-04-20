@@ -196,15 +196,24 @@ def strain(t,x,d,sd,
   noise_sigma += noise_gp.covariance(z,z)
   noise_p = np.hstack((noise_p,noise_gp.basis(z)))
 
-  prior_sigma = prior_gp.covariance(z,z)
-  prior_p = prior_gp.basis(z)
-
-  full_sigma = noise_sigma + prior_sigma
-  full_p = np.hstack((noise_p,prior_p))
-  full_mu = np.zeros(len(z))  
+  # XXXXXXXXX
+  #full_sigma = noise_sigma + prior_gp.covariance(z,z)
+  #full_p = np.hstack((noise_p,prior_gp.basis(z)))
+  #full_mu = np.zeros(len(z))  
+  # XXXXXXXXX
+  
+  # XXXXXXXXX
+  noise_sigma += prior_gp.covariance(z,z)
+  noise_p = np.hstack((noise_p,prior_gp.basis(z)))
+  noise_mu = np.zeros(len(z))  
+  # XXXXXXXXX
 
   # returns the indices of outliers 
-  outliers,fit = _is_outlier(d.ravel(),sd.ravel(),full_sigma,full_mu,full_p,tol)
+  outliers,fit = _is_outlier(d.ravel(),sd.ravel(),noise_sigma,noise_mu,noise_p,tol)
+  #outliers,fit = _is_outlier(d.ravel(),sd.ravel(),full_sigma,full_mu,full_p,tol)
+  # dereference full_sigma, full_p and full_mu
+  #del full_sigma,full_p,full_mu
+  
   fit = fit.reshape((Nt,Nx))
   # record removed data
   d.ravel()[outliers] = np.nan

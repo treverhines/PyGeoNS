@@ -32,5 +32,4 @@ def unit_conversion(units,time='day',space='m'):
   conv = dict([(k,v/to_m[space]) for k,v in to_m.iteritems()] +
               [(k,v/to_s[time]) for k,v in to_s.iteritems()])
   out = eval(units,conv)
-  print(out)
   return out

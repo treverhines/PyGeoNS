@@ -18,7 +18,7 @@ def set_units(units):
   '''
   def decorator(fin):
     def fout(*args,**kwargs):
-      convert = kwargs.pop('convert',False)
+      convert = kwargs.pop('convert',True)
       if convert:
         args = [a*conv(u,time='day',space='m') for a,u in zip(args,units)]
         
