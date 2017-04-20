@@ -8,6 +8,7 @@ import logging
 import os
 from pygeons.main.reml import reml
 from pygeons.main.strain import strain
+from pygeons.main.gprocs import get_units
 from pygeons.mjd import mjd_inv,mjd
 from pygeons.basemap import make_basemap
 from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
@@ -80,6 +81,7 @@ def pygeons_reml(input_file,model,params,fix=(),
     Number of subprocesses to spawn.
   
   '''
+  logger.info('Running pygeons reml ...')
   data = dict_from_hdf5(input_file)
   if data['time_exponent'] != 0:
     raise ValueError('input dataset must have units of displacement')
@@ -87,7 +89,6 @@ def pygeons_reml(input_file,model,params,fix=(),
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
 
-  logger.info('Performing spatial restricted maximum likelihood estimation ...')
   # convert params to a dictionary of hyperparameters for each direction
   params = _params_dict(params)
 
@@ -132,6 +133,46 @@ def pygeons_reml(input_file,model,params,fix=(),
       fout.flush()
 
 
+def _log_strain(input_file,
+                prior_model,prior_params, 
+                noise_model,noise_params, 
+                station_noise_model,station_noise_params, 
+                start_date,stop_date,positions,
+                outlier_tol,output_dir):
+  msg  = '\n'
+  msg += '----- PYGEONS STRAIN RUN INFORMATION -----\n'
+  msg += 'input file : %s\n' % input_file
+  msg += 'prior :\n' 
+  msg += '    model : %s\n' % ' '.join(prior_model)
+  msg += '    units : %s\n' % ' '.join(get_units(prior_model))
+  msg += '    east parameters : %s\n' % ' '.join(prior_params['east'].astype(str))
+  msg += '    north parameters : %s\n' % ' '.join(prior_params['north'].astype(str))
+  msg += '    vertical parameters : %s\n' % ' '.join(prior_params['vertical'].astype(str))
+  msg += 'noise :\n' 
+  msg += '    model : %s\n' % ' '.join(noise_model)
+  msg += '    units : %s\n' % ' '.join(get_units(noise_model))
+  msg += '    east parameters : %s\n' % ' '.join(noise_params['east'].astype(str))
+  msg += '    north parameters : %s\n' % ' '.join(noise_params['north'].astype(str))
+  msg += '    vertical parameters : %s\n' % ' '.join(noise_params['vertical'].astype(str))
+  msg += 'station noise :\n' 
+  msg += '    model : %s\n' % ' '.join(station_noise_model)
+  msg += '    units : %s\n' % ' '.join(get_units(station_noise_model))
+  msg += '    east parameters : %s\n' % ' '.join(station_noise_params['east'].astype(str))
+  msg += '    north parameters : %s\n' % ' '.join(station_noise_params['north'].astype(str))
+  msg += '    vertical parameters : %s\n' % ' '.join(station_noise_params['vertical'].astype(str))
+  msg += 'outlier tolerance : %s\n' % outlier_tol  
+  msg += 'output start date : %s\n' % start_date
+  msg += 'output stop date : %s\n' % stop_date
+  if positions is None:
+    msg += 'output positions file : < using same positions as input >\n'
+  else:   
+    msg += 'output positions file : %s\n' % positions
+
+  msg += 'output directory : %s\n' % output_dir  
+  msg += '------------------------------------------'
+  logger.info(msg)
+
+
 def pygeons_strain(input_file,
                    prior_model=('se-se',),prior_params=(1.0,0.05,50.0),
                    noise_model=(),noise_params=(),
@@ -172,6 +213,7 @@ def pygeons_strain(input_file,
     Tolerance for outlier detection. 
 
   '''
+  logger.info('Running pygeons strain ...')
   data = dict_from_hdf5(input_file)
   if data['time_exponent'] != 0:
     raise ValueError('input dataset must have units of displacement')
@@ -179,7 +221,6 @@ def pygeons_strain(input_file,
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
     
-  logger.info('Performing spatial Gaussian process regression ...')
   out_rm = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_res = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dx = dict((k,np.copy(v)) for k,v in data.iteritems())
@@ -219,6 +260,16 @@ def pygeons_strain(input_file,
   stop_time = mjd(stop_date,'%Y-%m-%d')  
   output_time = np.arange(start_time,stop_time+1)
   
+  if output_dir is None:
+    output_dir = _change_extension(input_file,'strain')
+
+  _log_strain(input_file,
+              prior_model,prior_params, 
+              noise_model,noise_params, 
+              station_noise_model,station_noise_params, 
+              start_date,stop_date,positions,
+              outlier_tol,output_dir)
+
   # convert the domain units from m to km
   for dir in ['east','north','vertical']:
     removed,fit,dx,sdx,dy,sdy  = strain(data['time'][:,None],
@@ -259,10 +310,6 @@ def pygeons_strain(input_file,
   out_dy['id'] = output_id
   out_dy['time_exponent'] = -1
   out_dy['space_exponent'] = 0
-
-  # write to output file
-  if output_dir is None:
-    output_dir = _change_extension(input_file,'strain')
 
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)

@@ -51,7 +51,6 @@ def text_from_dict(outfile,data):
     Data dictionary 
 
   '''
-  logger.info('Converting data dictionary to a text file ...')
   check_data(data)
   Nx = len(data['id'])
   strs = []
@@ -99,7 +98,6 @@ def hdf5_from_dict(outfile,data):
     Data dictionary      
   
   '''
-  logger.info('Converting data dictionary to an HDF5 file ...')
   check_data(data)
   fout = h5py.File(outfile,'w') 
   for k in data.keys():
@@ -130,7 +128,6 @@ def dict_from_text(infile,parser='csv'):
     Data dictionary
     
   '''
-  logger.info('Converting text file to a data dictionary ...')
   buff = open(infile,'r')
   strs = buff.read().split('***')
   buff.close()
@@ -190,7 +187,6 @@ def dict_from_hdf5(infile):
     Data dictionary
 
   '''
-  logger.info('Converting HDF5 file to a data dictionary ...')
   out = {}
   fin = h5py.File(infile,'r')
   for k in fin.keys():

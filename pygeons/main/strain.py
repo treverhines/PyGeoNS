@@ -8,7 +8,6 @@ import rbf.gauss
 from pygeons.main.gprocs import gpcomp
 logger = logging.getLogger(__name__)
 
-
 def _is_outlier(d,s,sigma,mu,p,tol):
   ''' 
   Identifies which points in *d* are outliers based on the prior
@@ -71,8 +70,7 @@ def strain(t,x,d,sd,
            station_noise_params=(),
            out_t=None,
            out_x=None,
-           tol=4.0,
-           offsets=True):
+           tol=4.0):
   ''' 
   Computes deformation gradients from displacement data.
   

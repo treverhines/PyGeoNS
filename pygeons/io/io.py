@@ -4,10 +4,12 @@ executables
 '''
 import numpy as np
 from pygeons import mjd
+import logging
 from pygeons.io.convert import (dict_from_hdf5,
                                 hdf5_from_dict,
                                 text_from_dict,
                                 dict_from_text)
+logger = logging.getLogger(__name__)                                
 
 
 def _change_extension(f,ext):
@@ -18,6 +20,7 @@ def pygeons_toh5(input_text_file,file_type='csv',output_file=None):
   ''' 
   converts a text file to an hdf5 file
   '''
+  logger.info('Running pygeons toh5 ...')
   data = dict_from_text(input_text_file,parser=file_type)
   if output_file is None:
     output_file = _change_extension(input_text_file,'h5')
@@ -29,6 +32,7 @@ def pygeons_totext(input_file,output_file=None):
   ''' 
   converts an hdf5 file to a text file
   '''
+  logger.info('Running pygeons totext ...')
   data = dict_from_hdf5(input_file)
   if output_file is None:
     output_file = _change_extension(input_file,'csv')
@@ -40,6 +44,7 @@ def pygeons_info(input_file):
   ''' 
   prints metadata 
   '''
+  logger.info('Running pygeons info ...')
   data_dict = dict_from_hdf5(input_file)
   # put together info string
   units = 'meters**%s days**%s' % (data_dict['space_exponent'],

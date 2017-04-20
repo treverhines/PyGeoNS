@@ -12,8 +12,8 @@ from pygeons.mjd import mjd,mjd_inv
 from pygeons.basemap import make_basemap
 from pygeons.clean.iclean import InteractiveCleaner
 from pygeons.breaks import make_space_vert_smp
+from pygeons.units import unit_conversion
 from pygeons.plot.plot import (_unit_string,
-                               _unit_conversion,
                                _setup_map_ax,
                                _setup_ts_ax)                               
 logger = logging.getLogger(__name__)
@@ -58,8 +58,8 @@ def pygeons_crop(input_file,start_date=None,stop_date=None,
     output data dictionary
 
   '''
+  logger.info('Running pygeons crop ...')
   data = dict_from_hdf5(input_file)
-  logger.info('Cropping data set ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   if start_date is None:
@@ -139,8 +139,8 @@ def pygeons_clean(input_file,resolution='i',
       output data dictionary 
     
   '''
+  logger.info('Running pygeons clean ...')
   data = dict_from_hdf5(input_file)
-  logger.info('Cleaning data set ...')
   out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',facecolor='white')
@@ -157,8 +157,8 @@ def pygeons_clean(input_file,resolution='i',
   pos = np.array([x,y]).T
   t = data['time']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
-  conv = _unit_conversion(data['space_exponent'],data['time_exponent'])
   units = _unit_string(data['space_exponent'],data['time_exponent'])
+  conv = 1.0/unit_conversion(units,time='day',space='m')
   u = conv*data['east']
   v = conv*data['north']
   z = conv*data['vertical']
@@ -225,7 +225,7 @@ def pygeons_clean(input_file,resolution='i',
       else:
         raise ValueError('edit type must be either "outliers" or "jump"')
         
-  logger.info('edits saved to %s' % output_edits_file)
+  logger.info('Edits saved to %s' % output_edits_file)
   clean_data  = ic.get_data()                 
   out['east'] = clean_data[0]/conv
   out['north'] = clean_data[1]/conv

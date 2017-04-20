@@ -125,13 +125,13 @@ def check_data(data):
   ''' 
   Runs all data consistency check
   '''
-  logger.debug('checking data consistency ... ')
+  logger.debug('Checking data consistency ... ')
   check_entries(data)
   check_shapes(data)
   check_positive_uncertainties(data)
   check_missing_data(data)
   check_unique_stations(data)
   check_unique_dates(data)
-  logger.debug('ok')
+  logger.debug('OK')
   
   

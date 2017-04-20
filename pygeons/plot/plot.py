@@ -14,6 +14,7 @@ from pygeons.plot.ivector import interactive_vector_viewer,one_sigfig
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
 from pygeons.basemap import make_basemap
+from pygeons.units import unit_conversion
 logger = logging.getLogger(__name__)
 
 
@@ -75,7 +76,7 @@ def _unit_string(space_exponent,time_exponent):
   '''
   if space_exponent == 0:
     # if the space exponent is 0 then use units of microstrain
-    space_str = '$\mathregular{\mu}$strain'
+    space_str = '1e-6'
   elif space_exponent == 1:
     space_str = 'mm'
   else:
@@ -89,23 +90,6 @@ def _unit_string(space_exponent,time_exponent):
     time_str = '/yr^%s' % -time_exponent
   
   return space_str + time_str
-        
-
-def _unit_conversion(space_exponent,time_exponent):
-  ''' 
-  returns the scalar which converts 
-  
-    meters**(space_exponent) * days*(time_exponent)
-  
-  to   
-
-    mm**(space_exponent) * years*(time_exponent)
-  '''
-  # if the space exponent is 0 then use units of microstrain
-  if space_exponent == 0:
-    return 1.0e6 * (1.0/365.25)**time_exponent
-  else:  
-    return 1000**space_exponent * (1.0/365.25)**time_exponent
   
 
 def _get_meridians_and_parallels(bm,ticks):
@@ -212,8 +196,8 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
       gets passed to pygeons.plot.view.interactive_view
 
   '''
+  logger.info('Running pygeons vector-view ...')
   data_list = [dict_from_hdf5(i) for i in input_files]
-  logger.info('Viewing vector data sets ...')
   data_list = _common_context(data_list)
 
   t = data_list[0]['time']
@@ -221,10 +205,10 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
   lat = data_list[0]['latitude']
   id = data_list[0]['id']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
-  conv = _unit_conversion(data_list[0]['space_exponent'],
-                          data_list[0]['time_exponent'])
   units = _unit_string(data_list[0]['space_exponent'],
                        data_list[0]['time_exponent'])
+  # factor that converts units of days and m to the units in *units*
+  conv = 1.0/unit_conversion(units,time='day',space='m')
   u = [conv*d['east'] for d in data_list]
   v = [conv*d['north'] for d in data_list]
   z = [conv*d['vertical'] for d in data_list]
@@ -265,9 +249,9 @@ def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
       gets passed to pygeons.strain.view
 
   '''
+  logger.info('Running pygeons strain-view ...')
   data_dx = dict_from_hdf5(xdiff_file)  
   data_dy = dict_from_hdf5(ydiff_file)  
-  logger.info('Viewing strain data ...')
   data_dx,data_dy = _common_context([data_dx,data_dy])
   
   if ((data_dx['space_exponent'] != 0) | 
@@ -279,10 +263,10 @@ def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
   lon = data_dx['longitude']
   lat = data_dx['latitude']
   dates = [mjd_inv(ti,'%Y-%m-%d') for ti in t]
-  conv = _unit_conversion(data_dx['space_exponent'],
-                          data_dx['time_exponent'])
   units = _unit_string(data_dx['space_exponent'],
                        data_dx['time_exponent'])
+  # factor that converts units of days and m to the units in *units*
+  conv = 1.0/unit_conversion(units,time='day',space='m')
   exx = conv*data_dx['east'] 
   eyy = conv*data_dy['north']
   exy = 0.5*conv*(data_dx['north'] + data_dy['east'])
