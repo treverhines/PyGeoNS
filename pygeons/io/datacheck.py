@@ -105,7 +105,7 @@ def check_unique_stations(data):
 
 def check_unique_dates(data):
   ''' 
-  makes sure each station id is unique
+  makes sure each date is unique
   '''
   unique_days = list(set(data['time']))
   if len(data['time']) != len(unique_days):

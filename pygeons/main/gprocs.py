@@ -32,8 +32,43 @@ def set_units(units):
   return decorator  
 
 
+@set_units([])
+def null():
+  '''Null GaussianProcess'''
+  return gauss.GaussianProcess(gauss._zero_mean,
+                               gauss._zero_covariance,
+                               basis=gauss._empty_basis)
+                               
 # 1D GaussianProcess constructors
 #####################################################################
+@set_units([])
+def p0_1d():
+  ''' 
+  Returns a *GaussianProcess* with annual and semiannual sinusoid
+  basis functions. The coefficients have zero mean and unit std. dev.
+  '''
+  def basis(x,diff):
+    powers = np.array([[0]])
+    out = rbf.poly.mvmonos(x,powers,diff)
+    return out
+
+  return gauss.gpbfci(basis,dim=1)  
+
+
+@set_units([])
+def p1_1d():
+  ''' 
+  Returns a *GaussianProcess* with annual and semiannual sinusoid
+  basis functions. The coefficients have zero mean and unit std. dev.
+  '''
+  def basis(x,diff):
+    powers = np.array([[1]])
+    out = rbf.poly.mvmonos(x,powers,diff)
+    return out
+
+  return gauss.gpbfci(basis,dim=1)  
+
+
 def per_1d():
   ''' 
   Returns a *GaussianProcess* with annual and semiannual sinusoid
@@ -50,6 +85,23 @@ def per_1d():
   mu = np.zeros(4)
   sigma = np.ones(4)
   return gauss.gpbfc(basis,mu,sigma,dim=1)
+
+
+@set_units([])
+def peri_1d():
+  ''' 
+  Returns a *GaussianProcess* with annual and semiannual sinusoid
+  basis functions. The coefficients have zero mean and unit std. dev.
+  '''
+  def basis(x):
+    # no derivatives because im lazy
+    out = np.array([np.sin(2*np.pi*x[:,0]/365.25),
+                    np.cos(2*np.pi*x[:,0]/365.25),
+                    np.sin(4*np.pi*x[:,0]/365.25),
+                    np.cos(4*np.pi*x[:,0]/365.25)]).T
+    return out
+
+  return gauss.gpbfci(basis,dim=1)
 
 
 def step_1d(t0):
@@ -71,6 +123,26 @@ def step_1d(t0):
   mu = np.zeros(1)
   sigma = np.ones(1)
   return gauss.gpbfc(basis,mu,sigma,dim=1)
+
+
+@set_units(['mjd'])
+def stepi_1d(t0):
+  ''' 
+  Returns a *GaussianProcess* with a heaviside function centered at
+  *t0*. The size of the step has zero mean and unit std. dev.
+  '''
+  def basis(x,diff):
+    if diff == (0,):
+      out = (x[:,0] >= t0).astype(float)
+    else:
+      # derivative is zero everywhere (ignore the step at t0)
+      out = np.zeros(x.shape[0],dtype=float)  
+    
+    # turn into an (N,1) array
+    out = out[:,None]
+    return out
+
+  return gauss.gpbfci(basis,dim=1)
 
 
 def ramp_1d(t0):
@@ -128,6 +200,7 @@ def exp_1d(sigma,cls):
   return gauss.gpexp((0.0,sigma**2,cls),dim=1)
 
 
+@set_units(['mm/yr^0.5','yr^-1'])
 def fogm_1d(s,fc):
   ''' 
   Returns a *GaussianProcess* describing an first-order Gauss-Markov
@@ -149,6 +222,7 @@ def fogm_1d(s,fc):
   return gauss.gpexp((0.0,coeff,cls),dim=1)
 
 
+@set_units(['mm/yr^0.5','mjd'])
 def bm_1d(w,t0):
   ''' 
   Returns brownian motion with scale parameter *w* and reference time
@@ -267,22 +341,13 @@ def kernel_product(gp1,gp2):
 
 
 @set_units([])
-def null():
-  '''Null GaussianProcess'''
-  return gauss.GaussianProcess(gauss._zero_mean,
-                               gauss._zero_covariance,
-                               basis=gauss._empty_basis,
-                               dim=3)
-                               
-
-@set_units([])
-def p11():
+def p10_3d():
   ''' 
   Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
   and (1,0,1)
   '''
   def basis(x,diff):
-    powers = np.array([[1,0,0],[1,1,0],[1,0,1]])
+    powers = np.array([[1,0,0]])
     out = rbf.poly.mvmonos(x,powers,diff)
     return out
 
@@ -290,14 +355,41 @@ def p11():
 
 
 @set_units([])
-def p21():
+def p11_3d():
+  ''' 
+  Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
+  and (1,0,1)
+  '''
+  def basis(x,diff):
+    powers = np.array([[1,1,0],[1,0,1]])
+    out = rbf.poly.mvmonos(x,powers,diff)
+    return out
+
+  return gauss.gpbfci(basis,dim=3)  
+
+
+@set_units([])
+def p20_3d():
   ''' 
   Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
   (1,0,1), (2,0,0), (2,1,0), and (2,0,1).
   '''
   def basis(x,diff):
-    powers = np.array([[1,0,0],[1,1,0],[1,0,1],
-                       [2,0,0],[2,1,0],[2,0,1]])
+    powers = np.array([[2,0,0]])
+    out = rbf.poly.mvmonos(x,powers,diff)
+    return out
+  
+  return gauss.gpbfci(basis,dim=3)  
+
+
+@set_units([])
+def p21_3d():
+  ''' 
+  Gaussian process with polynomial basis functions (1,0,0), (1,1,0),
+  (1,0,1), (2,0,0), (2,1,0), and (2,0,1).
+  '''
+  def basis(x,diff):
+    powers = np.array([[2,1,0],[2,0,1]])
     out = rbf.poly.mvmonos(x,powers,diff)
     return out
   
@@ -305,7 +397,7 @@ def p21():
   
 
 @set_units(['mm','yr','km'])
-def se_se(a,b,c):
+def se_se_3d(a,b,c):
   # convert hyperparameter units to m and days
   a *= 1.0/1000.0 # mm to m
   b *= 365.25 # yr to day
@@ -317,7 +409,7 @@ def se_se(a,b,c):
 
 
 @set_units(['mm*yr^-0.5','yr^-1','km'])
-def fogm_se(a,b,c):
+def fogm_se_3d(a,b,c):
   # convert hyperparameter units to m and days
   a *= (1.0/1000.0)*(365.25**-0.5) # mm*yr^-0.5 to m*day^-0.5
   b *= 365.25**-1 # yr^-1 to day^-1
@@ -329,7 +421,7 @@ def fogm_se(a,b,c):
 
 
 @set_units(['mm*yr^-0.5','mjd','km'])
-def bm_se(a,b,c):
+def bm_se_3d(a,b,c):
   # convert hyperparameter units to m and days
   a *= (1.0/1000.0)*(365.25**-0.5) # mm*yr^-1.5 to m*day^-1.5
   c *= 1000.0 # km to m
@@ -340,7 +432,7 @@ def bm_se(a,b,c):
 
 
 @set_units(['mm*yr^-1.5','mjd','km'])
-def ibm_se(a,b,c):
+def ibm_se_3d(a,b,c):
   # convert hyperparameter units to m and days
   a *= (1.0/1000.0)*(365.25**-1.5) # mm*yr^-1.5 to m*day^-1.5
   c *= 1000.0 # km to m
@@ -351,7 +443,7 @@ def ibm_se(a,b,c):
 
 
 @set_units(['mm','yr','km'])
-def mat32_se(a,b,c):
+def mat32_se_3d(a,b,c):
   # convert hyperparameter units to m and days
   a *= 1.0/1000.0 # mm to m
   b *= 365.25 # yr to day
@@ -363,7 +455,7 @@ def mat32_se(a,b,c):
 
 
 @set_units(['mm','yr','km'])
-def mat52_se(a,b,c):
+def mat52_se_3d(a,b,c):
   # convert hyperparameter units to m and days
   a *= 1.0/1000.0 # mm to m
   b *= 365.25 # yr to day
@@ -375,7 +467,7 @@ def mat52_se(a,b,c):
 
 
 @set_units(['mm','km'])
-def per_se(a,b):
+def per_se_3d(a,b):
   # convert hyperparameter units to m and days
   a *= 1.0/1000.0 # mm to m
   b *= 365.25 # yr to day
@@ -386,7 +478,7 @@ def per_se(a,b):
 
 
 @set_units(['mm','km'])
-def step_se(a,b):
+def step_se_3d(a,b):
   # convert hyperparameter units to m and days
   a *= 1.0/1000.0 # mm to m
   b *= 365.25 # yr to day
@@ -397,7 +489,7 @@ def step_se(a,b):
 
 
 @set_units(['mm','km'])
-def ramp_se(a,b):
+def ramp_se_3d(a,b):
   # convert hyperparameter units to m and days
   a *= 1.0/1000.0 # mm to m
   b *= 365.25 # yr to day
@@ -410,38 +502,46 @@ def ramp_se(a,b):
 # create a dictionary of all Gaussian process constructors in this
 # module
 CONSTRUCTORS = {'null':null,
-                'p11':p11,
-                'p21':p21,
-                'se*se':se_se,
-                'fogm*se':fogm_se,
-                'bm*se':bm_se,
-                'ibm*se':ibm_se,
-                'mat32*se':mat32_se,
-                'mat52*se':mat52_se,
-                'per*se':per_se,
-                'step*se':step_se,
-                'ramp*se':ramp_se}
+                'p0':p0_1d, 
+                'p1':p1_1d, 
+                'per':peri_1d, 
+                'step':stepi_1d,
+                'fogm':fogm_1d,
+                'bm':bm_1d,
+                'p10':p10_3d,
+                'p11':p11_3d,
+                'p20':p20_3d,
+                'p21':p21_3d,
+                'se-se':se_se_3d,
+                'fogm-se':fogm_se_3d,
+                'bm-se':bm_se_3d,
+                'ibm-se':ibm_se_3d,
+                'mat32-se':mat32_se_3d,
+                'mat52-se':mat52_se_3d,
+                'per-se':per_se_3d,
+                'step-se':step_se_3d,
+                'ramp-se':ramp_se_3d}
   
-def gpcomp(model,args):
+def gpcomp(models,args):
   ''' 
   Returns a composite Gaussian process. The components are specified
   with the *model* string, and the arguments for each component are
   specied with *args*. For example,
   
-  >>> gpcomp('fogm+se',(1.0,2.0,3.0,4.0)) 
+  >>> gpcomp(['fogm','se'],[1.0,2.0,3.0,4.0]) 
   
   creates a GaussianProcess composed of a FOGM and an SE model. The
   first two arguments are passed to *gpfogm* and the second two
   arguments are passed to *se*
   '''
   args = list(args)
-  models = model.strip().split('+')
+  models = list(models)
   cs = [CONSTRUCTORS[m] for m in models] # constructor for each component
   n  = sum(ci.n for ci in cs)
   if len(args) != n:
     raise ValueError(
       '%s parameters were specified for the model "%s", but it '
-      'requires %s parameters.\n' %(len(args),model,n))
+      'requires %s parameters.\n' %(len(args),' '.join(models),n))
   
   gp = null()
   for ci in cs:
@@ -450,11 +550,11 @@ def gpcomp(model,args):
   return gp
   
 
-def get_units(model):
+def get_units(models):
   ''' 
   returns the units for the GaussianProcess parameters
   '''
-  models = model.strip().split('+')
+  models = list(models)
   cs = [CONSTRUCTORS[m] for m in models]
   units = []
   for ci in cs:

@@ -4,7 +4,6 @@ This module defines a glossary of terms used in the help
 documentation. This is used to aid in building and maintaining the 
 help documentation for each executable.
 '''
-from pygeons.filter.gprocs import CONSTRUCTORS
 
 #####################################################################
 INPUT_TEXT_FILE = {
@@ -80,6 +79,15 @@ OUTPUT_FILE = {
 ''' 
 Output file name. If this is not specified then the output file name 
 will be the input file name but with a new extension.
+'''
+}
+#####################################################################
+OUTPUT_DIR = {
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Directory that output files will be written to.
 '''
 }
 #####################################################################
@@ -498,18 +506,17 @@ Indices of hyperparameters that should be fixed at the initial guess.
 PRIOR_MODEL = {
 'type':str,
 'metavar':'STR',
+'nargs':'*',
 'help': 
 ''' 
-String specifying the prior model. This can be any one of %s. A
-composite can be specified by joining models with a '+'.
-''' % CONSTRUCTORS.keys()
+Strings specifying the prior model. 
+'''
 }
 #####################################################################
 PRIOR_PARAMS = {
 'type':str,
+'metavar':'FLOAT',
 'nargs':'*',
-'default':(),
-'metavar':'FLOAT [FLOAT ...]',
 'help': 
 ''' 
 Hyperparameters for the prior model.
@@ -519,39 +526,57 @@ Hyperparameters for the prior model.
 NOISE_MODEL = {
 'type':str,
 'metavar':'STR',
+'nargs':'*',
 'help': 
 ''' 
-String specifying the noise model. This can be any one of %s. A
-composite can be specified by joining models with a '+'.
-''' % CONSTRUCTORS.keys()
+Strings specifying the noise model.
+''' 
 }
 #####################################################################
 NOISE_PARAMS = {
 'type':str,
-'nargs':'+',
-'default':(),
 'metavar':'FLOAT',
+'nargs':'*',
 'help': 
 ''' 
 Hyperparameters for the noise model.
 '''
 }
 #####################################################################
+STATION_NOISE_MODEL = {
+'type':str,
+'metavar':'STR',
+'nargs':'*',
+'help': 
+''' 
+Strings specifying the station noise model.
+''' 
+}
+#####################################################################
+STATION_NOISE_PARAMS = {
+'type':str,
+'metavar':'FLOAT',
+'nargs':'*',
+'help': 
+''' 
+Hyperparameters for the station noise model.
+'''
+}
+#####################################################################
 MODEL = {
 'type':str,
 'metavar':'STR',
+'nargs':'*',
 'help': 
 ''' 
-String specifying the model. This can be any one of %s. A composite
-can be specified by joining models with a '+'.
-''' % CONSTRUCTORS.keys()
+Strings specifying the model. 
+''' 
 }
 #####################################################################
 PARAMS = {
 'type':str,
+'metavar':'FLOAT',
 'nargs':'*',
-'default':(),
-'metavar':'FLOAT [FLOAT ...]',
 'help': 
 ''' 
 Initial guess for the model hyperparameters.
@@ -657,6 +682,7 @@ GLOSSARY = {
 'input_file':INPUT_FILE,
 'input_files':INPUT_FILES,
 'output_file':OUTPUT_FILE,
+'output_dir':OUTPUT_DIR,
 'input_edits_file':INPUT_EDITS_FILE,
 'output_edits_file':OUTPUT_EDITS_FILE,
 'no_display':NO_DISPLAY,
@@ -707,6 +733,8 @@ GLOSSARY = {
 'prior_model':PRIOR_MODEL,
 'noise_params':NOISE_PARAMS,
 'noise_model':NOISE_MODEL,
+'station_noise_params':STATION_NOISE_PARAMS,
+'station_noise_model':STATION_NOISE_MODEL,
 'fix':FIX,
 'outlier_tol':OUTLIER_TOL,
 't_diff':T_DIFF,

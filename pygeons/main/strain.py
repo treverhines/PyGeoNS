@@ -5,7 +5,6 @@ specialized for PyGeoNS
 import numpy as np
 import logging
 import rbf.gauss
-from pygeons.mp import parmap
 from pygeons.main.gprocs import gpcomp
 logger = logging.getLogger(__name__)
 
@@ -22,40 +21,57 @@ def _is_outlier(d,s,sigma,mu,p,tol):
   p : (N,P) prior basis functions
   tol : outlier tolerance
   
-  returns a boolean array indicating which points are outliers
+  returns a boolean array indicating which points are outliers and the
+  best fit trend to the data.
   '''
+  itr = 1
   out = np.zeros(d.shape[0],dtype=bool)
   while True:
-    q = sum(~out)
-    a = sigma[np.ix_(~out,~out)] + np.diag(s[~out]**2)
-    b = rbf.gauss._cholesky_block_inv(a,p[~out])
+    logger.debug('Starting iteration %s of outlier detection routine' % itr)
+    mask = np.isinf(s) | out
+    q = sum(~mask)
+    a = sigma[np.ix_(~mask,~mask)] + np.diag(s[~mask]**2)
+    b = rbf.gauss._cholesky_block_inv(a,p[~mask])
     c = np.empty((d.shape[0],b.shape[0]))
-    c[:,:q] = sigma[:,~out]
+    c[:,:q] = sigma[:,~mask]
     c[:,q:] = p
     r = np.empty(b.shape[0])
-    r[:q] = d[~out] - mu[~out]
+    r[:q] = d[~mask] - mu[~mask]
     r[q:] = 0.0
-    pred = mu + c.dot(b).dot(r)
-    res = np.abs(pred - d)/s
-    rms = np.sqrt(np.mean(res[~out]**2))
-    if np.all(out == (res > tol*rms)):
+    fit = mu + c.dot(b).dot(r)
+    res = np.abs(fit - d)/s
+    res[np.isinf(s)] = np.inf
+    rms = np.sqrt(np.mean(res[~mask]**2))
+    if np.all(mask == (res > tol*rms)):
       break
 
     else:
-      out = (res > tol*rms)
+      out = (res > tol*rms) & ~np.isinf(s)
+      itr += 1
 
-  return out
+  logger.debug('Detected %s outliers out of %s observations' % (sum(out),sum(~np.isinf(s))))
+  return out,fit
 
 
-def strain(t,x,d,s,
-           prior_model,prior_params,
+def _remove_zero_columns(A):
+  ''' 
+  remove columns of *A* which only have zeros
+  '''
+  toss = np.all(A == 0.0,axis=0)
+  A = A[:,~toss]
+  return A
+
+
+def strain(t,x,d,sd,
+           prior_model=('se-se',),
+           prior_params=(1.0,0.05,50.0),
+           noise_model=('null',),
+           noise_params=(),
+           station_noise_model=('p0',),
+           station_noise_params=(),
            out_t=None,
            out_x=None,
-           noise_model='null',
-           noise_params=(),
            tol=4.0,
-           procs=0,
-           return_sample=False,
            offsets=True):
   ''' 
   Computes deformation gradients from displacement data.
@@ -71,7 +87,7 @@ def strain(t,x,d,s,
   d : (Nt,Nx) array
     Grid of observations at time *t* and position *x*. 
   
-  s : (Nt,Nx) array
+  sd : (Nt,Nx) array
     Grid of observation uncertainties
   
   prior_model : str
@@ -100,93 +116,123 @@ def strain(t,x,d,s,
   tol : float, optional
     Tolerance for the outlier detection algorithm.
     
-  procs : int, optional
-    Distribute the tasks among this many subprocesses. 
-  
-  return_sample : bool, optional
-    If True then *out_mean* is a sample of the posterior.
+  Returns
+  -------
+  removed: (Nt,Nx) bool array
+    array of data that has been removed 
 
+  fit: (Nt,Nx) float array
+    array of fit to the data
+
+  dx: (Mt,Mx) array
+    array of x derivatives    
+
+  sigma_dx: (Mt,Mx) array
+    array of x derivative uncertainties    
+
+  dy: (Mt,Mx) array
+    array of y derivatives    
+
+  sigma_dy: (Mt,Mx) array
+    array of y derivative uncertainties    
+    
   '''  
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
-  d = np.asarray(d,dtype=float)
-  s = np.asarray(s,dtype=float)
+  d = np.array(d,dtype=float,copy=True)
+  sd = np.array(sd,dtype=float,copy=True)
+  Nt,Nx = t.shape[0],x.shape[0]
+  # allocate array indicating which data have been removed
+  removed = np.zeros((Nt,Nx),dtype=bool)
   if out_t is None:
     out_t = t
 
   if out_x is None:
     out_x = x
 
-  # Toss stations with no observations.
-  toss = np.all(np.isinf(s),axis=0) 
-  x = x[~toss]
-  d = d[:,~toss]
-  s = s[:,~toss]
+  prior_gp = gpcomp(prior_model,prior_params)
+  noise_gp = gpcomp(noise_model,noise_params)    
+  sta_gp   = gpcomp(station_noise_model,station_noise_params)
 
-  d = d.flatten()
-  s = s.flatten()
   t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')  
   t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')  
   # flat observation times and positions
-  z = np.array([t_grid.flatten(),
-                x0_grid.flatten(),
-                x1_grid.flatten()]).T
+  z = np.array([t_grid.ravel(),
+                x0_grid.ravel(),
+                x1_grid.ravel()]).T
 
   t_grid,x0_grid = np.meshgrid(out_t,out_x[:,0],indexing='ij')  
   t_grid,x1_grid = np.meshgrid(out_t,out_x[:,1],indexing='ij')  
   # flat observation times and positions
-  out_z = np.array([t_grid.flatten(),
-                    x0_grid.flatten(),
-                    x1_grid.flatten()]).T
+  out_z = np.array([t_grid.ravel(),
+                    x0_grid.ravel(),
+                    x1_grid.ravel()]).T
 
-  # create basis functions for station offsets
-  p = np.zeros((t.shape[0],x.shape[0],x.shape[0]))
-  for i in range(x.shape[0]): p[:,i,i] = 1.0
-  p = p.reshape((t.shape[0]*x.shape[0],x.shape[0]))
+  # create covariance matrix and basis functions describing noise.
+  # start with station-specific noise.
+  sta_sigma = sta_gp.covariance(t,t)
+  sta_p = sta_gp.basis(t)
+  Np = sta_p.shape[1]
+
+  # If a station has insufficient data for the station basis vectors
+  # then mask whatever few data points it does have 
+  bad_stations_bool = np.sum(~np.isinf(sd),axis=0) < Np
+  bad_stations,  = np.nonzero(bad_stations_bool)
+  good_stations, = np.nonzero(~bad_stations_bool) 
+  d[:,bad_stations] = np.nan
+  sd[:,bad_stations] = np.inf
+  removed[:,bad_stations] = True
   
-  # if the uncertainty is inf then the data is considered missing
-  # and will be tossed out
-  toss = np.isinf(s)
-  z = z[~toss] 
-  d = d[~toss]
-  s = s[~toss]
-  p = p[~toss]
+  # expand so that there is a covariance matrix and basis functions
+  # for each station that has sufficient data. 
+  noise_sigma = np.zeros((Nt,Nx,Nt,Nx))
+  noise_p = np.zeros((Nt,Nx,Np,len(good_stations)))
+  for i,j in enumerate(good_stations):
+    noise_sigma[:,j,:,j] = sta_sigma
+    noise_p[:,j,:,i] = sta_p
+    
+  noise_sigma = noise_sigma.reshape((Nt*Nx,Nt*Nx))
+  noise_p = noise_p.reshape((Nt*Nx,Np*len(good_stations)))
 
-  prior_gp = gpcomp(prior_model,prior_params)
-  noise_gp = gpcomp(noise_model,noise_params)    
-  full_gp  = prior_gp + noise_gp 
+  # add spatial noise
+  noise_sigma += noise_gp.covariance(z,z)
+  noise_p = np.hstack((noise_p,noise_gp.basis(z)))
 
-  full_sigma = full_gp.covariance(z,z) # model covariance
-  full_mu = full_gp.mean(z) # model mean
-  full_p  = np.hstack((full_gp.basis(z),p))
-  toss = _is_outlier(d,s,full_sigma,full_mu,full_p,tol)
-  logger.info('Detected %s outliers out of %s observations' % (sum(toss),len(toss)))
-  z = z[~toss] 
-  d = d[~toss]
-  s = s[~toss]
-  p = p[~toss]
+  prior_sigma = prior_gp.covariance(z,z)
+  prior_p = prior_gp.basis(z)
 
-  noise_sigma = np.diag(s**2) + noise_gp.covariance(z,z)
-  noise_p     = np.hstack((noise_gp.basis(z),p))
+  full_sigma = noise_sigma + prior_sigma
+  full_p = np.hstack((noise_p,prior_p))
+  full_mu = np.zeros(len(z))  
+
+  # returns the indices of outliers 
+  outliers,fit = _is_outlier(d.ravel(),sd.ravel(),full_sigma,full_mu,full_p,tol)
+  fit = fit.reshape((Nt,Nx))
+  # record removed data
+  d.ravel()[outliers] = np.nan
+  sd.ravel()[outliers] = np.inf
+  removed.ravel()[outliers] = True
+  
+  # toss out stations that are outliers or have infinite uncertainty
+  toss = np.isinf(sd.ravel()) 
+  z,d,sd = z[~toss],d.ravel()[~toss],sd.ravel()[~toss]   
+  noise_p = noise_p[~toss]
+  noise_sigma = noise_sigma[np.ix_(~toss,~toss)]
+  # add formal data uncertainties to the noise covariance matrix
+  noise_sigma += np.diag(sd**2)
+  
   # condition the prior with the data
   post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
   dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
   dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
-  if return_sample:
-    out = []
-    out += post_gp.sample(out_z)
-    out += np.zeros(out_z.shape[0])
-    out += dx_gp.sample(out_z)
-    out += np.zeros(out_z.shape[0])
-    out += dy_gp.sample(out_z)
-    out += np.zeros(out_z.shape[0])
-    
-  else:
-    out  = []
-    out += post_gp.meansd(out_z)
-    out += dx_gp.meansd(out_z)
-    out += dy_gp.meansd(out_z)
 
-  # reshape output arrays
-  out = [i.reshape((out_t.shape[0],out_x.shape[0])) for i in out]
+  dx,sdx = dx_gp.meansd(out_z)
+  dx = dx.reshape((out_t.shape[0],out_x.shape[0]))
+  sdx = sdx.reshape((out_t.shape[0],out_x.shape[0]))
+
+  dy,sdy = dy_gp.meansd(out_z)
+  dy = dy.reshape((out_t.shape[0],out_x.shape[0]))
+  sdy = sdy.reshape((out_t.shape[0],out_x.shape[0]))
+
+  out  = (removed,fit,dx,sdx,dy,sdy)
   return out

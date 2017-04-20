@@ -52,7 +52,6 @@ def _params_dict(b):
            'north':arr,
            'vertical':arr}
 
-  print(out)
   return out
 
 
@@ -133,12 +132,13 @@ def pygeons_reml(input_file,model,params,fix=(),
       fout.flush()
 
 
-def pygeons_strain(input_file,prior_model,prior_params,
+def pygeons_strain(input_file,
+                   prior_model=('se-se',),prior_params=(1.0,0.05,50.0),
+                   noise_model=(),noise_params=(),
+                   station_noise_model=('p0',),station_noise_params=(),
                    start_date=None,stop_date=None,positions=None,
-                   noise_model='null',noise_params=(),
-                   return_sample=False,
                    outlier_tol=4.0,
-                   output_file=None):
+                   output_dir=None):
   ''' 
   Performs temporal Gaussian process regression.
   
@@ -165,9 +165,6 @@ def pygeons_strain(input_file,prior_model,prior_params,
   noise_params : float array
     Hyperparameters for the noise
 
-  return_sample : bool, optional
-    Return a sample of the posterior.
-
   procs : int, optional
     Number of subprocesses to spawn.
 
@@ -183,13 +180,15 @@ def pygeons_strain(input_file,prior_model,prior_params,
     raise ValueError('input dataset must have units of displacement')
     
   logger.info('Performing spatial Gaussian process regression ...')
-  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out_rm = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out_res = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dx = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dy = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   # convert params to a dictionary of hyperparameters for each direction
   prior_params = _params_dict(prior_params)
   noise_params = _params_dict(noise_params)
+  station_noise_params = _params_dict(station_noise_params)
 
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
@@ -222,31 +221,31 @@ def pygeons_strain(input_file,prior_model,prior_params,
   
   # convert the domain units from m to km
   for dir in ['east','north','vertical']:
-    u,su,dx,sdx,dy,sdy  = strain(data['time'],
-                                 xy,
-                                 data[dir],
-                                 data[dir+'_std_dev'],
-                                 prior_model,prior_params[dir],
-                                 out_t=output_time,
-                                 out_x=output_xy,
-                                 noise_model=noise_model,
-                                 noise_params=noise_params[dir],
-                                 tol=outlier_tol,
-                                 return_sample=return_sample)
+    removed,fit,dx,sdx,dy,sdy  = strain(data['time'][:,None],
+                                        xy,
+                                        data[dir],
+                                        data[dir+'_std_dev'],
+                                        prior_model=prior_model,
+                                        prior_params=prior_params[dir],
+                                        noise_model=noise_model,
+                                        noise_params=noise_params[dir],
+                                        station_noise_model=station_noise_model,
+                                        station_noise_params=station_noise_params[dir],
+                                        out_t=output_time[:,None],
+                                        out_x=output_xy,
+                                        tol=outlier_tol)
     # convert back to m and days
-    out[dir] = u
-    out[dir+'_std_dev'] = su
+    out_rm[dir][~removed] = np.nan
+    out_rm[dir+'_std_dev'][~removed] = np.inf
+    out_res[dir] = data[dir] - fit
+    out_res[dir][removed] = np.nan
+    out_res[dir+'_std_dev'][removed] = np.inf
     out_dx[dir] = dx
     out_dx[dir+'_std_dev'] = sdx
     out_dy[dir] = dy
     out_dy[dir+'_std_dev'] = sdy
 
   # set the new lon lat and id if positions was given
-  out['time'] = output_time
-  out['longitude'] = output_lon
-  out['latitude'] = output_lat
-  out['id'] = output_id
-
   out_dx['time'] = output_time
   out_dx['longitude'] = output_lon
   out_dx['latitude'] = output_lat
@@ -262,12 +261,17 @@ def pygeons_strain(input_file,prior_model,prior_params,
   out_dy['space_exponent'] = 0
 
   # write to output file
-  if output_file is None:
-    output_file = _change_extension(input_file,'strain.h5')
+  if output_dir is None:
+    output_dir = _change_extension(input_file,'strain')
 
-  output_dx_file = _change_extension(output_file,'dx.h5')
-  output_dy_file = _change_extension(output_file,'dy.h5')
-  hdf5_from_dict(output_file,out)
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+  
+  output_rm_file = output_dir + '/removed.h5'
+  output_res_file = output_dir + '/residuals.h5'
+  output_dx_file = output_dir + '/xdiff.h5'
+  output_dy_file = output_dir + '/ydiff.h5'
+  hdf5_from_dict(output_rm_file,out_rm)
+  hdf5_from_dict(output_res_file,out_res)
   hdf5_from_dict(output_dx_file,out_dx)
   hdf5_from_dict(output_dy_file,out_dy)
-  
