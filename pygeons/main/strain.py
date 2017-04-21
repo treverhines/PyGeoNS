@@ -8,6 +8,7 @@ import rbf.gauss
 from pygeons.main.gprocs import gpcomp
 logger = logging.getLogger(__name__)
 
+
 def _is_outlier(d,s,sigma,mu,p,tol):
   ''' 
   Identifies which points in *d* are outliers based on the prior
@@ -22,6 +23,9 @@ def _is_outlier(d,s,sigma,mu,p,tol):
   
   returns a boolean array indicating which points are outliers and the
   best fit trend to the data.
+  
+  WARNING: This function has been written to maximize memory
+  efficiency. consequently it is really hard to follow.
   '''
   itr = 1
   out = np.zeros(d.shape[0],dtype=bool)
@@ -29,15 +33,17 @@ def _is_outlier(d,s,sigma,mu,p,tol):
     logger.debug('Starting iteration %s of outlier detection routine' % itr)
     mask = np.isinf(s) | out
     q = sum(~mask)
-    a = sigma[np.ix_(~mask,~mask)] + np.diag(s[~mask]**2)
-    b = rbf.gauss._cholesky_block_inv(a,p[~mask])
-    c = np.empty((d.shape[0],b.shape[0]))
-    c[:,:q] = sigma[:,~mask]
-    c[:,q:] = p
-    r = np.empty(b.shape[0])
+    # K : gp cov. + data cov.
+    K = sigma[np.ix_(~mask,~mask)] + np.diag(s[~mask]**2)
+    # mat : inverse of gp cov. + data cov. and augmented basis vecs.
+    K = rbf.gauss._cholesky_block_inv(K,p[~mask])
+    # residual of observed and mean 
+    r = np.zeros(q+p.shape[1])
     r[:q] = d[~mask] - mu[~mask]
-    r[q:] = 0.0
-    fit = mu + c.dot(b).dot(r)
+    # dot residual with inverse of the covariances
+    Kr = K.dot(r)
+    # form prediction vector 
+    fit = mu + sigma[:,~mask].dot(Kr[:q]) + p.dot(Kr[q:])
     res = np.abs(fit - d)/s
     res[np.isinf(s)] = np.inf
     rms = np.sqrt(np.mean(res[~mask]**2))
@@ -77,63 +83,27 @@ def strain(t,x,d,sd,
   Parameters
   ----------
   t : (Nt,1) array
-    Observation times.
-  
   x : (Nx,2) array
-    Observation positions.  
-
   d : (Nt,Nx) array
-    Grid of observations at time *t* and position *x*. 
-  
   sd : (Nt,Nx) array
-    Grid of observation uncertainties
-  
-  prior_model : str
-    String specifying the prior model
-  
-  prior_params : 2-tuple
-    Hyperparameters for the prior model.
-  
+  prior_model : str array
+  prior_params : float array
+  noise_model : str array
+  noise_params : float array
+  station_noise_model : str array
+  station_noise_params : float array
   out_t : (Mt,) array, optional
-    Output times
-  
   out_x : (Mx,2) array, optional
-    Output positions  
-
-  diff : (3,), optional         
-    Tuple specifying the derivative of the returned values. First
-    element is the time derivative, and the second two elements are
-    the space derivatives.
-
-  noise_model : str, optional
-    String specifying the noise model
-    
-  noise_params : 2-tuple, optional
-    Hyperparameters for the noise model
-    
   tol : float, optional
-    Tolerance for the outlier detection algorithm.
     
   Returns
   -------
   removed: (Nt,Nx) bool array
-    array of data that has been removed 
-
   fit: (Nt,Nx) float array
-    array of fit to the data
-
   dx: (Mt,Mx) array
-    array of x derivatives    
-
   sigma_dx: (Mt,Mx) array
-    array of x derivative uncertainties    
-
   dy: (Mt,Mx) array
-    array of y derivatives    
-
   sigma_dy: (Mt,Mx) array
-    array of y derivative uncertainties    
-    
   '''  
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
@@ -203,7 +173,9 @@ def strain(t,x,d,sd,
 
   # returns the indices of outliers 
   outliers,fit = _is_outlier(d.ravel(),sd.ravel(),full_sigma,full_mu,full_p,tol)
-  
+  # dereference full_* since we will not be using them anymore
+  del full_sigma,full_p,full_mu
+  # best fit combination of signal and noise to the observations
   fit = fit.reshape((Nt,Nx))
   # record removed data
   d.ravel()[outliers] = np.nan
