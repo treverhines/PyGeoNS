@@ -221,8 +221,8 @@ def pygeons_strain(input_file,
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
     
-  out_rm = dict((k,np.copy(v)) for k,v in data.iteritems())
-  out_res = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out_edit = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out_fit = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dx = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dy = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -272,25 +272,23 @@ def pygeons_strain(input_file,
 
   # convert the domain units from m to km
   for dir in ['east','north','vertical']:
-    removed,fit,dx,sdx,dy,sdy  = strain(data['time'][:,None],
-                                        xy,
-                                        data[dir],
-                                        data[dir+'_std_dev'],
-                                        prior_model=prior_model,
-                                        prior_params=prior_params[dir],
-                                        noise_model=noise_model,
-                                        noise_params=noise_params[dir],
-                                        station_noise_model=station_noise_model,
-                                        station_noise_params=station_noise_params[dir],
-                                        out_t=output_time[:,None],
-                                        out_x=output_xy,
-                                        tol=outlier_tol)
-    # convert back to m and days
-    out_rm[dir][~removed] = np.nan
-    out_rm[dir+'_std_dev'][~removed] = np.inf
-    out_res[dir] = data[dir] - fit
-    out_res[dir][removed] = np.nan
-    out_res[dir+'_std_dev'][removed] = np.inf
+    de,sde,fit,dx,sdx,dy,sdy  = strain(data['time'][:,None],
+                                       xy,
+                                       data[dir],
+                                       data[dir+'_std_dev'],
+                                       prior_model=prior_model,
+                                       prior_params=prior_params[dir],
+                                       noise_model=noise_model,
+                                       noise_params=noise_params[dir],
+                                       station_noise_model=station_noise_model,
+                                       station_noise_params=station_noise_params[dir],
+                                       out_t=output_time[:,None],
+                                       out_x=output_xy,
+                                       tol=outlier_tol)
+    out_edit[dir] = de
+    out_edit[dir+'_std_dev'] = sde
+    out_fit[dir] = fit
+    out_fit[dir+'_std_dev'][...] = 0.0
     out_dx[dir] = dx
     out_dx[dir+'_std_dev'] = sdx
     out_dy[dir] = dy
@@ -314,11 +312,11 @@ def pygeons_strain(input_file,
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
   
-  output_rm_file = output_dir + '/removed.h5'
-  output_res_file = output_dir + '/residuals.h5'
+  output_edit_file = output_dir + '/edit.h5'
+  output_fit_file = output_dir + '/fit.h5'
   output_dx_file = output_dir + '/xdiff.h5'
   output_dy_file = output_dir + '/ydiff.h5'
-  hdf5_from_dict(output_rm_file,out_rm)
-  hdf5_from_dict(output_res_file,out_res)
+  hdf5_from_dict(output_edit_file,out_edit)
+  hdf5_from_dict(output_fit_file,out_fit)
   hdf5_from_dict(output_dx_file,out_dx)
   hdf5_from_dict(output_dy_file,out_dy)

@@ -31,19 +31,27 @@ def _is_outlier(d,s,sigma,mu,p,tol):
   out = np.zeros(d.shape[0],dtype=bool)
   while True:
     logger.debug('Starting iteration %s of outlier detection routine' % itr)
+    # mask indicating missing data and outliers
     mask = np.isinf(s) | out
     q = sum(~mask)
-    # K : gp cov. + data cov.
-    K = sigma[np.ix_(~mask,~mask)] + np.diag(s[~mask]**2)
-    # mat : inverse of gp cov. + data cov. and augmented basis vecs.
-    K = rbf.gauss._cholesky_block_inv(K,p[~mask])
+
+    # K is the data and gp covariance
+    K = sigma[np.ix_(~mask,~mask)]
+    rbf.gauss._diag_add(K,s[~mask]**2)
+
+    # Kinv is the inverse of K augmented with p
+    Kinv = rbf.gauss._cholesky_block_inv(K,p[~mask])
+    del K 
+    
     # residual of observed and mean 
     r = np.zeros(q+p.shape[1])
     r[:q] = d[~mask] - mu[~mask]
     # dot residual with inverse of the covariances
-    Kr = K.dot(r)
+    v = Kinv.dot(r)
+    del Kinv,r 
+    
     # form prediction vector 
-    fit = mu + sigma[:,~mask].dot(Kr[:q]) + p.dot(Kr[q:])
+    fit = mu + sigma[:,~mask].dot(v[:q]) + p.dot(v[q:])
     res = np.abs(fit - d)/s
     res[np.isinf(s)] = np.inf
     rms = np.sqrt(np.mean(res[~mask]**2))
@@ -54,17 +62,9 @@ def _is_outlier(d,s,sigma,mu,p,tol):
       out = (res > tol*rms) & ~np.isinf(s)
       itr += 1
 
-  logger.debug('Detected %s outliers out of %s observations' % (sum(out),sum(~np.isinf(s))))
+  logger.debug('Detected %s outliers out of %s observations' % 
+               (sum(out),sum(~np.isinf(s))))
   return out,fit
-
-
-def _remove_zero_columns(A):
-  ''' 
-  remove columns of *A* which only have zeros
-  '''
-  toss = np.all(A == 0.0,axis=0)
-  A = A[:,~toss]
-  return A
 
 
 def strain(t,x,d,sd,
@@ -98,20 +98,22 @@ def strain(t,x,d,sd,
     
   Returns
   -------
-  removed: (Nt,Nx) bool array
+  de: (Nt,Nx) array
+    edited data
+  sde: (Nt,Nx) array
+    edited data uncertainty
   fit: (Nt,Nx) float array
   dx: (Mt,Mx) array
-  sigma_dx: (Mt,Mx) array
+  sdx: (Mt,Mx) array
   dy: (Mt,Mx) array
-  sigma_dy: (Mt,Mx) array
+  sdy: (Mt,Mx) array
   '''  
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
-  d = np.array(d,dtype=float,copy=True)
-  sd = np.array(sd,dtype=float,copy=True)
+  de = np.array(d,dtype=float,copy=True)
+  sde = np.array(sd,dtype=float,copy=True)
   Nt,Nx = t.shape[0],x.shape[0]
   # allocate array indicating which data have been removed
-  removed = np.zeros((Nt,Nx),dtype=bool)
   if out_t is None:
     out_t = t
 
@@ -144,54 +146,56 @@ def strain(t,x,d,sd,
 
   # If a station has insufficient data for the station basis vectors
   # then mask whatever few data points it does have 
-  bad_stations_bool = np.sum(~np.isinf(sd),axis=0) < Np
+  bad_stations_bool = np.sum(~np.isinf(sde),axis=0) < Np
   bad_stations,  = np.nonzero(bad_stations_bool)
   good_stations, = np.nonzero(~bad_stations_bool) 
-  d[:,bad_stations] = np.nan
-  sd[:,bad_stations] = np.inf
-  removed[:,bad_stations] = True
+  de[:,bad_stations] = np.nan
+  sde[:,bad_stations] = np.inf
   
-  # expand so that there is a covariance matrix and basis functions
-  # for each station that has sufficient data. 
-  noise_sigma = np.zeros((Nt,Nx,Nt,Nx))
-  noise_p = np.zeros((Nt,Nx,Np,len(good_stations)))
-  for i,j in enumerate(good_stations):
-    noise_sigma[:,j,:,j] = sta_sigma
-    noise_p[:,j,:,i] = sta_p
+  def build_noise():
+    '''returns the noise covariance and basis vectors'''
+    noise_sigma = np.zeros((Nt,Nx,Nt,Nx))
+    noise_p = np.zeros((Nt,Nx,Np,len(good_stations)))
+    for i,j in enumerate(good_stations):
+      noise_sigma[:,j,:,j] = sta_sigma
+      noise_p[:,j,:,i] = sta_p
     
-  noise_sigma = noise_sigma.reshape((Nt*Nx,Nt*Nx))
-  noise_p = noise_p.reshape((Nt*Nx,Np*len(good_stations)))
+    noise_sigma = noise_sigma.reshape((Nt*Nx,Nt*Nx))
+    noise_p = noise_p.reshape((Nt*Nx,Np*len(good_stations)))
 
-  # add spatial noise covariance and basis
-  noise_sigma += noise_gp.covariance(z,z)
-  noise_p = np.hstack((noise_p,noise_gp.basis(z)))
+    # add spatial noise covariance and basis
+    noise_sigma += noise_gp.covariance(z,z)
+    noise_p = np.hstack((noise_p,noise_gp.basis(z)))
+    return noise_sigma,noise_p
 
-  # add the prior covariance and basis 
-  full_sigma = noise_sigma + prior_gp.covariance(z,z)
-  full_p = np.hstack((noise_p,prior_gp.basis(z)))
+  # build the covariance and basis vector for the signal and noise
+  full_sigma,full_p = build_noise()
+  full_sigma += prior_gp.covariance(z,z)
+  full_p = np.hstack((full_p,prior_gp.basis(z)))
   full_mu = np.zeros(len(z))  
-
   # returns the indices of outliers 
-  outliers,fit = _is_outlier(d.ravel(),sd.ravel(),full_sigma,full_mu,full_p,tol)
+  outliers,fit = _is_outlier(de.ravel(),sde.ravel(),full_sigma,full_mu,full_p,tol)
   # dereference full_* since we will not be using them anymore
   del full_sigma,full_p,full_mu
+  
   # best fit combination of signal and noise to the observations
   fit = fit.reshape((Nt,Nx))
-  # record removed data
-  d.ravel()[outliers] = np.nan
-  sd.ravel()[outliers] = np.inf
-  removed.ravel()[outliers] = True
+  # remove outliers from edited data
+  de.ravel()[outliers] = np.nan
+  sde.ravel()[outliers] = np.inf
   
+  # rebuild noise covariance and basis vectors
+  noise_sigma,noise_p = build_noise()
   # toss out stations that are outliers or have infinite uncertainty
-  toss = np.isinf(sd.ravel()) 
-  z,d,sd = z[~toss],d.ravel()[~toss],sd.ravel()[~toss]   
+  toss = np.isinf(sde.ravel()) 
+  z,df,sdf = z[~toss],de.ravel()[~toss],sde.ravel()[~toss]   
   noise_p = noise_p[~toss]
   noise_sigma = noise_sigma[np.ix_(~toss,~toss)]
   # add formal data uncertainties to the noise covariance matrix
-  noise_sigma += np.diag(sd**2)
+  rbf.gauss._diag_add(noise_sigma,sdf**2)
   
   # condition the prior with the data
-  post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
+  post_gp = prior_gp.condition(z,df,sigma=noise_sigma,p=noise_p)
   dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
   dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
 
@@ -203,5 +207,5 @@ def strain(t,x,d,sd,
   dy = dy.reshape((out_t.shape[0],out_x.shape[0]))
   sdy = sdy.reshape((out_t.shape[0],out_x.shape[0]))
 
-  out  = (removed,fit,dx,sdx,dy,sdy)
+  out  = (de,sde,fit,dx,sdx,dy,sdy)
   return out
