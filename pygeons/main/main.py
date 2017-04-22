@@ -61,7 +61,7 @@ def _change_extension(f,ext):
 
 
 def pygeons_reml(input_file,model,params,fix=(),
-                 procs=0,parameters_file=None):
+                 parameters_file=None):
   ''' 
   Restricted maximum likelihood estimation of temporal
   hyperparameters.
@@ -140,7 +140,7 @@ def _log_strain(input_file,
                 start_date,stop_date,positions,
                 outlier_tol,output_dir):
   msg  = '\n'
-  msg += '----- PYGEONS STRAIN RUN INFORMATION -----\n'
+  msg += '--------------- PYGEONS STRAIN RUN INFORMATION ---------------\n\n'
   msg += 'input file : %s\n' % input_file
   msg += 'prior :\n' 
   msg += '    model : %s\n' % ' '.join(prior_model)
@@ -168,8 +168,8 @@ def _log_strain(input_file,
   else:   
     msg += 'output positions file : %s\n' % positions
 
-  msg += 'output directory : %s\n' % output_dir  
-  msg += '------------------------------------------'
+  msg += 'output directory : %s\n\n' % output_dir  
+  msg += '--------------------------------------------------------------\n'
   logger.info(msg)
 
 
@@ -288,7 +288,8 @@ def pygeons_strain(input_file,
     out_edit[dir] = de
     out_edit[dir+'_std_dev'] = sde
     out_fit[dir] = fit
-    out_fit[dir+'_std_dev'][...] = 0.0
+    # replace uncertainties for non-missing data with 0.0
+    out_fit[dir+'_std_dev'][~np.isinf(data[dir+'_std_dev'])] = 0.0
     out_dx[dir] = dx
     out_dx[dir+'_std_dev'] = sdx
     out_dy[dir] = dy
@@ -312,7 +313,7 @@ def pygeons_strain(input_file,
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
   
-  output_edit_file = output_dir + '/edit.h5'
+  output_edit_file = output_dir + '/edited.h5'
   output_fit_file = output_dir + '/fit.h5'
   output_dx_file = output_dir + '/xdiff.h5'
   output_dy_file = output_dir + '/ydiff.h5'

@@ -73,11 +73,11 @@ def without_interactivity(fin):
   call
   '''
   def fout(*args,**kwargs):
-    print('temporarily disabling figure interactivity\n')
+    logger.info('Temporarily disabling figure interactivity')
     pyqtRemoveInputHook()
     out = fin(*args,**kwargs)
     pyqtRestoreInputHook()
-    print('figure interactivity has been restored\n')
+    logger.info('Figure interactivity has been restored')
     return out
 
   return fout
@@ -85,49 +85,45 @@ def without_interactivity(fin):
 
 class InteractiveVectorViewer(object):
   ''' 
-             ----------------------------------------
-             PyGeoNS Interactive Vector Viewer (PIVV)
-             ----------------------------------------
+-------------- PyGeoNS Interactive Vector Viewer (PIVV) --------------
 
-An interactive figure for viewing and comparing the spatial and 
-temporal patterns in data sets.
+An interactive figure for viewing and comparing the spatial and
+temporal patterns in datasets.
 
-Controls
---------
-Left : Move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
-  100 respectively)
+Controls :
+  Left : Move back 1 time step (Ctrl-Left and Alt-Left move back 10
+    and 100 respectively)
 
-Right : Move forward 1 time step (Ctrl-Right and Alt-Right move 
-  forward 10 and 100 respectively)
+  Right : Move forward 1 time step (Ctrl-Right and Alt-Right move
+    forward 10 and 100 respectively)
 
-Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
-  100 respectively)
+  Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and
+    100 respectively)
           
-Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
-  and 100 respectively)
+  Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10
+    and 100 respectively)
           
-R : Redraw figures
+  R : Redraw figures
         
-C : Cycle the ordering of the data sets
+  C : Cycle the ordering of the datasets
 
-V : Toggles whether to hide the vertical component of deformation.
+  V : Toggles whether to hide the vertical component of deformation.
 
-H : Toggles whether to hide the station highlighter
+  H : Toggles whether to hide the station highlighter
         
-Enter : Disables figures and allows configurable parameters to be 
-  edited through the command line. Variables can be defined using any 
-  functions in the numpy, matplotlib, or base python namespace
+  Enter : Disables figures and allows configurable parameters to be
+    edited through the command line. Variables can be defined using any 
+    functions in the numpy, matplotlib, or base python namespace
 
-Notes
------
-Stations may also be selected by clicking on them.
+Notes :
+  Stations may also be selected by clicking on them.
     
-Exit PIV by closing the figures.
+  Exit PIVV by closing the figures.
   
-Key bindings only work when the active window is one of the PIV 
-figures.
+  Key bindings only work when the active window is one of the PIVV
+  figures.
 
----------------------------------------------------------------------
+----------------------------------------------------------------------
   '''
   def __init__(self,t,x,
                u=None,v=None,z=None,
@@ -356,7 +352,7 @@ figures.
     self.config['fontsize'] = fontsize
     self._init()
     disable_default_key_bindings()
-    print(self.__doc__)
+    logger.info(self.__doc__)
 
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_press_event',self.on_key_press)

@@ -1,6 +1,6 @@
 from __future__ import division
 import numpy as np
-from pygeons.plot.iview import InteractiveViewer
+from pygeons.plot.ivector import InteractiveVectorViewer
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import logging
@@ -55,54 +55,51 @@ def weighted_mean(x,sigma,axis=None):
 
 
 
-class InteractiveCleaner(InteractiveViewer):
+class InteractiveCleaner(InteractiveVectorViewer):
   ''' 
-                  ---------------------------------
-                  PyGeoNS Interactive Cleaner (PIC)
-                  ---------------------------------
+----------------- PyGeoNS Interactive Cleaner (PIC) -----------------
 
-An interactive figure for removing outliers and time series jumps
+An interactive figure for removing outliers and time series jumps.
 
-Controls
---------
-Enter : Edit the configurable parameters through the command line.
-  Variables can be defined using any functions in the numpy, 
-  matplotlib, or base python namespace.
+Controls :
+  Left : Move back 1 time step (Ctrl-Left and Alt-Left move back 10
+    and 100 respectively).
+  
+  Right : Move forward 1 time step (Ctrl-Right and Alt-Right move
+    forward 10 and 100 respectively).
+  
+  Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and
+    100 respectively).
+            
+  Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10
+    and 100 respectively).
+            
+  R : Redraw figures.
+  
+  V : Toggle whether to hide the vertical deformation.
+  
+  H : Toggle whether to hide the station marker.
+  
+  D : Enables outlier removal mode while pressed.  Click and drag on
+    the time series axes to remove outliers within a time interval.
+  
+  J : Enables jump removal mode while pressed. Jumps are estimated by
+    taking a weighted mean of the data over a time interval before and 
+    after the jump. Click on the time series axes to identify a jump and 
+    drag the cursor over the desired time interval.
 
-Left : Move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
-  100 respectively).
-
-Right : Move forward 1 time step (Ctrl-Right and Alt-Right move 
-forward 10 and 100 respectively).
-
-Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
-  100 respectively).
-          
-Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
-  and 100 respectively).
-          
-R : Redraw figures.
-
-V : Toggle whether to hide the vertical deformation.
-
-H : Toggle whether to hide the station marker.
-
-D : Enables outlier removal mode while pressed.  Click and drag on the
-  time series axes to remove outliers within a time interval.
-
-J : Enables jump removal mode while pressed. Jumps are estimated by
-  taking a weighted mean of the data over a time interval before and 
-  after the jump. Click on the time series axes to identify a jump and 
-  drag the cursor over the desired time interval.
-    
+  Enter : Edit the configurable parameters through the command line.
+    Variables can be defined using any functions in the numpy, 
+    matplotlib, or base python namespace.
+      
 Notes
 -----
-Stations may also be selected by clicking on them.
+  Stations may also be selected by clicking on them.
 
-Exit PIC by closing the figures.
+  Exit PIC by closing the figures.
 
-Key bindings only work when the active window is one of the PIC 
-figures
+  Key bindings only work when the active window is one of the PIC
+  figures
 
 ---------------------------------------------------------------------     
   '''
@@ -142,11 +139,11 @@ figures
       only one of u, v, and z need to be specified
     '''
     dataset_labels = kwargs.pop('dataset_labels',['edited data'])
-    InteractiveViewer.__init__(self,t,x,
-                               u=[u],v=[v],z=[z],
-                               su=[su],sv=[sv],sz=[sz],
-                               dataset_labels=dataset_labels,
-                               **kwargs)
+    InteractiveVectorViewer.__init__(self,t,x,
+                                     u=[u],v=[v],z=[z],
+                                     su=[su],sv=[sv],sz=[sz],
+                                     dataset_labels=dataset_labels,
+                                     **kwargs)
     self._mode = None
     self._mouse_is_pressed = False
     # record of all removed jumps and outliers  
@@ -167,7 +164,7 @@ figures
     self.ts_fig.canvas.mpl_connect('button_release_event',self.on_mouse_release)
     self.ts_fig.canvas.mpl_connect('key_release_event',self.on_key_release)
     self.map_fig.canvas.mpl_connect('key_release_event',self.on_key_release)
-    InteractiveViewer.connect(self)
+    InteractiveVectorViewer.connect(self)
         
   def remove_jump(self,jump_time,delta):
     ''' 
@@ -332,7 +329,7 @@ figures
       self.on_mouse_move(event)
 
     else:
-      InteractiveViewer.on_key_press(self,event)
+      InteractiveVectorViewer.on_key_press(self,event)
         
   def on_key_release(self,event):
     if event.key == 'd':

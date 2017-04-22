@@ -21,89 +21,83 @@ def fmin_pos(func,x0,*args,**kwargs):
   return xopt,fopt
 
 
-def reml(y,d,s,model,params,
-         fix=(),procs=0):
+def reml(t,x,d,sd,
+         network_model=('se-se',),
+         network_params=(1.0,0.05,50.0),
+         network_fix=(),
+         station_model=('p0',),
+         station_params=(),
+         station_fix=()):
   ''' 
   Returns the Restricted Maximum Likelihood (REML) estimatates of the
   unknown hyperparameters.
 
   Parameters
   ----------
-  y : (N,D) array
-    Observation points.
+  t : (Nt,) array
+  x : (Nx,2) array
+  d : (Nt,Nx) array
+  s : (Nt,Nx) array
+  model : str array
+  params : float array
+    initial guess
+  fix : int array
 
-  d : (...,N) array
-    Observed data at *y*.
-  
-  s : (...,N) array
-    Data uncertainty.
-  
-  model : str,
-    string indicating the stochastic model being optimized.
-    
-  params : (P,) array 
-    Initial guess for the hyperparameters.
-  
-  fix : (L,) int array
-    Indices of hyperparameters that will remain fixed
-  
-  procs : int, optional
-    Distribute the tasks among this many subprocesses. 
-  
   Returns
   -------
-  a : (...,P) float array
-    hyperparameters for each dataset. The hyperparameters are the
-    standard deviation for the SE, the characteristic-length scale for
-    the SE, the standard deviation for the FOGM, and the cutoff
-    frequency for the FOGM.
-  
-  b : (...) float array  
-    likelihoods associated with each set of hyperparameters
-
-  c : (...) int array
-    number of observations used to constrain the hyperparameters
-    
+  theta : (P,) float array
+    optimal hyperparameters 
   units : (P,) str array
     units of the hyperparameters 
+  like : float array  
+    likelihoods associated the optimal hyperparameters
     
   '''
-  y = np.asarray(y,dtype=float)
-  d = np.asarray(d,dtype=float)
-  s = np.asarray(s,dtype=float)
-  params = np.asarray(params,dtype=float)
-  fix = np.asarray(fix,dtype=int)
-  is_free = np.ones(params.shape,dtype=bool)
-  is_free[fix] = False
+  t = np.asarray(t,dtype=float)
+  x = np.asarray(x,dtype=float)
+  d = np.array(d,dtype=float,copy=True)
+  sd = np.array(sd,dtype=float,copy=True)
+  Nt,Nx = t.shape[0],x.shape[0]
 
-  bcast_shape = d.shape[:-1]
-  q = int(np.prod(bcast_shape))
-  n = y.shape[0]
-  d = d.reshape((q,n))
-  s = s.reshape((q,n))
-  units = get_units(model)
+  t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')
+  t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')
+  # flat observation times and positions
+  z = np.array([t_grid.ravel(),
+                x0_grid.ravel(),
+                x1_grid.ravel()]).T
 
-  def objective(theta,pos,data,sigma):
+  # If a station has insufficient data for the station basis vectors
+  # then mask whatever few data points it does have 
+  sta_gp = gpcomp(station_model,station_params)
+  Np = sta_gp.basis(np.zeros((0,1))).shape[1]
+  bad_stations_bool = np.sum(~np.isinf(sd),axis=0) < Np
+  bad_stations, = np.nonzero(bad_stations_bool)
+  d[:,bad_stations] = np.nan
+  sd[:,bad_stations] = np.inf
+
+  # array indicating missing data
+  toss = np.isinf(sd.ravel())
+  z,d,sd = z[~toss],d.ravel()[~toss],sd.ravel()[~toss]
+
+  def objective(theta):
     test_params = np.copy(params)
     test_params[is_free] = theta 
-    gp = gpcomp(model,test_params)
-    # return negative log likelihood
-    try:
-      return -gp.likelihood(pos,data,sigma)  
-    except Exception as err:
-      logger.info(
-        'An error was raised while evaluating the likelihood for '
-        'parameters %s, "%s". The returned likelihood will be INF' 
-        % (test_params,err))
-      return np.inf
+    test_network_params = TODO
+    test_station_params = TODO    
+    net_gp = gpcomp(network_model,test_network_params)
+    sta_gp = gpcomp(station_model,test_station_params)
+    # station process
+    sigma,p = _station_sigma_and_p(sta_gp,t,Nx,bad_stations)
+    sigma,p = sigma[np.ix_(~toss,~toss)],p[~toss]
+    # network process
+    sigma += net_gp.covariance(z,z)
+    p = np.hstack((p,net_gp.basis(z)))
+    # data uncertainty 
+    rbf.gauss._diag_add(sigma,sd**2)
+    # mean of the processes
+    mu = np.zeros(z.shape[0])
+    return -rbf.gauss.likelihood(d,mu,sigma,p=p)
 
-  def task(i):
-    logger.debug('Finding REML hyperparameters for dataset %s of %s ...' % (i+1,q))
-    if np.any(s[i] <= 0.0):
-      logger.info(
-        'At least one datum has zero or negative uncertainty. The '
-        'returned hyperparameters will be NaN.')
-      return np.full_like(params,np.nan),np.nan,0
 
     # if the uncertainty is inf then the data is considered missing
     is_missing = np.isinf(s[i])
