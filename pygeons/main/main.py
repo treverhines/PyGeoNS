@@ -6,6 +6,7 @@ from __future__ import division
 import numpy as np
 import logging
 import os
+import subprocess as sp
 from pygeons.main.reml import reml
 from pygeons.main.strain import strain
 from pygeons.main.gprocs import get_units
@@ -69,15 +70,15 @@ def _log_reml(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network :\n' 
   msg += '    model : %s\n' % ' '.join(network_model)
-  msg += '    fixed : %s\n' % ' '.join(network_fix.astype(str))
   msg += '    parameter units : %s\n' % ' '.join(get_units(network_model))
+  msg += '    fixed parameters : %s\n' % ' '.join(network_fix.astype(str))
   msg += '    initial east parameters : %s\n' % ' '.join(network_params['east'].astype(str))
   msg += '    initial north parameters : %s\n' % ' '.join(network_params['north'].astype(str))
   msg += '    initial vertical parameters : %s\n' % ' '.join(network_params['vertical'].astype(str))
   msg += 'station :\n' 
   msg += '    model : %s\n' % ' '.join(station_model)
-  msg += '    fixed : %s\n' % ' '.join(station_fix.astype(str))
   msg += '    parameter units : %s\n' % ' '.join(get_units(station_model))
+  msg += '    fixed parameters : %s\n' % ' '.join(station_fix.astype(str))
   msg += '    initial east parameters : %s\n' % ' '.join(station_params['east'].astype(str))
   msg += '    initial north parameters : %s\n' % ' '.join(station_params['north'].astype(str))
   msg += '    initial vertical parameters : %s\n' % ' '.join(station_params['vertical'].astype(str))
@@ -96,19 +97,22 @@ def _log_reml_results(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network :\n' 
   msg += '    model : %s\n' % ' '.join(network_model)
-  msg += '    fixed : %s\n' % ' '.join(network_fix.astype(str))
   msg += '    parameter units : %s\n' % ' '.join(get_units(network_model))
+  msg += '    fixed parameters : %s\n' % ' '.join(network_fix.astype(str))
   msg += '    optimal east parameters : %s\n' % ' '.join(network_params['east'].astype(str))
   msg += '    optimal north parameters : %s\n' % ' '.join(network_params['north'].astype(str))
   msg += '    optimal vertical parameters : %s\n' % ' '.join(network_params['vertical'].astype(str))
   msg += 'station :\n' 
   msg += '    model : %s\n' % ' '.join(station_model)
-  msg += '    fixed : %s\n' % ' '.join(station_fix.astype(str))
   msg += '    parameter units : %s\n' % ' '.join(get_units(station_model))
+  msg += '    fixed parameters : %s\n' % ' '.join(station_fix.astype(str))
   msg += '    optimal east parameters : %s\n' % ' '.join(station_params['east'].astype(str))
   msg += '    optimal north parameters : %s\n' % ' '.join(station_params['north'].astype(str))
   msg += '    optimal vertical parameters : %s\n' % ' '.join(station_params['vertical'].astype(str))
-  msg += 'log likelihood : %s\n' % likelihood
+  msg += 'log likelihood :\n' 
+  msg += '    east : %s\n' % likelihood['east']
+  msg += '    north : %s\n' % likelihood['north']
+  msg += '    vertical : %s\n' % likelihood['vertical']
   msg += 'output file : %s\n\n' % parameter_file  
   msg += '--------------------------------------------------------------\n'
   logger.info(msg)
@@ -143,50 +147,53 @@ def pygeons_reml(input_file,
   # make output file
   if parameter_file is None:
     parameter_file = 'parameters.txt'
-    # make sure an existing file is not overwritten
-    count = 0
-    while os.path.exists(parameter_file):
-      count += 1
-      parameter_file = 'parameters.%s.txt' % count
 
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
 
-  _log_reml(input_file,
-            network_model,network_params,network_fix, 
-            station_model,station_params,station_fix,
-            parameter_file)
+  # call "pygeons info" on the input data file. pipe the results to
+  # the output file
+  sp.call('pygeons info %s > %s' % (input_file,parameter_file),shell=True)
+  
+  msg = _log_reml(input_file,
+                  network_model,network_params,network_fix, 
+                  station_model,station_params,station_fix,
+                  parameter_file)
+  # write log entry to file
+  with open(parameter_file,'a') as fout:
+    fout.write(msg)
 
+  # make a dictionary storing likelihoods
+  likelihood = {}
   for dir in ['east','north','vertical']:
     # optimal hyperparameters for each timeseries, coresponding
     # likelihoods and data counts.
-    opt,like = reml(data['time'][:,None], 
-                    xy, 
-                    data[dir], 
-                    data[dir+'_std_dev'],
-                    network_model=network_model,
-                    network_params=network_params[dir],
-                    network_fix=network_fix,
-                    station_model=station_model,
-                    station_params=station_params[dir],
-                    station_fix=station_fix)
-                             
-    if dir == 'east':                                
-      with open(parameter_file,'w') as fout:
-        header = '%-15s%-15s' % ('component','count') 
-        header += "".join(['%-15s' % ('p%s[%s]' % (j,i)) for j,i in enumerate(param_units)])
-        header += '%-15s\n' % 'likelihood'
-        fout.write(header)
-        fout.flush()
-        
-    # convert units optimal hyperparameters back to mm and yr   
-    with open(parameter_file,'a') as fout:
-      entry  = '%-15s%-15s' % (dir,count)
-      entry += "".join(['%-15.4e' % j for j in opt])
-      entry += '%-15.4e\n' % like
-      fout.write(entry)
-      fout.flush()
+    net_opt,sta_opt,like = reml(data['time'][:,None], 
+                                xy, 
+                                data[dir], 
+                                data[dir+'_std_dev'],
+                                network_model=network_model,
+                                network_params=network_params[dir],
+                                network_fix=network_fix,
+                                station_model=station_model,
+                                station_params=station_params[dir],
+                                station_fix=station_fix)
+
+    # update the parameter dict with the optimal values
+    network_params[dir] = net_opt
+    station_params[dir] = sta_opt
+    likelihood[dir] = like
+
+  msg = _log_reml_results(input_file,
+                          network_model,network_params,network_fix, 
+                          station_model,station_params,station_fix,
+                          likelihood,parameter_file)
+  # write log entry to file                 
+  with open(parameter_file,'a') as fout:
+    fout.write(msg)
+    
+  return
 
 
 def _log_strain(input_file,

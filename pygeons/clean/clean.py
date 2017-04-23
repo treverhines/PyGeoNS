@@ -204,11 +204,6 @@ def pygeons_clean(input_file,resolution='i',
   # save edits to output file
   if output_edits_file is None:
     output_edits_file = 'edits.txt'
-    # make sure an existing file is not overwritten
-    count = 0
-    while os.path.exists(output_edits_file):
-      count += 1
-      output_edits_file = 'edits.%s.txt' % count
   
   with open(output_edits_file,'w') as fout:
     for i in ic.log:
