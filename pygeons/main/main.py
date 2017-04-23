@@ -60,26 +60,71 @@ def _change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
 
 
-def pygeons_reml(input_file,model,params,fix=(),
-                 parameters_file=None):
-  ''' 
-  Restricted maximum likelihood estimation of temporal
-  hyperparameters.
-  
-  Parameters
-  ----------
-  input_file : str
+def _log_reml(input_file,
+              network_model,network_params,network_fix, 
+              station_model,station_params,station_fix,
+              parameter_file):
+  msg  = '\n'                     
+  msg += '---------------- PYGEONS REML RUN INFORMATION ----------------\n\n'
+  msg += 'input file : %s\n' % input_file
+  msg += 'network :\n' 
+  msg += '    model : %s\n' % ' '.join(network_model)
+  msg += '    fixed : %s\n' % ' '.join(network_fix.astype(str))
+  msg += '    parameter units : %s\n' % ' '.join(get_units(network_model))
+  msg += '    initial east parameters : %s\n' % ' '.join(network_params['east'].astype(str))
+  msg += '    initial north parameters : %s\n' % ' '.join(network_params['north'].astype(str))
+  msg += '    initial vertical parameters : %s\n' % ' '.join(network_params['vertical'].astype(str))
+  msg += 'station :\n' 
+  msg += '    model : %s\n' % ' '.join(station_model)
+  msg += '    fixed : %s\n' % ' '.join(station_fix.astype(str))
+  msg += '    parameter units : %s\n' % ' '.join(get_units(station_model))
+  msg += '    initial east parameters : %s\n' % ' '.join(station_params['east'].astype(str))
+  msg += '    initial north parameters : %s\n' % ' '.join(station_params['north'].astype(str))
+  msg += '    initial vertical parameters : %s\n' % ' '.join(station_params['vertical'].astype(str))
+  msg += 'output file : %s\n\n' % parameter_file  
+  msg += '--------------------------------------------------------------\n'
+  logger.info(msg)
+  return msg
 
-  model : str
-    
-  params : (P,) float array
+
+def _log_reml_results(input_file,
+                      network_model,network_params,network_fix, 
+                      station_model,station_params,station_fix,
+                      likelihood,parameter_file):
+  msg  = '\n'                     
+  msg += '-------------------- PYGEONS REML RESULTS --------------------\n\n'
+  msg += 'input file : %s\n' % input_file
+  msg += 'network :\n' 
+  msg += '    model : %s\n' % ' '.join(network_model)
+  msg += '    fixed : %s\n' % ' '.join(network_fix.astype(str))
+  msg += '    parameter units : %s\n' % ' '.join(get_units(network_model))
+  msg += '    optimal east parameters : %s\n' % ' '.join(network_params['east'].astype(str))
+  msg += '    optimal north parameters : %s\n' % ' '.join(network_params['north'].astype(str))
+  msg += '    optimal vertical parameters : %s\n' % ' '.join(network_params['vertical'].astype(str))
+  msg += 'station :\n' 
+  msg += '    model : %s\n' % ' '.join(station_model)
+  msg += '    fixed : %s\n' % ' '.join(station_fix.astype(str))
+  msg += '    parameter units : %s\n' % ' '.join(get_units(station_model))
+  msg += '    optimal east parameters : %s\n' % ' '.join(station_params['east'].astype(str))
+  msg += '    optimal north parameters : %s\n' % ' '.join(station_params['north'].astype(str))
+  msg += '    optimal vertical parameters : %s\n' % ' '.join(station_params['vertical'].astype(str))
+  msg += 'log likelihood : %s\n' % likelihood
+  msg += 'output file : %s\n\n' % parameter_file  
+  msg += '--------------------------------------------------------------\n'
+  logger.info(msg)
+  return msg
   
-  fix : (L,) int array
-    Indices of the parameters which will be fixed
-    
-  procs : int, optional
-    Number of subprocesses to spawn.
   
+def pygeons_reml(input_file,
+                 network_model=('se-se',),
+                 network_params=(1.0,0.05,50.0),
+                 network_fix=(),
+                 station_model=('p0',),
+                 station_params=(),
+                 station_fix=(),
+                 parameter_file=None):
+  ''' 
+  Restricted maximum likelihood estimation
   '''
   logger.info('Running pygeons reml ...')
   data = dict_from_hdf5(input_file)
@@ -90,34 +135,45 @@ def pygeons_reml(input_file,model,params,fix=(),
     raise ValueError('input dataset must have units of displacement')
 
   # convert params to a dictionary of hyperparameters for each direction
-  params = _params_dict(params)
+  network_params = _params_dict(network_params)
+  network_fix = np.asarray(network_fix,dtype=int)
+  station_params = _params_dict(station_params)
+  station_fix = np.asarray(station_fix,dtype=int)
 
   # make output file
-  if parameters_file is None:
-    parameters_file = 'parameters.txt'
+  if parameter_file is None:
+    parameter_file = 'parameters.txt'
     # make sure an existing file is not overwritten
     count = 0
-    while os.path.exists(parameters_file):
+    while os.path.exists(parameter_file):
       count += 1
-      parameters_file = 'parameters.%s.txt' % count
+      parameter_file = 'parameters.%s.txt' % count
 
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
 
+  _log_reml(input_file,
+            network_model,network_params,network_fix, 
+            station_model,station_params,station_fix,
+            parameter_file)
+
   for dir in ['east','north','vertical']:
     # optimal hyperparameters for each timeseries, coresponding
     # likelihoods and data counts.
-    opt,like,count,param_units = reml(data['time'][:,None], 
-                                      xy, 
-                                      data[dir], 
-                                      data[dir+'_std_dev'],
-                                      model,
-                                      params[dir],
-                                      fix=fix)
+    opt,like = reml(data['time'][:,None], 
+                    xy, 
+                    data[dir], 
+                    data[dir+'_std_dev'],
+                    network_model=network_model,
+                    network_params=network_params[dir],
+                    network_fix=network_fix,
+                    station_model=station_model,
+                    station_params=station_params[dir],
+                    station_fix=station_fix)
                              
     if dir == 'east':                                
-      with open(parameters_file,'w') as fout:
+      with open(parameter_file,'w') as fout:
         header = '%-15s%-15s' % ('component','count') 
         header += "".join(['%-15s' % ('p%s[%s]' % (j,i)) for j,i in enumerate(param_units)])
         header += '%-15s\n' % 'likelihood'
@@ -125,7 +181,7 @@ def pygeons_reml(input_file,model,params,fix=(),
         fout.flush()
         
     # convert units optimal hyperparameters back to mm and yr   
-    with open(parameters_file,'a') as fout:
+    with open(parameter_file,'a') as fout:
       entry  = '%-15s%-15s' % (dir,count)
       entry += "".join(['%-15.4e' % j for j in opt])
       entry += '%-15.4e\n' % like
@@ -134,26 +190,26 @@ def pygeons_reml(input_file,model,params,fix=(),
 
 
 def _log_strain(input_file,
-                prior_model,prior_params, 
-                noise_model,noise_params, 
+                network_prior_model,network_prior_params, 
+                network_noise_model,network_noise_params, 
                 station_noise_model,station_noise_params, 
                 start_date,stop_date,positions,
                 outlier_tol,output_dir):
   msg  = '\n'
   msg += '--------------- PYGEONS STRAIN RUN INFORMATION ---------------\n\n'
   msg += 'input file : %s\n' % input_file
-  msg += 'prior :\n' 
-  msg += '    model : %s\n' % ' '.join(prior_model)
-  msg += '    parameter units : %s\n' % ' '.join(get_units(prior_model))
-  msg += '    east parameters : %s\n' % ' '.join(prior_params['east'].astype(str))
-  msg += '    north parameters : %s\n' % ' '.join(prior_params['north'].astype(str))
-  msg += '    vertical parameters : %s\n' % ' '.join(prior_params['vertical'].astype(str))
+  msg += 'network prior :\n' 
+  msg += '    model : %s\n' % ' '.join(network_prior_model)
+  msg += '    parameter units : %s\n' % ' '.join(get_units(network_prior_model))
+  msg += '    east parameters : %s\n' % ' '.join(network_prior_params['east'].astype(str))
+  msg += '    north parameters : %s\n' % ' '.join(network_prior_params['north'].astype(str))
+  msg += '    vertical parameters : %s\n' % ' '.join(network_prior_params['vertical'].astype(str))
   msg += 'network noise :\n' 
-  msg += '    model : %s\n' % ' '.join(noise_model)
-  msg += '    parameter units : %s\n' % ' '.join(get_units(noise_model))
-  msg += '    east parameters : %s\n' % ' '.join(noise_params['east'].astype(str))
-  msg += '    north parameters : %s\n' % ' '.join(noise_params['north'].astype(str))
-  msg += '    vertical parameters : %s\n' % ' '.join(noise_params['vertical'].astype(str))
+  msg += '    model : %s\n' % ' '.join(network_noise_model)
+  msg += '    parameter units : %s\n' % ' '.join(get_units(network_noise_model))
+  msg += '    east parameters : %s\n' % ' '.join(network_noise_params['east'].astype(str))
+  msg += '    north parameters : %s\n' % ' '.join(network_noise_params['north'].astype(str))
+  msg += '    vertical parameters : %s\n' % ' '.join(network_noise_params['vertical'].astype(str))
   msg += 'station noise :\n' 
   msg += '    model : %s\n' % ' '.join(station_noise_model)
   msg += '    parameter units : %s\n' % ' '.join(get_units(station_noise_model))
@@ -174,44 +230,17 @@ def _log_strain(input_file,
 
 
 def pygeons_strain(input_file,
-                   prior_model=('se-se',),prior_params=(1.0,0.05,50.0),
-                   noise_model=(),noise_params=(),
-                   station_noise_model=('p0',),station_noise_params=(),
+                   network_prior_model=('se-se',),
+                   network_prior_params=(1.0,0.05,50.0),
+                   network_noise_model=(),
+                   network_noise_params=(),
+                   station_noise_model=('p0',),
+                   station_noise_params=(),
                    start_date=None,stop_date=None,positions=None,
                    outlier_tol=4.0,
                    output_dir=None):
   ''' 
-  Performs temporal Gaussian process regression.
-  
-  Parameters
-  ----------
-  data : dict
-    Data dictionary.
-
-  prior_model : str
-    String specifying the prior model
-  
-  prior_params : float array
-    Hyperparameters for the prior  
-  
-  positions : str, optional
-    Position file for the output data set. 
-
-  diff : int, optional
-    Derivative order.
-  
-  noise_model : str
-    String specifying the noise model
-  
-  noise_params : float array
-    Hyperparameters for the noise
-
-  procs : int, optional
-    Number of subprocesses to spawn.
-
-  outlier_tol : float, optional
-    Tolerance for outlier detection. 
-
+  calculates strain
   '''
   logger.info('Running pygeons strain ...')
   data = dict_from_hdf5(input_file)
@@ -227,8 +256,8 @@ def pygeons_strain(input_file,
   out_dy = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   # convert params to a dictionary of hyperparameters for each direction
-  prior_params = _params_dict(prior_params)
-  noise_params = _params_dict(noise_params)
+  network_prior_params = _params_dict(network_prior_params)
+  network_noise_params = _params_dict(network_noise_params)
   station_noise_params = _params_dict(station_noise_params)
 
   bm = make_basemap(data['longitude'],data['latitude'])
@@ -264,8 +293,8 @@ def pygeons_strain(input_file,
     output_dir = _change_extension(input_file,'strain')
 
   _log_strain(input_file,
-              prior_model,prior_params, 
-              noise_model,noise_params, 
+              network_prior_model,network_prior_params, 
+              network_noise_model,network_noise_params, 
               station_noise_model,station_noise_params, 
               start_date,stop_date,positions,
               outlier_tol,output_dir)
@@ -276,10 +305,10 @@ def pygeons_strain(input_file,
                                        xy,
                                        data[dir],
                                        data[dir+'_std_dev'],
-                                       prior_model=prior_model,
-                                       prior_params=prior_params[dir],
-                                       noise_model=noise_model,
-                                       noise_params=noise_params[dir],
+                                       network_prior_model=network_prior_model,
+                                       network_prior_params=network_prior_params[dir],
+                                       network_noise_model=network_noise_model,
+                                       network_noise_params=network_noise_params[dir],
                                        station_noise_model=station_noise_model,
                                        station_noise_params=station_noise_params[dir],
                                        out_t=output_time[:,None],

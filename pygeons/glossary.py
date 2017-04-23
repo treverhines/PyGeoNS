@@ -91,7 +91,7 @@ Directory that output files will be written to.
 '''
 }
 #####################################################################
-PARAMETERS_FILE = {
+PARAMETER_FILE = {
 'type':str,
 'metavar':'STR',
 'help':
@@ -148,15 +148,6 @@ VERBOSE = {
 'help':
 ''' 
 Controls verbosity. 
-'''
-}
-#####################################################################
-RETURN_SAMPLE = {
-'action':'store_true',
-'help':
-''' 
-If True, then the returned dataset will be a random sample of the
-posterior, rather than its expected value and standard deviation.
 '''
 }
 #####################################################################
@@ -475,71 +466,64 @@ Maximum longitude of stations in the ouput dataset.
 '''
 }
 #####################################################################
-S_CUTOFF = {
-'type':float, 
-'metavar':'FLOAT', 
-'help': 
-''' 
-Cutoff frequency in 1/meters.
-'''
-}
-#####################################################################
-T_CUTOFF = {
-'type':float, 
-'metavar':'FLOAT', 
-'help': 
-''' 
-Cutoff frequency in 1/days.
-'''
-}
-#####################################################################
-FIX = {
+NETWORK_FIX = {
 'type':int,
-'nargs':'+',
+'nargs':'*',
 'metavar':'INT',
 'help': 
 ''' 
-Indices of hyperparameters that should be fixed at the initial guess.
+Indices of network hyperparameters that should be fixed at the initial
+guess.
+'''
+}
+STATION_FIX = {
+'type':int,
+'nargs':'*',
+'metavar':'INT',
+'help': 
+''' 
+Indices of station hyperparameters that should be fixed at the initial
+guess.
 '''
 }
 #####################################################################
-PRIOR_MODEL = {
+NETWORK_PRIOR_MODEL = {
 'type':str,
 'metavar':'STR',
 'nargs':'*',
 'help': 
 ''' 
-Strings specifying the prior model. 
+Strings specifying the network prior model. 
 '''
 }
 #####################################################################
-PRIOR_PARAMS = {
+NETWORK_PRIOR_PARAMS = {
 'type':str,
 'metavar':'FLOAT',
 'nargs':'*',
 'help': 
 ''' 
-Hyperparameters for the prior model.
+Hyperparameters for the network prior model.
 '''
 }
 #####################################################################
-NOISE_MODEL = {
+NETWORK_NOISE_MODEL = {
 'type':str,
 'metavar':'STR',
 'nargs':'*',
 'help': 
 ''' 
-Strings specifying the noise model.
+Strings specifying the network noise model.
 ''' 
 }
 #####################################################################
-NOISE_PARAMS = {
+NETWORK_NOISE_PARAMS = {
 'type':str,
 'metavar':'FLOAT',
 'nargs':'*',
 'help': 
 ''' 
-Hyperparameters for the noise model.
+Hyperparameters for the network noise model.
 '''
 }
 #####################################################################
@@ -563,23 +547,43 @@ Hyperparameters for the station noise model.
 '''
 }
 #####################################################################
-MODEL = {
+NETWORK_MODEL = {
 'type':str,
 'metavar':'STR',
 'nargs':'*',
 'help': 
 ''' 
-Strings specifying the model. 
+Strings specifying the network model. 
 ''' 
 }
 #####################################################################
-PARAMS = {
+NETWORK_PARAMS = {
 'type':str,
 'metavar':'FLOAT',
 'nargs':'*',
 'help': 
 ''' 
-Initial guess for the model hyperparameters.
+Initial guess for the network model hyperparameters.
+'''
+}
+#####################################################################
+STATION_MODEL = {
+'type':str,
+'metavar':'STR',
+'nargs':'*',
+'help': 
+''' 
+Strings specifying the station model. 
+''' 
+}
+#####################################################################
+STATION_PARAMS = {
+'type':str,
+'metavar':'FLOAT',
+'nargs':'*',
+'help': 
+''' 
+Initial guess for the station model hyperparameters.
 '''
 }
 #####################################################################
@@ -594,88 +598,6 @@ Defaults to 4.0.
 '''
 }
 #####################################################################
-S_DIFF = {
-'nargs':2,
-'type':int, 
-'metavar':'INT', 
-'help': 
-''' 
-Derivative order for each dimension. For example, setting *diff* to (1, 
-0) computes the first derivative in the x direction. Defaults to (0, 0), 
-meanings that no derivatives will be computed.
-'''
-}
-#####################################################################
-T_DIFF = {
-'nargs':1,
-'type':int, 
-'metavar':'INT', 
-'help': 
-''' 
-Derivative order. For example, setting *diff* to 1 computes the first
-time derivative. Defaults to 0, meaning that no derivative will be
-computed.
-'''
-}
-#####################################################################
-PROCS = {
-'type':int,
-'metavar':'INT',
-'help':
-''' 
-Number of subprocesses to use. Defaults to 0, meaning that no
-subprocesses will be spawned.
-'''
-}
-#####################################################################
-SAMPLES = {
-'type':int,
-'metavar':'INT',
-'help':
-''' 
-Number of samples to use for estimating the uncertainty.
-'''
-}
-#####################################################################
-N = {
-'type':int,
-'metavar':'INT',
-'help':
-''' 
-Stencil size.
-'''
-}
-#####################################################################
-FILL = {
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Indicates how to handle missing data. either 'none', 'interpolate', or 
-'extrapolate'
-'''
-}
-#####################################################################
-USE_PINV = {
-'type':bool,
-'metavar':'BOOL',
-'help':
-''' 
-Indicate whether to use a pseudo-inversion to calculate the RBF-FD 
-weights. This should be used when there are duplicate stations.
-'''
-}
-#####################################################################
-CHECK_ALL_EDGES = {
-'type':bool,
-'metavar':'BOOL',
-'help':
-''' 
-Enforces that no stencil contains stations which form an edge that 
-crosses the boundary.
-'''
-}
-#####################################################################
 
 GLOSSARY = {
 'input_text_file':INPUT_TEXT_FILE,
@@ -686,9 +608,8 @@ GLOSSARY = {
 'input_edits_file':INPUT_EDITS_FILE,
 'output_edits_file':OUTPUT_EDITS_FILE,
 'no_display':NO_DISPLAY,
-'parameters_file':PARAMETERS_FILE,
+'parameter_file':PARAMETER_FILE,
 'positions':POSITIONS,
-'return_sample':RETURN_SAMPLE,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,
@@ -725,24 +646,17 @@ GLOSSARY = {
 'max_lat':MAX_LAT,
 'min_lon':MIN_LON,
 'max_lon':MAX_LON,
-'t_cutoff':T_CUTOFF,
-'s_cutoff':S_CUTOFF,
-'params':PARAMS,
-'model':MODEL,
-'prior_params':PRIOR_PARAMS,
-'prior_model':PRIOR_MODEL,
-'noise_params':NOISE_PARAMS,
-'noise_model':NOISE_MODEL,
+'network_params':NETWORK_PARAMS,
+'network_model':NETWORK_MODEL,
+'station_params':STATION_PARAMS,
+'station_model':STATION_MODEL,
+'network_prior_params':NETWORK_PRIOR_PARAMS,
+'network_prior_model':NETWORK_PRIOR_MODEL,
+'network_noise_params':NETWORK_NOISE_PARAMS,
+'network_noise_model':NETWORK_NOISE_MODEL,
 'station_noise_params':STATION_NOISE_PARAMS,
 'station_noise_model':STATION_NOISE_MODEL,
-'fix':FIX,
+'network_fix':NETWORK_FIX,
+'station_fix':STATION_FIX,
 'outlier_tol':OUTLIER_TOL,
-'t_diff':T_DIFF,
-'s_diff':S_DIFF,
-'samples':SAMPLES,
-'procs':PROCS,
-'n':N,
-'fill':FILL,
-'use_pinv':USE_PINV,
-'check_all_edges':CHECK_ALL_EDGES
 }

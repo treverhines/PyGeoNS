@@ -198,30 +198,33 @@ p.set_defaults(func=pygeons_crop)
 # REML
 #####################################################################
 p = subs.add_parser('reml',
-  usage='pygeons reml STR STR FLOAT [FLOAT ...] [options]',
+  usage='pygeons reml STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 '''Finds the most likely hyperparameters''')
 p.add_argument('input_file',**GLOSSARY['input_file'])
-p.add_argument('model',**GLOSSARY['model'])
-p.add_argument('params',**GLOSSARY['params'])
-p.add_argument('--fix',**GLOSSARY['fix'])
-p.add_argument('-p','--parameters-file',**GLOSSARY['parameters_file'])
+p.add_argument('--network-model',**GLOSSARY['network_model'])
+p.add_argument('--network-params',**GLOSSARY['network_params'])
+p.add_argument('--network-fix',**GLOSSARY['network_fix'])
+p.add_argument('--station-model',**GLOSSARY['station_model'])
+p.add_argument('--station-params',**GLOSSARY['station_params'])
+p.add_argument('--station-fix',**GLOSSARY['station_fix'])
+p.add_argument('-p','--parameter-file',**GLOSSARY['parameter_file'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_reml)
 
 # STRAIN
 #####################################################################
 p = subs.add_parser('strain',
-  usage='pygeons reml STR STR FLOAT [FLOAT ...] [options]',
+  usage='pygeons reml STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
 '''Calculates time dependent strain''')
 p.add_argument('input_file',**GLOSSARY['input_file'])
-p.add_argument('--prior-model',**GLOSSARY['prior_model'])
-p.add_argument('--prior-params',**GLOSSARY['prior_params'])
-p.add_argument('--noise-model',**GLOSSARY['noise_model'])
-p.add_argument('--noise-params',**GLOSSARY['noise_params'])
+p.add_argument('--network-prior-model',**GLOSSARY['network_prior_model'])
+p.add_argument('--network-prior-params',**GLOSSARY['network_prior_params'])
+p.add_argument('--network-noise-model',**GLOSSARY['network_noise_model'])
+p.add_argument('--network-noise-params',**GLOSSARY['network_noise_params'])
 p.add_argument('--station-noise-model',**GLOSSARY['station_noise_model'])
 p.add_argument('--station-noise-params',**GLOSSARY['station_noise_params'])
 p.add_argument('-t','--outlier-tol',**GLOSSARY['outlier_tol'])
@@ -444,4 +447,5 @@ for k in kwargs.keys():
 func = kwargs.pop('func')
 verbose = kwargs.pop('verbose')
 logging.basicConfig(level=30-10*verbose)
+logging.captureWarnings(True)
 func(**kwargs)

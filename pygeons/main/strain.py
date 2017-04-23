@@ -33,17 +33,18 @@ def _station_sigma_and_p(gp,time,mask):
   p = p.reshape((np.sum(~mask),Np*Nx))
   # remove singluar values from p
   u,s,_ = np.linalg.svd(p,full_matrices=False)
-  p = u[:,s>1e-10]
+  keep = s > 1e-12*s.max()
+  p = u[:,keep]
   logger.debug('Removed %s singular values from the station basis vectors' 
-               % sum(~(s>1e-10)))
+               % np.sum(~keep))
   return sigma,p
 
 
 def strain(t,x,d,sd,
-           prior_model=('se-se',),
-           prior_params=(1.0,0.05,50.0),
-           noise_model=('null',),
-           noise_params=(),
+           network_prior_model=('se-se',),
+           network_prior_params=(1.0,0.05,50.0),
+           network_noise_model=(),
+           network_noise_params=(),
            station_noise_model=('p0',),
            station_noise_params=(),
            out_t=None,
@@ -58,10 +59,10 @@ def strain(t,x,d,sd,
   x : (Nx,2) array
   d : (Nt,Nx) array
   sd : (Nt,Nx) array
-  prior_model : str array
-  prior_params : float array
-  noise_model : str array
-  noise_params : float array
+  network_prior_model : str array
+  network_prior_params : float array
+  network_noise_model : str array
+  network_noise_params : float array
   station_noise_model : str array
   station_noise_params : float array
   out_t : (Mt,) array, optional
@@ -92,8 +93,8 @@ def strain(t,x,d,sd,
   if out_x is None:
     out_x = x
 
-  prior_gp = gpcomp(prior_model,prior_params)
-  noise_gp = gpcomp(noise_model,noise_params)    
+  prior_gp = gpcomp(network_prior_model,network_prior_params)
+  noise_gp = gpcomp(network_noise_model,network_noise_params)    
   sta_gp   = gpcomp(station_noise_model,station_noise_params)
 
   t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')  
@@ -110,17 +111,21 @@ def strain(t,x,d,sd,
                     x0_grid.ravel(),
                     x1_grid.ravel()]).T
 
+  # find missing data
+  mask = np.isinf(sde)
+  # unmasked data and uncertainties
+  zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
   # Build covariance and basis vectors for the combined process. Do
   # not evaluated at masked points
-  mask = np.isinf(sde)
   full_sigma,full_p = _station_sigma_and_p(sta_gp,t,mask)
-  full_sigma += noise_gp.covariance(z[~mask.ravel()],z[~mask.ravel()])
-  full_sigma += prior_gp.covariance(z[~mask.ravel()],z[~mask.ravel()])
-  full_p = np.hstack((full_p,noise_gp.basis(z[~mask.ravel()])))
-  full_p = np.hstack((full_p,prior_gp.basis(z[~mask.ravel()])))
-  full_mu = np.zeros(np.sum(~mask))  
+  full_sigma += noise_gp.covariance(zu,zu)
+  full_sigma += prior_gp.covariance(zu,zu)
+  full_p = np.hstack((full_p,noise_gp.basis(zu)))
+  full_p = np.hstack((full_p,prior_gp.basis(zu)))
+  # all processes are assumed to have zero mean
+  full_mu = np.zeros(zu.shape[0]) 
   # returns the indices of outliers 
-  outliers,fitf = rbf.gauss.outliers(de[~mask],sde[~mask],
+  outliers,fitf = rbf.gauss.outliers(du,sdu,
                                      mu=full_mu,sigma=full_sigma,p=full_p,
                                      tol=tol,return_fit=True)
   # dereference full_* since we will not be using them anymore
@@ -137,14 +142,16 @@ def strain(t,x,d,sd,
   
   # update the mask to include outliers
   mask = np.isinf(sde)
+  # unmasked data and uncertainties
+  zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
   # rebuild noise covariance and basis vectors
   noise_sigma,noise_p = _station_sigma_and_p(sta_gp,t,mask)
-  noise_sigma += noise_gp.covariance(z[~mask.ravel()],z[~mask.ravel()])
-  noise_p = np.hstack((noise_p,noise_gp.basis(z[~mask.ravel()])))
-  rbf.gauss._diag_add(noise_sigma,sde[~mask]**2)
+  noise_sigma += noise_gp.covariance(zu,zu)
+  noise_p = np.hstack((noise_p,noise_gp.basis(zu)))
+  rbf.gauss._diag_add(noise_sigma,sdu**2)
   
   # condition the prior with the data
-  post_gp = prior_gp.condition(z[~mask.ravel()],de[~mask],sigma=noise_sigma,p=noise_p)
+  post_gp = prior_gp.condition(zu,du,sigma=noise_sigma,p=noise_p)
   dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
   dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
 

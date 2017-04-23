@@ -16,6 +16,25 @@ def _change_extension(f,ext):
   return '.'.join(f.split('.')[:-1] + [ext])
   
 
+def _unit_string(space_exponent,time_exponent):
+  if space_exponent == 0:
+    # if the space exponent is 0 then use units of microstrain
+    space_str = '1'
+  elif space_exponent == 1:
+    space_str = 'm'
+  else:
+    space_str = 'm^%s' % space_exponent
+
+  if time_exponent == 0:
+    time_str = ''
+  elif time_exponent == -1:
+    time_str = '/day'
+  else:
+    time_str = '/day^%s' % -time_exponent
+
+  return space_str + time_str
+  
+  
 def pygeons_toh5(input_text_file,file_type='csv',output_file=None):
   ''' 
   converts a text file to an hdf5 file
@@ -47,25 +66,42 @@ def pygeons_info(input_file):
   logger.info('Running pygeons info ...')
   data_dict = dict_from_hdf5(input_file)
   # put together info string
-  units = 'meters**%s days**%s' % (data_dict['space_exponent'],
-                                   data_dict['time_exponent'])
+  units = _unit_string(data_dict['space_exponent'],
+                       data_dict['time_exponent'])
   stations = str(len(data_dict['id']))
   times = str(len(data_dict['time']))
+  observations = (np.sum(~np.isinf(data_dict['east_std_dev'])) +
+                  np.sum(~np.isinf(data_dict['north_std_dev'])) +
+                  np.sum(~np.isinf(data_dict['vertical_std_dev'])))
+
   time_range = '%s, %s' % (mjd.mjd_inv(data_dict['time'][0],'%Y-%m-%d'),
                            mjd.mjd_inv(data_dict['time'][-1],'%Y-%m-%d'))
   lon_range = '%s, %s' % (np.min(data_dict['longitude']),
                           np.max(data_dict['longitude']))
   lat_range = '%s, %s' % (np.min(data_dict['latitude']),
                           np.max(data_dict['latitude']))
-  station_names = ', '.join(data_dict['id'])
-  info_string =''' 
-  units : %s
-  stations : %s
-  times : %s
-  time range : %s
-  longitude range : %s
-  latitude range : %s
-  station names : %s
-  ''' % (units,stations,times,time_range,lon_range,lat_range,station_names)
-  print(info_string)
+  # split names into groups of no more than 8
+  station_name_list = list(data_dict['id'])
+  station_name_groups = []
+  while len(station_name_list) > 0:
+    station_name_groups += [', '.join(station_name_list[:7])]
+    station_name_list = station_name_list[7:]
+
+  msg  = '\n'
+  msg += '------------------ PYGEONS DATA INFORMATION ------------------\n\n'
+  msg += 'file : %s\n' % input_file
+  msg += 'units : %s\n' % units
+  msg += 'stations : %s\n' % stations
+  msg += 'times : %s\n' % times
+  msg += 'observations : %s\n' % observations
+  msg += 'time range : %s\n' % time_range
+  msg += 'longitude range : %s\n' % lon_range
+  msg += 'latitude range : %s\n' % lat_range
+  msg += 'station names : %s\n' % station_name_groups[0]
+  for g in station_name_groups[1:]:
+    msg += '                %s\n' % g
+
+  msg += '\n'  
+  msg += '--------------------------------------------------------------\n'
+  print(msg)
   
