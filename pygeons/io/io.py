@@ -38,6 +38,92 @@ def _unit_string(space_exponent,time_exponent):
   return space_str + time_str
   
   
+def pygeons_crop(input_file,start_date=None,stop_date=None,
+                 min_lat=-np.inf,max_lat=np.inf,
+                 min_lon=-np.inf,max_lon=np.inf,
+                 stations=None,output_stem=None):
+  ''' 
+  Sets the time span of the data set to be between *start_date* and 
+  *stop_date*. Sets the stations to be within the latitude and 
+  longitude bounds.
+  
+  Parameters
+  ----------
+  data : dict
+    data dictionary
+      
+  start_date : str, optional
+    start date of output data set in YYYY-MM-DD. Uses the start date 
+    of *data* if not provided. Defaults to the earliest date.
+
+  stop_date : str, optional
+    Stop date of output data set in YYYY-MM-DD. Uses the stop date 
+    of *data* if not provided. Defaults to the latest date.
+      
+  min_lon, max_lon, min_lat, max_lat : float, optional
+    Spatial bounds on the output data set
+  
+  stations : str list, optional
+    List of stations to be removed from the dataset. This is in 
+    addition to the station removed by the lon/lat bounds.
+    
+  Returns
+  -------
+  out_dict : dict
+    output data dictionary
+
+  '''
+  logger.info('Running pygeons crop ...')
+  data = dict_from_hdf5(input_file)
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
+  if start_date is None:
+    start_date = mjd.mjd_inv(data['time'].min(),'%Y-%m-%d')
+
+  if stop_date is None:
+    stop_date = mjd.mjd_inv(data['time'].max(),'%Y-%m-%d')
+
+  if stations is None:
+    stations = []
+
+  # remove times that are not within the bounds of *start_date* and 
+  # *stop_date*
+  start_time = int(mjd.mjd(start_date,'%Y-%m-%d'))
+  stop_time = int(mjd.mjd(stop_date,'%Y-%m-%d'))
+  idx = ((data['time'] >= start_time) &
+         (data['time'] <= stop_time))
+  out['time'] = out['time'][idx]
+  for dir in ['east','north','vertical']:
+    out[dir] = out[dir][idx,:]
+    out[dir + '_std_dev'] = out[dir + '_std_dev'][idx,:]
+
+  # find stations that are within the bounds
+  in_bounds = ((data['longitude'] > min_lon) &
+               (data['longitude'] < max_lon) &
+               (data['latitude'] > min_lat) &
+               (data['latitude'] < max_lat))
+  # find stations that are in the list of stations to be removed
+  in_list = np.array([i in stations for i in data['id']])
+  # keep stations that are in bounds and not in the list
+  idx, = (in_bounds & ~in_list).nonzero()
+
+  out['id'] = out['id'][idx]
+  out['longitude'] = out['longitude'][idx]
+  out['latitude'] = out['latitude'][idx]
+  for dir in ['east','north','vertical']:
+    out[dir] = out[dir][:,idx]
+    out[dir + '_std_dev'] = out[dir + '_std_dev'][:,idx]
+
+  # set output file name
+  if output_stem is None:
+    output_stem = _remove_extension(input_file) + '.crop'
+
+  output_file = output_stem + '.h5'
+  hdf5_from_dict(output_file,out)
+  logger.info('Cropped data written to %s' % output_file)
+  return
+
+
 def pygeons_toh5(input_text_file,file_type='csv',output_stem=None):
   ''' 
   converts a text file to an hdf5 file
