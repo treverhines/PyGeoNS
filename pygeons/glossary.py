@@ -72,41 +72,12 @@ format. Defaults to 'csv'.
 '''
 }
 #####################################################################
-OUTPUT_FILE = {
+OUTPUT_STEM = {
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
-Output file name. If this is not specified then the output file name 
-will be the input file name but with a new extension.
-'''
-}
-#####################################################################
-OUTPUT_DIR = {
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Directory that output files will be written to.
-'''
-}
-#####################################################################
-PARAMETER_FILE = {
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Name of the file that the optimal hyperparameters will be written to.
-Defaults to "parameters.txt".
-'''
-}
-#####################################################################
-OUTPUT_EDITS_FILE = {
-'type':str,
-'metavar':'STR',
-'help':
-''' 
-Name of the file where edits will be logged. Defaults to "edits.txt".
+Stem for the output filenames. This does not include extensions.
 '''
 }
 #####################################################################
@@ -603,12 +574,9 @@ GLOSSARY = {
 'input_text_file':INPUT_TEXT_FILE,
 'input_file':INPUT_FILE,
 'input_files':INPUT_FILES,
-'output_file':OUTPUT_FILE,
-'output_dir':OUTPUT_DIR,
+'output_stem':OUTPUT_STEM,
 'input_edits_file':INPUT_EDITS_FILE,
-'output_edits_file':OUTPUT_EDITS_FILE,
 'no_display':NO_DISPLAY,
-'parameter_file':PARAMETER_FILE,
 'positions':POSITIONS,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,

@@ -196,9 +196,12 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
       gets passed to pygeons.plot.view.interactive_view
 
   '''
+  logger.info('Running pygeons vector-view ...')
   data_list = [dict_from_hdf5(i) for i in input_files]
-  logger.info('Viewing vector data sets ...')
   data_list = _common_context(data_list)
+  
+  # use filenames for dataset labels if none were provided
+  dataset_labels = kwargs.pop('dataset_labels',input_files)
 
   t = data_list[0]['time']
   lon = data_list[0]['longitude']
@@ -226,6 +229,7 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
   interactive_vector_viewer(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
     ts_ax=ts_ax,map_ax=map_ax,
+    dataset_labels=dataset_labels,
     station_labels=id,time_labels=dates,
     units=units,**kwargs)
 
@@ -249,9 +253,9 @@ def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
       gets passed to pygeons.strain.view
 
   '''
+  logger.info('Running pygeons strain-view ...')
   data_dx = dict_from_hdf5(xdiff_file)  
   data_dy = dict_from_hdf5(ydiff_file)  
-  logger.info('Viewing strain data ...')
   data_dx,data_dy = _common_context([data_dx,data_dy])
   
   if ((data_dx['space_exponent'] != 0) | 

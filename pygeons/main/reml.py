@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ''' 
 Contains a function for restricted maximum likelihood (REML)
 hyperparameter estimation.

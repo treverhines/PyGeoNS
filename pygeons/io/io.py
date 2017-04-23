@@ -12,13 +12,16 @@ from pygeons.io.convert import (dict_from_hdf5,
 logger = logging.getLogger(__name__)                                
 
 
-def _change_extension(f,ext):
-  return '.'.join(f.split('.')[:-1] + [ext])
-  
+def _remove_extension(f):
+  '''remove file extension if one exists'''
+  if '.' not in f:
+    return f
+  else:
+    return '.'.join(f.split('.')[:-1])  
+
 
 def _unit_string(space_exponent,time_exponent):
   if space_exponent == 0:
-    # if the space exponent is 0 then use units of microstrain
     space_str = '1'
   elif space_exponent == 1:
     space_str = 'm'
@@ -35,28 +38,34 @@ def _unit_string(space_exponent,time_exponent):
   return space_str + time_str
   
   
-def pygeons_toh5(input_text_file,file_type='csv',output_file=None):
+def pygeons_toh5(input_text_file,file_type='csv',output_stem=None):
   ''' 
   converts a text file to an hdf5 file
   '''
   logger.info('Running pygeons toh5 ...')
   data = dict_from_text(input_text_file,parser=file_type)
-  if output_file is None:
-    output_file = _change_extension(input_text_file,'h5')
-    
+  if output_stem is None:
+    output_stem = _remove_extension(input_text_file)
+
+  output_file = output_stem + '.h5'  
   hdf5_from_dict(output_file,data)
+  logger.info('Data written to %s' % output_file)
+  return
   
 
-def pygeons_totext(input_file,output_file=None):  
+def pygeons_totext(input_file,output_stem=None):  
   ''' 
   converts an hdf5 file to a text file
   '''
   logger.info('Running pygeons totext ...')
   data = dict_from_hdf5(input_file)
-  if output_file is None:
-    output_file = _change_extension(input_file,'csv')
+  if output_stem is None:
+    output_stem = _remove_extension(input_file)
   
+  output_file = output_stem + '.csv'  
   text_from_dict(output_file,data)  
+  logger.info('Data written to %s' % output_file)
+  return
 
 
 def pygeons_info(input_file):
@@ -104,4 +113,5 @@ def pygeons_info(input_file):
   msg += '\n'  
   msg += '--------------------------------------------------------------'
   print(msg)
+  return
   

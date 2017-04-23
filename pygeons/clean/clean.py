@@ -3,7 +3,6 @@ Defines functions which are called by the PyGeoNS executable. These
 functions are for data cleaning.
 '''
 from __future__ import division
-import os
 import numpy as np
 import logging
 import matplotlib.pyplot as plt
@@ -19,14 +18,18 @@ from pygeons.plot.plot import (_unit_string,
 logger = logging.getLogger(__name__)
 
 
-def _change_extension(f,ext):
-  return '.'.join(f.split('.')[:-1] + [ext])
-  
+def _remove_extension(f):
+  '''remove file extension if one exists'''
+  if '.' not in f:
+    return f
+  else:
+    return '.'.join(f.split('.')[:-1])
+
 
 def pygeons_crop(input_file,start_date=None,stop_date=None,
                  min_lat=-np.inf,max_lat=np.inf,
                  min_lon=-np.inf,max_lon=np.inf,
-                 stations=None,output_file=None):
+                 stations=None,output_stem=None):
   ''' 
   Sets the time span of the data set to be between *start_date* and 
   *stop_date*. Sets the stations to be within the latitude and 
@@ -99,19 +102,21 @@ def pygeons_crop(input_file,start_date=None,stop_date=None,
     out[dir] = out[dir][:,idx]
     out[dir + '_std_dev'] = out[dir + '_std_dev'][:,idx]
     
-  if output_file is None:
-    output_file = _change_extension(input_file,'crop.h5')
+  # set output file name
+  if output_stem is None:
+    output_stem = _remove_extension(input_file) + '.crop'
   
+  output_file = output_stem + '.h5'  
   hdf5_from_dict(output_file,out)  
+  logger.info('Cropped data written to %s' % output_file)
   return 
 
 
 def pygeons_clean(input_file,resolution='i',
                   input_edits_file=None,
-                  output_edits_file=None,
                   break_lons=None,break_lats=None,
                   break_conn=None,no_display=False,
-                  output_file=None,**kwargs):
+                  output_stem=None,**kwargs):
   ''' 
   runs the PyGeoNS Interactive Cleaner
   
@@ -201,9 +206,12 @@ def pygeons_clean(input_file,resolution='i',
     ic.update()
     ic.connect()
     
-  # save edits to output file
-  if output_edits_file is None:
-    output_edits_file = 'edits.txt'
+  # set output file name
+  if output_stem is None:
+    output_stem = _remove_extension(input_file) + '.clean'
+
+  output_file = output_stem + '.h5'
+  output_edits_file = output_stem + '.txt'
   
   with open(output_edits_file,'w') as fout:
     for i in ic.log:
@@ -229,8 +237,7 @@ def pygeons_clean(input_file,resolution='i',
   out['north_std_dev'] = clean_data[4]/conv
   out['vertical_std_dev'] = clean_data[5]/conv
 
-  if output_file is None:
-    output_file = _change_extension(input_file,'clean.h5')
-  
   hdf5_from_dict(output_file,out)  
+  logger.info('Cleaned data written to %s' % output_file)
+  logger.info('Edits written to %s' % output_edits_file)
   return 

@@ -50,8 +50,7 @@ def strain(t,x,d,sd,
            station_noise_model=('p0',),
            station_noise_params=(),
            out_t=None,
-           out_x=None,
-           tol=4.0):
+           out_x=None):
   ''' 
   Computes deformation gradients from displacement data.
   
@@ -69,7 +68,6 @@ def strain(t,x,d,sd,
   station_noise_params : float array
   out_t : (Mt,) array, optional
   out_x : (Mx,2) array, optional
-  tol : float, optional
     
   Returns
   -------
@@ -87,7 +85,6 @@ def strain(t,x,d,sd,
   x = np.asarray(x,dtype=float)
   de = np.array(d,dtype=float,copy=True)
   sde = np.array(sd,dtype=float,copy=True)
-  Nt,Nx = t.shape[0],x.shape[0]
   # allocate array indicating which data have been removed
   if out_t is None:
     out_t = t
@@ -117,35 +114,6 @@ def strain(t,x,d,sd,
   mask = np.isinf(sde)
   # unmasked data and uncertainties
   zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
-  # Build covariance and basis vectors for the combined process. Do
-  # not evaluated at masked points
-  full_sigma,full_p = _station_sigma_and_p(sta_gp,t,mask)
-  full_sigma += noise_gp.covariance(zu,zu)
-  full_sigma += prior_gp.covariance(zu,zu)
-  full_p = np.hstack((full_p,noise_gp.basis(zu)))
-  full_p = np.hstack((full_p,prior_gp.basis(zu)))
-  # all processes are assumed to have zero mean
-  full_mu = np.zeros(zu.shape[0]) 
-  # returns the indices of outliers 
-  outliers,fitf = rbf.gauss.outliers(du,sdu,
-                                     mu=full_mu,sigma=full_sigma,p=full_p,
-                                     tol=tol,return_fit=True)
-  # dereference full_* since we will not be using them anymore
-  del full_sigma,full_p,full_mu
-  
-  # mask the outliers in *de* and *sde*
-  r,c = np.nonzero(~mask)
-  de[r[outliers],c[outliers]] = np.nan
-  sde[r[outliers],c[outliers]] = np.inf
-  
-  # best fit combination of signal and noise to the observations
-  fit = np.full((Nt,Nx),np.nan)
-  fit[~mask] = fitf
-  
-  # update the mask to include outliers
-  mask = np.isinf(sde)
-  # unmasked data and uncertainties
-  zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
   # rebuild noise covariance and basis vectors
   noise_sigma,noise_p = _station_sigma_and_p(sta_gp,t,mask)
   noise_sigma += noise_gp.covariance(zu,zu)
@@ -165,5 +133,5 @@ def strain(t,x,d,sd,
   dy = dy.reshape((out_t.shape[0],out_x.shape[0]))
   sdy = sdy.reshape((out_t.shape[0],out_x.shape[0]))
 
-  out  = (de,sde,fit,dx,sdx,dy,sdy)
+  out  = (dx,sdx,dy,sdy)
   return out
