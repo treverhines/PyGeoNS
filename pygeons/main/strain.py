@@ -31,12 +31,14 @@ def _station_sigma_and_p(gp,time,mask):
     p[c==i,:,i] = p_i[r[c==i]]
 
   p = p.reshape((np.sum(~mask),Np*Nx))
-  # remove singluar values from p
-  u,s,_ = np.linalg.svd(p,full_matrices=False)
-  keep = s > 1e-12*s.max()
-  p = u[:,keep]
-  logger.debug('Removed %s singular values from the station basis vectors' 
-               % np.sum(~keep))
+  if p.size != 0:
+    # remove singluar values from p
+    u,s,_ = np.linalg.svd(p,full_matrices=False)
+    keep = s > 1e-12*s.max()
+    p = u[:,keep]
+    logger.debug('Removed %s singular values from the station basis vectors' 
+                 % np.sum(~keep))
+  
   return sigma,p
 
 

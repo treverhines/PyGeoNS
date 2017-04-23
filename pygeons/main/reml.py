@@ -99,7 +99,7 @@ def reml(t,x,d,sd,
     mu = np.zeros(z.shape[0])
     return -rbf.gauss.likelihood(d,mu,sigma,p=p)
 
-  opt,val = fmin_pos(objective,params[free],disp=True)
+  opt,val = fmin_pos(objective,params[free],disp=False)
   params[free] = opt
   out_network_params = params[:n]
   out_station_params = params[n:]

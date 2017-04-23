@@ -12,7 +12,6 @@ def unit_conversion(units,time='day',space='m'):
   >>> unit_conversion('mm/yr',time='day',space='m')
       2.73785078713e-06
 
-  >>> units_ustrain
   '''
   # replace carets with two asterisks
   units = units.replace('^','**')
