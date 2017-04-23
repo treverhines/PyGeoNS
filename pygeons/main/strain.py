@@ -83,8 +83,8 @@ def strain(t,x,d,sd,
   '''  
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
-  de = np.array(d,dtype=float,copy=True)
-  sde = np.array(sd,dtype=float,copy=True)
+  d = np.array(d,dtype=float)
+  sd = np.array(sd,dtype=float)
   # allocate array indicating which data have been removed
   if out_t is None:
     out_t = t
@@ -111,17 +111,17 @@ def strain(t,x,d,sd,
                     x1_grid.ravel()]).T
 
   # find missing data
-  mask = np.isinf(sde)
+  mask = np.isinf(sd)
   # unmasked data and uncertainties
-  zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
+  z,d,sd = z[~mask.ravel()],d[~mask],sd[~mask]
   # rebuild noise covariance and basis vectors
   noise_sigma,noise_p = _station_sigma_and_p(sta_gp,t,mask)
-  noise_sigma += noise_gp.covariance(zu,zu)
-  noise_p = np.hstack((noise_p,noise_gp.basis(zu)))
-  rbf.gauss._diag_add(noise_sigma,sdu**2)
+  noise_sigma += noise_gp.covariance(z,z)
+  noise_p = np.hstack((noise_p,noise_gp.basis(z)))
+  rbf.gauss._diag_add(noise_sigma,sd**2)
   
   # condition the prior with the data
-  post_gp = prior_gp.condition(zu,du,sigma=noise_sigma,p=noise_p)
+  post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
   dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
   dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
 

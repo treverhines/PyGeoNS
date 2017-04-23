@@ -55,8 +55,8 @@ def reml(t,x,d,sd,
   '''
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
-  d = np.array(d,dtype=float,copy=True)
-  sd = np.array(sd,dtype=float,copy=True)
+  d = np.array(d,dtype=float)
+  sd = np.array(sd,dtype=float)
   network_params = np.asarray(network_params,dtype=float)
   station_params = np.asarray(station_params,dtype=float)
   network_fix = np.asarray(network_fix,dtype=int)

@@ -35,8 +35,7 @@ def autoclean(t,x,d,sd,
   x = np.asarray(x,dtype=float)
   de = np.array(d,dtype=float,copy=True)
   sde = np.array(sd,dtype=float,copy=True)
-  network_params = np.asarray(network_params,dtype=float)
-  station_params = np.asarray(station_params,dtype=float)
+
   net_gp = gpcomp(network_model,network_params)
   sta_gp = gpcomp(station_model,station_params)
 
@@ -61,8 +60,6 @@ def autoclean(t,x,d,sd,
   outliers,fitf = rbf.gauss.outliers(du,sdu,
                                      mu=full_mu,sigma=full_sigma,p=full_p,
                                      tol=tol,return_fit=True)
-  # dereference full_* since we will not be using them anymore
-  del full_sigma,full_p,full_mu
 
   # mask the outliers in *de* and *sde*
   r,c = np.nonzero(~mask)
