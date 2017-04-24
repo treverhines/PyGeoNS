@@ -10,7 +10,9 @@ from pygeons.main.fit import fit
 from pygeons.main.reml import reml
 from pygeons.main.strain import strain
 from pygeons.main.autoclean import autoclean
-from pygeons.main.gprocs import get_units
+from pygeons.main.gptools import composite_units
+from pygeons.main import gpnetwork
+from pygeons.main import gpstation
 from pygeons.mjd import mjd_inv,mjd
 from pygeons.basemap import make_basemap
 from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
@@ -75,13 +77,13 @@ def _log_fit(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network :\n' 
   msg += '    model : %s\n' % ', '.join(network_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(network_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(network_model,gpnetwork.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['vertical']])
   msg += 'station :\n' 
   msg += '    model : %s\n' % ', '.join(station_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(station_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(station_model,gpstation.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['vertical']])
@@ -101,13 +103,13 @@ def _log_autoclean(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network :\n' 
   msg += '    model : %s\n' % ', '.join(network_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(network_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(network_model,gpnetwork.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['vertical']])
   msg += 'station :\n' 
   msg += '    model : %s\n' % ', '.join(station_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(station_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(station_model,gpstation.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['vertical']])
@@ -127,14 +129,14 @@ def _log_reml(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network :\n' 
   msg += '    model : %s\n' % ', '.join(network_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(network_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(network_model,gpnetwork.CONSTRUCTORS))
   msg += '    fixed parameters : %s\n' % ', '.join(network_fix.astype(str))
   msg += '    initial east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['east']])
   msg += '    initial north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['north']])
   msg += '    initial vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['vertical']])
   msg += 'station :\n' 
   msg += '    model : %s\n' % ', '.join(station_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(station_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(station_model,gpstation.CONSTRUCTORS))
   msg += '    fixed parameters : %s\n' % ', '.join(station_fix.astype(str))
   msg += '    initial east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['east']])
   msg += '    initial north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['north']])
@@ -154,14 +156,14 @@ def _log_reml_results(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network :\n' 
   msg += '    model : %s\n' % ' '.join(network_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(network_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(network_model,gpnetwork.CONSTRUCTORS))
   msg += '    fixed parameters : %s\n' % ', '.join(network_fix.astype(str))
   msg += '    optimal east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['east']])
   msg += '    optimal north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['north']])
   msg += '    optimal vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['vertical']])
   msg += 'station :\n' 
   msg += '    model : %s\n' % ' '.join(station_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(station_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(station_model,gpstation.CONSTRUCTORS))
   msg += '    fixed parameters : %s\n' % ', '.join(station_fix.astype(str))
   msg += '    optimal east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['east']])
   msg += '    optimal north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['north']])
@@ -187,19 +189,19 @@ def _log_strain(input_file,
   msg += 'input file : %s\n' % input_file
   msg += 'network prior :\n' 
   msg += '    model : %s\n' % ', '.join(network_prior_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(network_prior_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(network_prior_model,gpnetwork.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_prior_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_prior_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_prior_params['vertical']])
   msg += 'network noise :\n' 
   msg += '    model : %s\n' % ' '.join(network_noise_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(network_noise_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(network_noise_model,gpnetwork.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_noise_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_noise_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_noise_params['vertical']])
   msg += 'station noise :\n' 
   msg += '    model : %s\n' % ' '.join(station_noise_model)
-  msg += '    parameter units : %s\n' % ', '.join(get_units(station_noise_model))
+  msg += '    parameter units : %s\n' % ', '.join(composite_units(station_noise_model,gpstation.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['vertical']])
@@ -217,8 +219,8 @@ def _log_strain(input_file,
   
 
 def pygeons_fit(input_file,
-                network_model=('se-se',),
-                network_params=(1.0,0.05,50.0),
+                network_model=('p10','p11','se-se',),
+                network_params=(5.0,0.05,50.0),
                 station_model=('p0',),
                 station_params=(),
                 output_stem=None):
@@ -273,8 +275,8 @@ def pygeons_fit(input_file,
 
 
 def pygeons_autoclean(input_file,
-                      network_model=('se-se',),
-                      network_params=(1.0,0.05,50.0),
+                      network_model=('p10','p11','se-se',),
+                      network_params=(5.0,0.05,50.0),
                       station_model=('p0',),
                       station_params=(),
                       output_stem=None,
@@ -330,8 +332,8 @@ def pygeons_autoclean(input_file,
 
 
 def pygeons_reml(input_file,
-                 network_model=('se-se',),
-                 network_params=(1.0,0.05,50.0),
+                 network_model=('p10','p11','se-se',),
+                 network_params=(5.0,0.05,50.0),
                  network_fix=(),
                  station_model=('p0',),
                  station_params=(),
@@ -407,8 +409,8 @@ def pygeons_reml(input_file,
 
 
 def pygeons_strain(input_file,
-                   network_prior_model=('se-se',),
-                   network_prior_params=(1.0,0.05,50.0),
+                   network_prior_model=('p10','p11','se-se',),
+                   network_prior_params=(5.0,0.05,50.0),
                    network_noise_model=(),
                    network_noise_params=(),
                    station_noise_model=('p0',),

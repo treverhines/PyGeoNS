@@ -5,7 +5,9 @@ specialized for PyGeoNS
 import numpy as np
 import logging
 import rbf.gauss
-from pygeons.main.gprocs import gpcomp
+from pygeons.main.gptools import composite
+from pygeons.main import gpnetwork
+from pygeons.main import gpstation
 logger = logging.getLogger(__name__)
 
 
@@ -92,9 +94,9 @@ def strain(t,x,d,sd,
   if out_x is None:
     out_x = x
 
-  prior_gp = gpcomp(network_prior_model,network_prior_params)
-  noise_gp = gpcomp(network_noise_model,network_noise_params)    
-  sta_gp   = gpcomp(station_noise_model,station_noise_params)
+  prior_gp = composite(network_prior_model,network_prior_params,gpnetwork.CONSTRUCTORS)
+  noise_gp = composite(network_noise_model,network_noise_params,gpnetwork.CONSTRUCTORS)
+  sta_gp   = composite(station_noise_model,station_noise_params,gpstation.CONSTRUCTORS)
 
   t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')  
   t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')  

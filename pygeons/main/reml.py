@@ -5,7 +5,9 @@ hyperparameter estimation.
 import numpy as np
 import logging
 from scipy.optimize import fmin
-from pygeons.main.gprocs import gpcomp
+from pygeons.main.gptools import composite
+from pygeons.main import gpnetwork
+from pygeons.main import gpstation
 from pygeons.main.strain import _station_sigma_and_p
 import rbf.gauss 
 logger = logging.getLogger(__name__)
@@ -85,8 +87,8 @@ def reml(t,x,d,sd,
     test_params[free] = theta 
     test_network_params = test_params[:n]
     test_station_params = test_params[n:]
-    net_gp = gpcomp(network_model,test_network_params)
-    sta_gp = gpcomp(station_model,test_station_params)
+    net_gp = composite(network_model,test_network_params,gpnetwork.CONSTRUCTORS)
+    sta_gp = composite(station_model,test_station_params,gpstation.CONSTRUCTORS)
     # station process
     sigma,p = _station_sigma_and_p(sta_gp,t,mask)
     # network process

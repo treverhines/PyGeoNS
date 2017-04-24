@@ -3,7 +3,9 @@ Contains a data editing algorithm
 '''
 import numpy as np
 import logging
-from pygeons.main.gprocs import gpcomp
+from pygeons.main.gptools import composite
+from pygeons.main import gpnetwork
+from pygeons.main import gpstation
 from pygeons.main.strain import _station_sigma_and_p
 import rbf.gauss 
 logger = logging.getLogger(__name__)
@@ -36,8 +38,8 @@ def autoclean(t,x,d,sd,
   de = np.array(d,dtype=float,copy=True)
   sde = np.array(sd,dtype=float,copy=True)
 
-  net_gp = gpcomp(network_model,network_params)
-  sta_gp = gpcomp(station_model,station_params)
+  net_gp = composite(network_model,network_params,gpnetwork.CONSTRUCTORS)
+  sta_gp = composite(station_model,station_params,gpstation.CONSTRUCTORS)
 
   t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')
   t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')
