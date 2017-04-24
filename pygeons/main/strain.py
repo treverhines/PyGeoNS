@@ -29,7 +29,7 @@ def _station_sigma_and_p(gp,time,mask):
   r,c = np.nonzero(~mask)
   for i in range(Nx):
     # good luck trying to figure out what the fuck im doing here
-    sigma[c==i,c==i] = sigma_i[r[c==i],r[c==i]]
+    sigma[np.ix_(c==i,c==i)] = sigma_i[np.ix_(r[c==i],r[c==i])]
     p[c==i,:,i] = p_i[r[c==i]]
 
   p = p.reshape((np.sum(~mask),Np*Nx))
