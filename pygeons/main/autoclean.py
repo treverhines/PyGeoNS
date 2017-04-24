@@ -57,16 +57,12 @@ def autoclean(t,x,d,sd,
   # all processes are assumed to have zero mean
   full_mu = np.zeros(zu.shape[0])
   # returns the indices of outliers 
-  outliers,fitf = rbf.gauss.outliers(du,sdu,
-                                     mu=full_mu,sigma=full_sigma,p=full_p,
-                                     tol=tol,return_fit=True)
+  outliers = rbf.gauss.outliers(du,sdu,
+                                mu=full_mu,sigma=full_sigma,p=full_p,
+                                tol=tol)
 
   # mask the outliers in *de* and *sde*
   r,c = np.nonzero(~mask)
   de[r[outliers],c[outliers]] = np.nan
   sde[r[outliers],c[outliers]] = np.inf
-
-  # best fit combination of signal and noise to the observations
-  fit = np.full((t.shape[0],x.shape[0]),np.nan)
-  fit[~mask] = fitf
-  return (de,sde,fit)
+  return (de,sde)

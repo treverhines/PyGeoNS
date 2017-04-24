@@ -6,6 +6,7 @@ from __future__ import division
 import numpy as np
 import logging
 import subprocess as sp
+from pygeons.main.fit import fit
 from pygeons.main.reml import reml
 from pygeons.main.strain import strain
 from pygeons.main.autoclean import autoclean
@@ -65,11 +66,36 @@ def _remove_extension(f):
     return '.'.join(f.split('.')[:-1])
 
 
+def _log_fit(input_file,
+             network_model,network_params, 
+             station_model,station_params,
+             output_file):
+  msg  = '\n'                     
+  msg += '---------------- PYGEONS FIT RUN INFORMATION -----------------\n\n'
+  msg += 'input file : %s\n' % input_file
+  msg += 'network :\n' 
+  msg += '    model : %s\n' % ', '.join(network_model)
+  msg += '    parameter units : %s\n' % ', '.join(get_units(network_model))
+  msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['east']])
+  msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['north']])
+  msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_params['vertical']])
+  msg += 'station :\n' 
+  msg += '    model : %s\n' % ', '.join(station_model)
+  msg += '    parameter units : %s\n' % ', '.join(get_units(station_model))
+  msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['east']])
+  msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['north']])
+  msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['vertical']])
+  msg += 'output file : %s\n\n' % output_file  
+  msg += '--------------------------------------------------------------\n'
+  logger.info(msg)
+  return 
+
+
 def _log_autoclean(input_file,
                    network_model,network_params, 
                    station_model,station_params,
                    outlier_tol,
-                   output_edited_file,output_fit_file):
+                   output_file):
   msg  = '\n'                     
   msg += '------------- PYGEONS AUTOCLEAN RUN INFORMATION --------------\n\n'
   msg += 'input file : %s\n' % input_file
@@ -86,8 +112,7 @@ def _log_autoclean(input_file,
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_params['vertical']])
   msg += 'outlier tolerance : %s\n' % outlier_tol  
-  msg += 'output edited file : %s\n' % output_edited_file  
-  msg += 'output fit file : %s\n\n' % output_fit_file  
+  msg += 'output file : %s\n\n' % output_file  
   msg += '--------------------------------------------------------------\n'
   logger.info(msg)
   return 
@@ -191,6 +216,62 @@ def _log_strain(input_file,
   logger.info(msg)
   
 
+def pygeons_fit(input_file,
+                network_model=('se-se',),
+                network_params=(1.0,0.05,50.0),
+                station_model=('p0',),
+                station_params=(),
+                output_stem=None):
+  ''' 
+  Condition the Gaussian process to the observations and evaluate the
+  posterior at the observation points.
+  '''
+  logger.info('Running pygeons fit ...')
+  data = dict_from_hdf5(input_file)
+  if data['time_exponent'] != 0:
+    raise ValueError('input dataset must have units of displacement')
+
+  if data['space_exponent'] != 1:
+    raise ValueError('input dataset must have units of displacement')
+
+  # create output dictionary
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+
+  # convert params to a dictionary of hyperparameters for each direction
+  network_params = _params_dict(network_params)
+  station_params = _params_dict(station_params)
+
+  # make output file name
+  if output_stem is None:
+    output_stem = _remove_extension(input_file) + '.fit'
+
+  output_file = output_stem + '.h5'
+  
+  # convert geodetic positions to cartesian
+  bm = make_basemap(data['longitude'],data['latitude'])
+  x,y = bm(data['longitude'],data['latitude'])
+  xy = np.array([x,y]).T
+
+  _log_fit(input_file,
+           network_model,network_params,
+           station_model,station_params,
+           output_file)
+  
+  for dir in ['east','north','vertical']:
+    u,su = fit(data['time'][:,None],xy,      
+               data[dir],data[dir+'_std_dev'],
+               network_model=network_model,
+               network_params=network_params[dir],
+               station_model=station_model,
+               station_params=station_params[dir])
+    out[dir] = u
+    out[dir+'_std_dev'] = su
+
+  hdf5_from_dict(output_file,out)
+  logger.info('Posterior fit written to %s' % output_file)
+  return
+
+
 def pygeons_autoclean(input_file,
                       network_model=('se-se',),
                       network_params=(1.0,0.05,50.0),
@@ -209,8 +290,8 @@ def pygeons_autoclean(input_file,
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
 
-  out_edited = dict((k,np.copy(v)) for k,v in data.iteritems())
-  out_fit = dict((k,np.copy(v)) for k,v in data.iteritems())
+  # dictionary which will contain the edited data
+  out = dict((k,np.copy(v)) for k,v in data.iteritems())
 
   # convert params to a dictionary of hyperparameters for each direction
   network_params = _params_dict(network_params)
@@ -220,8 +301,7 @@ def pygeons_autoclean(input_file,
   if output_stem is None:
     output_stem = _remove_extension(input_file) + '.autoclean'
 
-  output_edited_file = output_stem + '.edited.h5'
-  output_fit_file = output_stem + '.fit.h5'
+  output_file = output_stem + '.h5'
   
   # convert geodetic positions to cartesian
   bm = make_basemap(data['longitude'],data['latitude'])
@@ -232,27 +312,20 @@ def pygeons_autoclean(input_file,
                  network_model,network_params,
                  station_model,station_params,
                  outlier_tol,
-                 output_edited_file,output_fit_file)
+                 output_file)
   
   for dir in ['east','north','vertical']:
-    de,sde,fit = autoclean(data['time'][:,None], 
-                           xy, 
-                           data[dir], 
-                           data[dir+'_std_dev'],
-                           network_model=network_model,
-                           network_params=network_params[dir],
-                           station_model=station_model,
-                           station_params=station_params[dir])
-    out_edited[dir] = de
-    out_edited[dir+'_std_dev'] = sde
-    out_fit[dir] = fit
-    # set unmasked uncertainties to zero 
-    out_fit[dir+'_std_dev'][~np.isinf(data[dir+'_std_dev'])] = 0.0
+    de,sde = autoclean(data['time'][:,None],xy, 
+                       data[dir],data[dir+'_std_dev'],
+                       network_model=network_model,
+                       network_params=network_params[dir],
+                       station_model=station_model,
+                       station_params=station_params[dir])
+    out[dir] = de
+    out[dir+'_std_dev'] = sde
 
-  hdf5_from_dict(output_edited_file,out_edited)
-  hdf5_from_dict(output_fit_file,out_fit)
-  logger.info('Edited data written to %s' % output_edited_file)
-  logger.info('Data fit written to %s' % output_fit_file)
+  hdf5_from_dict(output_file,out)
+  logger.info('Edited data written to %s' % output_file)
   return
 
 
@@ -307,10 +380,8 @@ def pygeons_reml(input_file,
   # make a dictionary storing likelihoods
   likelihood = {}
   for dir in ['east','north','vertical']:
-    net_opt,sta_opt,like = reml(data['time'][:,None], 
-                                xy, 
-                                data[dir], 
-                                data[dir+'_std_dev'],
+    net_opt,sta_opt,like = reml(data['time'][:,None],xy, 
+                                data[dir],data[dir+'_std_dev'],
                                 network_model=network_model,
                                 network_params=network_params[dir],
                                 network_fix=network_fix,
@@ -410,10 +481,8 @@ def pygeons_strain(input_file,
               output_dx_file,output_dy_file)
 
   for dir in ['east','north','vertical']:
-    dx,sdx,dy,sdy  = strain(data['time'][:,None],
-                            xy,
-                            data[dir],
-                            data[dir+'_std_dev'],
+    dx,sdx,dy,sdy  = strain(data['time'][:,None],xy,
+                            data[dir],data[dir+'_std_dev'],
                             network_prior_model=network_prior_model,
                             network_prior_params=network_prior_params[dir],
                             network_noise_model=network_noise_model,
