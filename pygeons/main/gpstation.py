@@ -343,14 +343,29 @@ def ibm(sigma,t0):
 
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
+#CONSTRUCTORS = {'p0':p0, 
+#                'p1':p1, 
+#                'peri':peri, 
+#                'per':per, 
+#                'stepi':stepi,
+#                'step':step,
+#                'rampi':rampi,
+#                'ramp':ramp,
+#                'bm':bm,
+#                'ibm':ibm,
+#                'fogm':fogm,
+#                'mat32':mat32,
+#                'mat52':mat52,
+#                'se':se,
+#                'exp':exp}
+
+# trim down constructors to the ones that are useful for strain
+# analysis
 CONSTRUCTORS = {'p0':p0, 
                 'p1':p1, 
-                'peri':peri, 
-                'per':per, 
-                'stepi':stepi,
-                'step':step,
-                'rampi':rampi,
-                'ramp':ramp,
+                'per':peri, 
+                'step':stepi,
+                'ramp':rampi,
                 'bm':bm,
                 'ibm':ibm,
                 'fogm':fogm,
