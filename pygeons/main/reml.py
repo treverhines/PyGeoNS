@@ -111,6 +111,7 @@ def reml(t,x,d,sd,
     return out  
 
   opt,val = fmin_pos(objective,params[free],disp=False)
+  logger.info('Optimal hyperparameters : ' + ' '.join('%0.4e' % i for i in opt))
   params[free] = opt
   out_network_params = params[:n]
   out_station_params = params[n:]
