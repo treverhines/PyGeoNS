@@ -98,7 +98,17 @@ def reml(t,x,d,sd,
     rbf.gauss._diag_add(sigma,sd**2)
     # mean of the processes
     mu = np.zeros(z.shape[0])
-    return -rbf.gauss.likelihood(d,mu,sigma,p=p)
+    try:
+      out = -rbf.gauss.likelihood(d,mu,sigma,p=p)
+    except np.linalg.LinAlgError as err:
+      logger.warning(
+        'An error was raised while computing the log '
+        'likelihood:\n\n%s\n' % repr(err))
+      logger.warning('Returning -INF for the log likelihood')   
+      
+      out = np.inf
+      
+    return out  
 
   opt,val = fmin_pos(objective,params[free],disp=False)
   params[free] = opt
