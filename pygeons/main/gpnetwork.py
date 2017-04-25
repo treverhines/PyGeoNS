@@ -284,18 +284,33 @@ def step_se(sigma,t0,cls):
   return kernel_product(tgp,sgp)
 
 
+#CONSTRUCTORS = {'p00':p00,
+#                'p01':p01,
+#                'p10':p10,
+#                'p11':p11,
+#                'p20':p20,
+#                'p21':p21,
+#                'per-se':per_se,
+#                'step-se':step_se,
+#                'bm-se':bm_se,
+#                'ibm-se':ibm_se,
+#                'fogm-se':fogm_se,
+#                'mat32-se':mat32_se,
+#                'mat52-se':mat52_se,
+#                'se-se':se_se,
+#                'exp-se':exp_se}
+
+# trim down constructors to the ones that are useful for strain
+# analysis
 CONSTRUCTORS = {'p00':p00,
                 'p01':p01,
                 'p10':p10,
                 'p11':p11,
-                'p20':p20,
-                'p21':p21,
                 'per-se':per_se,
-                'step-se':step_se,
                 'bm-se':bm_se,
                 'ibm-se':ibm_se,
                 'fogm-se':fogm_se,
-                'mat32-se':mat32_se,
-                'mat52-se':mat52_se,
                 'se-se':se_se,
-                'exp-se':exp_se}
+                'exp-se':exp_se,
+                'mat32-se':mat32_se,
+                'mat52-se':mat52_se}
