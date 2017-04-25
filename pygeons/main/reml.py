@@ -105,7 +105,6 @@ def reml(t,x,d,sd,
         'An error was raised while computing the log '
         'likelihood:\n\n%s\n' % repr(err))
       logger.warning('Returning -INF for the log likelihood')   
-      
       out = np.inf
       
     return out  

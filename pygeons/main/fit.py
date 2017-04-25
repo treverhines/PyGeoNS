@@ -4,8 +4,9 @@ from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
 from pygeons.main.strain import _station_sigma_and_p
-from rbf.gauss import _cholesky_block_inv
+from rbf.gauss import _cholesky_block_inv,_diag_add,_block_dot
 logger = logging.getLogger(__name__)
+
 
 def _fit(d,s,mu,sigma,p):
   ''' 
@@ -14,15 +15,28 @@ def _fit(d,s,mu,sigma,p):
   Returns the mean and standard deviation of the posterior.
   '''  
   n,m = p.shape
-  Kinv = _cholesky_block_inv(sigma+np.diag(s**2),p)
-  r = np.empty(n+m)
-  r[:n] = d - mu
-  r[n:] = 0.0
-  k = np.empty((n,n+m))
-  k[:,:n] = sigma
-  k[:,n:] = p
-  u = mu + k.dot(Kinv.dot(r))
-  su = np.sqrt(np.diag(sigma) - np.sum(k*Kinv.dot(k.T).T,axis=1))
+
+  _diag_add(sigma,s**2)
+  Kinv = _cholesky_block_inv(sigma,p)
+  _diag_add(sigma,-s**2)
+
+  r = [[d[:,None] - mu[:,None]],[np.zeros((m,1))]]
+  k = [[sigma,p]]
+  k_T = [[sigma.T],[p.T]]
+  # intermediate block vector
+  vec = _block_dot(Kinv,r)
+  vec = _block_dot(k,vec)
+  # mean of posterior
+  u = mu + vec[0][0][:,0]
+  # efficiently compute standard deviation of posterior
+  mat = _block_dot(Kinv,k_T)
+
+  del Kinv
+
+  # element-wise multiplication of the k and mat.T
+  arr  = np.sum(k[0][0]*mat[0][0].T,axis=1)
+  arr += np.sum(k[0][1]*mat[1][0].T,axis=1)
+  su = np.sqrt(np.diag(sigma) - arr)
   return u,su
 
 
