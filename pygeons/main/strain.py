@@ -18,8 +18,11 @@ def _station_sigma_and_p(gp,time,mask):
   evauluated at unmasked data.
   '''
   # stations that *will* have basis vectors
-  sigma_i = gp.covariance(time,time)
-  p_i = gp.basis(time)
+  diff = np.array([0])
+  # use _covariance and _basis instead of covariance and basis because
+  # they do not make copies
+  sigma_i = gp._covariance(time,time,diff,diff)
+  p_i = gp._basis(time,diff)
   _,Nx = mask.shape
   _,Np = p_i.shape
   
@@ -87,6 +90,7 @@ def strain(t,x,d,sd,
   x = np.asarray(x,dtype=float)
   d = np.array(d,dtype=float)
   sd = np.array(sd,dtype=float)
+  diff = np.array([0,0,0])
   # allocate array indicating which data have been removed
   if out_t is None:
     out_t = t
@@ -118,8 +122,10 @@ def strain(t,x,d,sd,
   z,d,sd = z[~mask.ravel()],d[~mask],sd[~mask]
   # rebuild noise covariance and basis vectors
   noise_sigma,noise_p = _station_sigma_and_p(sta_gp,t,mask)
-  noise_sigma += noise_gp.covariance(z,z)
-  noise_p = np.hstack((noise_p,noise_gp.basis(z)))
+  # use _covariance and _basis instead of covariance and basis because
+  # they do not make copies
+  noise_sigma += noise_gp._covariance(z,z,diff,diff)
+  noise_p = np.hstack((noise_p,noise_gp._basis(z,diff)))
   rbf.gauss._diag_add(noise_sigma,sd**2)
   
   # condition the prior with the data
@@ -127,11 +133,11 @@ def strain(t,x,d,sd,
   dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
   dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
 
-  dx,sdx = dx_gp.meansd(out_z)
+  dx,sdx = dx_gp.meansd(out_z,max_chunk=500)
   dx = dx.reshape((out_t.shape[0],out_x.shape[0]))
   sdx = sdx.reshape((out_t.shape[0],out_x.shape[0]))
 
-  dy,sdy = dy_gp.meansd(out_z)
+  dy,sdy = dy_gp.meansd(out_z,max_chunk=500)
   dy = dy.reshape((out_t.shape[0],out_x.shape[0]))
   sdy = sdy.reshape((out_t.shape[0],out_x.shape[0]))
 

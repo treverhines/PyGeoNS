@@ -37,6 +37,7 @@ def autoclean(t,x,d,sd,
   x = np.asarray(x,dtype=float)
   de = np.array(d,dtype=float,copy=True)
   sde = np.array(sd,dtype=float,copy=True)
+  diff = np.array([0,0,0])
 
   net_gp = composite(network_model,network_params,gpnetwork.CONSTRUCTORS)
   sta_gp = composite(station_model,station_params,gpstation.CONSTRUCTORS)
@@ -54,8 +55,10 @@ def autoclean(t,x,d,sd,
   # Build covariance and basis vectors for the combined process. Do
   # not evaluated at masked points
   full_sigma,full_p = _station_sigma_and_p(sta_gp,t,mask)
-  full_sigma += net_gp.covariance(zu,zu)
-  full_p = np.hstack((full_p,net_gp.basis(zu)))
+  # use _covariance and _basis instead of covariance and basis because
+  # they do not make copies
+  full_sigma += net_gp._covariance(zu,zu,diff,diff)
+  full_p = np.hstack((full_p,net_gp._basis(zu,diff)))
   # all processes are assumed to have zero mean
   full_mu = np.zeros(zu.shape[0])
   # returns the indices of outliers 

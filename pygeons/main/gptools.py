@@ -5,8 +5,31 @@ import numpy as np
 from rbf.gauss import GaussianProcess
 from rbf.gauss import _get_arg_count,_zero_mean,_zero_covariance,_empty_basis
 from pygeons.units import unit_conversion as conv
+import logging
+logger = logging.getLogger(__name__)
 
+def chunkify_covariance(cov_in,chunks):
+  ''' 
+  Wraps covariance functions so that the covariance matrix is built in
+  chunks rather than all at once. This is more memory efficient.
+  '''
+  def cov_out(x1,x2,diff1,diff2):
+    n1,n2 = x1.shape[0],x2.shape[0]
+    m = (n1//chunks) + 1 # chunk size
+    k = 0 
+    out = np.zeros((n1,n2),dtype=float)
+    while k < n1:
+      logger.debug('Building covariance matrix : %3d%% complete' % (100.0*k/n1))
+      cov_chunk = cov_in(x1[k:min(k+m,n1)],x2,diff1,diff2) 
+      out[k:min(k+m,n1)] = cov_chunk 
+      k += m
+      
+    logger.debug('Building covariance matrix : 100% complete')
+    return out  
+  
+  return cov_out      
 
+ 
 def set_units(units):
   ''' 
   Wrapper for Gaussian process constructors which sets the
@@ -117,6 +140,7 @@ def composite(components,args,constructors):
   for ci in cs:
     gp += ci(*(args.pop(0) for i in range(ci.nargs)))
   
+  gp._covariance = chunkify_covariance(gp._covariance,10)
   return gp
   
 

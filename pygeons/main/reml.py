@@ -59,6 +59,7 @@ def reml(t,x,d,sd,
   x = np.asarray(x,dtype=float)
   d = np.array(d,dtype=float)
   sd = np.array(sd,dtype=float)
+  diff = np.array([0,0,0])
   network_params = np.asarray(network_params,dtype=float)
   station_params = np.asarray(station_params,dtype=float)
   network_fix = np.asarray(network_fix,dtype=int)
@@ -91,9 +92,11 @@ def reml(t,x,d,sd,
     sta_gp = composite(station_model,test_station_params,gpstation.CONSTRUCTORS)
     # station process
     sigma,p = _station_sigma_and_p(sta_gp,t,mask)
-    # network process
-    sigma += net_gp.covariance(z,z)
-    p = np.hstack((p,net_gp.basis(z)))
+    # network process 
+    # use _covariance and _basis instead of covariance and basis
+    # because they do not make copies
+    sigma += net_gp._covariance(z,z,diff,diff)
+    p = np.hstack((p,net_gp._basis(z,diff)))
     # data uncertainty 
     rbf.gauss._diag_add(sigma,sd**2)
     # mean of the processes
