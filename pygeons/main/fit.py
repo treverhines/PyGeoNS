@@ -20,9 +20,11 @@ def _fit(d,s,mu,sigma,p):
   Kinv = _cholesky_block_inv(sigma,p)
   _diag_add(sigma,-s**2)
 
-  r = [[d[:,None] - mu[:,None]],[np.zeros((m,1))]]
+  r = [[d[:,None] - mu[:,None]],
+       [np.zeros((m,1))]]
   k = [[sigma,p]]
-  k_T = [[sigma.T],[p.T]]
+  k_T = [[sigma.T],
+         [p.T]]
   # intermediate block vector
   vec = _block_dot(Kinv,r)
   vec = _block_dot(k,vec)
@@ -30,9 +32,7 @@ def _fit(d,s,mu,sigma,p):
   u = mu + vec[0][0][:,0]
   # efficiently compute standard deviation of posterior
   mat = _block_dot(Kinv,k_T)
-
   del Kinv
-
   # element-wise multiplication of the k and mat.T
   arr  = np.sum(k[0][0]*mat[0][0].T,axis=1)
   arr += np.sum(k[0][1]*mat[1][0].T,axis=1)
