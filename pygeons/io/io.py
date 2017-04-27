@@ -5,6 +5,7 @@ executables
 import numpy as np
 from pygeons import mjd
 import logging
+import warnings
 from pygeons.io.convert import (dict_from_hdf5,
                                 hdf5_from_dict,
                                 text_from_dict,
@@ -37,7 +38,88 @@ def _unit_string(space_exponent,time_exponent):
 
   return space_str + time_str
   
+
+def _common_context(data_list):
+  ''' 
+  Expands the input data dictionaries so that they each have the same 
+  context (i.e. stations and observation times).
+  '''
+  # check for consisten units
+  time_exp = data_list[0]['time_exponent']
+  if not all(time_exp == d['time_exponent'] for d in data_list):
+    raise ValueError('datasets do not have consistent units')
+
+  space_exp = data_list[0]['space_exponent']
+  if not all(space_exp == d['space_exponent'] for d in data_list):
+    raise ValueError('datasets do not have consistent units')
+
+  all_ids = np.hstack([d['id'] for d in data_list])
+  all_lons = np.hstack([d['longitude'] for d in data_list])
+  all_lats = np.hstack([d['latitude'] for d in data_list])
+  all_times = np.hstack([d['time'] for d in data_list])
+  unique_ids,idx = np.unique(all_ids,return_index=True)
+  unique_lons = all_lons[idx]
+  unique_lats = all_lats[idx]
+  unique_times = np.arange(all_times.min(),all_times.max()+1)
+  Nt,Nx = unique_times.shape[0],unique_ids.shape[0]
+  out_list = []
+  # create LUTs
+  time_dict = dict(zip(unique_times,range(Nt)))
+  id_dict = dict(zip(unique_ids,range(Nx)))
+  for d in data_list:
+    p = {}
+    p['time_exponent'] = d['time_exponent']
+    p['space_exponent'] = d['space_exponent']
+    p['time'] = unique_times
+    p['id'] = unique_ids
+    p['longitude'] = unique_lons
+    p['latitude'] = unique_lats
+    # find the indices that map the times and stations from d onto the 
+    # unique times and stations
+    tidx = [time_dict[i] for i in d['time']]
+    sidx = [id_dict[i] for i in d['id']]
+    for dir in ['east','north','vertical']:
+      p[dir] = np.full((Nt,Nx),np.nan)
+      p[dir][np.ix_(tidx,sidx)] = d[dir]
+      p[dir + '_std_dev'] = np.full((Nt,Nx),np.inf)
+      p[dir + '_std_dev'][np.ix_(tidx,sidx)] = d[dir + '_std_dev']
+
+    out_list += [p]
+
+  return out_list
   
+
+def pygeons_merge(input_files,output_stem=None):
+  ''' 
+  Merge data files
+  '''
+  logger.info('Running pygeons merge ...')
+  data_list = [dict_from_hdf5(i) for i in input_files]
+  data_list = _common_context(data_list)
+  out = data_list[0]
+  for d in data_list[1:]:
+    for dir in ['east','north','vertical']:
+      # overwrite data in *out* with non-missing data in *d*
+      missing_in_d = np.isinf(d[dir+'_std_dev'])
+      missing_in_out = np.isinf(out[dir+'_std_dev'])
+      if np.any(~missing_in_d & ~missing_in_out):
+        warnings.warn(
+          'Data for some stations and times exist in multiple '
+          'datasets. Precedence is determined by the order the data '
+          'files were specified in.')
+        
+      out[dir][~missing_in_d] = d[dir][~missing_in_d]
+      out[dir+'_std_dev'][~missing_in_d] = d[dir+'_std_dev'][~missing_in_d]
+
+  # set output file name
+  if output_stem is None:
+    output_stem = 'merged'
+
+  output_file = output_stem + '.h5'
+  hdf5_from_dict(output_file,out)
+  logger.info('Merged data written to %s' % output_file)
+
+
 def pygeons_crop(input_file,start_date=None,stop_date=None,
                  min_lat=-np.inf,max_lat=np.inf,
                  min_lon=-np.inf,max_lon=np.inf,

@@ -194,6 +194,18 @@ p.add_argument('--max-lon',**GLOSSARY['max_lon'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_crop)
 
+# MERGE
+#####################################################################
+p = subs.add_parser('merge',
+  usage='pygeons merge STR [options]',
+  description=
+'''Merges datasets.
+''')  
+p.add_argument('input_files',**GLOSSARY['input_files'])
+p.add_argument('-o','--output-stem',**GLOSSARY['output_stem'])
+p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
+p.set_defaults(func=pygeons_merge)
+
 # FIT
 #####################################################################
 p = subs.add_parser('fit',
