@@ -33,5 +33,5 @@ pygeons strain -vv 'work/data.crop.autoclean.h5' \
                                     north    5.0e0 5.0e-2 5.0e1 \
                                     vertical 5.0e0 5.0e-2 5.0e1 \
 
-pygeons strain-view 'work/data.crop.autoclean.strain.xdiff.h5' \
-                    'work/data.crop.autoclean.strain.ydiff.h5'
+#pygeons strain-view 'work/data.crop.autoclean.strain.xdiff.h5' \
+#                    'work/data.crop.autoclean.strain.ydiff.h5'

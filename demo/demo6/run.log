@@ -1,0 +1,2934 @@
+--2017-04-26 17:15:20--  ftp://data-out.unavco.org/pub/products/position/TWHL/TWHL.pbo.nam08.csv
+           => ‘work/csv/TWHL.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/TWHL ... done.
+==> SIZE TWHL.pbo.nam08.csv ... 324698
+==> PASV ... done.    ==> RETR TWHL.pbo.nam08.csv ... done.
+Length: 324698 (317K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 15%  178K 1s
+    50K .......... .......... .......... .......... .......... 31%  501K 1s
+   100K .......... .......... .......... .......... .......... 47%  752K 0s
+   150K .......... .......... .......... .......... .......... 63%  943K 0s
+   200K .......... .......... .......... .......... .......... 78%  879K 0s
+   250K .......... .......... .......... .......... .......... 94% 63.5K 0s
+   300K .......... .......                                    100% 69.4K=1.6s
+
+2017-04-26 17:15:23 (199 KB/s) - ‘work/csv/TWHL.pbo.nam08.csv’ saved [324698]
+
+--2017-04-26 17:15:23--  ftp://data-out.unavco.org/pub/products/position/SEDR/SEDR.pbo.nam08.csv
+           => ‘work/csv/SEDR.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/SEDR ... done.
+==> SIZE SEDR.pbo.nam08.csv ... 400794
+==> PASV ... done.    ==> RETR SEDR.pbo.nam08.csv ... done.
+Length: 400794 (391K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 12%  179K 2s
+    50K .......... .......... .......... .......... .......... 25%  502K 1s
+   100K .......... .......... .......... .......... .......... 38%  743K 1s
+   150K .......... .......... .......... .......... .......... 51%  940K 0s
+   200K .......... .......... .......... .......... .......... 63%  890K 0s
+   250K .......... .......... .......... .......... .......... 76%  348K 0s
+   300K .......... .......... .......... .......... .......... 89% 1.44M 0s
+   350K .......... .......... .......... .......... .         100% 51.1K=1.5s
+
+2017-04-26 17:15:26 (253 KB/s) - ‘work/csv/SEDR.pbo.nam08.csv’ saved [400794]
+
+--2017-04-26 17:15:26--  ftp://data-out.unavco.org/pub/products/position/SEAT/SEAT.pbo.nam08.csv
+           => ‘work/csv/SEAT.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/SEAT ... done.
+==> SIZE SEAT.pbo.nam08.csv ... 427222
+==> PASV ... done.    ==> RETR SEAT.pbo.nam08.csv ... done.
+Length: 427222 (417K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 11%  179K 2s
+    50K .......... .......... .......... .......... .......... 23%  502K 1s
+   100K .......... .......... .......... .......... .......... 35%  754K 1s
+   150K .......... .......... .......... .......... .......... 47%  935K 1s
+   200K .......... .......... .......... .......... .......... 59%  882K 0s
+   250K .......... .......... .......... .......... .......... 71% 69.4K 0s
+   300K .......... .......... .......... .......... .......... 83% 99.8K 0s
+   350K .......... .......... .......... .......... .......... 95%  462K 0s
+   400K .......... .......                                    100%  293K=1.9s
+
+2017-04-26 17:15:29 (215 KB/s) - ‘work/csv/SEAT.pbo.nam08.csv’ saved [427222]
+
+--2017-04-26 17:15:29--  ftp://data-out.unavco.org/pub/products/position/SC03/SC03.pbo.nam08.csv
+           => ‘work/csv/SC03.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/SC03 ... done.
+==> SIZE SC03.pbo.nam08.csv ... 280951
+==> PASV ... done.    ==> RETR SC03.pbo.nam08.csv ... done.
+Length: 280951 (274K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 18%  178K 1s
+    50K .......... .......... .......... .......... .......... 36%  497K 1s
+   100K .......... .......... .......... .......... .......... 54%  751K 0s
+   150K .......... .......... .......... .......... .......... 72%  944K 0s
+   200K .......... .......... .......... .......... .......... 91%  879K 0s
+   250K .......... .......... ....                            100%  825K=0.6s
+
+2017-04-26 17:15:30 (468 KB/s) - ‘work/csv/SC03.pbo.nam08.csv’ saved [280951]
+
+--2017-04-26 17:15:30--  ftp://data-out.unavco.org/pub/products/position/SC02/SC02.pbo.nam08.csv
+           => ‘work/csv/SC02.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/SC02 ... done.
+==> SIZE SC02.pbo.nam08.csv ... 315457
+==> PASV ... done.    ==> RETR SC02.pbo.nam08.csv ... done.
+Length: 315457 (308K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 16%  178K 1s
+    50K .......... .......... .......... .......... .......... 32%  499K 1s
+   100K .......... .......... .......... .......... .......... 48%  751K 0s
+   150K .......... .......... .......... .......... .......... 64%  940K 0s
+   200K .......... .......... .......... .......... .......... 81%  881K 0s
+   250K .......... .......... .......... .......... .......... 97% 69.6K 0s
+   300K ........                                              100% 49.4K=1.4s
+
+2017-04-26 17:15:33 (214 KB/s) - ‘work/csv/SC02.pbo.nam08.csv’ saved [315457]
+
+--2017-04-26 17:15:33--  ftp://data-out.unavco.org/pub/products/position/PCOL/PCOL.pbo.nam08.csv
+           => ‘work/csv/PCOL.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/PCOL ... done.
+==> SIZE PCOL.pbo.nam08.csv ... 273097
+==> PASV ... done.    ==> RETR PCOL.pbo.nam08.csv ... done.
+Length: 273097 (267K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 18%  178K 1s
+    50K .......... .......... .......... .......... .......... 37%  502K 1s
+   100K .......... .......... .......... .......... .......... 56%  743K 0s
+   150K .......... .......... .......... .......... .......... 74%  939K 0s
+   200K .......... .......... .......... .......... .......... 93%  894K 0s
+   250K .......... ......                                     100%  828K=0.6s
+
+2017-04-26 17:15:35 (462 KB/s) - ‘work/csv/PCOL.pbo.nam08.csv’ saved [273097]
+
+--2017-04-26 17:15:35--  ftp://data-out.unavco.org/pub/products/position/PABH/PABH.pbo.nam08.csv
+           => ‘work/csv/PABH.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/PABH ... done.
+==> SIZE PABH.pbo.nam08.csv ... 404767
+==> PASV ... done.    ==> RETR PABH.pbo.nam08.csv ... done.
+Length: 404767 (395K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 12%  179K 2s
+    50K .......... .......... .......... .......... .......... 25%  501K 1s
+   100K .......... .......... .......... .......... .......... 37%  757K 1s
+   150K .......... .......... .......... .......... .......... 50%  944K 0s
+   200K .......... .......... .......... .......... .......... 63%  886K 0s
+   250K .......... .......... .......... .......... .......... 75%  263K 0s
+   300K .......... .......... .......... .......... .......... 88% 1.63M 0s
+   350K .......... .......... .......... .......... .....     100% 59.5K=1.5s
+
+2017-04-26 17:15:37 (257 KB/s) - ‘work/csv/PABH.pbo.nam08.csv’ saved [404767]
+
+--2017-04-26 17:15:37--  ftp://data-out.unavco.org/pub/products/position/P816/P816.pbo.nam08.csv
+           => ‘work/csv/P816.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P816 ... done.
+==> SIZE P816.pbo.nam08.csv ... 66847
+==> PASV ... done.    ==> RETR P816.pbo.nam08.csv ... done.
+Length: 66847 (65K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 76%  178K 0s
+    50K .......... .....                                      100%  246K=0.3s
+
+2017-04-26 17:15:39 (190 KB/s) - ‘work/csv/P816.pbo.nam08.csv’ saved [66847]
+
+--2017-04-26 17:15:39--  ftp://data-out.unavco.org/pub/products/position/P815/P815.pbo.nam08.csv
+           => ‘work/csv/P815.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P815 ... done.
+==> SIZE P815.pbo.nam08.csv ... 74631
+==> PASV ... done.    ==> RETR P815.pbo.nam08.csv ... done.
+Length: 74631 (73K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 68%  179K 0s
+    50K .......... .......... ..                              100%  325K=0.3s
+
+2017-04-26 17:15:40 (208 KB/s) - ‘work/csv/P815.pbo.nam08.csv’ saved [74631]
+
+--2017-04-26 17:15:40--  ftp://data-out.unavco.org/pub/products/position/P439/P439.pbo.nam08.csv
+           => ‘work/csv/P439.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P439 ... done.
+==> SIZE P439.pbo.nam08.csv ... 235998
+==> PASV ... done.    ==> RETR P439.pbo.nam08.csv ... done.
+Length: 235998 (230K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 21%  173K 1s
+    50K .......... .......... .......... .......... .......... 43%  499K 1s
+   100K .......... .......... .......... .......... .......... 65%  749K 0s
+   150K .......... .......... .......... .......... .......... 86%  940K 0s
+   200K .......... .......... ..........                      100%  930K=0.5s
+
+2017-04-26 17:15:42 (425 KB/s) - ‘work/csv/P439.pbo.nam08.csv’ saved [235998]
+
+--2017-04-26 17:15:42--  ftp://data-out.unavco.org/pub/products/position/P438/P438.pbo.nam08.csv
+           => ‘work/csv/P438.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P438 ... done.
+==> SIZE P438.pbo.nam08.csv ... 187012
+==> PASV ... done.    ==> RETR P438.pbo.nam08.csv ... done.
+Length: 187012 (183K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 27% 53.6K 2s
+    50K .......... .......... .......... .......... .......... 54%  502K 1s
+   100K .......... .......... .......... .......... .......... 82%  132K 0s
+   150K .......... .......... .......... ..                   100%  946K=1.4s
+
+2017-04-26 17:15:45 (126 KB/s) - ‘work/csv/P438.pbo.nam08.csv’ saved [187012]
+
+--2017-04-26 17:15:45--  ftp://data-out.unavco.org/pub/products/position/P437/P437.pbo.nam08.csv
+           => ‘work/csv/P437.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P437 ... done.
+==> SIZE P437.pbo.nam08.csv ... 201120
+==> PASV ... done.    ==> RETR P437.pbo.nam08.csv ... done.
+Length: 201120 (196K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 25%  171K 1s
+    50K .......... .......... .......... .......... .......... 50%  499K 0s
+   100K .......... .......... .......... .......... .......... 76%  751K 0s
+   150K .......... .......... .......... .......... ......    100%  947K=0.5s
+
+2017-04-26 17:15:46 (387 KB/s) - ‘work/csv/P437.pbo.nam08.csv’ saved [201120]
+
+--2017-04-26 17:15:46--  ftp://data-out.unavco.org/pub/products/position/P436/P436.pbo.nam08.csv
+           => ‘work/csv/P436.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P436 ... done.
+==> SIZE P436.pbo.nam08.csv ... 228748
+==> PASV ... done.    ==> RETR P436.pbo.nam08.csv ... done.
+Length: 228748 (223K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 22%  163K 1s
+    50K .......... .......... .......... .......... .......... 44%  499K 1s
+   100K .......... .......... .......... .......... .......... 67%  741K 0s
+   150K .......... .......... .......... .......... .......... 89%  940K 0s
+   200K .......... .......... ...                             100%  944K=0.6s
+
+2017-04-26 17:15:48 (404 KB/s) - ‘work/csv/P436.pbo.nam08.csv’ saved [228748]
+
+--2017-04-26 17:15:48--  ftp://data-out.unavco.org/pub/products/position/P435/P435.pbo.nam08.csv
+           => ‘work/csv/P435.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P435 ... done.
+==> SIZE P435.pbo.nam08.csv ... 231388
+==> PASV ... done.    ==> RETR P435.pbo.nam08.csv ... done.
+Length: 231388 (226K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 22%  175K 1s
+    50K .......... .......... .......... .......... .......... 44%  314K 1s
+   100K .......... .......... .......... .......... .......... 66%  743K 0s
+   150K .......... .......... .......... .......... .......... 88%  940K 0s
+   200K .......... .......... .....                           100%  945K=0.6s
+
+2017-04-26 17:15:49 (381 KB/s) - ‘work/csv/P435.pbo.nam08.csv’ saved [231388]
+
+--2017-04-26 17:15:49--  ftp://data-out.unavco.org/pub/products/position/P426/P426.pbo.nam08.csv
+           => ‘work/csv/P426.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P426 ... done.
+==> SIZE P426.pbo.nam08.csv ... 170038
+==> PASV ... done.    ==> RETR P426.pbo.nam08.csv ... done.
+Length: 170038 (166K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 30%  175K 1s
+    50K .......... .......... .......... .......... .......... 60%  499K 0s
+   100K .......... .......... .......... .......... .......... 90%  735K 0s
+   150K .......... ......                                     100%  973K=0.5s
+
+2017-04-26 17:15:51 (353 KB/s) - ‘work/csv/P426.pbo.nam08.csv’ saved [170038]
+
+--2017-04-26 17:15:51--  ftp://data-out.unavco.org/pub/products/position/P424/P424.pbo.nam08.csv
+           => ‘work/csv/P424.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P424 ... done.
+==> SIZE P424.pbo.nam08.csv ... 175682
+==> PASV ... done.    ==> RETR P424.pbo.nam08.csv ... done.
+Length: 175682 (172K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 29%  165K 1s
+    50K .......... .......... .......... .......... .......... 58%  502K 0s
+   100K .......... .......... .......... .......... .......... 87%  743K 0s
+   150K .......... .......... .                               100%  967K=0.5s
+
+2017-04-26 17:15:52 (349 KB/s) - ‘work/csv/P424.pbo.nam08.csv’ saved [175682]
+
+--2017-04-26 17:15:52--  ftp://data-out.unavco.org/pub/products/position/P423/P423.pbo.nam08.csv
+           => ‘work/csv/P423.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P423 ... done.
+==> SIZE P423.pbo.nam08.csv ... 244172
+==> PASV ... done.    ==> RETR P423.pbo.nam08.csv ... done.
+Length: 244172 (238K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 20%  171K 1s
+    50K .......... .......... .......... .......... .......... 41%  504K 1s
+   100K .......... .......... .......... .......... .......... 62%  752K 0s
+   150K .......... .......... .......... .......... .......... 83%  935K 0s
+   200K .......... .......... .......... ........             100%  936K=0.6s
+
+2017-04-26 17:15:54 (431 KB/s) - ‘work/csv/P423.pbo.nam08.csv’ saved [244172]
+
+--2017-04-26 17:15:54--  ftp://data-out.unavco.org/pub/products/position/P419/P419.pbo.nam08.csv
+           => ‘work/csv/P419.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P419 ... done.
+==> SIZE P419.pbo.nam08.csv ... 148684
+==> PASV ... done.    ==> RETR P419.pbo.nam08.csv ... done.
+Length: 148684 (145K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 34%  173K 1s
+    50K .......... .......... .......... .......... .......... 68%  497K 0s
+   100K .......... .......... .......... .......... .....     100%  749K=0.4s
+
+2017-04-26 17:15:55 (323 KB/s) - ‘work/csv/P419.pbo.nam08.csv’ saved [148684]
+
+--2017-04-26 17:15:55--  ftp://data-out.unavco.org/pub/products/position/P418/P418.pbo.nam08.csv
+           => ‘work/csv/P418.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P418 ... done.
+==> SIZE P418.pbo.nam08.csv ... 220609
+==> PASV ... done.    ==> RETR P418.pbo.nam08.csv ... done.
+Length: 220609 (215K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 23%  172K 1s
+    50K .......... .......... .......... .......... .......... 46%  502K 0s
+   100K .......... .......... .......... .......... .......... 69%  749K 0s
+   150K .......... .......... .......... .......... .......... 92%  940K 0s
+   200K .......... .....                                      100%  933K=0.5s
+
+2017-04-26 17:15:57 (409 KB/s) - ‘work/csv/P418.pbo.nam08.csv’ saved [220609]
+
+--2017-04-26 17:15:57--  ftp://data-out.unavco.org/pub/products/position/P403/P403.pbo.nam08.csv
+           => ‘work/csv/P403.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P403 ... done.
+==> SIZE P403.pbo.nam08.csv ... 228038
+==> PASV ... done.    ==> RETR P403.pbo.nam08.csv ... done.
+Length: 228038 (223K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 22%  164K 1s
+    50K .......... .......... .......... .......... .......... 44%  499K 0s
+   100K .......... .......... .......... .......... .......... 67%  743K 0s
+   150K .......... .......... .......... .......... .......... 89%  939K 0s
+   200K .......... .......... ..                              100%  936K=0.6s
+
+2017-04-26 17:15:59 (404 KB/s) - ‘work/csv/P403.pbo.nam08.csv’ saved [228038]
+
+--2017-04-26 17:15:59--  ftp://data-out.unavco.org/pub/products/position/P402/P402.pbo.nam08.csv
+           => ‘work/csv/P402.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P402 ... done.
+==> SIZE P402.pbo.nam08.csv ... 208154
+==> PASV ... done.    ==> RETR P402.pbo.nam08.csv ... done.
+Length: 208154 (203K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 24%  172K 1s
+    50K .......... .......... .......... .......... .......... 49%  499K 0s
+   100K .......... .......... .......... .......... .......... 73%  754K 0s
+   150K .......... .......... .......... .......... .......... 98%  935K 0s
+   200K ...                                                   100%  982K=0.5s
+
+2017-04-26 17:16:00 (396 KB/s) - ‘work/csv/P402.pbo.nam08.csv’ saved [208154]
+
+--2017-04-26 17:16:00--  ftp://data-out.unavco.org/pub/products/position/P401/P401.pbo.nam08.csv
+           => ‘work/csv/P401.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P401 ... done.
+==> SIZE P401.pbo.nam08.csv ... 249926
+==> PASV ... done.    ==> RETR P401.pbo.nam08.csv ... done.
+Length: 249926 (244K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 20%  154K 1s
+    50K .......... .......... .......... .......... .......... 40%  499K 1s
+   100K .......... .......... .......... .......... .......... 61%  751K 0s
+   150K .......... .......... .......... .......... .......... 81%  935K 0s
+   200K .......... .......... .......... .......... ....      100%  914K=0.6s
+
+2017-04-26 17:16:02 (411 KB/s) - ‘work/csv/P401.pbo.nam08.csv’ saved [249926]
+
+--2017-04-26 17:16:02--  ftp://data-out.unavco.org/pub/products/position/P400/P400.pbo.nam08.csv
+           => ‘work/csv/P400.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P400 ... done.
+==> SIZE P400.pbo.nam08.csv ... 188332
+==> PASV ... done.    ==> RETR P400.pbo.nam08.csv ... done.
+Length: 188332 (184K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 27%  175K 1s
+    50K .......... .......... .......... .......... .......... 54%  503K 0s
+   100K .......... .......... .......... .......... .......... 81%  749K 0s
+   150K .......... .......... .......... ...                  100%  957K=0.5s
+
+2017-04-26 17:16:03 (378 KB/s) - ‘work/csv/P400.pbo.nam08.csv’ saved [188332]
+
+--2017-04-26 17:16:03--  ftp://data-out.unavco.org/pub/products/position/P399/P399.pbo.nam08.csv
+           => ‘work/csv/P399.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P399 ... done.
+==> SIZE P399.pbo.nam08.csv ... 150071
+==> PASV ... done.    ==> RETR P399.pbo.nam08.csv ... done.
+Length: 150071 (147K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 34%  169K 1s
+    50K .......... .......... .......... .......... .......... 68%  501K 0s
+   100K .......... .......... .......... .......... ......    100%  750K=0.5s
+
+2017-04-26 17:16:05 (320 KB/s) - ‘work/csv/P399.pbo.nam08.csv’ saved [150071]
+
+--2017-04-26 17:16:05--  ftp://data-out.unavco.org/pub/products/position/P064/P064.pbo.nam08.csv
+           => ‘work/csv/P064.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/P064 ... done.
+==> SIZE P064.pbo.nam08.csv ... 189139
+==> PASV ... done.    ==> RETR P064.pbo.nam08.csv ... done.
+Length: 189139 (185K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 27%  174K 1s
+    50K .......... .......... .......... .......... .......... 54%  499K 0s
+   100K .......... .......... .......... .......... .......... 81%  741K 0s
+   150K .......... .......... .......... ....                 100%  947K=0.5s
+
+2017-04-26 17:16:06 (375 KB/s) - ‘work/csv/P064.pbo.nam08.csv’ saved [189139]
+
+--2017-04-26 17:16:06--  ftp://data-out.unavco.org/pub/products/position/NEAH/NEAH.pbo.nam08.csv
+           => ‘work/csv/NEAH.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/NEAH ... done.
+==> SIZE NEAH.pbo.nam08.csv ... 422929
+==> PASV ... done.    ==> RETR NEAH.pbo.nam08.csv ... done.
+Length: 422929 (413K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 12%  180K 2s
+    50K .......... .......... .......... .......... .......... 24%  499K 1s
+   100K .......... .......... .......... .......... .......... 36%  760K 1s
+   150K .......... .......... .......... .......... .......... 48%  939K 1s
+   200K .......... .......... .......... .......... .......... 60%  882K 0s
+   250K .......... .......... .......... .......... .......... 72%  815K 0s
+   300K .......... .......... .......... .......... .......... 84% 36.5K 0s
+   350K .......... .......... .......... .......... .......... 96%  251K 0s
+   400K .......... ...                                        100% 1.12M=2.2s
+
+2017-04-26 17:16:10 (188 KB/s) - ‘work/csv/NEAH.pbo.nam08.csv’ saved [422929]
+
+--2017-04-26 17:16:10--  ftp://data-out.unavco.org/pub/products/position/KTBW/KTBW.pbo.nam08.csv
+           => ‘work/csv/KTBW.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/KTBW ... done.
+==> SIZE KTBW.pbo.nam08.csv ... 323930
+==> PASV ... done.    ==> RETR KTBW.pbo.nam08.csv ... done.
+Length: 323930 (316K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 15%  147K 2s
+    50K .......... .......... .......... .......... .......... 31%  497K 1s
+   100K .......... .......... .......... .......... .......... 47%  354K 1s
+   150K .......... .......... .......... .......... .......... 63%  944K 0s
+   200K .......... .......... .......... .......... .......... 79%  305K 0s
+   250K .......... .......... .......... .......... .......... 94%  139M 0s
+   300K .......... ......                                     100%  148M=0.8s
+
+2017-04-26 17:16:12 (396 KB/s) - ‘work/csv/KTBW.pbo.nam08.csv’ saved [323930]
+
+--2017-04-26 17:16:12--  ftp://data-out.unavco.org/pub/products/position/BLYN/BLYN.pbo.nam08.csv
+           => ‘work/csv/BLYN.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/BLYN ... done.
+==> SIZE BLYN.pbo.nam08.csv ... 290336
+==> PASV ... done.    ==> RETR BLYN.pbo.nam08.csv ... done.
+Length: 290336 (284K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 17% 42.7K 5s
+    50K .......... .......... .......... .......... .......... 35%  497K 2s
+   100K .......... .......... .......... .......... .......... 52%  376K 1s
+   150K .......... .......... .......... .......... .......... 70%  941K 1s
+   200K .......... .......... .......... .......... .......... 88% 42.4K 0s
+   250K .......... .......... .......... ...                  100%  152M=2.6s
+
+2017-04-26 17:16:16 (107 KB/s) - ‘work/csv/BLYN.pbo.nam08.csv’ saved [290336]
+
+--2017-04-26 17:16:16--  ftp://data-out.unavco.org/pub/products/position/ALBH/ALBH.pbo.nam08.csv
+           => ‘work/csv/ALBH.pbo.nam08.csv’
+Resolving data-out.unavco.org (data-out.unavco.org)... 69.44.86.79
+Connecting to data-out.unavco.org (data-out.unavco.org)|69.44.86.79|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /pub/products/position/ALBH ... done.
+==> SIZE ALBH.pbo.nam08.csv ... 438781
+==> PASV ... done.    ==> RETR ALBH.pbo.nam08.csv ... done.
+Length: 438781 (428K) (unauthoritative)
+
+     0K .......... .......... .......... .......... .......... 11%  136K 3s
+    50K .......... .......... .......... .......... .......... 23%  235K 2s
+   100K .......... .......... .......... .......... .......... 35%  391K 1s
+   150K .......... .......... .......... .......... .......... 46%  410K 1s
+   200K .......... .......... .......... .......... .......... 58%  914K 1s
+   250K .......... .......... .......... .......... .......... 70%  511K 0s
+   300K .......... .......... .......... .......... .......... 81%  940K 0s
+   350K .......... .......... .......... .......... .......... 93%  565K 0s
+   400K .......... .......... ........                        100%  957K=1.2s
+
+2017-04-26 17:16:19 (371 KB/s) - ‘work/csv/ALBH.pbo.nam08.csv’ saved [438781]
+
+INFO:pygeons.io.io:Running pygeons toh5 ...
+INFO:pygeons.io.io:Data written to work/data.h5
+INFO:pygeons.io.io:Running pygeons crop ...
+INFO:pygeons.io.io:Cropped data written to work/data.crop.h5
+INFO:pygeons.main.main:Running pygeons autoclean ...
+DEBUG:pygeons.io.datacheck:Checking data consistency ... 
+DEBUG:pygeons.io.datacheck:OK
+INFO:pygeons.main.main:
+------------- PYGEONS AUTOCLEAN RUN INFORMATION --------------
+
+input file : work/data.crop.h5
+network :
+    model : p10, p11, se-se
+    parameter units : mm, yr, km
+    east parameters : 5.0000e+00, 5.0000e-02, 5.0000e+01
+    north parameters : 5.0000e+00, 5.0000e-02, 5.0000e+01
+    vertical parameters : 5.0000e+00, 5.0000e-02, 5.0000e+01
+station :
+    model : p0
+    parameter units : 
+    east parameters : 
+    north parameters : 
+    vertical parameters : 
+outlier tolerance : 4.0
+output file : work/data.crop.autoclean.h5
+
+--------------------------------------------------------------
+
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  53% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  74% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  85% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  95% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.strain:Removed 1 singular values from the station basis vectors
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Starting iteration 1 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 2 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 3 of outlier detection routine
+DEBUG:rbf.gauss:Detected 30 outliers out of 3183 observations
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  53% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  74% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  85% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  95% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.strain:Removed 1 singular values from the station basis vectors
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Starting iteration 1 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 2 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 3 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 4 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 5 of outlier detection routine
+DEBUG:rbf.gauss:Detected 32 outliers out of 3183 observations
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  53% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  74% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  85% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  95% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.strain:Removed 1 singular values from the station basis vectors
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Starting iteration 1 of outlier detection routine
+DEBUG:rbf.gauss:Starting iteration 2 of outlier detection routine
+DEBUG:rbf.gauss:Detected 2 outliers out of 3183 observations
+DEBUG:pygeons.io.datacheck:Checking data consistency ... 
+DEBUG:pygeons.io.datacheck:OK
+INFO:pygeons.main.main:Edited data written to work/data.crop.autoclean.h5
+INFO:pygeons.main.main:Running pygeons strain ...
+DEBUG:pygeons.io.datacheck:Checking data consistency ... 
+DEBUG:pygeons.io.datacheck:OK
+INFO:pygeons.main.main:
+--------------- PYGEONS STRAIN RUN INFORMATION ---------------
+
+input file : work/data.crop.autoclean.h5
+network prior :
+    model : p10, p11, se-se
+    parameter units : mm, yr, km
+    east parameters : 5.0000e+00, 5.0000e-02, 5.0000e+01
+    north parameters : 5.0000e+00, 5.0000e-02, 5.0000e+01
+    vertical parameters : 5.0000e+00, 5.0000e-02, 5.0000e+01
+network noise :
+    model : 
+    parameter units : 
+    east parameters : 
+    north parameters : 
+    vertical parameters : 
+station noise :
+    model : p0
+    parameter units : 
+    east parameters : 
+    north parameters : 
+    vertical parameters : 
+output start date : 2015-11-01
+output stop date : 2016-03-01
+output positions file : < using same positions as input >
+output east derivative file : work/data.crop.autoclean.strain.xdiff.h5
+output north derivative file : work/data.crop.autoclean.strain.ydiff.h5
+
+--------------------------------------------------------------
+
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  53% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  74% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  85% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  95% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.strain:Removed 1 singular values from the station basis vectors
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Calculating and caching kernel inverse ...
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Done
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  53% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  74% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  85% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  95% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.strain:Removed 1 singular values from the station basis vectors
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Calculating and caching kernel inverse ...
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Done
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  53% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  74% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  85% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  95% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.strain:Removed 1 singular values from the station basis vectors
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Calculating and caching kernel inverse ...
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  50% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  60% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  70% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  80% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  90% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:rbf.gauss:Done
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  20% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  30% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  40% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  51% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  61% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  71% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  81% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  91% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :   0% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  10% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  21% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  31% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  42% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  52% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  63% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  73% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  84% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix :  94% complete
+DEBUG:pygeons.main.gptools:Building covariance matrix : 100% complete
+DEBUG:pygeons.io.datacheck:Checking data consistency ... 
+DEBUG:pygeons.io.datacheck:OK
+DEBUG:pygeons.io.datacheck:Checking data consistency ... 
+DEBUG:pygeons.io.datacheck:OK
+INFO:pygeons.main.main:East derivative written to work/data.crop.autoclean.strain.xdiff.h5
+INFO:pygeons.main.main:North derivative written to work/data.crop.autoclean.strain.ydiff.h5

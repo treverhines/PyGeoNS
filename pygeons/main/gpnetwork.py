@@ -10,6 +10,20 @@ from pygeons.main import gpstation
 
 # 2D GaussianProcess constructors
 #####################################################################
+def p0(sigma):
+  ''' 
+  Spatially constant basis function
+  '''
+  def basis(x,diff):
+    powers = np.array([[0,0]])
+    out = rbf.poly.mvmonos(x,powers,diff)
+    return out
+
+  mu = np.full((1,),0.0)
+  sigma = np.full((1,),sigma)
+  return gauss.gpbfc(basis,mu,sigma,dim=2)  
+
+
 def se(sigma,cls):
   ''' 
   Squared exponential covariance function
@@ -173,6 +187,21 @@ def exp_se(sigma,cts,cls):
   return kernel_product(tgp,sgp)
 
 
+@set_units(['mm','yr'])
+def exp_p0(sigma,cts):
+  ''' 
+  EXP in time and constant in space covariance function
+  
+  Parameters
+  ----------
+  sigma [mm] : Standard deviation of displacements
+  cts [yr] : Characteristic time-scale
+  '''
+  tgp = gpstation.exp(sigma,cts,convert=False)
+  sgp = p0(1.0)
+  return kernel_product(tgp,sgp)
+
+
 @set_units(['mm/yr^0.5','1/yr','km'])
 def fogm_se(sigma,fc,cls):
   ''' 
@@ -312,5 +341,6 @@ CONSTRUCTORS = {'p00':p00,
                 'fogm-se':fogm_se,
                 'se-se':se_se,
                 'exp-se':exp_se,
+                'exp-p0':exp_p0,
                 'mat32-se':mat32_se,
                 'mat52-se':mat52_se}
