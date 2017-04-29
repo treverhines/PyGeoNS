@@ -182,8 +182,8 @@ def _log_strain(input_file,
                 network_prior_model,network_prior_params, 
                 network_noise_model,network_noise_params, 
                 station_noise_model,station_noise_params, 
-                start_date,stop_date,positions,
-                output_dx_file,output_dy_file):
+                start_date,stop_date,positions,rate,
+                output_u_file,output_dx_file,output_dy_file):
   msg  = '\n'
   msg += '--------------- PYGEONS STRAIN RUN INFORMATION ---------------\n\n'
   msg += 'input file : %s\n' % input_file
@@ -209,19 +209,28 @@ def _log_strain(input_file,
   msg += 'output stop date : %s\n' % stop_date
   if positions is None:
     msg += 'output positions file : < using same positions as input >\n'
+
   else:   
     msg += 'output positions file : %s\n' % positions
 
-  msg += 'output east derivative file : %s\n' % output_dx_file
-  msg += 'output north derivative file : %s\n\n' % output_dy_file
+  if rate:
+    msg += 'output velocity file : %s\n' % output_u_file
+    msg += 'output east derivative file : %s\n' % output_dx_file
+    msg += 'output north derivative file : %s\n\n' % output_dy_file
+
+  else:
+    msg += 'output displacement file : %s\n' % output_u_file
+    msg += 'output east derivative file : %s\n' % output_dx_file
+    msg += 'output north derivative file : %s\n\n' % output_dy_file
+  
   msg += '--------------------------------------------------------------\n'
   logger.info(msg)
   
 
 def pygeons_fit(input_file,
-                network_model=('p10','p11','se-se',),
+                network_model=('se-se',),
                 network_params=(5.0,0.05,50.0),
-                station_model=('p0',),
+                station_model=('p0','p1'),
                 station_params=(),
                 output_stem=None):
   ''' 
@@ -275,9 +284,9 @@ def pygeons_fit(input_file,
 
 
 def pygeons_autoclean(input_file,
-                      network_model=('p10','p11','se-se',),
+                      network_model=('se-se',),
                       network_params=(5.0,0.05,50.0),
-                      station_model=('p0',),
+                      station_model=('p0','p1'),
                       station_params=(),
                       output_stem=None,
                       outlier_tol=4.0):
@@ -332,10 +341,10 @@ def pygeons_autoclean(input_file,
 
 
 def pygeons_reml(input_file,
-                 network_model=('p10','p11','se-se',),
+                 network_model=('se-se',),
                  network_params=(5.0,0.05,50.0),
                  network_fix=(),
-                 station_model=('p0',),
+                 station_model=('p0','p1'),
                  station_params=(),
                  station_fix=(),
                  output_stem=None):
@@ -409,14 +418,14 @@ def pygeons_reml(input_file,
 
 
 def pygeons_strain(input_file,
-                   network_prior_model=('p10','p11','se-se',),
+                   network_prior_model=('se-se',),
                    network_prior_params=(5.0,0.05,50.0),
                    network_noise_model=(),
                    network_noise_params=(),
-                   station_noise_model=('p0',),
+                   station_noise_model=('p0','p1'),
                    station_noise_params=(),
                    start_date=None,stop_date=None,positions=None,
-                   output_stem=None):
+                   rate=True,output_stem=None):
   ''' 
   calculates strain
   '''
@@ -428,6 +437,7 @@ def pygeons_strain(input_file,
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
     
+  out_u = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dx = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dy = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -446,6 +456,7 @@ def pygeons_strain(input_file,
     output_id = np.array(data['id'],copy=True)
     output_lon = np.array(data['longitude'],copy=True)
     output_lat = np.array(data['latitude'],copy=True)
+
   else:  
     pos = np.loadtxt(positions,dtype=str)
     # pos = id,longitude,latitude
@@ -472,18 +483,19 @@ def pygeons_strain(input_file,
   if output_stem is None:
     output_stem = _remove_extension(input_file) + '.strain'
 
-  output_dx_file = output_stem + '.xdiff.h5'
-  output_dy_file = output_stem + '.ydiff.h5'
+  output_u_file = output_stem + '.u.h5'
+  output_dx_file = output_stem + '.dudx.h5'
+  output_dy_file = output_stem + '.dudy.h5'
 
   _log_strain(input_file,
               network_prior_model,network_prior_params, 
               network_noise_model,network_noise_params, 
               station_noise_model,station_noise_params, 
-              start_date,stop_date,positions,
-              output_dx_file,output_dy_file)
+              start_date,stop_date,positions,rate,
+              output_u_file,output_dx_file,output_dy_file)
 
   for dir in ['east','north','vertical']:
-    dx,sdx,dy,sdy  = strain(data['time'][:,None],xy,
+    u,su,dx,sdx,dy,sdy  = strain(data['time'][:,None],xy,
                             data[dir],data[dir+'_std_dev'],
                             network_prior_model=network_prior_model,
                             network_prior_params=network_prior_params[dir],
@@ -492,31 +504,46 @@ def pygeons_strain(input_file,
                             station_noise_model=station_noise_model,
                             station_noise_params=station_noise_params[dir],
                             out_t=output_time[:,None],
-                            out_x=output_xy)
+                            out_x=output_xy,
+                            rate=rate)
+    out_u[dir] = u
+    out_u[dir+'_std_dev'] = su
     out_dx[dir] = dx
     out_dx[dir+'_std_dev'] = sdx
     out_dy[dir] = dy
     out_dy[dir+'_std_dev'] = sdy
 
   # set the new lon lat and id if positions was given
+  out_u['time'] = output_time
+  out_u['longitude'] = output_lon
+  out_u['latitude'] = output_lat
+  out_u['id'] = output_id
+  out_u['time_exponent'] = -int(rate)
+  out_u['space_exponent'] = 1
+
   out_dx['time'] = output_time
   out_dx['longitude'] = output_lon
   out_dx['latitude'] = output_lat
   out_dx['id'] = output_id
-  out_dx['time_exponent'] = -1
+  out_dx['time_exponent'] = -int(rate)
   out_dx['space_exponent'] = 0
   
   out_dy['time'] = output_time
   out_dy['longitude'] = output_lon
   out_dy['latitude'] = output_lat
   out_dy['id'] = output_id
-  out_dy['time_exponent'] = -1
+  out_dy['time_exponent'] = -int(rate)
   out_dy['space_exponent'] = 0
 
-  output_dx_file = output_stem + '.xdiff.h5'
-  output_dy_file = output_stem + '.ydiff.h5'
+  hdf5_from_dict(output_u_file,out_u)
   hdf5_from_dict(output_dx_file,out_dx)
   hdf5_from_dict(output_dy_file,out_dy)
-  logger.info('East derivative written to %s' % output_dx_file)
-  logger.info('North derivative written to %s' % output_dy_file)
+  if rate:
+    logger.info('Posterior velocities written to %s' % output_u_file)
+    logger.info('Posterior velocity gradients written to %s and %s' % (output_dx_file,output_dy_file))
+
+  else:  
+    logger.info('Posterior displacements written to %s' % output_u_file)
+    logger.info('Posterior displacement gradients written to %s and %s' % (output_dx_file,output_dy_file))
+
   return

@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 def autoclean(t,x,d,sd,
               network_model=('se-se',),
-              network_params=(1.0,0.05,50.0),
-              station_model=('p0',),
+              network_params=(5.0,0.05,50.0),
+              station_model=('p0','p1'),
               station_params=(),tol=4.0):
   ''' 
   Returns a dataset that has been cleaned of outliers using a data

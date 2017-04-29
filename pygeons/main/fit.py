@@ -42,8 +42,8 @@ def _fit(d,s,mu,sigma,p):
 
 def fit(t,x,d,sd,
         network_model=('se-se',),
-        network_params=(1.0,0.05,50.0),
-        station_model=('p0',),
+        network_params=(5.0,0.05,50.0),
+        station_model=('p0','p1'),
         station_params=()):
   ''' 
   Returns the condition Gaussian process evaluated at the data points

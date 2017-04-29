@@ -558,6 +558,16 @@ Initial guess for the station model hyperparameters.
 '''
 }
 #####################################################################
+NO_RATE = {
+'dest':'rate',
+'action':'store_false',
+'help':
+''' 
+If this flag is raised then displacements and displacement gradients
+will be returned instead of velocities and velocity gradients.
+'''
+}
+#####################################################################
 OUTLIER_TOL = {
 'type':float, 
 'metavar':'FLOAT', 
@@ -624,6 +634,7 @@ GLOSSARY = {
 'network_noise_model':NETWORK_NOISE_MODEL,
 'station_noise_params':STATION_NOISE_PARAMS,
 'station_noise_model':STATION_NOISE_MODEL,
+'no_rate':NO_RATE,
 'network_fix':NETWORK_FIX,
 'station_fix':STATION_FIX,
 'outlier_tol':OUTLIER_TOL,

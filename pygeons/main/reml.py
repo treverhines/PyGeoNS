@@ -25,9 +25,9 @@ def fmin_pos(func,x0,*args,**kwargs):
 
 def reml(t,x,d,sd,
          network_model=('se-se',),
-         network_params=(1.0,0.05,50.0),
+         network_params=(5.0,0.05,50.0),
          network_fix=(),
-         station_model=('p0',),
+         station_model=('p0','p1'),
          station_params=(),
          station_fix=()):
   ''' 

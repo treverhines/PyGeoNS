@@ -49,42 +49,16 @@ def _station_sigma_and_p(gp,time,mask):
 
 def strain(t,x,d,sd,
            network_prior_model=('se-se',),
-           network_prior_params=(1.0,0.05,50.0),
+           network_prior_params=(5.0,0.05,50.0),
            network_noise_model=(),
            network_noise_params=(),
-           station_noise_model=('p0',),
+           station_noise_model=('p0','p1'),
            station_noise_params=(),
            out_t=None,
-           out_x=None):
+           out_x=None,
+           rate=True):
   ''' 
   Computes deformation gradients from displacement data.
-  
-  Parameters
-  ----------
-  t : (Nt,1) array
-  x : (Nx,2) array
-  d : (Nt,Nx) array
-  sd : (Nt,Nx) array
-  network_prior_model : str array
-  network_prior_params : float array
-  network_noise_model : str array
-  network_noise_params : float array
-  station_noise_model : str array
-  station_noise_params : float array
-  out_t : (Mt,) array, optional
-  out_x : (Mx,2) array, optional
-    
-  Returns
-  -------
-  de: (Nt,Nx) array
-    edited data
-  sde: (Nt,Nx) array
-    edited data uncertainty
-  fit: (Nt,Nx) float array
-  dx: (Mt,Mx) array
-  sdx: (Mt,Mx) array
-  dy: (Mt,Mx) array
-  sdy: (Mt,Mx) array
   '''  
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
@@ -130,16 +104,27 @@ def strain(t,x,d,sd,
   
   # condition the prior with the data
   post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
-  dx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
-  dy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
+  if rate:
+    u_gp    = post_gp.differentiate((1,0,0)) # velocity
+    dudx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
+    dudy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
 
-  dx,sdx = dx_gp.meansd(out_z,max_chunk=500)
-  dx = dx.reshape((out_t.shape[0],out_x.shape[0]))
-  sdx = sdx.reshape((out_t.shape[0],out_x.shape[0]))
+  else:  
+    u_gp    = post_gp.differentiate((0,0,0)) # displacement
+    dudx_gp = post_gp.differentiate((0,1,0)) # x derivative of displacement
+    dudy_gp = post_gp.differentiate((0,0,1)) # y derivative of displacement
 
-  dy,sdy = dy_gp.meansd(out_z,max_chunk=500)
-  dy = dy.reshape((out_t.shape[0],out_x.shape[0]))
-  sdy = sdy.reshape((out_t.shape[0],out_x.shape[0]))
+  u,su = u_gp.meansd(out_z,max_chunk=500)
+  u = u.reshape((out_t.shape[0],out_x.shape[0]))
+  su = su.reshape((out_t.shape[0],out_x.shape[0]))
 
-  out  = (dx,sdx,dy,sdy)
+  dudx,sdudx = dudx_gp.meansd(out_z,max_chunk=500)
+  dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
+  sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
+
+  dudy,sdudy = dudy_gp.meansd(out_z,max_chunk=500)
+  dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
+  sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
+
+  out  = (u,su,dudx,sdudx,dudy,sdudy)
   return out
