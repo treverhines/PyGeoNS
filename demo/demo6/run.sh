@@ -18,17 +18,23 @@ pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
 
 ## crop out data prior to 2015-01-01 and after 2017-01-01
 pygeons crop -v 'work/data.h5' \
-             --start-date '2015-07-01' \
-             --stop-date '2016-03-01' \
+             --start-date '2014-05-01' \
+             --stop-date '2016-05-01' \
 
+pygeons reml -vv 'work/data.crop.h5' \
+             --network-model 'se-se' \
+             --network-params 1.0 0.1 50.0 \
+             --network-fix 1 2 \
+             --station-model 'p0' 'p1' \
+             --station-params
 
-pygeons strain -vv 'work/data.crop.h5' \
-             --network-prior-model 'se-se' \
-             --network-prior-params east 1.0e0 3.0e-2 5.0e1 \
-                                    north 1.0e0 3.0e-2 5.0e1 \
-                                    vertical 1.0e0 3.0e-2 5.0e1 \
-             --station-noise-model 'p0' 'p1' \
-             --station-noise-params
-
-pygeons strain-view 'work/data.crop.strain.dudx.h5' \
-                    'work/data.crop.strain.dudx.h5'
+#pygeons strain -vv 'work/data.crop.h5' \
+#             --network-prior-model 'se-se' \
+#             --network-prior-params east 1.0e0 3.0e-2 5.0e1 \
+#                                    north 1.0e0 3.0e-2 5.0e1 \
+#                                    vertical 1.0e0 3.0e-2 5.0e1 \
+#             --station-noise-model 'p0' 'p1' \
+#             --station-noise-params
+#
+#pygeons strain-view 'work/data.crop.strain.dudx.h5' \
+#                    'work/data.crop.strain.dudx.h5'

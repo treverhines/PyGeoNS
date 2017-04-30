@@ -6,7 +6,9 @@ from rbf.gauss import GaussianProcess
 from rbf.gauss import _get_arg_count,_zero_mean,_zero_covariance,_empty_basis
 from pygeons.units import unit_conversion as conv
 import logging
+from pygeons.main.cbasis import add_diffs_to_caches
 logger = logging.getLogger(__name__)
+
 
 def chunkify_covariance(cov_in,chunks):
   ''' 
@@ -120,6 +122,9 @@ def composite(components,args,constructors):
   first two arguments are passed to *gpfogm* and the second two
   arguments are passed to *se*.
   '''
+  # use cythonized functions when evaluating RBFs  
+  add_diffs_to_caches()
+
   components = list(components)
   args = list(args)
   try:
