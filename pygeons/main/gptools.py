@@ -10,22 +10,22 @@ from pygeons.main.cbasis import add_diffs_to_caches
 logger = logging.getLogger(__name__)
 
 
-def chunkify_covariance(cov_in,chunks):
+def chunkify_covariance(cov_in,chunk_size):
   ''' 
   Wraps covariance functions so that the covariance matrix is built in
   chunks rather than all at once. This is more memory efficient if the
-  covariance function generates multiple intermediary arrays.
+  covariance function generates multiple intermediary arrays. 
   '''
   def cov_out(x1,x2,diff1,diff2):
+    count = 0 
     n1,n2 = x1.shape[0],x2.shape[0]
-    m = (n1//chunks) + 1 # chunk size
-    k = 0 
     out = np.zeros((n1,n2),dtype=float)
-    while k < n1:
-      logger.debug('Building covariance matrix : %3d%% complete' % (100.0*k/n1))
-      cov_chunk = cov_in(x1[k:min(k+m,n1)],x2,diff1,diff2) 
-      out[k:min(k+m,n1)] = cov_chunk 
-      k += m
+    while count < n1:
+      logger.debug('Building covariance matrix : %3d%% complete' % ((100.0*count)/n1))
+      start,stop = count,count+chunk_size
+      cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 
+      out[start:stop] = cov_chunk 
+      count += chunk_size
       
     logger.debug('Building covariance matrix : 100% complete')
     return out  
@@ -146,7 +146,7 @@ def composite(components,args,constructors):
   for ci in cs:
     gp += ci(*(args.pop(0) for i in range(ci.nargs)))
   
-  gp._covariance = chunkify_covariance(gp._covariance,10)
+  gp._covariance = chunkify_covariance(gp._covariance,500)
   return gp
   
 

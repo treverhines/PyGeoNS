@@ -114,15 +114,15 @@ def strain(t,x,d,sd,
     dudx_gp = post_gp.differentiate((0,1,0)) # x derivative of displacement
     dudy_gp = post_gp.differentiate((0,0,1)) # y derivative of displacement
 
-  u,su = u_gp.meansd(out_z,max_chunk=500)
+  u,su = u_gp.meansd(out_z,chunk_size=500)
   u = u.reshape((out_t.shape[0],out_x.shape[0]))
   su = su.reshape((out_t.shape[0],out_x.shape[0]))
 
-  dudx,sdudx = dudx_gp.meansd(out_z,max_chunk=500)
+  dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=500)
   dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
   sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
 
-  dudy,sdudy = dudy_gp.meansd(out_z,max_chunk=500)
+  dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=500)
   dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
   sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
 

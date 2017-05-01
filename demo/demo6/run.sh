@@ -9,7 +9,7 @@
 #PBS -q flux
 #PBS -l qos=flux
 #PBS -l nodes=1:ppn=8,mem=32000mb,walltime=40:00:00
-cd $PBS_O_WORKDIR
+#cd $PBS_O_WORKDIR
 
 # This script demonstrates how to download GPS data from UNAVCO and
 # then use PyGeoNS to calculate the time-dependent strain accumulated
