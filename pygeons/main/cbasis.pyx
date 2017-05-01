@@ -18,14 +18,14 @@ from cython cimport boundscheck,wraparound,cdivision
 @boundscheck(False)
 @wraparound(False)
 @cdivision(True)
-cpdef exp_0(double[:,:] x1, 
-            double[:,:] c1, 
-            double[:] eps):
+cpdef np.ndarray exp_0(double[:,:] x0, 
+                       double[:,:] c0, 
+                       double[:] eps):
   ''' 
   parameters
   ----------
-  x1 : (N,1) float array
-  c1 : (1,M) float array
+  x0 : (N,1) float array
+  c0 : (1,M) float array
   eps : (M,) float array
   
   Returns
@@ -35,148 +35,231 @@ cpdef exp_0(double[:,:] x1,
   '''
   cdef:
     int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+    
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = exp(-sqrt((x0[i,0] - c0[0,j])**2)/eps[j])
+        
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray exp_00(double[:,:] x0, double[:,:] x1,
+                        double[:,:] c0, double[:,:] c1,
+                        double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0,x1 : (N,1) float array
+  c0,c1 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = exp(-sqrt((x0[i,0] - c0[0,j])**2 + (x1[i,0] - c1[0,j])**2)/eps[j])
+        
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray se_0(double[:,:] x0, 
+                      double[:,:] c0, 
+                      double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0 : (N,1) float array
+  c0 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+    
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = exp(-(x0[i,0] - c0[0,j])**2/(2*eps[j]**2))        
+
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray se_1(double[:,:] x0, 
+                      double[:,:] c0, 
+                      double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0 : (N,1) float array
+  c0 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+    
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = -(2*x0[i,0] - 2*c0[0,j])*exp(-(x0[i,0] - c0[0,j])**2/(2*eps[j]**2))/(2*eps[j]**2)    
+        
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray se_00(double[:,:] x0, double[:,:] x1,
+                       double[:,:] c0, double[:,:] c1,
+                       double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0,x1 : (N,1) float array
+  c0,c1 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = exp(-((x0[i,0] - c0[0,j])**2 + (x1[i,0] - c1[0,j])**2)/(2*eps[j]**2))
+        
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray se_10(double[:,:] x0, double[:,:] x1,
+                       double[:,:] c0, double[:,:] c1,
+                       double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0,x1 : (N,1) float array
+  c0,c1 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = -(2*x0[i,0] - 2*c0[0,j])*exp(-((x0[i,0] - c0[0,j])**2 + (x1[i,0] - c1[0,j])**2)/(2*eps[j]**2))/(2*eps[j]**2)        
+
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray se_01(double[:,:] x0, double[:,:] x1,
+                       double[:,:] c0, double[:,:] c1,
+                       double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0,x1 : (N,1) float array
+  c0,c1 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+
+  for i in prange(n,nogil=True):
+    for j in range(m):
+      out[i,j] = -(2*x1[i,0] - 2*c1[0,j])*exp(-((x0[i,0] - c0[0,j])**2 + (x1[i,0] - c1[0,j])**2)/(2*eps[j]**2))/(2*eps[j]**2)        
+
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
+cpdef np.ndarray mat32_0(double[:,:] x0, 
+                         double[:,:] c0, 
+                         double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0 : (N,1) float array
+  c0 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
     double r
     double[:,:] out = np.empty((n,m),dtype=np.float64)
     
   for i in prange(n,nogil=True):
     for j in range(m):
-      r = fabs(x1[i,0] - c1[0,j])
-      out[i,j] = exp(-r/eps[j])
-        
-  return np.asarray(out)
-
-
-@boundscheck(False)
-@wraparound(False)
-@cdivision(True)
-cpdef exp_00(double[:,:] x1, double[:,:] x2,
-             double[:,:] c1, double[:,:] c2,
-             double[:] eps):
-  ''' 
-  parameters
-  ----------
-  x1,x2 : (N,1) float array
-  c1,c2 : (1,M) float array
-  eps : (M,) float array
-  
-  Returns
-  -------
-  out : (N,M) float array
-  
-  '''
-  cdef:
-    int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
-    double r
-    double[:,:] out = np.empty((n,m),dtype=np.float64)
-
-  for i in prange(n,nogil=True):
-    for j in range(m):
-      r = sqrt((x1[i,0] - c1[0,j])**2 +
-               (x2[i,0] - c2[0,j])**2)
-      out[i,j] = exp(-r/eps[j])
-        
-  return np.asarray(out)
-
-
-@boundscheck(False)
-@wraparound(False)
-@cdivision(True)
-cpdef se_0(double[:,:] x1, 
-           double[:,:] c1, 
-           double[:] eps):
-  ''' 
-  parameters
-  ----------
-  x1 : (N,1) float array
-  c1 : (1,M) float array
-  eps : (M,) float array
-  
-  Returns
-  -------
-  out : (N,M) float array
-  
-  '''
-  cdef:
-    int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
-    double r
-    double[:,:] out = np.empty((n,m),dtype=np.float64)
-    
-  for i in prange(n,nogil=True):
-    for j in range(m):
-      r = fabs(x1[i,0] - c1[0,j])
-      out[i,j] = exp(-r**2/(2*eps[j]**2))
-        
-  return np.asarray(out)
-
-
-@boundscheck(False)
-@wraparound(False)
-@cdivision(True)
-cpdef se_00(double[:,:] x1, double[:,:] x2,
-            double[:,:] c1, double[:,:] c2,
-            double[:] eps):
-  ''' 
-  parameters
-  ----------
-  x1,x2 : (N,1) float array
-  c1,c2 : (1,M) float array
-  eps : (M,) float array
-  
-  Returns
-  -------
-  out : (N,M) float array
-  
-  '''
-  cdef:
-    int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
-    double r
-    double[:,:] out = np.empty((n,m),dtype=np.float64)
-
-  for i in prange(n,nogil=True):
-    for j in range(m):
-      r = sqrt((x1[i,0] - c1[0,j])**2 +
-               (x2[i,0] - c2[0,j])**2)
-      out[i,j] = exp(-r**2/(2*eps[j]**2))
-        
-  return np.asarray(out)
-
-
-@boundscheck(False)
-@wraparound(False)
-@cdivision(True)
-cpdef mat32_0(double[:,:] x1, 
-              double[:,:] c1, 
-              double[:] eps):
-  ''' 
-  parameters
-  ----------
-  x1 : (N,1) float array
-  c1 : (1,M) float array
-  eps : (M,) float array
-  
-  Returns
-  -------
-  out : (N,M) float array
-  
-  '''
-  cdef:
-    int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
-    double r
-    double[:,:] out = np.empty((n,m),dtype=np.float64)
-    
-  for i in prange(n,nogil=True):
-    for j in range(m):
-      r = fabs(x1[i,0] - c1[0,j])
+      r = fabs(x0[i,0] - c0[0,j])
       out[i,j] = (1.0 + sqrt(3.0)*r/eps[j])*exp(-sqrt(3.0)*r/eps[j])
         
   return np.asarray(out)
@@ -185,14 +268,14 @@ cpdef mat32_0(double[:,:] x1,
 @boundscheck(False)
 @wraparound(False)
 @cdivision(True)
-cpdef mat32_00(double[:,:] x1, double[:,:] x2,
-               double[:,:] c1, double[:,:] c2,
-               double[:] eps):
+cpdef np.ndarray mat32_00(double[:,:] x0, double[:,:] x1,
+                          double[:,:] c0, double[:,:] c1,
+                          double[:] eps):
   ''' 
   parameters
   ----------
-  x1,x2 : (N,1) float array
-  c1,c2 : (1,M) float array
+  x0,x1 : (N,1) float array
+  c0,c1 : (1,M) float array
   eps : (M,) float array
   
   Returns
@@ -202,15 +285,15 @@ cpdef mat32_00(double[:,:] x1, double[:,:] x2,
   '''
   cdef:
     int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
+    int n = x0.shape[0]
+    int m = c0.shape[1]
     double r
     double[:,:] out = np.empty((n,m),dtype=np.float64)
 
   for i in prange(n,nogil=True):
     for j in range(m):
-      r = sqrt((x1[i,0] - c1[0,j])**2 +
-               (x2[i,0] - c2[0,j])**2)
+      r = sqrt((x0[i,0] - c0[0,j])**2 +
+               (x1[i,0] - c1[0,j])**2)
       out[i,j] = (1.0 + sqrt(3.0)*r/eps[j])*exp(-sqrt(3.0)*r/eps[j])
         
   return np.asarray(out)
@@ -219,14 +302,14 @@ cpdef mat32_00(double[:,:] x1, double[:,:] x2,
 @boundscheck(False)
 @wraparound(False)
 @cdivision(True)
-cpdef mat52_0(double[:,:] x1, 
-              double[:,:] c1, 
-              double[:] eps):
+cpdef np.ndarray mat52_0(double[:,:] x0, 
+                         double[:,:] c0, 
+                         double[:] eps):
   ''' 
   parameters
   ----------
-  x1 : (N,1) float array
-  c1 : (1,M) float array
+  x0 : (N,1) float array
+  c0 : (1,M) float array
   eps : (M,) float array
   
   Returns
@@ -236,14 +319,14 @@ cpdef mat52_0(double[:,:] x1,
   '''
   cdef:
     int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
+    int n = x0.shape[0]
+    int m = c0.shape[1]
     double r
     double[:,:] out = np.empty((n,m),dtype=np.float64)
     
   for i in prange(n,nogil=True):
     for j in range(m):
-      r = fabs(x1[i,0] - c1[0,j])
+      r = fabs(x0[i,0] - c0[0,j])
       out[i,j] = (1.0 + sqrt(5.0)*r/eps[j] + 5.0*r**2/(3.0*eps[j]**2))*exp(-sqrt(5.0)*r/eps[j])        
 
   return np.asarray(out)
@@ -252,14 +335,14 @@ cpdef mat52_0(double[:,:] x1,
 @boundscheck(False)
 @wraparound(False)
 @cdivision(True)
-cpdef mat52_00(double[:,:] x1, double[:,:] x2,
-               double[:,:] c1, double[:,:] c2,
-               double[:] eps):
+cpdef np.ndarray mat52_00(double[:,:] x0, double[:,:] x1,
+                          double[:,:] c0, double[:,:] c1,
+                          double[:] eps):
   ''' 
   parameters
   ----------
-  x1,x2 : (N,1) float array
-  c1,c2 : (1,M) float array
+  x0,x1 : (N,1) float array
+  c0,c1 : (1,M) float array
   eps : (M,) float array
   
   Returns
@@ -269,15 +352,15 @@ cpdef mat52_00(double[:,:] x1, double[:,:] x2,
   '''
   cdef:
     int i,j
-    int n = x1.shape[0]
-    int m = c1.shape[1]
+    int n = x0.shape[0]
+    int m = c0.shape[1]
     double r
     double[:,:] out = np.empty((n,m),dtype=np.float64)
 
   for i in prange(n,nogil=True):
     for j in range(m):
-      r = sqrt((x1[i,0] - c1[0,j])**2 +
-               (x2[i,0] - c2[0,j])**2)
+      r = sqrt((x0[i,0] - c0[0,j])**2 +
+               (x1[i,0] - c1[0,j])**2)
       out[i,j] = (1.0 + sqrt(5.0)*r/eps[j] + 5.0*r**2/(3.0*eps[j]**2))*exp(-sqrt(5.0)*r/eps[j])        
         
   return np.asarray(out)
@@ -293,7 +376,10 @@ def add_diffs_to_caches():
 
   rbf.basis.se.backend = 'numpy'
   rbf.basis.se.cache[(0,)] = se_0
+  rbf.basis.se.cache[(1,)] = se_1
   rbf.basis.se.cache[(0,0)] = se_00
+  rbf.basis.se.cache[(1,0)] = se_10
+  rbf.basis.se.cache[(0,1)] = se_01
 
   rbf.basis.mat32.backend = 'numpy'
   rbf.basis.mat32.cache[(0,)] = mat32_0
@@ -304,68 +390,90 @@ def add_diffs_to_caches():
   rbf.basis.mat52.cache[(0,0)] = mat52_00
   return
 
+
 def test_diffs():
   ''' 
   make sure the hard coded functions are all working
   '''
-  x1 = np.random.random((10,1))
-  x2 = np.random.random((10,2))
-  c1 = np.random.random((15,1))
-  c2 = np.random.random((15,2))
+  x0 = np.random.random((10,1))
+  x1 = np.random.random((10,2))
+  c0 = np.random.random((15,1))
+  c1 = np.random.random((15,2))
   eps = np.random.random((15,))
   
   # test exp 1d
   rbf.basis.exp.clear_cache()
-  out1 = rbf.basis.exp(x1,c1,eps=eps)
+  out1 = rbf.basis.exp(x0,c0,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.exp(x1,c1,eps=eps)
+  out2 = rbf.basis.exp(x0,c0,eps=eps)
   assert np.all(np.isclose(out1,out2)),'exp_0'
 
   # test exp 2d
   rbf.basis.exp.clear_cache()
-  out1 = rbf.basis.exp(x2,c2,eps=eps)
+  out1 = rbf.basis.exp(x1,c1,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.exp(x2,c2,eps=eps)
+  out2 = rbf.basis.exp(x1,c1,eps=eps)
   assert np.all(np.isclose(out1,out2)),'exp_00'
 
   # test se 1d
   rbf.basis.se.clear_cache()
-  out1 = rbf.basis.se(x1,c1,eps=eps)
+  out1 = rbf.basis.se(x0,c0,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.se(x1,c1,eps=eps)
+  out2 = rbf.basis.se(x0,c0,eps=eps)
   assert np.all(np.isclose(out1,out2)),'se_0'
+
+  # test se 1d
+  rbf.basis.se.clear_cache()
+  out1 = rbf.basis.se(x0,c0,eps=eps,diff=(1,))
+  add_diffs_to_caches()
+  out2 = rbf.basis.se(x0,c0,eps=eps,diff=(1,))
+  assert np.all(np.isclose(out1,out2)),'se_1'
 
   # test se 2d
   rbf.basis.se.clear_cache()
-  out1 = rbf.basis.se(x2,c2,eps=eps)
+  out1 = rbf.basis.se(x1,c1,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.se(x2,c2,eps=eps)
+  out2 = rbf.basis.se(x1,c1,eps=eps)
   assert np.all(np.isclose(out1,out2)),'se_00'
+
+  # test se 2d
+  rbf.basis.se.clear_cache()
+  out1 = rbf.basis.se(x1,c1,eps=eps,diff=(1,0))
+  add_diffs_to_caches()
+  out2 = rbf.basis.se(x1,c1,eps=eps,diff=(1,0))
+  assert np.all(np.isclose(out1,out2)),'se_10'
+
+  # test se 2d
+  rbf.basis.se.clear_cache()
+  out1 = rbf.basis.se(x1,c1,eps=eps,diff=(0,1))
+  add_diffs_to_caches()
+  out2 = rbf.basis.se(x1,c1,eps=eps,diff=(0,1))
+  assert np.all(np.isclose(out1,out2)),'se_10'
 
   # test mat32 1d
   rbf.basis.mat32.clear_cache()
-  out1 = rbf.basis.mat32(x1,c1,eps=eps)
+  out1 = rbf.basis.mat32(x0,c0,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.mat32(x1,c1,eps=eps)
+  out2 = rbf.basis.mat32(x0,c0,eps=eps)
   assert np.all(np.isclose(out1,out2)),'mat32_0'
 
   # test mat32 2d
   rbf.basis.mat32.clear_cache()
-  out1 = rbf.basis.mat32(x2,c2,eps=eps)
+  out1 = rbf.basis.mat32(x1,c1,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.mat32(x2,c2,eps=eps)
+  out2 = rbf.basis.mat32(x1,c1,eps=eps)
   assert np.all(np.isclose(out1,out2)),'mat32_00' 
 
   # test mat52 1d
   rbf.basis.mat52.clear_cache()
-  out1 = rbf.basis.mat52(x1,c1,eps=eps)
+  out1 = rbf.basis.mat52(x0,c0,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.mat52(x1,c1,eps=eps)
+  out2 = rbf.basis.mat52(x0,c0,eps=eps)
   assert np.all(np.isclose(out1,out2)),'mat52_0'
 
   # test mat52 2d
   rbf.basis.mat52.clear_cache()
-  out1 = rbf.basis.mat52(x2,c2,eps=eps)
+  out1 = rbf.basis.mat52(x1,c1,eps=eps)
   add_diffs_to_caches()
-  out2 = rbf.basis.mat52(x2,c2,eps=eps)
+  out2 = rbf.basis.mat52(x1,c1,eps=eps)
   assert np.all(np.isclose(out1,out2)),'mat52_00'

@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 def chunkify_covariance(cov_in,chunks):
   ''' 
   Wraps covariance functions so that the covariance matrix is built in
-  chunks rather than all at once. This is more memory efficient.
+  chunks rather than all at once. This is more memory efficient if the
+  covariance function generates multiple intermediary arrays.
   '''
   def cov_out(x1,x2,diff1,diff2):
     n1,n2 = x1.shape[0],x2.shape[0]
