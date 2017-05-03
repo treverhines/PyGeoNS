@@ -1,6 +1,5 @@
 ''' 
-Defines functions which are called by the PyGeoNS executable. These 
-functions are for data cleaning.
+Defines cleaning functions which are called by the PyGeoNS executable.
 '''
 from __future__ import division
 import numpy as np

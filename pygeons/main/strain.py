@@ -1,6 +1,5 @@
 ''' 
-Contains a Gaussian process regression function that has been 
-specialized for PyGeoNS
+Contains a function for computing strain or strain rates.
 '''
 import numpy as np
 import logging

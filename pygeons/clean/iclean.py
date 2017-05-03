@@ -1,3 +1,6 @@
+''' 
+Defines the PyGeoNS InteractiveCleaner class.
+'''
 from __future__ import division
 import numpy as np
 from pygeons.plot.ivector import InteractiveVectorViewer

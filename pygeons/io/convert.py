@@ -1,6 +1,6 @@
 ''' 
-Module for converting between hdf5 files, text files and data 
-dictionaries
+Module for converting between hdf5 files, text files and data
+dictionaries.
 '''
 import numpy as np
 import logging

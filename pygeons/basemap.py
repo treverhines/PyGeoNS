@@ -1,3 +1,7 @@
+''' 
+This module contains a function for defining an appropriate Basemap
+for a dataset.
+'''
 import numpy as np
 from mpl_toolkits.basemap import Basemap
 

@@ -1,5 +1,5 @@
 ''' 
-Module of station Gaussian process constructors
+Module of station Gaussian process constructors.
 '''
 import numpy as np
 import rbf.basis

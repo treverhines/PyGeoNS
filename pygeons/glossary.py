@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 ''' 
-This module defines a glossary of terms used in the help 
-documentation. This is used to aid in building and maintaining the 
-help documentation for each executable.
+This modules defines command line arguments that are used by the
+PyGeoNS executable. Each argument is a dictionary of key word
+arguments that are passed to the *add_argument* method of an
+*ArgumentParser*.
 '''
-
 #####################################################################
 INPUT_TEXT_FILE = {
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
-Name of the input data file. This should be a text file containing the 
-content of station files separated by three asterisks, ***. The 
-station files can have the PBO csv format, the PBO pos format, or the 
-PyGeoNS csv format. The format is specified with the *file_type* 
-argument.
+Name of the input text data file. 
 '''
 }
 #####################################################################
@@ -24,7 +20,7 @@ INPUT_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input data file. This should be an HDF5 file.  
+Name of the input HDF5 data file. 
 '''
 }
 #####################################################################
@@ -34,7 +30,7 @@ INPUT_FILES = {
 'metavar':'STR [STR ...]',
 'help':
 ''' 
-Names of the input data files. These should be HDF5 files. 
+Names of the input HDF5 data files.
 '''
 }
 #####################################################################
@@ -43,9 +39,8 @@ XDIFF_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input data file containing the x derivatives of a
-displacement or velocity field. This should be the output of
-pygeons-sgpr with the flag "--diff 1 0".
+Name of the input HDF5 data file containing deformation east
+derivative.
 '''
 }
 #####################################################################
@@ -54,9 +49,8 @@ YDIFF_FILE = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the input data file containing the y derivatives of a 
-displacement or velocity field. This should be the output of 
-pygeons-sgpr with the flag "--diff 0 1".
+Name of the input HDF5 data file containing deformation north
+derivative.
 '''
 }
 #####################################################################
@@ -66,9 +60,8 @@ FILE_TYPE = {
 'default':'csv',
 'help':
 ''' 
-The format for the station files. This can either be 'csv', 'pbocsv', 
-'pbopos', or 'tdecsv'. See the README for a description of each 
-format. Defaults to 'csv'.
+Format for the input text file. This can either be 'csv', 'pbocsv', or
+'pbopos'.
 '''
 }
 #####################################################################
@@ -85,9 +78,9 @@ NO_DISPLAY = {
 'action':'store_true',
 'help':
 ''' 
-If this flag is raised then the interactive cleaner will not open up.
-The edits from *input_edits_file* will be applied and the output data
-file still be generated.
+Do not display the PyGeoNS Interactive Cleaner. The edits from
+*input-edits-file* will be applied and the output data file will still
+be generated.
 '''
 }
 #####################################################################
@@ -97,8 +90,6 @@ INPUT_EDITS_FILE = {
 'help':
 ''' 
 Name of the file containing edits that will be applied to the dataset. 
-This can be the name of the output edits file from a previous 
-cleaning.
 '''
 }
 #####################################################################
@@ -107,7 +98,7 @@ POSITIONS = {
 'metavar':'STR',
 'help':
 ''' 
-Name of the file containing ids, latitudes, and longitudes of the 
+Name of the file containing IDs, latitudes, and longitudes of the 
 output positions. If this is not specified then the output positions 
 will be the same as the positions in the input dataset.
 '''
@@ -118,7 +109,7 @@ VERBOSE = {
 'default':0,
 'help':
 ''' 
-Controls verbosity. 
+Verbosity is set based on the number of times this flag is raised.
 '''
 }
 #####################################################################
@@ -128,9 +119,7 @@ COLORS = {
 'metavar':'STR',
 'help':
 ''' 
-Color string for each dataset. This can be any valid matplotlib color 
-string (e.g. 'r', 'g', or 'b' for red green or blue). There must be at 
-least as many specified colors as there are datasets.
+Color string for each dataset (e.g. 'r', 'g', 'b').
 '''
 }
 #####################################################################
@@ -140,11 +129,7 @@ LINE_STYLES = {
 'metavar':'STR',
 'help':
 ''' 
-Line style string for each dataset. This can be almost any valid 
-matplotlib line style string (e.g. '-', 'dashed', ':'). Note that 
-'--' conflicts with the command line argument parsing utility and so 
-'dashed' must be used instead. There must be at least as many 
-specified line styles as there are datasets.
+Line style string for each dataset (e.g. '-', 'dashed', ':', 'None').
 '''
 }
 #####################################################################
@@ -154,8 +139,8 @@ ERROR_STYLES = {
 'metavar':'STR',
 'help':
 ''' 
-Style of displaying the timeseries uncertainties. This is a list
-containing entries "fill", "bar", or "None".
+Style of displaying the uncertainties for each dataset. This can be
+"fill", "bar", or "None".
 '''
 }
 #####################################################################
@@ -165,9 +150,7 @@ LINE_MARKERS = {
 'metavar':'STR',
 'help':
 ''' 
-Marker string for each dataset. This can be any valid matplotlib 
-marker string (e.g. 'o', '.','p'). There must be at least as many 
-specified markers as there are datasets.
+Marker string for each dataset (e.g. 'o', '.','p'). 
 '''
 }
 #####################################################################
@@ -186,7 +169,7 @@ MAP_RESOLUTION = {
 'metavar':'STR',
 'help':
 ''' 
-Sets the basemap resolution. Can be either 'c', 'i', or 'h' for 
+Sets the basemap resolution. This can be either 'c', 'i', or 'h' for
 coarse, intermediate, or high resolution.
 '''
 }
@@ -215,9 +198,7 @@ VERTICES = {
 'metavar':'INT',
 'help':
 ''' 
-Number of vertices used in plotting the strain glyphs. Making this 
-number lower will decrease the rendering time at the expense of lower 
-quality glyphs.
+Number of vertices used in plotting the strain glyphs. 
 '''
 }
 #####################################################################
@@ -272,7 +253,7 @@ QUIVER_SCALE = {
 'metavar':'FLOAT',
 'help':
 ''' 
-Controls the length of the vectors
+Controls the length of the vectors.
 '''
 }
 #####################################################################
@@ -281,7 +262,7 @@ QUIVER_KEY_LENGTH = {
 'metavar':'FLOAT',
 'help':
 ''' 
-Length of the key vector.
+Length of the vector key.
 '''
 }
 #####################################################################
@@ -338,7 +319,7 @@ TS_TITLE = {
 'metavar':'STR',
 'help':
 ''' 
-Title of the time series figure
+Title of the time series figure.
 '''
 }
 #####################################################################
@@ -376,7 +357,7 @@ FONTSIZE = {
 'metavar':'FLOAT',
 'help':
 ''' 
-Fontsize used in all figures
+Fontsize used in all figures.
 '''
 }
 #####################################################################
@@ -385,7 +366,7 @@ START_DATE = {
 'metavar':'STR',
 'help':
 ''' 
-Start date for the output dataset in YYYY-MM-DD. This defaults to the 
+Start date for the output dataset in YYYY-MM-DD. This defaults to the
 start date for the input dataset.
 '''
 }
@@ -406,9 +387,7 @@ STATIONS = {
 'metavar':'STR', 
 'help': 
 ''' 
-List of stations that will not be included in the output dataset. This 
-is in addition to the stations that will be excluded by the 
-longitude/latitude bounds.
+Additional stations that should not be included in the output dataset.
 '''
 }
 #####################################################################
@@ -445,28 +424,6 @@ MAX_LON = {
 'help': 
 ''' 
 Maximum longitude of stations in the ouput dataset.
-'''
-}
-#####################################################################
-NETWORK_FIX = {
-'type':int,
-'nargs':'*',
-'metavar':'INT',
-'help': 
-''' 
-Indices of network hyperparameters that should be fixed at the initial
-guess.
-'''
-}
-#####################################################################
-STATION_FIX = {
-'type':int,
-'nargs':'*',
-'metavar':'INT',
-'help': 
-''' 
-Indices of station hyperparameters that should be fixed at the initial
-guess.
 '''
 }
 #####################################################################
@@ -550,6 +507,17 @@ Initial guess for the network model hyperparameters.
 '''
 }
 #####################################################################
+NETWORK_FIX = {
+'type':int,
+'nargs':'*',
+'metavar':'INT',
+'help': 
+''' 
+Indices of network hyperparameters that should be fixed at the initial
+guess.
+'''
+}
+#####################################################################
 STATION_MODEL = {
 'type':str,
 'metavar':'STR',
@@ -570,6 +538,17 @@ Initial guess for the station model hyperparameters.
 '''
 }
 #####################################################################
+STATION_FIX = {
+'type':int,
+'nargs':'*',
+'metavar':'INT',
+'help': 
+''' 
+Indices of station hyperparameters that should be fixed at the initial
+guess.
+'''
+}
+#####################################################################
 NO_RATE = {
 'dest':'rate',
 'action':'store_false',
@@ -587,7 +566,6 @@ OUTLIER_TOL = {
 ''' 
 Tolerance for outlier detection. Smaller values make the detection
 algorithm more sensitive. This should not be any lower than about 2.0.
-Defaults to 4.0.
 '''
 }
 #####################################################################

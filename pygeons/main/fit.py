@@ -1,3 +1,7 @@
+''' 
+Contains a function for fitting a Gaussian process to the
+observations.
+'''
 import numpy as np
 import logging
 from pygeons.main.gptools import composite

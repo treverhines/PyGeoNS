@@ -1,5 +1,5 @@
 ''' 
-Tools for creating Gaussian processes 
+Tools for creating Gaussian processes.
 '''
 import numpy as np
 from rbf.gauss import GaussianProcess

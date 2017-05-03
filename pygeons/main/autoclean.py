@@ -1,5 +1,5 @@
 ''' 
-Contains a data editing algorithm
+Contains a data editing algorithm.
 '''
 import numpy as np
 import logging

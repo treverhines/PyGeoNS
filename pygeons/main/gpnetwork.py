@@ -1,5 +1,5 @@
 ''' 
-module of functions that construct *GaussianProcess* instances. 
+module of network Gaussian process constructors.
 '''
 import numpy as np
 import rbf.basis

@@ -1,10 +1,10 @@
 ''' 
-provides a unit conversion function
+This module provides a unit conversion function
 '''
 
 def unit_conversion(units,time='day',space='m'):
   ''' 
-  returns a factors that converts data with units of *units* (e.g.
+  Returns a factors that converts data with units of *units* (e.g.
   km/hr) to units that are in terms of *time* and *space*. 
   
   Example

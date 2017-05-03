@@ -1,6 +1,6 @@
 ''' 
 Defines input/output functions which are called by the PyGeoNS
-executables
+executables.
 '''
 import numpy as np
 from pygeons import mjd

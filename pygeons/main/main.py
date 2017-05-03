@@ -1,5 +1,5 @@
 ''' 
-Defines the main filtering functions which are called by the 
+Defines the main analysis functions which are called by the 
 PyGeoNS executable.
 '''
 from __future__ import division
