@@ -134,7 +134,7 @@ Notes :
                map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
                ts_ax=None,ts_title=None,
                units=None,scatter_size=100,fontsize=10,
-               colors=None,line_styles=None,line_markers=None):
+               colors=None,line_styles=None,line_markers=None,error_styles=None):
     ''' 
     Interactively views vector valued data which is time and space 
     dependent
@@ -250,6 +250,11 @@ Notes :
       self.colors = colors
       
     
+    if error_styles is None:
+      self.error_styles = ['fill']*S
+    else:
+      self.error_styles = error_styles    
+
     if line_styles is None:
       self.line_styles = ['solid']*S
     else:
@@ -680,50 +685,78 @@ Notes :
       self.line3[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],2])
       self.line3[si].set_label(self.dataset_labels[si])                     
   
-  def _init_fill(self):
+  def _init_err(self):
     # Initially plots the confidence interval for each deformation 
     # component.
-    self.fill1,self.fill2,self.fill3 = [],[],[]
+    self.err1,self.err2,self.err3 = [],[],[]
     for si in range(len(self.data_sets)):
-      self.fill1 += [self.ts_ax[0].fill_between(
-                     self.t,
-                     self.data_sets[si][:,self.config['xidx'],0] -
-                     self.sigma_sets[si][:,self.config['xidx'],0],
-                     self.data_sets[si][:,self.config['xidx'],0] +
-                     self.sigma_sets[si][:,self.config['xidx'],0],
-                     edgecolor='none',
-                     color=self.colors[si],alpha=0.2)]
-      self.fill2 += [self.ts_ax[1].fill_between(
-                     self.t,
-                     self.data_sets[si][:,self.config['xidx'],1] -
-                     self.sigma_sets[si][:,self.config['xidx'],1],
-                     self.data_sets[si][:,self.config['xidx'],1] +
-                     self.sigma_sets[si][:,self.config['xidx'],1],
-                     edgecolor='none',
-                     color=self.colors[si],alpha=0.2)]
-      self.fill3 += [self.ts_ax[2].fill_between(
-                     self.t,
-                     self.data_sets[si][:,self.config['xidx'],2] -
-                     self.sigma_sets[si][:,self.config['xidx'],2],
-                     self.data_sets[si][:,self.config['xidx'],2] +
-                     self.sigma_sets[si][:,self.config['xidx'],2],
-                     edgecolor='none',
-                     color=self.colors[si],alpha=0.2)]
-  
-  def _update_fill(self):
+      if self.error_styles[si] == 'fill':
+        self.err1 += [self.ts_ax[0].fill_between(
+                       self.t,
+                       self.data_sets[si][:,self.config['xidx'],0] -
+                       self.sigma_sets[si][:,self.config['xidx'],0],
+                       self.data_sets[si][:,self.config['xidx'],0] +
+                       self.sigma_sets[si][:,self.config['xidx'],0],
+                       edgecolor='none',
+                       color=self.colors[si],alpha=0.2)]
+        self.err2 += [self.ts_ax[1].fill_between(
+                       self.t,
+                       self.data_sets[si][:,self.config['xidx'],1] -
+                       self.sigma_sets[si][:,self.config['xidx'],1],
+                       self.data_sets[si][:,self.config['xidx'],1] +
+                       self.sigma_sets[si][:,self.config['xidx'],1],
+                       edgecolor='none',
+                       color=self.colors[si],alpha=0.2)]
+        self.err3 += [self.ts_ax[2].fill_between(
+                       self.t,
+                       self.data_sets[si][:,self.config['xidx'],2] -
+                       self.sigma_sets[si][:,self.config['xidx'],2],
+                       self.data_sets[si][:,self.config['xidx'],2] +
+                       self.sigma_sets[si][:,self.config['xidx'],2],
+                       edgecolor='none',
+                       color=self.colors[si],alpha=0.2)]
+
+      elif self.error_styles[si] == 'bar':
+        self.err1 += [self.ts_ax[0].errorbar(
+                       self.t,
+                       self.data_sets[si][:,self.config['xidx'],0],
+                       self.sigma_sets[si][:,self.config['xidx'],0],
+                       linestyle='None',
+                       color=self.colors[si])]
+        self.err2 += [self.ts_ax[1].errorbar(
+                       self.t,
+                       self.data_sets[si][:,self.config['xidx'],1],
+                       self.sigma_sets[si][:,self.config['xidx'],1],
+                       linestyle='None',
+                       color=self.colors[si])]
+        self.err3 += [self.ts_ax[2].errorbar(
+                       self.t,
+                       self.data_sets[si][:,self.config['xidx'],2],
+                       self.sigma_sets[si][:,self.config['xidx'],2],
+                       linestyle='None',
+                       color=self.colors[si])]
+
+      elif self.error_styles[si] == 'None':
+        return
+      
+      else:
+        raise ValueError(
+          'elements of *error_styles* must be "fill", "bar", or "None"')
+
+  def _update_err(self):
     # Updates the confidence intervals for changes in *xidx* or 
     # *tidx*. Unfortunately, the only way to update these artists is 
     # to remove and replot them.
-    for f in self.fill1: f.remove()
-    for f in self.fill2: f.remove()
-    for f in self.fill3: f.remove()
-    self._init_fill()
+    for f in self.err1: f.remove()
+    for f in self.err2: f.remove()
+    for f in self.err3: f.remove()
+    self._init_err()
 
   def _remove_artists(self):
     # This function should remove EVERY artist
-    for f in self.fill1: f.remove()
-    for f in self.fill2: f.remove()
-    for f in self.fill3: f.remove()
+    for f in self.err1: f.remove()
+    for f in self.err2: f.remove()
+    for f in self.err3: f.remove()
     for l in self.line1: l.remove()
     for l in self.line2: l.remove()
     for l in self.line3: l.remove()
@@ -744,7 +777,7 @@ Notes :
     self._init_map_ax()
     self._init_quiver()
     self._init_lines()
-    self._init_fill()
+    self._init_err()
     self._init_image()
     self._init_scatter()
     self._init_ts_ax()
@@ -758,7 +791,7 @@ Notes :
     self._update_map_ax()
     self._update_quiver()
     self._update_lines()
-    self._update_fill()
+    self._update_err()
     self._update_image()
     self._update_scatter()
     self._update_ts_ax()

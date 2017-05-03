@@ -148,6 +148,17 @@ specified line styles as there are datasets.
 '''
 }
 #####################################################################
+ERROR_STYLES = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Style of displaying the timeseries uncertainties. This is a list
+containing entries "fill", "bar", or "None".
+'''
+}
+#####################################################################
 LINE_MARKERS = {
 'nargs':'+',
 'type':str,
@@ -447,6 +458,7 @@ Indices of network hyperparameters that should be fixed at the initial
 guess.
 '''
 }
+#####################################################################
 STATION_FIX = {
 'type':int,
 'nargs':'*',
@@ -601,6 +613,7 @@ GLOSSARY = {
 'snr_mask':SNR_MASK,
 'colors':COLORS,
 'line_styles':LINE_STYLES,
+'error_styles':ERROR_STYLES,
 'line_markers':LINE_MARKERS,
 'dataset_labels':DATASET_LABELS,
 'quiver_scale':QUIVER_SCALE,
