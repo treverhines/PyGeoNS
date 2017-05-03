@@ -140,7 +140,7 @@ ERROR_STYLES = {
 'help':
 ''' 
 Style of displaying the uncertainties for each dataset. This can be
-"fill", "bar", or "None".
+'fill', 'bar', or 'None'.
 '''
 }
 #####################################################################

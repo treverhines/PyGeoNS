@@ -11,21 +11,41 @@ main = argparse.ArgumentParser(
   usage='pygeons SUBCOMMAND ...',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''PyGeoNS is a command-line application for analyzing GPS
-displacement timeseries. PyGeoNS is primarily intended for computing
-time-dependent strain rates, which illuminates any transient
-deformation in the dataset. Strain rates are computed using Gaussian
-Process Regression (GPR). PyGeoNS can produce more than just
-strain-rates; it can use GPR to spatially/temporally smooth the GPS
-data or compute its spatial/temporal derivatives. PyGeoNS also
-provides subroutines for interactive viewing and cleaning.''')
+'''PyGeoNS (Python-based Geodetic Network Strain software) 
+
+PyGeoNS is a command line application for identifying transient strain
+in daily GPS displacement timeseries. The command which ultimately
+carries out this task is 'pygeons strain'. The user will likely want
+to first convert the data to an HDF5 format with 'pygeons toh5', crop
+the data to a manageable size with 'pygeons crop', clean the data
+automatically with 'pygeons autoclean' or manually with 'pygeons
+clean', and view the data with 'pygeons vector-view'.
+
+PyGeoNS identifies transient deformation in a Bayesian framework in
+that the user must specify a prior stochastic process describing both
+the signal and the noise. The signal is described as a
+three-dimensional 'network' stochatic process (two spatial dimensions
+and one time dimension). The noise can be described as a network
+stochastic process or a 'station' stochastic process, which is noise
+that is uncorrelated between stations. The hyperparameters for the
+stochastic processes can be determined objectively with the Restricted
+Maximum Likelihood (REML) method using the command 'pygeons reml'.
+
+The transient deformation and transient strain returned by 'pygeons
+strain' can be viewed with the commands 'pygeons vector-view' and
+pygeons strain-view' respectively. See the README for a complete
+demonstration of PyGeoNS.
+
+PyGeoNS is developed by Trever Hines (hinest@umich.edu) and is
+distributed under the MIT license. Please post bug reports, comments,
+or suggestions at http://www.github.com/treverhines/PyGeoNS.''')
 subs = main.add_subparsers(
   metavar='SUBCOMMAND',
   help=
-'''PyGeoNS sub-command. This can be any of ['info', 'toh5', 'totext',
-'vector-view', 'strain-view', 'clean', 'crop', 'strain', 'reml']. Call
-"pygeons" followed by the sub-command and '-h' to see more
-information.''')
+'''PyGeoNS sub-command. This can be 'info', 'toh5', 'totext',
+'vector-view', 'strain-view', 'clean', 'autoclean', 'crop', 'merge',
+'strain', 'reml', or 'fit'. Call 'pygeons' followed by the sub-command
+and '-h' to see more information.''')
 
 ## TOH5
 #####################################################################
