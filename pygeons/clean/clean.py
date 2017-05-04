@@ -9,7 +9,6 @@ from pygeons.io.convert import dict_from_hdf5,hdf5_from_dict
 from pygeons.mjd import mjd,mjd_inv
 from pygeons.basemap import make_basemap
 from pygeons.clean.iclean import InteractiveCleaner
-from pygeons.breaks import make_space_vert_smp
 from pygeons.units import unit_conversion
 from pygeons.plot.plot import (_unit_string,
                                _setup_map_ax,

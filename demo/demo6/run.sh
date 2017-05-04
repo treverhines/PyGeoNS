@@ -16,15 +16,15 @@
 # over a slow slip event.
 
 ## download data from the urls in *urls.txt*
-rm -rf 'work/csv'
-mkdir -p 'work/csv'
-for i in `cat 'urls.txt'`
-  do
-  wget -P 'work/csv' $i
-  done
-
+#rm -rf 'work/csv'
+#mkdir -p 'work/csv'
+#for i in `cat 'urls.txt'`
+#  do
+#  wget -P 'work/csv' $i
+#  done
+#
 ## use sed to concatenate all the data files and separate them with ***
-sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+#sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
 ## convert the csv file to an hdf5 file
 pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
@@ -45,5 +45,5 @@ pygeons strain -vv 'work/data.crop.h5' \
              --station-noise-params \
              --output-stem 'work/comm.strain'
 
-#pygeons strain-view -v 'work/data.crop.strain.dudx.h5' \
-#                       'work/data.crop.strain.dudy.h5'
+pygeons strain-view -v 'work/comm.strain.dudx.h5' \
+                       'work/comm.strain.dudy.h5'
