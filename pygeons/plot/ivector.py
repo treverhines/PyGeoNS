@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from pygeons.plot.rin import restricted_input
 from pygeons.plot.quiver import Quiver
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import ListedColormap
+from code import InteractiveConsole
 import logging
-import os
+import sys
 import scipy.interpolate
 from scipy.spatial import cKDTree
+from textwrap import wrap
 try:
   from PyQt4.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 except ImportError:
@@ -83,7 +84,44 @@ def without_interactivity(fin):
   return fout
     
 
-class InteractiveVectorViewer(object):
+class Configurable(object):
+  ''' 
+  Class which allows the user to interactively configure its
+  attributes with the *configure* method
+  '''
+  def configure(self,attrs=None):
+    # *attrs* is a list of attribute names that the user wants to
+    # configure. This defaults to all the non-private names
+    if attrs is None:
+      attrs = [n for n in dir(self) if not n.startswith('_')]
+
+    # set message displayed when the interactive console starts
+    banner  = '\n'
+    banner += 'Python ' + sys.version + ' on ' + sys.platform + '\n'
+    banner += 'Type "help", "copyright", "credits" or "license" for more information.'
+    banner += '\n\n'
+    banner += '\n'.join(wrap('The current namespace has been populated with the following attributes from the class instance:'))
+    banner += '\n\n'
+    banner += '\n'.join(wrap(', '.join(['"%s"' % i for i in attrs])))
+    banner += '\n\n'
+    banner += '\n'.join(wrap('The values associate with these names can be modified, and the attributes of the class instance will be updated with the new values. When finished, exit the interpreter with Ctrl+"d".'))
+    banner += '\n'
+    namespace = {}
+    for n in attrs:
+      # fill the namespace with deep copies of the classes current
+      # attributes
+      namespace[n] = getattr(self,n)
+
+    # set the attribute values with an interactive console
+    ic = InteractiveConsole(locals=namespace)
+    ic.interact(banner=banner)
+    # namespace has been modified in the interactive console. Give the
+    # instance the new values
+    for n in attrs:
+      setattr(self,n,namespace[n])
+
+
+class InteractiveVectorViewer(Configurable):
   ''' 
 -------------- PyGeoNS Interactive Vector Viewer (PIVV) --------------
 
@@ -111,9 +149,7 @@ Controls :
 
   H : Toggles whether to hide the station highlighter
         
-  Enter : Disables figures and allows configurable parameters to be
-    edited through the command line. Variables can be defined using any 
-    functions in the numpy, matplotlib, or base python namespace
+  Enter : Edit parameters through the command line
 
 Notes :
   Stations may also be selected by clicking on them.
@@ -125,16 +161,51 @@ Notes :
 
 ----------------------------------------------------------------------
   '''
+  @property
+  def xidx(self):
+    return self._xidx
+  
+  @xidx.setter
+  def xidx(self,val):
+    Nx = len(self.x)
+    # wrap the index around so that it is between 0 and Nx
+    self._xidx = val%Nx
+
+  @property
+  def tidx(self):
+    return self._tidx
+  
+  @tidx.setter
+  def tidx(self,val):
+    Nt = len(self.t)
+    # wrap the index around so that it is between 0 and Nt
+    self._tidx = val%Nt
+
   def __init__(self,t,x,
                u=None,v=None,z=None,
                su=None,sv=None,sz=None, 
-               station_labels=None,time_labels=None,dataset_labels=None,
-               quiver_key_length=None,quiver_scale=None,quiver_key_pos=(0.15,0.2),
-               image_clim=None,image_cmap='RdBu_r',image_resolution=300,
-               map_ax=None,map_title=None,map_ylim=None,map_xlim=None,
-               ts_ax=None,ts_title=None,
-               units=None,scatter_size=100,fontsize=10,
-               colors=None,line_styles=None,line_markers=None,error_styles=None):
+               station_labels=None,
+               time_labels=None,
+               dataset_labels=None,
+               quiver_key_length=None,
+               quiver_scale=None,
+               quiver_key_pos=(0.15,0.2),
+               image_clim=None,
+               image_cmap='RdBu_r',
+               image_resolution=300,
+               map_ax=None,
+               map_title=None,
+               map_ylim=None,
+               map_xlim=None,
+               ts_ax=None,
+               ts_title=None,
+               units=None,
+               scatter_size=100,
+               fontsize=10,
+               colors=None,
+               line_styles=None,
+               line_markers=None,
+               error_styles=None):
     ''' 
     Interactively views vector valued data which is time and space 
     dependent
@@ -142,143 +213,67 @@ Notes :
     Parameters
     ----------
       t : (Nt,) array
-        observation times
-
       x : (Nx,2) array
-        observation positions
-        
-      u,v,z : (S,Nx,Nt) array
-        vector field components
-        
-      su,sv,sz : (S,Nx,Nt) array
-        one standard deviation uncertainty in vector field components
-        
-      units : str
-      
-      quiver_key_length : float
-        length of the quiver key
-
-      quiver_scale : float
-        scales the vectors by this amount
-
-      quiver_key_pos : (2,) array
-        position of th quiver key in axis coordinates
-        
-      scatter_size : float
-        size of the vertical deformation dots
-
-      station_labels : (Nx,) str array
-      
-      dataset_labels : (Ns,) str array
-      
-      image_clim : float
-        minimum and maximum vertical color value      
-
-      image_cmap : Colormap instance
-        colormap for vertical deformation
-
-      image_resolution : int
-        number of columns and rows in the matrix passed to plt.imshow. 
-        Larger number produces crisper Voronoi cells
-
-      map_ax : Axis instance
-        axis where map view will be plotted
-      
-      map_title : str
-        replaces the default title for the map view plot
-
-      map_ylim : (2,) array
-        ylim for the map view plot
-      
-      map_xlim : (2,) array
-        xlim for the map view plot
-      
-      ts_ax : Axis instance
-        list of three axes where the time series components will be 
-        plotted. They must all be on the same figure in order for 
-        interactivity to work
-
-      ts_title : str
-        title for time series plot
-      
-      fontsize : float
-        controls all fontsizes
-        
+      u,v,z : (Ns,Nx,Nt) array
+      su,sv,sz : (Ns,Nx,Nt) array
+      **kwargs
     '''
+    # SET T and X
+    #################################################################
     # time and space arrays
     self.t = np.asarray(t)
     self.x = np.asarray(x)
     Nt = self.t.shape[0]
     Nx = self.x.shape[0]
     
+    # SET DATA_SETS AND SIGMA_SETS
+    #################################################################
     # find out how many data sets were provided
     if u is not None:
-      S = len(u)
+      Ns = len(u)
     elif v is not None:
-      S = len(v)       
+      Ns = len(v)       
     elif z is not None:
-      S = len(z)       
+      Ns = len(z)       
     else:
       raise ValueError('must provide either u, v, or z')  
     
     if u is None:
-      u = [np.zeros((Nt,Nx)) for i in range(S)]
+      u = [np.zeros((Nt,Nx)) for i in range(Ns)]
     if v is None:
-      v = [np.zeros((Nt,Nx)) for i in range(S)]
+      v = [np.zeros((Nt,Nx)) for i in range(Ns)]
     if z is None:
-      z = [np.zeros((Nt,Nx)) for i in range(S)]
+      z = [np.zeros((Nt,Nx)) for i in range(Ns)]
     if su is None:
-      su = [np.zeros((Nt,Nx)) for i in range(S)]
+      su = [np.zeros((Nt,Nx)) for i in range(Ns)]
     if sv is None:
-      sv = [np.zeros((Nt,Nx)) for i in range(S)]
+      sv = [np.zeros((Nt,Nx)) for i in range(Ns)]
     if sz is None:
-      sz = [np.zeros((Nt,Nx)) for i in range(S)]
+      sz = [np.zeros((Nt,Nx)) for i in range(Ns)]
   
-    if ((len(u)  != S) | (len(v)  != S) |
-        (len(z)  != S) | (len(su) != S) |
-        (len(sv) != S) | (len(sz) != S)):
+    if ((len(u)  != Ns) | (len(v)  != Ns) |
+        (len(z)  != Ns) | (len(su) != Ns) |
+        (len(sv) != Ns) | (len(sz) != Ns)):
       raise ValueError(
         'provided values of u, v, z, su, sv, and sz must have the '
         'same length')
 
-    if colors is None:
-      colors = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
-      self.colors = [colors[i%7] for i in range(S)]
-    else:
-      # replace the standard 'g' with a more neon green
-      colors = [(0.0,0.7,0.0) if (i == 'g') else i for i in colors]
-      self.colors = colors
-      
-    
-    if error_styles is None:
-      self.error_styles = ['fill']*S
-    else:
-      self.error_styles = error_styles    
-
-    if line_styles is None:
-      self.line_styles = ['solid']*S
-    else:
-      self.line_styles = line_styles    
-
-    if line_markers is None:
-      self.line_markers = ['None']*S
-    else:
-      self.line_markers = line_markers    
-
     # merge u,v,z and su,sv,sz into data_sets and sigma_sets for 
     # compactness
     self.data_sets = []
-    for i,j,k in zip(u,v,z):
-      i,j,k = np.asarray(i),np.asarray(j),np.asarray(k)
-      tpl = (i[:,:,None],j[:,:,None],k[:,:,None])
+    for ui,vi,zi in zip(u,v,z):
+      ui,vi,zi = np.asarray(ui),np.asarray(vi),np.asarray(zi)
+      tpl = (ui[:,:,None],vi[:,:,None],zi[:,:,None])
       self.data_sets += [np.concatenate(tpl,axis=2)]
 
     self.sigma_sets = []
-    for i,j,k in zip(su,sv,sz):
-      i,j,k = np.asarray(i),np.asarray(j),np.asarray(k)
-      tpl = (i[:,:,None],j[:,:,None],k[:,:,None])
+    for sui,svi,szi in zip(su,sv,sz):
+      sui,svi,szi = np.asarray(sui),np.asarray(svi),np.asarray(szi)
+      tpl = (sui[:,:,None],svi[:,:,None],szi[:,:,None])
       self.sigma_sets += [np.concatenate(tpl,axis=2)]
-    
+      
+    ## SET MAP_AX, TS_AX, MAP_FIG, AND TS_FIG
+    #################################################################
     # map view axis and figure
     if map_ax is None:
       # gives a white background 
@@ -300,63 +295,112 @@ Notes :
     else:
       self.ts_fig = ts_ax[0].get_figure()
       self.ts_ax = ts_ax   
+
+    ## SET PLOTTING PARAMETERS
+    #################################################################
+    # dataset colors
+    if colors is None:
+      cycle = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
+      colors = [cycle[i%7] for i in range(Ns)]
+
+    # if only one color was specified then use it for all datasets
+    elif len(colors) == 1:
+      colors = [colors[0] for i in range(Ns)]
       
-    # station names used for the time series plots
+    self.colors = colors
+    
+    # error style
+    if error_styles is None:
+      error_styles = ['fill' for i in range(Ns)]
+
+    elif len(error_styles) == 1:
+      error_styles = [error_styles[0] for i in range(Ns)]
+      
+    self.error_styles = error_styles
+    
+    # line styles
+    if line_styles is None:
+      line_styles = ['solid' for i in range(Ns)]
+
+    elif len(line_styles) == 1:
+      line_styles = [line_styles[0] for i in range(Ns)]
+      
+    self.line_styles = line_styles
+    
+    # line markers
+    if line_markers is None:
+      line_markers = ['None' for i in range(Ns)]
+
+    elif len(line_markers) == 1:
+      line_markers = [line_markers[0] for i in range(Ns)]
+      
+    self.line_markers = line_markers
+
+    # station labels
     if station_labels is None:
-      station_labels = ['%04d' % m for m in range(len(self.x))]
-
-    if time_labels is None:
-      time_labels = np.array(self.t).astype(str)
-
-    # data set names used for the legends
-    if dataset_labels is None:
-      dataset_labels = ['dataset %s' % n for n in range(len(self.data_sets))]
+      station_labels = ['%04d' % i for i in range(Nx)]
 
     self.station_labels = station_labels
-    self.time_labels = time_labels
-    self.dataset_labels = dataset_labels
 
+    # time labels
+    if time_labels is None:
+      time_labels = [str(i) for i in self.t]
+  
+    self.time_labels = time_labels
+
+    # dataset labels
+    if dataset_labels is None:
+      dataset_labels = ['dataset %s' % i for i in range(Ns)]
+    
+    self.dataset_labels = dataset_labels  
+    
+    # quiver key length
     if quiver_key_length is None: 
-      # This is an Nt,Nx,S array of vector lengths for each data set
+      # This is an Nt,Nx,Ns array of vector lengths for each data set
       mags = [np.linalg.norm(d,axis=2) for d in self.data_sets]
       # find the average length of unmasked vectors
       mag = max(np.nanmean(mags),1e-10)
       # round to leading sigfig
       quiver_key_length = one_sigfig(mag)
+    
+    self.quiver_key_length = quiver_key_length  
       
+    # quiver scale
     if quiver_scale is None:
       mags = [np.linalg.norm(d,axis=2) for d in self.data_sets]
       mag = max(np.nanmean(mags),1e-10)
       # find the average shortest distance between points
-      if Nx <= 1:
+      if len(self.x) <= 1:
         dist = 1.0
       else:  
         T = cKDTree(self.x)
         dist = np.mean(T.query(self.x,2)[0][:,1])
 
       quiver_scale = mag/dist
+    
+    self.quiver_scale = quiver_scale
       
-    # this dictionary contains plot configuration parameters which may 
-    # be interactively changed
-    self.config = {}
-    self.config['highlight'] = True
-    self.config['tidx'] = 0
-    self.config['xidx'] = 0
-    self.config['units'] = units
-    self.config['image_cmap'] = image_cmap
-    self.config['image_clim'] = image_clim
-    self.config['image_resolution'] = image_resolution
-    self.config['quiver_scale'] = quiver_scale
-    self.config['quiver_key_pos'] = quiver_key_pos        
-    self.config['quiver_key_length'] = quiver_key_length
-    self.config['scatter_size'] = scatter_size
-    self.config['ts_title'] = ts_title
-    self.config['map_title'] = map_title
-    self.config['map_xlim'] = map_xlim
-    self.config['map_ylim'] = map_ylim
-    self.config['fontsize'] = fontsize
+    # set additional parameters which do not need to be checked yet
+    self.highlight = True
+    self.tidx = 0
+    self.xidx = 0
+    self.units = units
+    self.image_cmap = image_cmap
+    self.image_clim = image_clim
+    self.image_resolution = image_resolution
+    self.quiver_key_pos = quiver_key_pos        
+    self.scatter_size = scatter_size
+    self.ts_title = ts_title
+    self.map_title = map_title
+    self.map_xlim = map_xlim
+    self.map_ylim = map_ylim
+    self.fontsize = fontsize
+
+    # initiate all artists
     self._init()
+    # turn off MPLs key bindings and use my own
     disable_default_key_bindings()
+    # display help
     logger.info(self.__doc__)
 
   def connect(self):
@@ -372,15 +416,15 @@ Notes :
     #
     # CALL THIS AFTER *_init_lines*
     #
-    if self.config['units'] is None:
+    if self.units is None:
       ts_ylabel_0 = 'east'
       ts_ylabel_1 = 'north'
       ts_ylabel_2 = 'vertical' 
 
     else:
-      ts_ylabel_0 = 'east [%s]' % self.config['units']
-      ts_ylabel_1 = 'north [%s]' % self.config['units']
-      ts_ylabel_2 = 'vertical [%s]' % self.config['units']
+      ts_ylabel_0 = 'east [%s]' % self.units
+      ts_ylabel_1 = 'north [%s]' % self.units
+      ts_ylabel_2 = 'vertical [%s]' % self.units
 
     self.ts_ax[2].set_xlabel('time')
     self.ts_ax[0].set_ylabel(ts_ylabel_0)
@@ -389,25 +433,25 @@ Notes :
     self.ts_ax[0].grid(c='0.5',alpha=0.5)
     self.ts_ax[1].grid(c='0.5',alpha=0.5)
     self.ts_ax[2].grid(c='0.5',alpha=0.5)
-    self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[0].yaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[1].yaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[2].yaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[0].title.set_fontsize(self.config['fontsize'])
-    self.ts_ax[0].tick_params(labelsize=self.config['fontsize'])
-    self.ts_ax[1].tick_params(labelsize=self.config['fontsize'])
-    self.ts_ax[2].tick_params(labelsize=self.config['fontsize'])
-    if self.config['ts_title'] is None:
-      name = self.station_labels[self.config['xidx']]
+    self.ts_ax[0].xaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[1].xaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[2].xaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[0].yaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[1].yaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[2].yaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[0].title.set_fontsize(self.fontsize)
+    self.ts_ax[0].tick_params(labelsize=self.fontsize)
+    self.ts_ax[1].tick_params(labelsize=self.fontsize)
+    self.ts_ax[2].tick_params(labelsize=self.fontsize)
+    if self.ts_title is None:
+      name = self.station_labels[self.xidx]
       self.ts_ax[0].set_title('station : %s' % name,
-                              fontsize=self.config['fontsize'])
+                              fontsize=self.fontsize)
     else:
-      self.ts_ax[0].set_title(self.config['ts_title'],
-                              fontsize=self.config['fontsize'])
+      self.ts_ax[0].set_title(self.ts_title,
+                              fontsize=self.fontsize)
 
-    self.ts_ax[0].legend(frameon=False,fontsize=self.config['fontsize'])
+    self.ts_ax[0].legend(frameon=False,fontsize=self.fontsize)
     # hide x tick labels for the top two axes
     plt.setp(self.ts_ax[0].get_xticklabels(), visible=False)
     plt.setp(self.ts_ax[1].get_xticklabels(), visible=False)
@@ -428,22 +472,22 @@ Notes :
     #
     # CALL THIS AFTER *_update_lines*
     # 
-    if self.config['ts_title'] is None:
-      name = self.station_labels[self.config['xidx']]
+    if self.ts_title is None:
+      name = self.station_labels[self.xidx]
       self.ts_ax[0].set_title('station : %s' % name,
-                              fontsize=self.config['fontsize'])
+                              fontsize=self.fontsize)
     else:
-      self.ts_ax[0].set_title(self.config['ts_title'],
-                              fontsize=self.config['fontsize'])
+      self.ts_ax[0].set_title(self.ts_title,
+                              fontsize=self.fontsize)
 
-    self.ts_ax[0].legend(frameon=False,fontsize=self.config['fontsize'])
+    self.ts_ax[0].legend(frameon=False,fontsize=self.fontsize)
     self.ts_ax[0].set_autoscale_on(True) 
     self.ts_ax[1].set_autoscale_on(True) 
     self.ts_ax[2].set_autoscale_on(True) 
     self.ts_ax[0].relim()
     self.ts_ax[1].relim()
     self.ts_ax[2].relim()
-    self.ts_ax[0].autoscale_view(tight=True)
+    self.ts_ax[0].autoscale_view()
     self.ts_ax[1].autoscale_view()
     self.ts_ax[2].autoscale_view()
 
@@ -454,63 +498,63 @@ Notes :
     # CALL THIS AFTER *_init_scatter*
     # 
     self.map_ax.set_aspect('equal')
-    self.map_ax.tick_params(labelsize=self.config['fontsize'])
-    if self.config['map_title'] is None:
-      time_label = self.time_labels[self.config['tidx']]
+    self.map_ax.tick_params(labelsize=self.fontsize)
+    if self.map_title is None:
+      time_label = self.time_labels[self.tidx]
       self.map_ax.set_title('time : %s' % time_label,
-                            fontsize=self.config['fontsize'])
+                            fontsize=self.fontsize)
     else:
-      self.map_ax.set_title(self.config['map_title'],
-                            fontsize=self.config['fontsize'])
+      self.map_ax.set_title(self.map_title,
+                            fontsize=self.fontsize)
 
     # do not dynamically update the axis limits
-    if self.config['map_xlim'] is None:
-      self.config['map_xlim'] = self.map_ax.get_xlim()
+    if self.map_xlim is None:
+      self.map_xlim = self.map_ax.get_xlim()
 
-    if self.config['map_ylim'] is None:  
-      self.config['map_ylim'] = self.map_ax.get_ylim()
+    if self.map_ylim is None:  
+      self.map_ylim = self.map_ax.get_ylim()
       
-    self.map_ax.set_xlim(self.config['map_xlim'])
-    self.map_ax.set_ylim(self.config['map_ylim'])
+    self.map_ax.set_xlim(self.map_xlim)
+    self.map_ax.set_ylim(self.map_ylim)
       
   def _update_map_ax(self):
     # Updates the map axis for changes in *xidx* or *tidx*. This 
     # involves changing the title to display the current date
-    if self.config['map_title'] is None:
-      time_label = self.time_labels[self.config['tidx']]
+    if self.map_title is None:
+      time_label = self.time_labels[self.tidx]
       self.map_ax.set_title('time : %s' % time_label,
-                            fontsize=self.config['fontsize'])
+                            fontsize=self.fontsize)
     else:
-      self.map_ax.set_title(self.config['map_title'],
-                            fontsize=self.config['fontsize'])
+      self.map_ax.set_title(self.map_title,
+                            fontsize=self.fontsize)
 
   def _init_image(self):
     # Initially plots the vertical deformation image.
     #
     # CALL THIS AFTER *_init_map_ax*
     #
-    self.x_itp = [np.linspace(self.config['map_xlim'][0],
-                              self.config['map_xlim'][1],
-                              self.config['image_resolution']),
-                  np.linspace(self.config['map_ylim'][0],
-                              self.config['map_ylim'][1],
-                              self.config['image_resolution'])]
-    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
+    self.x_itp = [np.linspace(self.map_xlim[0],
+                              self.map_xlim[1],
+                              self.image_resolution),
+                  np.linspace(self.map_ylim[0],
+                              self.map_ylim[1],
+                              self.image_resolution)]
+    data_itp = _grid_interp_data(self.data_sets[0][self.tidx,:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
-    if self.config['image_clim'] is None:
+    if self.image_clim is None:
       # if vmin and vmax are None then the color bounds will be 
       # updated each time the artists are redrawn
       image_clim = data_itp.min(),data_itp.max()
     else:  
-      image_clim = self.config['image_clim']
+      image_clim = self.image_clim
 
     self.image = self.map_ax.imshow(
                    data_itp,
-                   extent=(self.config['map_xlim']+self.config['map_ylim']),
+                   extent=(self.map_xlim+self.map_ylim),
                    interpolation='bicubic',
                    origin='lower',
                    vmin=image_clim[0],vmax=image_clim[1],
-                   cmap=self.config['image_cmap'],
+                   cmap=self.image_cmap,
                    zorder=0)
     # Allocate a space in the figure for the colorbar if a colorbar 
     # has not already been generated.
@@ -519,30 +563,30 @@ Notes :
     else:
       self.cbar = self.map_fig.colorbar(self.image,cax=self.cbar.ax)  
       
-    if self.config['units'] is None:
+    if self.units is None:
       image_clabel = 'vertical'
     else:
-      image_clabel = 'vertical [%s]' % self.config['units']
+      image_clabel = 'vertical [%s]' % self.units
       
     self.cbar.set_clim(image_clim)
-    self.cbar.set_label(image_clabel,fontsize=self.config['fontsize'])
-    self.cbar.ax.tick_params(labelsize=self.config['fontsize'])
+    self.cbar.set_label(image_clabel,fontsize=self.fontsize)
+    self.cbar.ax.tick_params(labelsize=self.fontsize)
     self.cbar.solids.set_rasterized(True)
 
   def _update_image(self):
     # Update the vertical deformation image for changes in *tidx* or 
     # *xidx*. This changes the data for the image and updates the 
     # colorbar
-    data_itp = _grid_interp_data(self.data_sets[0][self.config['tidx'],:,2],
+    data_itp = _grid_interp_data(self.data_sets[0][self.tidx,:,2],
                                  self.x,self.x_itp[0],self.x_itp[1])
     self.image.set_data(data_itp)
-    if self.config['image_clim'] is None:
+    if self.image_clim is None:
       # *image_clim* are the user specified color bounds. if they are 
       # None then the color bounds will be updated each time the 
       # artists are redrawn
       image_clim = data_itp.min(),data_itp.max()
     else:  
-      image_clim = self.config['image_clim']
+      image_clim = self.image_clim
 
     self.image.set_clim(image_clim)
     self.cbar.set_clim(image_clim)
@@ -560,9 +604,9 @@ Notes :
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
     # use scatter points to show z for second data set 
-    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
+    colors = sm.to_rgba(self.data_sets[1][self.tidx,:,2])
     self.scatter = self.map_ax.scatter(self.x[:,0],self.x[:,1],
-                                       c=colors,s=self.config['scatter_size'],
+                                       c=colors,s=self.scatter_size,
                                        zorder=1,edgecolor=self.colors[1])
 
   def _update_scatter(self):
@@ -575,34 +619,34 @@ Notes :
       return
 
     sm = ScalarMappable(norm=self.cbar.norm,cmap=self.cbar.get_cmap())
-    colors = sm.to_rgba(self.data_sets[1][self.config['tidx'],:,2])
+    colors = sm.to_rgba(self.data_sets[1][self.tidx,:,2])
     self.scatter.set_facecolors(colors)
 
   def _init_highlighter(self):
     # Creates a highlighter indicating the location of the station 
     # currently plotted in the time series axes.
-    self.highlighter = self.map_ax.plot(self.x[self.config['xidx'],0],
-                                   self.x[self.config['xidx'],1],'ko',
-                                   markersize=20*self.config['highlight'])[0]
+    self.highlighter = self.map_ax.plot(self.x[self.xidx,0],
+                                   self.x[self.xidx,1],'ko',
+                                   markersize=20*self.highlight)[0]
 
   def _update_highlighter(self):
     # Updates the highlighter for changes in *tidx* or *xidx*. This changes 
     # the location of the highlighter to the new current station
-    self.highlighter.set_data(self.x[self.config['xidx'],0],
-                         self.x[self.config['xidx'],1])
-    self.highlighter.set_markersize(20*self.config['highlight'])
+    self.highlighter.set_data(self.x[self.xidx,0],
+                         self.x[self.xidx,1])
+    self.highlighter.set_markersize(20*self.highlight)
 
   def _init_quiver(self):
     # Initially plots the horizontal deformation vectors and a key
     self.quiver = []
     for si in range(len(self.data_sets)):
       q = Quiver(self.map_ax,self.x[:,0],self.x[:,1],
-                 self.data_sets[si][self.config['tidx'],:,0],
-                 self.data_sets[si][self.config['tidx'],:,1],
-                 scale=self.config['quiver_scale'],  
+                 self.data_sets[si][self.tidx,:,0],
+                 self.data_sets[si][self.tidx,:,1],
+                 scale=self.quiver_scale,  
                  width=0.005,
-                 sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
-                        self.sigma_sets[si][self.config['tidx'],:,1],
+                 sigma=(self.sigma_sets[si][self.tidx,:,0],
+                        self.sigma_sets[si][self.tidx,:,1],
                         np.zeros(self.x.shape[0])), 
                  color=self.colors[si],
                  ellipse_kwargs={'edgecolors':'k','zorder':1+si},
@@ -612,28 +656,28 @@ Notes :
       self.quiver += [q]                        
       if si == 0:
         # plot quiver key for the first data set
-        if self.config['units'] is None:
-          quiver_key_label = '%s' % self.config['quiver_key_length']
+        if self.units is None:
+          quiver_key_label = '%s' % self.quiver_key_length
         else:
-          quiver_key_label = '%s %s' % (self.config['quiver_key_length'],
-                                        self.config['units'])
+          quiver_key_label = '%s %s' % (self.quiver_key_length,
+                                        self.units)
           
         self.key = self.map_ax.quiverkey(
                      self.quiver[si],
-                     self.config['quiver_key_pos'][0],
-                     self.config['quiver_key_pos'][1],
-                     self.config['quiver_key_length'],
+                     self.quiver_key_pos[0],
+                     self.quiver_key_pos[1],
+                     self.quiver_key_length,
                      quiver_key_label,zorder=2,labelsep=0.05,
-                     fontproperties={'size':self.config['fontsize']})
+                     fontproperties={'size':self.fontsize})
                      
   def _update_quiver(self):
     # Updates the deformation vectors for changes in *tidx* or *xidx* 
     for si in range(len(self.data_sets)):
       self.quiver[si].set_UVC(
-                        self.data_sets[si][self.config['tidx'],:,0],
-                        self.data_sets[si][self.config['tidx'],:,1],
-                        sigma=(self.sigma_sets[si][self.config['tidx'],:,0],
-                               self.sigma_sets[si][self.config['tidx'],:,1],
+                        self.data_sets[si][self.tidx,:,0],
+                        self.data_sets[si][self.tidx,:,1],
+                        sigma=(self.sigma_sets[si][self.tidx,:,0],
+                               self.sigma_sets[si][self.tidx,:,1],
                                np.zeros(self.x.shape[0])))
 
   def _init_pickers(self):
@@ -652,21 +696,21 @@ Notes :
     self.line1,self.line2,self.line3 = [],[],[]
     for si in range(len(self.data_sets)):
       self.line1 += self.ts_ax[0].plot(
-                      self.t,self.data_sets[si][:,self.config['xidx'],0],
+                      self.t,self.data_sets[si][:,self.xidx,0],
                       color=self.colors[si],
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
                       linewidth=1.0)
       self.line2 += self.ts_ax[1].plot(
-                      self.t,self.data_sets[si][:,self.config['xidx'],1],
+                      self.t,self.data_sets[si][:,self.xidx,1],
                       color=self.colors[si],
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
                       linewidth=1.0)
       self.line3 += self.ts_ax[2].plot(
-                      self.t,self.data_sets[si][:,self.config['xidx'],2],
+                      self.t,self.data_sets[si][:,self.xidx,2],
                       color=self.colors[si],
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
@@ -677,12 +721,12 @@ Notes :
     # Updates the deformation time series for changes in *tidx* or 
     # *xidx*.
     for si in range(len(self.data_sets)):
-      self.line1[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],0])
+      self.line1[si].set_data(self.t,self.data_sets[si][:,self.xidx,0])
       # relabel in case the data_set order has switched
       self.line1[si].set_label(self.dataset_labels[si])                     
-      self.line2[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],1])
+      self.line2[si].set_data(self.t,self.data_sets[si][:,self.xidx,1])
       self.line2[si].set_label(self.dataset_labels[si])                     
-      self.line3[si].set_data(self.t,self.data_sets[si][:,self.config['xidx'],2])
+      self.line3[si].set_data(self.t,self.data_sets[si][:,self.xidx,2])
       self.line3[si].set_label(self.dataset_labels[si])                     
   
   def _init_err(self):
@@ -693,46 +737,46 @@ Notes :
       if self.error_styles[si] == 'fill':
         self.err1 += [self.ts_ax[0].fill_between(
                        self.t,
-                       self.data_sets[si][:,self.config['xidx'],0] -
-                       self.sigma_sets[si][:,self.config['xidx'],0],
-                       self.data_sets[si][:,self.config['xidx'],0] +
-                       self.sigma_sets[si][:,self.config['xidx'],0],
+                       self.data_sets[si][:,self.xidx,0] -
+                       self.sigma_sets[si][:,self.xidx,0],
+                       self.data_sets[si][:,self.xidx,0] +
+                       self.sigma_sets[si][:,self.xidx,0],
                        edgecolor='none',
                        color=self.colors[si],alpha=0.2)]
         self.err2 += [self.ts_ax[1].fill_between(
                        self.t,
-                       self.data_sets[si][:,self.config['xidx'],1] -
-                       self.sigma_sets[si][:,self.config['xidx'],1],
-                       self.data_sets[si][:,self.config['xidx'],1] +
-                       self.sigma_sets[si][:,self.config['xidx'],1],
+                       self.data_sets[si][:,self.xidx,1] -
+                       self.sigma_sets[si][:,self.xidx,1],
+                       self.data_sets[si][:,self.xidx,1] +
+                       self.sigma_sets[si][:,self.xidx,1],
                        edgecolor='none',
                        color=self.colors[si],alpha=0.2)]
         self.err3 += [self.ts_ax[2].fill_between(
                        self.t,
-                       self.data_sets[si][:,self.config['xidx'],2] -
-                       self.sigma_sets[si][:,self.config['xidx'],2],
-                       self.data_sets[si][:,self.config['xidx'],2] +
-                       self.sigma_sets[si][:,self.config['xidx'],2],
+                       self.data_sets[si][:,self.xidx,2] -
+                       self.sigma_sets[si][:,self.xidx,2],
+                       self.data_sets[si][:,self.xidx,2] +
+                       self.sigma_sets[si][:,self.xidx,2],
                        edgecolor='none',
                        color=self.colors[si],alpha=0.2)]
 
       elif self.error_styles[si] == 'bar':
         self.err1 += [self.ts_ax[0].errorbar(
                        self.t,
-                       self.data_sets[si][:,self.config['xidx'],0],
-                       self.sigma_sets[si][:,self.config['xidx'],0],
+                       self.data_sets[si][:,self.xidx,0],
+                       self.sigma_sets[si][:,self.xidx,0],
                        linestyle='None',
                        color=self.colors[si])]
         self.err2 += [self.ts_ax[1].errorbar(
                        self.t,
-                       self.data_sets[si][:,self.config['xidx'],1],
-                       self.sigma_sets[si][:,self.config['xidx'],1],
+                       self.data_sets[si][:,self.xidx,1],
+                       self.sigma_sets[si][:,self.xidx,1],
                        linestyle='None',
                        color=self.colors[si])]
         self.err3 += [self.ts_ax[2].errorbar(
                        self.t,
-                       self.data_sets[si][:,self.config['xidx'],2],
-                       self.sigma_sets[si][:,self.config['xidx'],2],
+                       self.data_sets[si][:,self.xidx,2],
+                       self.sigma_sets[si][:,self.xidx,2],
                        linestyle='None',
                        color=self.colors[si])]
 
@@ -806,59 +850,24 @@ Notes :
     self._init()
     
   @without_interactivity
-  def command_line_configure(self):
-    # Provides a prompt which allows the user to set the configurable 
-    # properties via the command line
-    while True:
-      try:
-        key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
-        print('')
-        val = self.config[key]
-        break
-      except KeyError:  
-        if key == 'exit':
-          return
-          
-        if key != 'help':
-          print('"%s" is not a configurable parameter\n' % key)
-
-        print('select from one of the following')
-        for k in self.config.keys():
-          print('    %s' % k)
-        print('')
-
-    print('current value is %s\n' % repr(val))
-    try:
-      new_val = restricted_input('new value >>> ')
-      print('')
-        
-    except Exception as err:
-      print('')
-      print('the following error was raised when evaluating the '
-            'above expression:\n    %s\n' % repr(err))
-      new_val = val
-        
-    self.config[key] = new_val
+  def configure(self):
+    Configurable.configure(self)
   
   def save_frames(self,dir):
-    ''' 
-    saves each frame as a jpeg image in the direction *dir*
-    '''
+    # saves each frame as a jpeg image in the direction *dir*
     Nt = self.data_sets[0].shape[0]
     for i in range(Nt):
-      self.config['tidx'] = i
+      self.tidx = i
       self.update()
       fname = '%06d.jpeg' % i
-      print('saving file %s/%s' % (dir,fname))
+      logger.info('saving file %s/%s' % (dir,fname))
       plt.savefig(dir+'/'+fname)
-
-    print('done')
 
   def on_pick(self,event):
     # This function is called when the mouse is clicked
     for i,v in enumerate(self.pickers):
       if event.artist == v:
-        self.config['xidx'] = i
+        self.xidx = i
         break
 
     self.update()    
@@ -866,68 +875,56 @@ Notes :
   def on_key_press(self,event):
     # This function is called when a key is pressed
     if event.key == 'right':
-      Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = (self.config['tidx'] + 1)%Nt
+      self.tidx += 1
       self.update()
 
     elif event.key == 'ctrl+right':
-      Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = (self.config['tidx'] + 10)%Nt
+      self.tidx += 10
       self.update()
 
     elif event.key == 'alt+right':
-      Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = (self.config['tidx'] + 100)%Nt
+      self.tidx += 100
       self.update()
 
     elif event.key == 'left':
-      Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = (self.config['tidx'] - 1)%Nt
+      self.tidx -= 1
       self.update()
 
     elif event.key == 'ctrl+left':
-      Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = (self.config['tidx'] - 10)%Nt
+      self.tidx -= 10
       self.update()
 
     elif event.key == 'alt+left':
-      Nt = self.data_sets[0].shape[0]
-      self.config['tidx'] = (self.config['tidx'] - 100)%Nt
+      self.tidx -= 100
       self.update()
 
     elif event.key == 'up':
-      Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = (self.config['xidx'] + 1)%Nx
+      self.xidx += 1
       self.update()
 
     elif event.key == 'ctrl+up':
-      Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = (self.config['xidx'] + 10)%Nx
+      self.xidx += 10
       self.update()
 
     elif event.key == 'alt+up':
-      Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = (self.config['xidx'] + 100)%Nx
+      self.xidx += 100
       self.update()
 
     elif event.key == 'down':
-      Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = (self.config['xidx'] - 1)%Nx
+      self.xidx -= 1
       self.update()
 
     elif event.key == 'ctrl+down':
-      Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = (self.config['xidx'] - 10)%Nx
+      self.xidx -= 10
       self.update()
 
     elif event.key == 'alt+down':
-      Nx = self.data_sets[0].shape[1]
-      self.config['xidx'] = (self.config['xidx'] - 100)%Nx
+      self.xidx -= 100
       self.update()
 
     elif event.key == 'h':
       # toggle station highlighter
-      self.config['highlight'] = not self.config['highlight']
+      self.highlight = not self.highlight
       self.hard_update()
 
     elif event.key == 'c':
@@ -939,27 +936,21 @@ Notes :
       
     elif event.key == 'v':
       # toggle vertical deformation 
-      if self.config['image_cmap'] is _blank_cmap:
-        self.config['image_cmap'] = self._previous_cmap
+      if self.image_cmap is _blank_cmap:
+        self.image_cmap = self._previous_cmap
       
       else:
-        self._previous_cmap = self.config['image_cmap']
-        self.config['image_cmap'] = _blank_cmap  
+        self._previous_cmap = self.image_cmap
+        self.image_cmap = _blank_cmap  
         
       self.hard_update()
-
-    elif event.key == 's':
-      if not os.path.exists('frames'):
-        os.mkdir('frames')
-
-      self.save_frames('frames')
 
     elif event.key == 'r':
       # refresh  
       self.hard_update()
       
     elif event.key == 'enter':
-      self.command_line_configure()
+      self.configure()
       self.hard_update()
       
     else:

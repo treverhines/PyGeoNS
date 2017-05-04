@@ -91,9 +91,7 @@ Controls :
     after the jump. Click on the time series axes to identify a jump and 
     drag the cursor over the desired time interval.
 
-  Enter : Edit the configurable parameters through the command line.
-    Variables can be defined using any functions in the numpy, 
-    matplotlib, or base python namespace.
+  Enter : Edit parameters through the command line.
       
 Notes
 -----
@@ -178,38 +176,38 @@ Notes
     intervals then no changes will be made.
 
     '''
-    xidx = self.config['xidx']
     tidx_right, = np.nonzero((self.t >= jump_time) & 
                              (self.t <= (jump_time+delta)))
     tidx_left,  = np.nonzero((self.t <  jump_time) & 
                              (self.t >= (jump_time-delta)))
-    mean_right,_ = weighted_mean(self.data_sets[0][tidx_right,xidx,:],
-                                 self.sigma_sets[0][tidx_right,xidx,:],
+    mean_right,_ = weighted_mean(self.data_sets[0][tidx_right,self.xidx,:],
+                                 self.sigma_sets[0][tidx_right,self.xidx,:],
                                  axis=0)
-    mean_left,_ = weighted_mean(self.data_sets[0][tidx_left,xidx,:],
-                                self.sigma_sets[0][tidx_left,xidx,:],
+    mean_left,_ = weighted_mean(self.data_sets[0][tidx_left,self.xidx,:],
+                                self.sigma_sets[0][tidx_left,self.xidx,:],
                                 axis=0)
     # jump for each component
     jump = mean_right - mean_left
     # only remove jumps when a jump can be calculated
     finite_idx, = np.isfinite(jump).nonzero()
     all_tidx_right, = np.nonzero(self.t >= jump_time)
-    new_pos = self.data_sets[0][all_tidx_right,xidx,:]
+    new_pos = self.data_sets[0][all_tidx_right,self.xidx,:]
     new_pos[:,finite_idx] = new_pos[:,finite_idx] - jump[finite_idx] 
-    self.data_sets[0][all_tidx_right,xidx] = new_pos
-    self.log.append(('jump',xidx,jump_time,delta))
-    logger.info('removed jump for station %s at time %s' % (xidx,jump_time))
+    self.data_sets[0][all_tidx_right,self.xidx] = new_pos
+    self.log.append(('jump',self.xidx,jump_time,delta))
+    logger.info('removed jump for station %s at time %s' % 
+                (self.xidx,jump_time))
       
   def remove_outliers(self,start_time,end_time):
     ''' 
     masks data data between *start_time* and *end_time*
     '''
-    xidx = self.config['xidx']
     tidx, = np.nonzero((self.t >= start_time) & (self.t <= end_time))
-    self.data_sets[0][tidx,xidx] = np.nan
-    self.sigma_sets[0][tidx,xidx] = np.inf
-    self.log.append(('outliers',xidx,start_time,end_time))
-    logger.info('removed outliers for station %s from time %s to %s' % (xidx,start_time,end_time))
+    self.data_sets[0][tidx,self.xidx] = np.nan
+    self.sigma_sets[0][tidx,self.xidx] = np.inf
+    self.log.append(('outliers',self.xidx,start_time,end_time))
+    logger.info('removed outliers for station %s from time %s to %s' % 
+                (self.xidx,start_time,end_time))
 
   def on_mouse_press(self,event):
     # ignore if not the left button
@@ -226,7 +224,8 @@ Notes
     for ax in self.ts_ax:
       ymin,ymax = ax.get_ylim()
       ax.set_ylim((ymin,ymax)) # prevent the ylims from changing after calls to draw
-      r = Rectangle((self._t1,ymin),0.0,ymax-ymin,color='none',alpha=0.5,edgecolor=None)
+      r = Rectangle((self._t1,ymin),0.0,ymax-ymin,color='none',
+                    alpha=0.5,edgecolor=None)
       self.rects += [r]
       self.vlines += [ax.vlines(self._t1,ymin,ymax,color='none')]
       ax.add_patch(r)

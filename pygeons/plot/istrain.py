@@ -4,57 +4,72 @@ This module provides functions for plotting strain
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.text import Text
-from pygeons.plot.iview import disable_default_key_bindings
-from pygeons.plot.iview import without_interactivity
-from pygeons.plot.iview import one_sigfig
-from pygeons.plot.rin import restricted_input
+from pygeons.plot.ivector import disable_default_key_bindings
+from pygeons.plot.ivector import without_interactivity
+from pygeons.plot.ivector import one_sigfig
+from pygeons.plot.ivector import Configurable
 from pygeons.plot.strain_glyph import strain_glyph
 from scipy.spatial import cKDTree
-import os
+import logging
+logger = logging.getLogger(__name__)
 
 
-class InteractiveStrainViewer(object):
+class InteractiveStrainViewer(Configurable):
   ''' 
-              ----------------------------------------
-              PyGeoNS Interactive Strain Viewer (PISV)
-              ----------------------------------------
+----------- PyGeoNS Interactive Strain Viewer (PISV) ----------------
 
-An interactive figure for viewing the spatial and temporal patterns in 
+An interactive figure for viewing the spatial and temporal patterns in
 strain.
 
-Controls
---------
-Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
-  100 respectively)
-
-Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
-  forward 10 and 100 respectively)
-
-Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
-  100 respectively)
-          
-Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
-  and 100 respectively)
-
-R : redraw figures
-
-H : Hide station marker
-
-Enter : Disables figures and allows configurable parameters to be 
-  edited through the command line. Variables can be defined using any 
-  functions in the numpy, matplotlib, or base python namespace
-
-Notes
------
-Stations may also be selected by clicking on them.
-
-Exit PISV by closing the figures.
+Controls :
+  Left : move back 1 time step (Ctrl-Left and Alt-Left move back 10 and 
+    100 respectively)
   
-Key bindings only work when the active window is one of the PISV 
-figures.
-
+  Right : move forward 1 time step (Ctrl-Right and Alt-Right move 
+    forward 10 and 100 respectively)
+  
+  Up : Move forward 1 station (Ctrl-Left and Alt-Left move back 10 and 
+    100 respectively)
+            
+  Down : Move back 1 station (Ctrl-Right and Alt-Right move forward 10 
+    and 100 respectively)
+  
+  R : redraw figures
+  
+  H : Hide station marker
+  
+  Enter : Edit parameters through the command line
+  
+Notes :
+  Stations may also be selected by clicking on them.
+  
+  Exit PISV by closing the figures.
+    
+  Key bindings only work when the active window is one of the PISV 
+  figures.
+  
 ---------------------------------------------------------------------
   '''
+  @property
+  def xidx(self):
+    return self._xidx
+
+  @xidx.setter
+  def xidx(self,val):
+    Nx = len(self.x)
+    # wrap the index around so that it is between 0 and Nx
+    self._xidx = val%Nx
+
+  @property
+  def tidx(self):
+    return self._tidx
+
+  @tidx.setter
+  def tidx(self,val):
+    Nt = len(self.t)
+    # wrap the index around so that it is between 0 and Nt
+    self._tidx = val%Nt
+
   def __init__(self,t,x,
                exx,eyy,exy,
                sxx=None,syy=None,sxy=None,
@@ -82,47 +97,19 @@ figures.
     Parameters
     ----------
       t : (Nt,) array
-        Observation times
-
       x : (Nx,2) array
-        Observation positions
-        
       exx,eyy,exy : (Nt,Nx) array
-        Strain tensor components
-
       sxx,syy,sxy : (Nt,Nx) array
-        One standard deviation uncertainty on the strain components
-        
-      scale : float
-        Increases the size of the strain markers
-         
-      map_ax : Axis instance
-        Axis where map view will be plotted
-
-      map_title : str
-        Replaces the default title for the map view plot
-
-      map_ylim : (2,) array
-        Y limits for the map view plot
-      
-      xlim : (2,) array
-        X limits for the map view plot
-      
-      fontsize : float
-        Controls all fontsizes
-      
-      key_magnitude : float
-        strain magnitude for the key
-        
-      key_position : tuple    
-        position of the key in axis coordinates
-        
+      **kwargs        
     '''
-    # time and space arrays
+    ## SET T AND X
+    #################################################################
     self.t = np.asarray(t)
     self.x = np.asarray(x)
     Nx,Nt = len(x),len(t)
     
+    ## SET DATA_SET AND SIGMA_SET
+    #################################################################
     if sxx is None: sxx = np.zeros((Nt,Nx))
     if syy is None: syy = np.zeros((Nt,Nx))
     if sxy is None: sxy = np.zeros((Nt,Nx))
@@ -132,7 +119,8 @@ figures.
     tpl = (sxx[:,:,None],syy[:,:,None],sxy[:,:,None])
     self.sigma_set = np.concatenate(tpl,axis=2)
 
-    # map view axis and figure
+    ## SET MAP_AX, TS_AX, MAP_FIG, AND TS_FIG
+    #################################################################
     if map_ax is None:
       # gives a white background 
       map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
@@ -153,17 +141,21 @@ figures.
       self.ts_fig = ts_ax[0].get_figure()
       self.ts_ax = ts_ax
 
-    # station names used for the time series plots
+    ## SET PLOTTING PARAMETERS
+    #################################################################
+    # station labels
     if station_labels is None:
-      station_labels = np.arange(len(self.x)).astype(str)
+      station_labels = ['%04d' % i for i in range(Nx)]
+    
+    self.station_labels = station_labels  
               
+    # time labels  
     if time_labels is None:
-      time_labels = np.array(self.t).astype(str)
+      time_labels = [str(i) for i in self.t]
 
-    self.time_labels = list(time_labels)
-    self.station_labels = list(station_labels)
+    self.time_labels = time_labels
 
-    # estimate a good scale for the strain glyphs
+    # scale
     if scale is None:
       # Get an idea of what the typical strain magnitudes are
       mags = np.linalg.norm(self.data_set,axis=2)
@@ -177,34 +169,40 @@ figures.
     
       scale = dist/mag
       
+    self.scale = scale
+    
+    # key magnitude
     if key_magnitude is None:  
       mags = np.linalg.norm(self.data_set,axis=2)
       mag = max(np.nanmean(mags),1e-10)
       key_magnitude = one_sigfig(mag)
       
-    # this dictionary contains plot configuration parameters which may 
-    # be interactively changed
-    self.config = {}
-    self.config['highlight'] = True 
-    self.config['tidx'] = 0
-    self.config['xidx'] = 0
-    self.config['scale'] = scale
-    self.config['map_title'] = map_title
-    self.config['map_xlim'] = map_xlim
-    self.config['map_ylim'] = map_ylim
-    self.config['ts_title'] = ts_title
-    self.config['fontsize'] = fontsize
-    self.config['units'] = units
-    self.config['compression_color'] = compression_color
-    self.config['extension_color'] = extension_color
-    self.config['alpha'] = alpha
-    self.config['vertices'] = vertices
-    self.config['key_magnitude'] = key_magnitude
-    self.config['key_position'] = key_position
-    self.config['snr_mask'] = snr_mask
+    self.key_magnitude = key_magnitude
+    
+    # set additional properties
+    self.highlight = True 
+    self.tidx = 0
+    self.xidx = 0
+    self.scale = scale
+    self.map_title = map_title
+    self.map_xlim = map_xlim
+    self.map_ylim = map_ylim
+    self.ts_title = ts_title
+    self.fontsize = fontsize
+    self.units = units
+    self.compression_color = compression_color
+    self.extension_color = extension_color
+    self.alpha = alpha
+    self.vertices = vertices
+    self.key_position = key_position
+    self.snr_mask = snr_mask
+
+    # initiate all artists
     self._init()
+    # turn off MPL key bindings and use my own
     disable_default_key_bindings()
-    print(self.__doc__)
+    # display help
+    logger.info(self.__doc__)
 
   def connect(self):
     self.ts_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
@@ -212,31 +210,21 @@ figures.
     self.map_fig.canvas.mpl_connect('key_press_event',self.on_key_press)
     self.map_fig.canvas.mpl_connect('pick_event',self.on_pick)
 
-  def save_frames(self,dir):
-    ''' 
-    saves each frame as a jpeg image in the direction *dir*
-    '''
-    Nt = self.data_set.shape[0]
-    for i in range(Nt):
-      self.config['tidx'] = i
-      self.update()
-      fname = '%06d.jpeg' % i
-      print('saving file %s/%s' % (dir,fname))
-      plt.savefig(dir+'/'+fname)
-    
-    print('done')  
-
   def _init_ts_ax(self):
-    # call after _init_lines
-    if self.config['units'] is None:
+    # Initially configures the time series axes. This involves setting
+    # the titles, labels, and scaling to fir the displayed data
+    #
+    # CALL THIS AFTER *_init_lines*
+    #
+    if self.units is None:
       ts_ylabel_0 = 'east normal'
       ts_ylabel_1 = 'north normal'
       ts_ylabel_2 = 'east-north shear'
 
     else:
-      ts_ylabel_0 = 'east normal\n[%s]' % self.config['units']
-      ts_ylabel_1 = 'north normal\n[%s]' % self.config['units']
-      ts_ylabel_2 = 'east-north shear\n[%s]' % self.config['units']
+      ts_ylabel_0 = 'east normal\n[%s]' % self.units
+      ts_ylabel_1 = 'north normal\n[%s]' % self.units
+      ts_ylabel_2 = 'east-north shear\n[%s]' % self.units
 
     self.ts_ax[2].set_xlabel('time')
     self.ts_ax[0].set_ylabel(ts_ylabel_0)
@@ -245,23 +233,23 @@ figures.
     self.ts_ax[0].grid(c='0.5',alpha=0.5)
     self.ts_ax[1].grid(c='0.5',alpha=0.5)
     self.ts_ax[2].grid(c='0.5',alpha=0.5)
-    self.ts_ax[0].xaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[1].xaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[2].xaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[0].yaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[1].yaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[2].yaxis.label.set_fontsize(self.config['fontsize'])
-    self.ts_ax[2].title.set_fontsize(self.config['fontsize'])
-    self.ts_ax[0].tick_params(labelsize=self.config['fontsize'])
-    self.ts_ax[1].tick_params(labelsize=self.config['fontsize'])
-    self.ts_ax[2].tick_params(labelsize=self.config['fontsize'])
-    if self.config['ts_title'] is None:
-      name = self.station_labels[self.config['xidx']]
+    self.ts_ax[0].xaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[1].xaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[2].xaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[0].yaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[1].yaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[2].yaxis.label.set_fontsize(self.fontsize)
+    self.ts_ax[2].title.set_fontsize(self.fontsize)
+    self.ts_ax[0].tick_params(labelsize=self.fontsize)
+    self.ts_ax[1].tick_params(labelsize=self.fontsize)
+    self.ts_ax[2].tick_params(labelsize=self.fontsize)
+    if self.ts_title is None:
+      name = self.station_labels[self.xidx]
       self.ts_ax[0].set_title('station : %s' % name,
-                              fontsize=self.config['fontsize'])
+                              fontsize=self.fontsize)
     else:
-      self.ts_ax[0].set_title(self.config['ts_title'],
-                              fontsize=self.config['fontsize'])
+      self.ts_ax[0].set_title(self.ts_title,
+                              fontsize=self.fontsize)
 
     # hide xtick labels for the top two axes
     plt.setp(self.ts_ax[0].get_xticklabels(), visible=False)
@@ -277,18 +265,19 @@ figures.
     self.ts_ax[2].autoscale_view()
 
   def _update_ts_ax(self):
-    # call after _update_lines
+    # Update the time series axes for changes in *tidx* or *xidx*.
+    # THis involves changes the axes titles and rescaling for the new
+    # data being displayed
     #
-    # updates for:
-    #   xidx
-    #   ts_title
-    if self.config['ts_title'] is None:
-      name = self.station_labels[self.config['xidx']]
+    # CALL THIS AFTER *_update_lines*
+    #
+    if self.ts_title is None:
+      name = self.station_labels[self.xidx]
       self.ts_ax[0].set_title('station : %s' % name,
-                              fontsize=self.config['fontsize'])
+                              fontsize=self.fontsize)
     else:
-      self.ts_ax[0].set_title(self.config['ts_title'],
-                              fontsize=self.config['fontsize'])
+      self.ts_ax[0].set_title(self.ts_title,
+                              fontsize=self.fontsize)
 
     self.ts_ax[0].set_autoscale_on(True)
     self.ts_ax[1].set_autoscale_on(True)
@@ -301,51 +290,54 @@ figures.
     self.ts_ax[2].autoscale_view()
 
   def _init_map_ax(self):
-    # call after _init_scatter
+    # Initially configure the map view axis.  THis involves setting
+    # the titles, labels, and scaling to fit the plotted data.
     self.map_ax.set_aspect('equal')
-    self.map_ax.tick_params(labelsize=self.config['fontsize'])
-    if self.config['map_title'] is None:
-      time_label = self.time_labels[self.config['tidx']]
+    self.map_ax.tick_params(labelsize=self.fontsize)
+    if self.map_title is None:
+      time_label = self.time_labels[self.tidx]
       self.map_ax.set_title('time : %s' % time_label,
-                            fontsize=self.config['fontsize'])
+                            fontsize=self.fontsize)
     else:
-      self.map_ax.set_title(self.config['map_title'],
-                            fontsize=self.config['fontsize'])
+      self.map_ax.set_title(self.map_title,
+                            fontsize=self.fontsize)
 
     # do not dynamically update the axis limits
-    if self.config['map_xlim'] is None:
-      self.config['map_xlim'] = self.map_ax.get_xlim()
+    if self.map_xlim is None:
+      self.map_xlim = self.map_ax.get_xlim()
 
-    if self.config['map_ylim'] is None:
-      self.config['map_ylim'] = self.map_ax.get_ylim()
+    if self.map_ylim is None:
+      self.map_ylim = self.map_ax.get_ylim()
 
-    self.map_ax.set_xlim(self.config['map_xlim'])
-    self.map_ax.set_ylim(self.config['map_ylim'])
+    self.map_ax.set_xlim(self.map_xlim)
+    self.map_ax.set_ylim(self.map_ylim)
 
   def _update_map_ax(self):
-    if self.config['map_title'] is None:
-      time_label = self.time_labels[self.config['tidx']]
+    # Updates the map axis for changes in *xidx* or *tidx*. This
+    # involves changing the title to display the current time
+    if self.map_title is None:
+      time_label = self.time_labels[self.tidx]
       self.map_ax.set_title('time : %s' % time_label,
-                            fontsize=self.config['fontsize'])
+                            fontsize=self.fontsize)
     else:
-      self.map_ax.set_title(self.config['map_title'],
-                            fontsize=self.config['fontsize'])
+      self.map_ax.set_title(self.map_title,
+                            fontsize=self.fontsize)
 
   def _init_marker(self):
-    self.marker, = self.map_ax.plot(self.x[self.config['xidx'],0],
-                                    self.x[self.config['xidx'],1],'ko',
-                                    markersize=20*self.config['highlight'])
+    # Creates a highlighter indicating the location of the station
+    # currently plotted in the time seris axes.
+    self.marker, = self.map_ax.plot(self.x[self.xidx,0],
+                                    self.x[self.xidx,1],'ko',
+                                    markersize=20*self.highlight)
 
   def _update_marker(self):
-    # updates for:
-    #   xidx
-    #   highlight
-    self.marker.set_data(self.x[self.config['xidx'],0],
-                         self.x[self.config['xidx'],1])
-    self.marker.set_markersize(20*self.config['highlight'])
+    # Updates the highlighter for changes in *tidx* or *xidx*.
+    self.marker.set_data(self.x[self.xidx,0],
+                         self.x[self.xidx,1])
+    self.marker.set_markersize(20*self.highlight)
 
   def _init_pickers(self):
-    # pickable artists
+    # Create a pickable artist for each point in *x*
     self.pickers = []
     for xi in self.x:
       self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
@@ -353,124 +345,127 @@ figures.
                                        markersize=0)
 
   def _init_key(self):
+    # Initially create the strain glyph key
     self.glyph_key = []
-    mag = self.config['key_magnitude']
-    units = self.config['units']
+    mag = self.key_magnitude
+    units = self.units
     strain = [mag,-mag,0.0]
     sigma = [0.25*mag,0.25*mag,0.25*mag]
 
-    key_pos_axes = self.config['key_position']
+    key_pos_axes = self.key_position
     key_pos_display = self.map_ax.transAxes.transform(key_pos_axes)
     key_pos_data = self.map_ax.transData.inverted().transform(key_pos_display)
     posx,posy = key_pos_data
     self.glyph_key += strain_glyph(key_pos_data,strain,sigma=sigma,
-                                   scale=self.config['scale'],
-                                   ext_color=self.config['extension_color'],
-                                   cmp_color=self.config['compression_color'],
-                                   alpha=self.config['alpha'],
-                                   vert=self.config['vertices'])
+                                   scale=self.scale,
+                                   ext_color=self.extension_color,
+                                   cmp_color=self.compression_color,
+                                   alpha=self.alpha,
+                                   vert=self.vertices)
     if units is None:
       text_str = '%s' % mag
     else:
       text_str = '%s %s' % (mag,units)
       
-    textx = posx + 1.1*mag*self.config['scale']
+    textx = posx + 1.1*mag*self.scale
     texty = posy
     self.glyph_key += [Text(textx,texty,text_str,
                             fontsize=10,
-                            color=self.config['extension_color'])]
+                            color=self.extension_color)]
     textx = posx
-    texty = posy + 1.1*mag*self.config['scale']
+    texty = posy + 1.1*mag*self.scale
     self.glyph_key += [Text(textx,texty,'-' + text_str,
                             fontsize=10,
-                            color=self.config['compression_color'])]
+                            color=self.compression_color)]
 
     for a in self.glyph_key: self.map_ax.add_artist(a)
   
   def _update_key(self):
+    # Remakes the strain glyph key
     for a in self.glyph_key: a.remove()
     self._init_key()
 
   def _init_strain(self): 
+    # Initially plots the strain glyphs
     self.glyphs = []
-    strain = self.data_set[self.config['tidx'],:,:]
-    sigma = self.sigma_set[self.config['tidx'],:,:]
+    strain = self.data_set[self.tidx,:,:]
+    sigma = self.sigma_set[self.tidx,:,:]
     for args in zip(self.x,strain,sigma):
       self.glyphs += strain_glyph(*args,
-                                  scale=self.config['scale'],
-                                  ext_color=self.config['extension_color'],
-                                  cmp_color=self.config['compression_color'],
-                                  alpha=self.config['alpha'],
-                                  vert=self.config['vertices'],
-                                  snr_mask=self.config['snr_mask'])
+                                  scale=self.scale,
+                                  ext_color=self.extension_color,
+                                  cmp_color=self.compression_color,
+                                  alpha=self.alpha,
+                                  vert=self.vertices,
+                                  snr_mask=self.snr_mask)
        
     for a in self.glyphs: self.map_ax.add_artist(a)
 
   def _update_strain(self):
-    # remove any existing strain artists and replot
+    # Remove any existing strain artists and replot
     for a in self.glyphs: a.remove()
     self._init_strain()
 
   def _init_lines(self):
+    # Create strain time series lines
     self.line1, = self.ts_ax[0].plot(
                     self.t,
-                    self.data_set[:,self.config['xidx'],0],
+                    self.data_set[:,self.xidx,0],
                     color='k',
                     linestyle='-',
                     linewidth=1.0)
     self.line2, = self.ts_ax[1].plot(
                     self.t,
-                    self.data_set[:,self.config['xidx'],1],
+                    self.data_set[:,self.xidx,1],
                     color='k',
                     linestyle='-',
                     linewidth=1.0)
     self.line3, = self.ts_ax[2].plot(
                     self.t,
-                    self.data_set[:,self.config['xidx'],2],
+                    self.data_set[:,self.xidx,2],
                     color='k',
                     linestyle='-',
                     linewidth=1.0)
 
   def _update_lines(self):
-    # updates for:
-    #   xidx
+    # Update strain time series lines
     self.line1.set_data(self.t,
-                        self.data_set[:,self.config['xidx'],0])
+                        self.data_set[:,self.xidx,0])
     # relabel in case the data_set order has switched
     self.line2.set_data(self.t,
-                        self.data_set[:,self.config['xidx'],1])
+                        self.data_set[:,self.xidx,1])
     self.line3.set_data(self.t,
-                        self.data_set[:,self.config['xidx'],2])
+                        self.data_set[:,self.xidx,2])
 
   def _init_fill(self):
+    # Create uncertainties in the strain timeseries
     self.fill1 = self.ts_ax[0].fill_between(
                    self.t,
-                   self.data_set[:,self.config['xidx'],0] -
-                   self.sigma_set[:,self.config['xidx'],0],
-                   self.data_set[:,self.config['xidx'],0] +
-                   self.sigma_set[:,self.config['xidx'],0],
+                   self.data_set[:,self.xidx,0] -
+                   self.sigma_set[:,self.xidx,0],
+                   self.data_set[:,self.xidx,0] +
+                   self.sigma_set[:,self.xidx,0],
                    edgecolor='none',
                    color='k',alpha=0.2)
     self.fill2 = self.ts_ax[1].fill_between(
                    self.t,
-                   self.data_set[:,self.config['xidx'],1] -
-                   self.sigma_set[:,self.config['xidx'],1],
-                   self.data_set[:,self.config['xidx'],1] +
-                   self.sigma_set[:,self.config['xidx'],1],
+                   self.data_set[:,self.xidx,1] -
+                   self.sigma_set[:,self.xidx,1],
+                   self.data_set[:,self.xidx,1] +
+                   self.sigma_set[:,self.xidx,1],
                    edgecolor='none',
                    color='k',alpha=0.2)
     self.fill3 = self.ts_ax[2].fill_between(
                    self.t,
-                   self.data_set[:,self.config['xidx'],2] -
-                   self.sigma_set[:,self.config['xidx'],2],
-                   self.data_set[:,self.config['xidx'],2] +
-                   self.sigma_set[:,self.config['xidx'],2],
+                   self.data_set[:,self.xidx,2] -
+                   self.sigma_set[:,self.xidx,2],
+                   self.data_set[:,self.xidx,2] +
+                   self.sigma_set[:,self.xidx,2],
                    edgecolor='none',
                    color='k',alpha=0.2)
 
   def _update_fill(self):
-    # updates for:
-    #   xidx
+    # Replot uncertainties in the strain timeseries
     self.fill1.remove()
     self.fill2.remove()
     self.fill3.remove()
@@ -518,126 +513,78 @@ figures.
     self._init()
 
   @without_interactivity
-  def command_line_configure(self):
-    while True:
-      try:
-        key = raw_input('enter parameter name ["help" for choices or "exit"] >>> ')
-        print('')
-        val = self.config[key]
-        break
-      except KeyError:
-        if key == 'exit':
-          return
+  def configure(self):
+    Configurable.configure(self)
 
-        if key != 'help':
-          print('"%s" is not a configurable parameter\n' % key)
-
-        print('select from one of the following')
-        for k in self.config.keys():
-          print('    %s' % k)
-        print('')
-
-    print('current value is %s\n' % repr(val))
-    try:
-      new_val = restricted_input('new value >>> ')
-      print('')
-
-    except Exception as err:
-      print('')
-      print('the following error was raised when evaluating the above expression:\n    %s\n' % repr(err))
-      new_val = val
-
-    self.config[key] = new_val
+  def save_frames(self,dir):
+    # saves each frame as a jpeg image in the direction *dir*
+    Nt = self.data_set.shape[0]
+    for i in range(Nt):
+      self.tidx = i
+      self.update()
+      fname = '%06d.jpeg' % i
+      logger.info('saving file %s/%s' % (dir,fname))
+      plt.savefig(dir+'/'+fname)
 
   def on_pick(self,event):
     for i,v in enumerate(self.pickers):
       if event.artist == v:
-        self.config['xidx'] = i
+        self.xidx = i
         break
 
     self.update()
 
   def on_key_press(self,event):
     if event.key == 'right':
-      self.config['tidx'] += 1
-      Nt = self.data_set.shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.tidx += 1
       self.update()
 
     elif event.key == 'ctrl+right':
-      self.config['tidx'] += 10
-      Nt = self.data_set.shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.tidx += 10
       self.update()
 
     elif event.key == 'alt+right':
-      self.config['tidx'] += 100
-      Nt = self.data_set.shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.tidx += 100
       self.update()
 
     elif event.key == 'left':
-      self.config['tidx'] -= 1
-      Nt = self.data_set.shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.tidx -= 1
       self.update()
 
     elif event.key == 'ctrl+left':
-      self.config['tidx'] -= 10
-      Nt = self.data_set.shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.tidx -= 10
       self.update()
 
     elif event.key == 'alt+left':
-      self.config['tidx'] -= 100
-      Nt = self.data_set.shape[0]
-      self.config['tidx'] = self.config['tidx']%Nt
+      self.tidx -= 100
       self.update()
 
     elif event.key == 'up':
-      self.config['xidx'] += 1
-      Nx = self.data_set.shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.xidx += 1
       self.update()
 
     elif event.key == 'ctrl+up':
-      self.config['xidx'] += 10
-      Nx = self.data_set.shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.xidx += 10
       self.update()
 
     elif event.key == 'alt+up':
-      self.config['xidx'] += 100
-      Nx = self.data_set.shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.xidx += 100
       self.update()
 
     elif event.key == 'down':
-      self.config['xidx'] -= 1
-      Nx = self.data_set.shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.xidx -= 1
       self.update()
 
     elif event.key == 'ctrl+down':
-      self.config['xidx'] -= 10
-      Nx = self.data_set.shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.xidx -= 10
       self.update()
 
     elif event.key == 'alt+down':
-      self.config['xidx'] -= 100
-      Nx = self.data_set.shape[1]
-      self.config['xidx'] = self.config['xidx']%Nx
+      self.xidx -= 100
       self.update()
 
-    elif event.key == 's':
-      if not os.path.exists('frames'):
-        os.mkdir('frames')
-        
-      self.save_frames('frames')
-
     elif event.key == 'h':
-      self.config['highlight'] = not self.config['highlight']
+      self.highlight = not self.highlight
       self.update()
 
     elif event.key == 'r':
@@ -645,7 +592,7 @@ figures.
       self.hard_update()
 
     elif event.key == 'enter':
-      self.command_line_configure()
+      self.configure()
       self.hard_update()
 
     else:
