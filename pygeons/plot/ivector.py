@@ -96,17 +96,28 @@ class Configurable(object):
       attrs = [n for n in dir(self) if not n.startswith('_')]
 
     # set message displayed when the interactive console starts
+    msg1 = ('Python ' + sys.version + ' on ' + sys.platform + '\n'
+            'Type "help", "copyright", "credits" or "license" for '
+            'more information.')
+    msg2 = ('The current namespace has been populated with the '
+            'following attributes from the class instance:')
+    msg3 = ', '.join(['"%s"' % i for i in attrs])
+    msg4 = ('The values associate with these names can be modified, '
+            'and the attributes of the class instance will be '
+            'updated with the new values. When finished, exit the '
+            'interpreter with Ctrl+"d".')
+
     banner  = '\n'
-    banner += 'Python ' + sys.version + ' on ' + sys.platform + '\n'
-    banner += 'Type "help", "copyright", "credits" or "license" for more information.'
+    banner += msg1 
     banner += '\n\n'
-    banner += '\n'.join(wrap('The current namespace has been populated with the following attributes from the class instance:'))
+    banner += '\n'.join(wrap(msg2,70))
     banner += '\n\n'
-    banner += '\n'.join(wrap(', '.join(['"%s"' % i for i in attrs])))
-    banner += '\n\n'
-    banner += '\n'.join(wrap('The values associate with these names can be modified, and the attributes of the class instance will be updated with the new values. When finished, exit the interpreter with Ctrl+"d".'))
-    banner += '\n'
+    banner += '\n    '.join(wrap('    '+msg3,66))
+    banner += '\n\n'    
+    banner += '\n'.join(wrap(msg4,70))
+    banner += '\n'    
     namespace = {}
+    
     for n in attrs:
       # fill the namespace with deep copies of the classes current
       # attributes

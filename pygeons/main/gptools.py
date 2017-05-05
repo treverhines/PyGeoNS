@@ -21,13 +21,19 @@ def chunkify_covariance(cov_in,chunk_size):
     n1,n2 = x1.shape[0],x2.shape[0]
     out = np.zeros((n1,n2),dtype=float)
     while count < n1:
-      logger.debug('Building covariance matrix : %3d%% complete' % ((100.0*count)/n1))
+      # only log the progress if the covariance matrix takes multiple
+      # chunks to build
+      if n1 > chunk_size:
+        logger.debug('Building covariance matrix : %3d%% complete' % ((100.0*count)/n1))
+        
       start,stop = count,count+chunk_size
       cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 
       out[start:stop] = cov_chunk 
       count += chunk_size
       
-    logger.debug('Building covariance matrix : 100% complete')
+    if n1 > chunk_size:
+      logger.debug('Building covariance matrix : 100% complete')
+      
     return out  
   
   return cov_out      
