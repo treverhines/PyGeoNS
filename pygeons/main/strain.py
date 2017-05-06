@@ -100,7 +100,7 @@ def strain(t,x,d,sd,
   noise_sigma += noise_gp._covariance(z,z,diff,diff)
   noise_p = np.hstack((noise_p,noise_gp._basis(z,diff)))
   rbf.gauss._diag_add(noise_sigma,sd**2)
-  
+
   # condition the prior with the data
   post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
   if rate:
