@@ -18,7 +18,7 @@ def _fit(d,s,mu,sigma,p):
   ''' 
   conditions the discrete Gaussian process described by *mu*, *sigma*,
   and *p* with the observations *d* which have uncertainty *s*.
-  Returns the mean and standard deviation of the posterior.
+  Returns the mean of the posterior.
   '''  
   n,m = p.shape
   # *sigma_and_s* is the Gaussian process covariance with the noise
@@ -28,14 +28,17 @@ def _fit(d,s,mu,sigma,p):
   # compute mean of the posterior 
   vec1,vec2 = Kinv.dot(d - mu,np.zeros(m)) 
   u = mu + sigma.dot(vec1) + p.dot(vec2)   
+  # dont bother computing the uncertainties and just return zero for
+  # now
+  su = np.zeros_like(u)
   # compute std. dev. of the posterior
-  mat1,mat2 = Kinv.dot(sigma.T,p.T)
-  del Kinv
-  # just compute the diagonal components of the covariance matrix
-  # note that A.dot(B).diagonal() == np.sum(A*B.T,axis=1)
-  su = np.sqrt(sigma.diagonal() - 
-               np.sum(sigma*mat1.T,axis=1) -
-               np.sum(p*mat2.T,axis=1))
+  #  mat1,mat2 = Kinv.dot(sigma.T,p.T)
+  #  del Kinv
+  #  # just compute the diagonal components of the covariance matrix
+  #  # note that A.dot(B).diagonal() == np.sum(A*B.T,axis=1)
+  #  su = np.sqrt(sigma.diagonal() - 
+  #               np.sum(sigma*mat1.T,axis=1) -
+  #               np.sum(p*mat2.T,axis=1))
   return u,su
 
 
@@ -45,7 +48,9 @@ def fit(t,x,d,sd,
         station_model=('p0','p1'),
         station_params=()):
   ''' 
-  Returns the condition Gaussian process evaluated at the data points
+  Returns the mean of the conditioned Gaussian process evaluated at
+  the data points. This is a quick calculation used to assess whether
+  the Gaussian process is actually able to describe the observations.
 
   Parameters
   ----------

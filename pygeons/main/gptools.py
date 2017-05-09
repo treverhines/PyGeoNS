@@ -5,10 +5,10 @@ import numpy as np
 from rbf.gauss import GaussianProcess
 from rbf.gauss import _get_arg_count,_zero_mean,_zero_covariance,_empty_basis
 from pygeons.units import unit_conversion as conv
+import scipy.sparse as sp
 import logging
 from pygeons.main.cbasis import add_diffs_to_caches
 logger = logging.getLogger(__name__)
-
 
 def chunkify_covariance(cov_in,chunk_size):
   ''' 
@@ -19,20 +19,30 @@ def chunkify_covariance(cov_in,chunk_size):
   def cov_out(x1,x2,diff1,diff2):
     count = 0 
     n1,n2 = x1.shape[0],x2.shape[0]
-    out = np.zeros((n1,n2),dtype=float)
+    # We cannot yet allocate the output array until we evaluate cov_in
+    # and find out if it is a numpy array or sparse array
+    out = None
     while count < n1:
       # only log the progress if the covariance matrix takes multiple
       # chunks to build
       if n1 > chunk_size:
-        logger.debug('Building covariance matrix : %3d%% complete' % ((100.0*count)/n1))
+        logger.debug('Building covariance matrix : %5.1f%% complete' % ((100.0*count)/n1))
         
       start,stop = count,count+chunk_size
       cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 
+      if out is None:
+        # allocate *out* if we have not done so already
+        if sp.issparse(cov_chunk):
+          out = sp.csc_matrix((n1,n2),dtype=float)
+        
+        else:  
+          out = np.zeros((n1,n2),dtype=float)
+        
       out[start:stop] = cov_chunk 
       count += chunk_size
       
     if n1 > chunk_size:
-      logger.debug('Building covariance matrix : 100% complete')
+      logger.debug('Building covariance matrix : 100.0% complete')
       
     return out  
   
@@ -153,7 +163,7 @@ def composite(components,args,constructors):
   for ci in cs:
     gp += ci(*(args.pop(0) for i in range(ci.nargs)))
   
-  gp._covariance = chunkify_covariance(gp._covariance,500)
+  gp._covariance = chunkify_covariance(gp._covariance,1000)
   return gp
   
 

@@ -2,42 +2,53 @@
 Contains a function for computing strain or strain rates.
 '''
 import numpy as np
+import scipy.sparse as sp
 import logging
 from rbf.gauss import (_as_sparse_or_array,
+                       _as_array,
                        _as_covariance)
 from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
+import warnings
 logger = logging.getLogger(__name__)
 
 
 def _station_sigma_and_p(gp,time,mask):
   ''' 
-  Build the covariance matrix and basis vectors describing noise for
-  all stations. The covariance and basis functions will only be
-  evauluated at unmasked data.
+  Build the sparse covariance matrix and basis vectors describing
+  noise for all stations. The covariance and basis functions will only
+  be evauluated at unmasked data.
   '''
-  #TODO MAKE THIS RETURN A SPARSE MATRIX
-  
-  # stations that *will* have basis vectors
+  logger.debug('Building station covariance matrix and basis vectors ...')
   diff = np.array([0])
-  # use _covariance and _basis instead of covariance and basis because
-  # they do not make copies
   sigma_i = gp._covariance(time,time,diff,diff)
+  # convert sigma_i to a dense array, even if it is sparse
+  sigma_i = _as_array(sigma_i)
   p_i = gp._basis(time,diff)
-  _,Nx = mask.shape
   _,Np = p_i.shape
+  Nt,Nx = mask.shape
+
+  # build the sparse covariance matrix for all data (including the
+  # masked ones) then crop out the masked ones afterwards. This is
+  # not efficient but I cannot think of a better way.
+  sigma = sp.csc_matrix((Nt*Nx,Nt*Nx))
+  p = np.zeros((Nt*Nx,Np*Nx))
+  # scipy will warn you about sparse inefficiencies but this really is
+  # the most memory efficient option that I can find
+  with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    for i in range(Nx):
+      sigma[i::Nx,i::Nx] = sigma_i 
+      p[i::Nx,i::Nx] = p_i
+    
+  # toss out masked rows and columns
+  maskf = mask.ravel()
+  sigma = sigma[:,~maskf][~maskf,:]
+  p = p[~maskf,:]
+  logger.debug('Station covariance matrix is sparse with %.3f%% non-zeros' % 
+               (sigma.nnz/(1.0*np.prod(sigma.shape))))
   
-  sigma = np.zeros((np.sum(~mask),np.sum(~mask)))
-  p = np.zeros((np.sum(~mask),Np,Nx))
-
-  r,c = np.nonzero(~mask)
-  for i in range(Nx):
-    # good luck trying to figure out what the fuck im doing here
-    sigma[np.ix_(c==i,c==i)] = sigma_i[np.ix_(r[c==i],r[c==i])]
-    p[c==i,:,i] = p_i[r[c==i]]
-
-  p = p.reshape((np.sum(~mask),Np*Nx))
   if p.size != 0:
     # remove singluar values from p
     u,s,_ = np.linalg.svd(p,full_matrices=False)
@@ -46,6 +57,7 @@ def _station_sigma_and_p(gp,time,mask):
     logger.debug('Removed %s singular values from the station basis vectors' 
                  % np.sum(~keep))
   
+  logger.debug('Done')
   return sigma,p
 
 
@@ -120,15 +132,15 @@ def strain(t,x,d,sd,
     dudx_gp = post_gp.differentiate((0,1,0)) # x derivative of displacement
     dudy_gp = post_gp.differentiate((0,0,1)) # y derivative of displacement
 
-  u,su = u_gp.meansd(out_z,chunk_size=500)
+  u,su = u_gp.meansd(out_z,chunk_size=1000)
   u = u.reshape((out_t.shape[0],out_x.shape[0]))
   su = su.reshape((out_t.shape[0],out_x.shape[0]))
 
-  dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=500)
+  dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
   dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
   sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
 
-  dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=500)
+  dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
   dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
   sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
 
