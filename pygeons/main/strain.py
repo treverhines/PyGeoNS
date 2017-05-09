@@ -3,7 +3,8 @@ Contains a function for computing strain or strain rates.
 '''
 import numpy as np
 import logging
-import rbf.gauss
+from rbf.gauss import (_as_sparse_or_array,
+                       _as_covariance)
 from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
@@ -16,6 +17,8 @@ def _station_sigma_and_p(gp,time,mask):
   all stations. The covariance and basis functions will only be
   evauluated at unmasked data.
   '''
+  #TODO MAKE THIS RETURN A SPARSE MATRIX
+  
   # stations that *will* have basis vectors
   diff = np.array([0])
   # use _covariance and _basis instead of covariance and basis because
@@ -93,14 +96,18 @@ def strain(t,x,d,sd,
   mask = np.isinf(sd)
   # unmasked data and uncertainties
   z,d,sd = z[~mask.ravel()],d[~mask],sd[~mask]
-  # rebuild noise covariance and basis vectors
-  noise_sigma,noise_p = _station_sigma_and_p(sta_gp,t,mask)
-  # use _covariance and _basis instead of covariance and basis because
-  # they do not make copies
-  noise_sigma += noise_gp._covariance(z,z,diff,diff)
-  noise_p = np.hstack((noise_p,noise_gp._basis(z,diff)))
-  rbf.gauss._diag_add(noise_sigma,sd**2)
-
+  # build noise covariance and basis vectors
+  sta_sigma,sta_p = _station_sigma_and_p(sta_gp,t,mask)
+  # add data noise to the station noise
+  obs_sigma = _as_covariance(sd)
+  sta_sigma = _as_sparse_or_array(sta_sigma + obs_sigma)
+  # make network noise
+  net_sigma = noise_gp._covariance(z,z,diff,diff)
+  net_p = noise_gp._basis(z,diff)
+  # combine noise processes
+  noise_sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+  noise_p = np.hstack((sta_p,net_p))
+  del sta_sigma,net_sigma,obs_sigma,sta_p,net_p
   # condition the prior with the data
   post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
   if rate:

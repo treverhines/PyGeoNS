@@ -79,6 +79,7 @@ def kernel_product(gp1,gp2):
     return np.zeros(x.shape[0])
 
   def covariance(x1,x2,diff1,diff2):
+    #TODO FIX THIS FOR SPARSE
     out  = gp1._covariance(x1[:,[0]],x2[:,[0]],
                            diff1[[0]],diff2[[0]])
     out *= gp2._covariance(x1[:,[1,2]],x2[:,[1,2]],

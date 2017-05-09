@@ -7,7 +7,8 @@ from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
 from pygeons.main.strain import _station_sigma_and_p
-import rbf.gauss 
+from rbf.gauss import (_as_sparse_or_array,
+                       outliers)
 logger = logging.getLogger(__name__)
 
 
@@ -54,20 +55,20 @@ def autoclean(t,x,d,sd,
   zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
   # Build covariance and basis vectors for the combined process. Do
   # not evaluated at masked points
-  full_sigma,full_p = _station_sigma_and_p(sta_gp,t,mask)
-  # use _covariance and _basis instead of covariance and basis because
-  # they do not make copies
-  full_sigma += net_gp._covariance(zu,zu,diff,diff)
-  full_p = np.hstack((full_p,net_gp._basis(zu,diff)))
-  # all processes are assumed to have zero mean
-  full_mu = np.zeros(zu.shape[0])
+  sta_sigma,sta_p = _station_sigma_and_p(sta_gp,t,mask)
+  net_sigma = net_gp._covariance(zu,zu,diff,diff)
+  net_p = net_gp._basis(zu,diff)
+  # combine station gp with the network gp
+  mu = np.zeros(z.shape[0])  
+  sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+  p = np.hstack((sta_p,net_p))
+  del sta_sigma,net_sigma,sta_p,net_p
   # returns the indices of outliers 
-  outliers = rbf.gauss.outliers(du,sdu,
-                                mu=full_mu,sigma=full_sigma,p=full_p,
-                                tol=tol)
-
+  out_idx = outliers(du,sdu,
+                     mu=mu,sigma=sigma,p=p,
+                     tol=tol)
   # mask the outliers in *de* and *sde*
   r,c = np.nonzero(~mask)
-  de[r[outliers],c[outliers]] = np.nan
-  sde[r[outliers],c[outliers]] = np.inf
+  de[r[out_idx],c[out_idx]] = np.nan
+  sde[r[out_idx],c[out_idx]] = np.inf
   return (de,sde)

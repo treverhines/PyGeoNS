@@ -9,7 +9,9 @@ from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
 from pygeons.main.strain import _station_sigma_and_p
-import rbf.gauss 
+from rbf.gauss import (_as_sparse_or_array,
+                       _as_covariance,
+                       likelihood)
 logger = logging.getLogger(__name__)
 
 
@@ -91,18 +93,21 @@ def reml(t,x,d,sd,
     net_gp = composite(network_model,test_network_params,gpnetwork.CONSTRUCTORS)
     sta_gp = composite(station_model,test_station_params,gpstation.CONSTRUCTORS)
     # station process
-    sigma,p = _station_sigma_and_p(sta_gp,t,mask)
-    # network process 
-    # use _covariance and _basis instead of covariance and basis
-    # because they do not make copies
-    sigma += net_gp._covariance(z,z,diff,diff)
-    p = np.hstack((p,net_gp._basis(z,diff)))
-    # data uncertainty 
-    rbf.gauss._diag_add(sigma,sd**2)
-    # mean of the processes
+    sta_sigma,sta_p = _station_sigma_and_p(sta_gp,t,mask)
+    # add data noise to the diagonals of sta_sigma. Both matrices are
+    # sparse so this is efficient
+    obs_sigma = _as_covariance(sd)
+    sta_sigma = _as_sparse_or_array(sta_sigma + obs_sigma)
+    # network process
+    net_sigma = net_gp._covariance(z,z,diff,diff)
+    net_p = net_gp._basis(z,diff)
+    # combine station gp with the network gp
     mu = np.zeros(z.shape[0])
+    sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+    p = np.hstack((sta_p,net_p))
+    del sta_sigma,net_sigma,obs_sigma,sta_p,net_p
     try:
-      out = -rbf.gauss.likelihood(d,mu,sigma,p=p)
+      out = -likelihood(d,mu,sigma,p=p)
     except np.linalg.LinAlgError as err:
       logger.warning(
         'An error was raised while computing the log '
