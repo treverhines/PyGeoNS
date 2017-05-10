@@ -2,63 +2,15 @@
 Contains a function for computing strain or strain rates.
 '''
 import numpy as np
-import scipy.sparse as sp
 import logging
-from rbf.gauss import (_as_sparse_or_array,
-                       _as_array,
-                       _as_covariance)
-from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
-import warnings
+from rbf.gauss import (_as_sparse_or_array,
+                       _as_covariance)
+from pygeons.main.gptools import (composite,
+                                  station_sigma_and_p)
+
 logger = logging.getLogger(__name__)
-
-
-def _station_sigma_and_p(gp,time,mask):
-  ''' 
-  Build the sparse covariance matrix and basis vectors describing
-  noise for all stations. The covariance and basis functions will only
-  be evauluated at unmasked data.
-  '''
-  logger.debug('Building station covariance matrix and basis vectors ...')
-  diff = np.array([0])
-  sigma_i = gp._covariance(time,time,diff,diff)
-  # convert sigma_i to a dense array, even if it is sparse
-  sigma_i = _as_array(sigma_i)
-  p_i = gp._basis(time,diff)
-  _,Np = p_i.shape
-  Nt,Nx = mask.shape
-
-  # build the sparse covariance matrix for all data (including the
-  # masked ones) then crop out the masked ones afterwards. This is
-  # not efficient but I cannot think of a better way.
-  sigma = sp.csc_matrix((Nt*Nx,Nt*Nx))
-  p = np.zeros((Nt*Nx,Np*Nx))
-  # scipy will warn you about sparse inefficiencies but this really is
-  # the most memory efficient option that I can find
-  with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    for i in range(Nx):
-      sigma[i::Nx,i::Nx] = sigma_i 
-      p[i::Nx,i::Nx] = p_i
-    
-  # toss out masked rows and columns
-  maskf = mask.ravel()
-  sigma = sigma[:,~maskf][~maskf,:]
-  p = p[~maskf,:]
-  logger.debug('Station covariance matrix is sparse with %.3f%% non-zeros' % 
-               (sigma.nnz/(1.0*np.prod(sigma.shape))))
-  
-  if p.size != 0:
-    # remove singluar values from p
-    u,s,_ = np.linalg.svd(p,full_matrices=False)
-    keep = s > 1e-12*s.max()
-    p = u[:,keep]
-    logger.debug('Removed %s singular values from the station basis vectors' 
-                 % np.sum(~keep))
-  
-  logger.debug('Done')
-  return sigma,p
 
 
 def strain(t,x,d,sd,
@@ -109,7 +61,7 @@ def strain(t,x,d,sd,
   # unmasked data and uncertainties
   z,d,sd = z[~mask.ravel()],d[~mask],sd[~mask]
   # build noise covariance and basis vectors
-  sta_sigma,sta_p = _station_sigma_and_p(sta_gp,t,mask)
+  sta_sigma,sta_p = station_sigma_and_p(sta_gp,t,mask)
   # add data noise to the station noise
   obs_sigma = _as_covariance(sd)
   sta_sigma = _as_sparse_or_array(sta_sigma + obs_sigma)

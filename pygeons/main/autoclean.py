@@ -3,10 +3,10 @@ Contains a data editing algorithm.
 '''
 import numpy as np
 import logging
-from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
-from pygeons.main.strain import _station_sigma_and_p
+from pygeons.main.gptools import (composite,
+                                  station_sigma_and_p)  
 from rbf.gauss import (_as_sparse_or_array,
                        outliers)
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def autoclean(t,x,d,sd,
   zu,du,sdu = z[~mask.ravel()],de[~mask],sde[~mask]
   # Build covariance and basis vectors for the combined process. Do
   # not evaluated at masked points
-  sta_sigma,sta_p = _station_sigma_and_p(sta_gp,t,mask)
+  sta_sigma,sta_p = station_sigma_and_p(sta_gp,t,mask)
   net_sigma = net_gp._covariance(zu,zu,diff,diff)
   net_p = net_gp._basis(zu,diff)
   # combine station gp with the network gp

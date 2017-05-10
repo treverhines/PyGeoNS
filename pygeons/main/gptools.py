@@ -2,13 +2,75 @@
 Tools for creating Gaussian processes.
 '''
 import numpy as np
-from rbf.gauss import GaussianProcess
-from rbf.gauss import _get_arg_count,_zero_mean,_zero_covariance,_empty_basis
-from pygeons.units import unit_conversion as conv
 import scipy.sparse as sp
-import logging
+from rbf.gauss import (GaussianProcess,
+                       _get_arg_count,
+                       _zero_mean,
+                       _zero_covariance,
+                       _empty_basis)
+from pygeons.units import unit_conversion as conv
 from pygeons.main.cbasis import add_diffs_to_caches
+import logging
 logger = logging.getLogger(__name__)
+
+
+def station_sigma_and_p(gp,time,mask):
+  ''' 
+  Build the sparse covariance matrix and basis vectors describing
+  noise that is uncorrelated between stations. The covariance and
+  basis functions will only be evauluated at unmasked data.
+  '''
+  logger.debug('Building station covariance matrix and basis '
+               'vectors ...')
+  sigma_i = gp.covariance(time,time)
+  p_i = gp.basis(time)
+  _,Np = p_i.shape
+  Nt,Nx = mask.shape
+  # build the data for the sparse covariance matrix for all data
+  # (including the masked ones) then crop out the masked ones
+  # afterwards. This is not efficient but I cannot think of a better
+  # way.
+  p = np.zeros((Nt,Nx,Np,Nx),dtype=float)
+  data = np.zeros((Nt,Nt,Nx),dtype=float)
+  rows = np.zeros((Nt,Nt,Nx),dtype=np.int32)
+  cols = np.zeros((Nt,Nt,Nx),dtype=np.int32)
+  for i in range(Nx):
+    rows_i,cols_i = np.mgrid[:Nt,:Nt]
+    data[:,:,i] = sigma_i
+    rows[:,:,i] = i + rows_i*Nx
+    cols[:,:,i] = i + cols_i*Nx
+    p[:,i,:,i] = p_i
+
+  p = p.reshape((Nt*Nx,Np*Nx))
+  # flatten the sparse matrix data
+  data = data.ravel()
+  rows = rows.ravel()
+  cols = cols.ravel()
+  # remove zeros before converting to csc
+  keep_idx, = data.nonzero()
+  data = data[keep_idx]
+  rows = rows[keep_idx]
+  cols = cols[keep_idx]
+  # convert to csc  
+  sigma = sp.csc_matrix((data,(rows,cols)),(Nt*Nx,Nt*Nx))
+  # toss out rows and columns for masked data
+  maskf = mask.ravel()
+  sigma = sigma[:,~maskf][~maskf,:]
+  p = p[~maskf,:]
+  logger.debug('Station covariance matrix is sparse with %.3f%% '
+               'non-zeros' % (sigma.nnz/(1.0*np.prod(sigma.shape))))
+
+  if p.size != 0:
+    # remove singluar values from p
+    u,s,_ = np.linalg.svd(p,full_matrices=False)
+    keep = s > 1e-12*s.max()
+    p = u[:,keep]
+    logger.debug('Removed %s singular values from the station basis '
+                 'vectors' % np.sum(~keep))
+
+  logger.debug('Done')
+  return sigma,p
+
 
 def chunkify_covariance(cov_in,chunk_size):
   ''' 
@@ -26,7 +88,8 @@ def chunkify_covariance(cov_in,chunk_size):
       # only log the progress if the covariance matrix takes multiple
       # chunks to build
       if n1 > chunk_size:
-        logger.debug('Building covariance matrix : %5.1f%% complete' % ((100.0*count)/n1))
+        logger.debug('Building covariance matrix : %5.1f%% complete' 
+                     % ((100.0*count)/n1))
         
       start,stop = count,count+chunk_size
       cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 

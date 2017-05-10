@@ -5,10 +5,10 @@ hyperparameter estimation.
 import numpy as np
 import logging
 from scipy.optimize import fmin
-from pygeons.main.gptools import composite
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
-from pygeons.main.strain import _station_sigma_and_p
+from pygeons.main.gptools import (composite,
+                                  station_sigma_and_p)
 from rbf.gauss import (_as_sparse_or_array,
                        _as_covariance,
                        likelihood)
@@ -93,7 +93,7 @@ def reml(t,x,d,sd,
     net_gp = composite(network_model,test_network_params,gpnetwork.CONSTRUCTORS)
     sta_gp = composite(station_model,test_station_params,gpstation.CONSTRUCTORS)
     # station process
-    sta_sigma,sta_p = _station_sigma_and_p(sta_gp,t,mask)
+    sta_sigma,sta_p = station_sigma_and_p(sta_gp,t,mask)
     # add data noise to the diagonals of sta_sigma. Both matrices are
     # sparse so this is efficient
     obs_sigma = _as_covariance(sd)
