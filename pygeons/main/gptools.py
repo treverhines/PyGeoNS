@@ -22,43 +22,65 @@ def station_sigma_and_p(gp,time,mask):
   '''
   logger.debug('Building station covariance matrix and basis '
                'vectors ...')
-  sigma_i = gp.covariance(time,time)
-  p_i = gp.basis(time)
-  _,Np = p_i.shape
-  Nt,Nx = mask.shape
+  diff = np.array([0])             
+  sigma_i = gp._covariance(time,time,diff,diff)
+  p_i = gp._basis(time,diff)
+
+  Nt,Np = p_i.shape
+  _,Nx = mask.shape
+
+  # break sigma_i into data,rows,cols
+  if sp.issparse(sigma_i):
+    sigma_i = sigma_i.tocoo()
+    data_i = sigma_i.data
+    rows_i = sigma_i.row
+    cols_i = sigma_i.col
+  
+  else:
+    # the matrix is dense
+    data_i = sigma_i.ravel()
+    rows_i,cols_i = np.mgrid[:Nt,:Nt]
+    rows_i = rows_i.ravel()
+    cols_i = cols_i.ravel()
+  
   # build the data for the sparse covariance matrix for all data
   # (including the masked ones) then crop out the masked ones
-  # afterwards. This is not efficient but I cannot think of a better
-  # way.
+  # afterwards. This is not efficient if there are many masked
+  # observations but I cannot think of a better way to do this.
+  Nnz, = data_i.shape  # number of non-zeros in sigma_i
   p = np.zeros((Nt,Nx,Np,Nx),dtype=float)
-  data = np.zeros((Nt,Nt,Nx),dtype=float)
-  rows = np.zeros((Nt,Nt,Nx),dtype=np.int32)
-  cols = np.zeros((Nt,Nt,Nx),dtype=np.int32)
+  data = np.zeros((Nx,Nnz),dtype=float)  
+  rows = np.zeros((Nx,Nnz),dtype=np.int32)  
+  cols = np.zeros((Nx,Nnz),dtype=np.int32)  
   for i in range(Nx):
-    rows_i,cols_i = np.mgrid[:Nt,:Nt]
-    data[:,:,i] = sigma_i
-    rows[:,:,i] = i + rows_i*Nx
-    cols[:,:,i] = i + cols_i*Nx
+    data[i,:] = data_i
+    rows[i,:] = i + rows_i*Nx
+    cols[i,:] = i + cols_i*Nx
     p[:,i,:,i] = p_i
 
-  p = p.reshape((Nt*Nx,Np*Nx))
-  # flatten the sparse matrix data
   data = data.ravel()
   rows = rows.ravel()
   cols = cols.ravel()
-  # remove zeros before converting to csc
-  keep_idx, = data.nonzero()
-  data = data[keep_idx]
-  rows = rows[keep_idx]
-  cols = cols[keep_idx]
-  # convert to csc  
-  sigma = sp.csc_matrix((data,(rows,cols)),(Nt*Nx,Nt*Nx))
+  p = p.reshape((Nt*Nx,Np*Nx))
+
+  if Nx*Nnz > (0.5*Nt**2*Nx**2):
+    # if the matrix has more than 50% non-zeros then make the output
+    # matrix dense
+    sigma = np.zeros((Nt*Nx,Nt*Nx))
+    sigma[rows,cols] = data
+    logger.debug('Station covariance matrix is dense')
+  
+  else:
+    # otherwise make it csc sparse    
+    sigma = sp.csc_matrix((data,(rows,cols)),(Nt*Nx,Nt*Nx),dtype=float)
+    density = (100.0*sigma.nnz)/np.prod(sigma.shape)
+    logger.debug('Station covariance matrix is sparse with %.3f%% '
+                 'non-zeros' % density)
+
   # toss out rows and columns for masked data
   maskf = mask.ravel()
   sigma = sigma[:,~maskf][~maskf,:]
   p = p[~maskf,:]
-  logger.debug('Station covariance matrix is sparse with %.3f%% '
-               'non-zeros' % (100.0*sigma.nnz/(1.0*np.prod(sigma.shape))))
 
   if p.size != 0:
     # remove singluar values from p
@@ -79,49 +101,56 @@ def chunkify_covariance(cov_in,chunk_size):
   covariance function generates multiple intermediary arrays. 
   '''
   def cov_out(x1,x2,diff1,diff2):
+    N1,N2 = x1.shape[0],x2.shape[0]
+    # Collect the data in data,rows,cols format. Then covert to the
+    # proper type at the end
+    data = np.zeros((0,),dtype=float)  
+    rows = np.zeros((0,),dtype=np.int32)  
+    cols = np.zeros((0,),dtype=np.int32)  
+    # count is the total number of rows added to the output covariance
+    # matrix thus far
     count = 0 
-    n1,n2 = x1.shape[0],x2.shape[0]
-    # We cannot yet allocate the output array until we evaluate cov_in
-    # and find out if it is a numpy array or sparse array
-    array_type = None
-    while count < n1:
-      # only log the progress if the covariance matrix takes multiple
-      # chunks to build
-      if n1 > chunk_size:
+    while count != N1:
+      if N1 > chunk_size:
+        # only log the progress if the covariance matrix takes
+        # multiple chunks to build
         logger.debug(
           'Building covariance matrix (chunk size = %s) : %5.1f%% '
-          'complete' % (chunk_size,(100.0*count)/n1))
-        
-      start,stop = count,count+chunk_size
-      cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 
-      if array_type is None:
-        if sp.issparse(cov_chunk):
-          array_type = 'sparse'
-          data = np.zeros((0,),dtype=float)
-          rows = np.zeros((0,),dtype=np.int32)
-          cols = np.zeros((0,),dtype=np.int32)
+          'complete' % (chunk_size,(100.0*count)/N1))
 
-        else:
-          array_type = 'dense'
-          out = np.zeros((n1,n2),dtype=float)
-          
-      if array_type == 'sparse':
-        # seriously not efficient but fuck it
+      start,stop = count,min(count+chunk_size,N1)
+      cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 
+      if sp.issparse(cov_chunk):
+        # if sparse convert to coo and get the data
         cov_chunk = cov_chunk.tocoo()
         data = np.hstack((data,cov_chunk.data))
         rows = np.hstack((rows,start + cov_chunk.row))
         cols = np.hstack((cols,cov_chunk.col))
-      
+
       else:
-        out[start:stop] = cov_chunk 
-                       
-      count += chunk_size
-    
-    if array_type == 'sparse':
-      # combine the data into a csc array
-      out = sp.csc_matrix((data,(rows,cols)),(n1,n2),dtype=float)  
+        # if dense unravel cov_chunk
+        r,c = np.mgrid[start:stop,:N2]
+        data = np.hstack((data,cov_chunk.ravel()))
+        rows = np.hstack((rows,r.ravel()))
+        cols = np.hstack((cols,c.ravel()))
+        
+      count = min(count+chunk_size,N1)
+      
+    # Decide whether to make the output array sparse or dense based on
+    # the number of non-zeros. I could have alternatively had the
+    # output mimic the input covariance function.
+    Nnz, = data.shape
+    if Nnz > (0.5*N1*N2):
+      # if the matrix has more than 50% non-zeros then make the output
+      # matrix dense
+      out = np.zeros((N1,N2))
+      out[rows,cols] = data
   
-    if n1 > chunk_size:
+    else:
+      # otherwise make it csc sparse    
+      out = sp.csc_matrix((data,(rows,cols)),(N1,N2),dtype=float)
+    
+    if N1 > chunk_size:
       logger.debug(
         'Building covariance matrix (chunk size = %s) : 100.0%% '
         'complete' % chunk_size)
