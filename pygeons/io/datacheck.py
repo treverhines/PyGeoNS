@@ -2,6 +2,9 @@
 This module contains functions that check the consistency of data 
 dictionaries. See the README.rst for a description of a valid data 
 dictionary.
+
+TODO ADD A CHECK FOR HIGH SIGMA BECAUSE THAT CAN CAUSE CHOLESKY
+DECOMPOSITIONS TO BREAK
 '''
 import numpy as np
 import logging

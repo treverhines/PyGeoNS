@@ -59,7 +59,7 @@ def autoclean(t,x,d,sd,
   net_sigma = net_gp._covariance(zu,zu,diff,diff)
   net_p = net_gp._basis(zu,diff)
   # combine station gp with the network gp
-  mu = np.zeros(z.shape[0])  
+  mu = np.zeros(zu.shape[0])  
   sigma = _as_sparse_or_array(sta_sigma + net_sigma)
   p = np.hstack((sta_p,net_p))
   del sta_sigma,net_sigma,sta_p,net_p

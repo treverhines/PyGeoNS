@@ -65,11 +65,6 @@ def pygeons_clean(input_file,resolution='i',
   map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
   bm = make_basemap(data['longitude'],data['latitude'],resolution=resolution)
   _setup_map_ax(bm,map_ax)
-  # draw breaks if there are any
-  vert,smp = make_space_vert_smp(break_lons,break_lats,break_conn,bm)
-  for s in smp:
-    map_ax.plot(vert[s,0],vert[s,1],'k--',lw=2,zorder=2)
-
   x,y = bm(data['longitude'],data['latitude'])
   pos = np.array([x,y]).T
   t = data['time']
@@ -94,6 +89,10 @@ def pygeons_clean(input_file,resolution='i',
   if input_edits_file is not None:
     with open(input_edits_file,'r') as fin:
       for line in fin: 
+        # ignore blank lines
+        if line.isspace():
+          continue
+          
         type,sta,a,b = line.strip().split()
         # set the current station in *ic* to the station for this edit
         xidx, = (data['id'] == sta).nonzero()
@@ -102,7 +101,7 @@ def pygeons_clean(input_file,resolution='i',
           # dataset
           continue
           
-        ic.config['xidx'] = xidx[0]
+        ic.xidx = xidx[0]
         if type == 'outliers':
           start_time = mjd(a,'%Y-%m-%d')
           stop_time = mjd(b,'%Y-%m-%d')
