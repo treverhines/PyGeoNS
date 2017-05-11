@@ -58,7 +58,7 @@ def station_sigma_and_p(gp,time,mask):
   sigma = sigma[:,~maskf][~maskf,:]
   p = p[~maskf,:]
   logger.debug('Station covariance matrix is sparse with %.3f%% '
-               'non-zeros' % (sigma.nnz/(1.0*np.prod(sigma.shape))))
+               'non-zeros' % (100.0*sigma.nnz/(1.0*np.prod(sigma.shape))))
 
   if p.size != 0:
     # remove singluar values from p
@@ -83,29 +83,48 @@ def chunkify_covariance(cov_in,chunk_size):
     n1,n2 = x1.shape[0],x2.shape[0]
     # We cannot yet allocate the output array until we evaluate cov_in
     # and find out if it is a numpy array or sparse array
-    out = None
+    array_type = None
     while count < n1:
       # only log the progress if the covariance matrix takes multiple
       # chunks to build
       if n1 > chunk_size:
-        logger.debug('Building covariance matrix : %5.1f%% complete' 
-                     % ((100.0*count)/n1))
+        logger.debug(
+          'Building covariance matrix (chunk size = %s) : %5.1f%% '
+          'complete' % (chunk_size,(100.0*count)/n1))
         
       start,stop = count,count+chunk_size
       cov_chunk = cov_in(x1[start:stop],x2,diff1,diff2) 
-      if out is None:
-        # allocate *out* if we have not done so already
+      if array_type is None:
         if sp.issparse(cov_chunk):
-          out = sp.csc_matrix((n1,n2),dtype=float)
-        
-        else:  
+          array_type = 'sparse'
+          data = np.zeros((0,),dtype=float)
+          rows = np.zeros((0,),dtype=np.int32)
+          cols = np.zeros((0,),dtype=np.int32)
+
+        else:
+          array_type = 'dense'
           out = np.zeros((n1,n2),dtype=float)
-        
-      out[start:stop] = cov_chunk 
-      count += chunk_size
+          
+      if array_type == 'sparse':
+        # seriously not efficient but fuck it
+        cov_chunk = cov_chunk.tocoo()
+        data = np.hstack((data,cov_chunk.data))
+        rows = np.hstack((rows,start + cov_chunk.row))
+        cols = np.hstack((cols,cov_chunk.col))
       
+      else:
+        out[start:stop] = cov_chunk 
+                       
+      count += chunk_size
+    
+    if array_type == 'sparse':
+      # combine the data into a csc array
+      out = sp.csc_matrix((data,(rows,cols)),(n1,n2),dtype=float)  
+  
     if n1 > chunk_size:
-      logger.debug('Building covariance matrix : 100.0% complete')
+      logger.debug(
+        'Building covariance matrix (chunk size = %s) : 100.0%% '
+        'complete' % chunk_size)
       
     return out  
   
@@ -152,11 +171,26 @@ def kernel_product(gp1,gp2):
     return np.zeros(x.shape[0])
 
   def covariance(x1,x2,diff1,diff2):
-    #TODO FIX THIS FOR SPARSE
-    out  = gp1._covariance(x1[:,[0]],x2[:,[0]],
-                           diff1[[0]],diff2[[0]])
-    out *= gp2._covariance(x1[:,[1,2]],x2[:,[1,2]],
-                           diff1[[1,2]],diff2[[1,2]])
+    cov1  = gp1._covariance(x1[:,[0]],x2[:,[0]],
+                            diff1[[0]],diff2[[0]])
+    cov2  = gp2._covariance(x1[:,[1,2]],x2[:,[1,2]],
+                            diff1[[1,2]],diff2[[1,2]])
+    # There are two conditions to consider: (1) cov1 and cov2 are
+    # dense, and (2) at least one of the matrices is sparse. If (1)
+    # then use *np.multiply* for element-wise multiplication. If (2)
+    # then use the *multiply* method of the sparse matrix.
+    if (not sp.issparse(cov1)) & (not sp.issparse(cov2)):
+      # both are dense. The output will be a dense array
+      out = np.multiply(cov1,cov2)
+
+    else:
+      # at least one is sparse. THe output will be a sparse array
+      if sp.issparse(cov1):
+        out = cov1.multiply(cov2).tocsc()
+      else:
+        # cov2 is sparse
+        out = cov2.multiply(cov1).tocsc()
+             
     return out
   
   return GaussianProcess(mean,covariance,dim=3)  

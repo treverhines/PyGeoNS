@@ -31,14 +31,14 @@ pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
 
 ## crop out data prior to 2015-01-01 and after 2017-01-01
 pygeons crop -v 'work/data.h5' \
-             --start-date '2014-01-01' \
+             --start-date '2010-01-01' \
              --stop-date '2016-01-01' \
 
-pygeons fit -vv 'work/data.crop.h5' \
-            --network-model 'p10' 'p11' \
-            --network-params \
-            --station-model 'p0' 'per' 'fogm' \
-            --station-params 0.5 0.01
+mprof run -T 0.01 pygeons reml -vv 'work/data.crop.h5' \
+            --network-model 'wen12-se' \
+            --network-params 1.0 0.1 100.0 \
+            --station-model 'p0' 'p1' 'per' \
+            --station-params \
 
 #pygeons strain -vv 'work/data.crop.h5' \
 #             --network-prior-model 'p10' 'p11' \
