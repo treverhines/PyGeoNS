@@ -425,7 +425,7 @@ def pygeons_strain(input_file,
                    station_noise_model=('p0','p1'),
                    station_noise_params=(),
                    start_date=None,stop_date=None,positions=None,
-                   rate=True,output_stem=None):
+                   rate=True,uncertainty=True,output_stem=None):
   ''' 
   calculates strain
   '''
@@ -505,7 +505,7 @@ def pygeons_strain(input_file,
                             station_noise_params=station_noise_params[dir],
                             out_t=output_time[:,None],
                             out_x=output_xy,
-                            rate=rate)
+                            rate=rate,uncertainty=uncertainty)
     out_u[dir] = u
     out_u[dir+'_std_dev'] = su
     out_dx[dir] = dx

@@ -31,18 +31,16 @@ pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
 
 ## crop out data prior to 2015-01-01 and after 2017-01-01
 pygeons crop -v 'work/data.h5' \
-             --start-date '2010-01-01' \
-             --stop-date '2016-01-01' \
+             --start-date '2015-06-01' \
+             --stop-date '2016-06-01' \
 
-#            --network-model 'wen12-se' \
-#            --network-params 1.0 0.2 100.0 \
-pygeons fit -vv 'work/data.crop.h5' \
-            --network-model \
-            --network-params \
-            --station-model 'p0' 'p1' 'per' 'se' \
-            --station-params 1.0 0.1 \
+pygeons strain -vv 'work/data.crop.h5' \
+             --network-prior-model 'spwen12-se' \
+             --network-prior-params 1.0 0.1 100.0 \
+             --station-noise-model 'p0' 'p1' 'per' \
+             --station-noise-params \
 
-pygeons vector-view work/data.crop.h5 work/data.crop.fit.h5
+#pygeons vector-view work/data.crop.h5 work/data.crop.fit.h5
 
 #pygeons strain -vv 'work/data.crop.h5' \
 #             --network-prior-model 'p10' 'p11' \

@@ -24,6 +24,42 @@ cdef int THREADS = omp_get_max_threads()
 @boundscheck(False)
 @wraparound(False)
 @cdivision(True)
+cpdef np.ndarray wen12_0(double[:,:] x0, 
+                         double[:,:] c0, 
+                         double[:] eps):
+  ''' 
+  parameters
+  ----------
+  x0 : (N,1) float array
+  c0 : (1,M) float array
+  eps : (M,) float array
+  
+  Returns
+  -------
+  out : (N,M) float array
+  
+  '''
+  global THREADS
+  cdef:
+    int i,j
+    int n = x0.shape[0]
+    int m = c0.shape[1]
+    double[:,:] out = np.empty((n,m),dtype=np.float64)
+    
+  for i in prange(n,nogil=True,num_threads=THREADS):
+    for j in range(m):
+      if sqrt((x0[i,0] - c0[0,j])**2) < eps[j]:
+        out[i,j] = (1 - sqrt((-c0[0,j] + x0[i,0])**2)/eps[j])**5*(1 + 5*sqrt((-c0[0,j] + x0[i,0])**2)/eps[j] + 8*(-c0[0,j] + x0[i,0])**2/eps[j]**2)    
+
+      else:
+        out[i,j] = 0.0  
+        
+  return np.asarray(out)
+
+
+@boundscheck(False)
+@wraparound(False)
+@cdivision(True)
 cpdef np.ndarray exp_0(double[:,:] x0, 
                        double[:,:] c0, 
                        double[:] eps):
@@ -387,24 +423,24 @@ def add_diffs_to_caches():
   ''' 
   places the hard-coded cythonized functions in the RBF caches
   ''' 
-  rbf.basis.exp.backend = 'numpy'
   rbf.basis.exp.cache[(0,)] = exp_0
   rbf.basis.exp.cache[(0,0)] = exp_00
 
-  rbf.basis.se.backend = 'numpy'
   rbf.basis.se.cache[(0,)] = se_0
   rbf.basis.se.cache[(1,)] = se_1
   rbf.basis.se.cache[(0,0)] = se_00
   rbf.basis.se.cache[(1,0)] = se_10
   rbf.basis.se.cache[(0,1)] = se_01
 
-  rbf.basis.mat32.backend = 'numpy'
   rbf.basis.mat32.cache[(0,)] = mat32_0
   rbf.basis.mat32.cache[(0,0)] = mat32_00
 
-  rbf.basis.mat52.backend = 'numpy'
   rbf.basis.mat52.cache[(0,)] = mat52_0
   rbf.basis.mat52.cache[(0,0)] = mat52_00
+
+  rbf.basis.wen12.cache[(0,)] = wen12_0
+
+  rbf.basis.spwen12.cache[(0,)] = wen12_0
   return
 
 
@@ -418,6 +454,20 @@ def test_diffs():
   c1 = np.random.random((15,2))
   eps = np.random.random((15,))
   
+  # test wen 1d
+  rbf.basis.wen12.clear_cache()
+  out1 = rbf.basis.wen12(x0,c0,eps=eps)
+  add_diffs_to_caches()
+  out2 = rbf.basis.wen12(x0,c0,eps=eps)
+  assert np.all(np.isclose(out1,out2)),'wen12_0'
+
+  # test spwen 1d
+  rbf.basis.spwen12.clear_cache()
+  out1 = rbf.basis.spwen12(x0,c0,eps=0.5)
+  add_diffs_to_caches()
+  out2 = rbf.basis.spwen12(x0,c0,eps=0.5)
+  assert np.all(np.isclose(out1.A,out2.A)),'wen12_0'
+
   # test exp 1d
   rbf.basis.exp.clear_cache()
   out1 = rbf.basis.exp(x0,c0,eps=eps)

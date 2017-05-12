@@ -214,33 +214,20 @@ def mat52(sigma,cts):
 
 
 @set_units(['mm','yr'])
-def wen10(sigma,cts):
-  ''' 
-  Wendland 1-D C0 covariance function. 
-  
-  Parameters
-  ----------
-  sigma [mm] : Standard deviation of displacements
-  cts [yr] : Characteristic time-scale
-  '''
-  return gauss.gpiso(rbf.basis.spwen10,(0.0,sigma**2,cts),dim=1)
-
-
-@set_units(['mm','yr'])
-def wen11(sigma,cts):
-  ''' 
-  Wendland 1-D C2 covariance function. 
-  
-  Parameters
-  ----------
-  sigma [mm] : Standard deviation of displacements
-  cts [yr] : Characteristic time-scale
-  '''
-  return gauss.gpiso(rbf.basis.spwen11,(0.0,sigma**2,cts),dim=1)
-
-
-@set_units(['mm','yr'])
 def wen12(sigma,cts):
+  ''' 
+  Wendland 1-D C4 covariance function. 
+  
+  Parameters
+  ----------
+  sigma [mm] : Standard deviation of displacements
+  cts [yr] : Characteristic time-scale
+  '''
+  return gauss.gpiso(rbf.basis.wen12,(0.0,sigma**2,cts),dim=1)
+
+
+@set_units(['mm','yr'])
+def spwen12(sigma,cts):
   ''' 
   Wendland 1-D C4 covariance function. 
   
@@ -262,33 +249,20 @@ def wen30(sigma,cts):
   sigma [mm] : Standard deviation of displacements
   cts [yr] : Characteristic time-scale
   '''
+  return gauss.gpiso(rbf.basis.wen30,(0.0,sigma**2,cts),dim=1)
+
+
+@set_units(['mm','yr'])
+def spwen30(sigma,cts):
+  ''' 
+  Wendland 3-D C0 covariance function. 
+  
+  Parameters
+  ----------
+  sigma [mm] : Standard deviation of displacements
+  cts [yr] : Characteristic time-scale
+  '''
   return gauss.gpiso(rbf.basis.spwen30,(0.0,sigma**2,cts),dim=1)
-
-
-@set_units(['mm','yr'])
-def wen31(sigma,cts):
-  ''' 
-  Wendland 3-D C2 covariance function. 
-  
-  Parameters
-  ----------
-  sigma [mm] : Standard deviation of displacements
-  cts [yr] : Characteristic time-scale
-  '''
-  return gauss.gpiso(rbf.basis.spwen31,(0.0,sigma**2,cts),dim=1)
-
-
-@set_units(['mm','yr'])
-def wen32(sigma,cts):
-  ''' 
-  Wendland 3-D C4 covariance function. 
-  
-  Parameters
-  ----------
-  sigma [mm] : Standard deviation of displacements
-  cts [yr] : Characteristic time-scale
-  '''
-  return gauss.gpiso(rbf.basis.spwen32,(0.0,sigma**2,cts),dim=1)
 
 
 @set_units(['mm','yr'])
@@ -449,11 +423,9 @@ CONSTRUCTORS = {'p0':p0,
                 'fogm':fogm,
                 'mat32':mat32,
                 'mat52':mat52,
-                'wen10':wen10,
-                'wen11':wen11,
                 'wen12':wen12,
+                'spwen12':spwen12,
                 'wen30':wen30,
-                'wen31':wen31,
-                'wen32':wen32,
+                'spwen30':spwen30,
                 'se':se,
                 'exp':exp}

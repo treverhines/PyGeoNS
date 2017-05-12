@@ -188,22 +188,6 @@ def exp_se(sigma,cts,cls):
 
 
 @set_units(['mm','yr','km'])
-def wen11_se(sigma,cts,cls):
-  ''' 
-  WEN11 in time and SE in space covariance function
-  
-  Parameters
-  ----------
-  sigma [mm] : Standard deviation of displacements
-  cts [yr] : Characteristic time-scale
-  cls [km] : Characteristic length-scale
-  '''
-  tgp = gpstation.wen11(sigma,cts,convert=False)
-  sgp = se(1.0,cls)
-  return kernel_product(tgp,sgp)
-
-
-@set_units(['mm','yr','km'])
 def wen12_se(sigma,cts,cls):
   ''' 
   WEN11 in time and SE in space covariance function
@@ -215,6 +199,22 @@ def wen12_se(sigma,cts,cls):
   cls [km] : Characteristic length-scale
   '''
   tgp = gpstation.wen12(sigma,cts,convert=False)
+  sgp = se(1.0,cls)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','yr','km'])
+def spwen12_se(sigma,cts,cls):
+  ''' 
+  WEN11 in time and SE in space covariance function
+  
+  Parameters
+  ----------
+  sigma [mm] : Standard deviation of displacements
+  cts [yr] : Characteristic time-scale
+  cls [km] : Characteristic length-scale
+  '''
+  tgp = gpstation.spwen12(sigma,cts,convert=False)
   sgp = se(1.0,cls)
   return kernel_product(tgp,sgp)
 
@@ -376,5 +376,5 @@ CONSTRUCTORS = {'p00':p00,
                 'exp-p0':exp_p0,
                 'mat32-se':mat32_se,
                 'mat52-se':mat52_se,
-                'wen11-se':wen11_se,
-                'wen12-se':wen12_se}
+                'wen12-se':wen12_se,
+                'spwen12-se':spwen12_se}

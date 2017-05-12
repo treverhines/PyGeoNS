@@ -44,19 +44,24 @@ def station_sigma_and_p(gp,time,mask):
     rows_i = rows_i.ravel()
     cols_i = cols_i.ravel()
   
+  # collect the covariance data dynamically using data, row, col
+  # format
+  data = []
+  rows = []
+  cols = []
   p = np.zeros((Nt,Nx,Np,Nx),dtype=float)
-  data = np.zeros((0,),dtype=float)
-  rows = np.zeros((0,),dtype=np.int32)
-  cols = np.zeros((0,),dtype=np.int32)
   for i in range(Nx):
     # mask_i indicates the elements of data_i that correspond to a
     # masked datum. Dont include them in the output array
     mask_i = mask[rows_i,i] | mask[cols_i,i]
-    data = np.hstack((data,data_i[~mask_i]))
-    rows = np.hstack((rows,i + rows_i[~mask_i]*Nx))
-    cols = np.hstack((cols,i + cols_i[~mask_i]*Nx))
+    data += [data_i[~mask_i]]
+    rows += [i + rows_i[~mask_i]*Nx]
+    cols += [i + cols_i[~mask_i]*Nx]
     p[:,i,:,i] = p_i
 
+  data = np.hstack(data)
+  rows = np.hstack(rows)
+  cols = np.hstack(cols)
   p = p.reshape((Nt*Nx,Np*Nx))
   p = p[~mask.ravel(),:]
   # map rows and cols to the rows and cols of the array after the
@@ -101,9 +106,9 @@ def chunkify_covariance(cov_in,chunk_size):
     N1,N2 = x1.shape[0],x2.shape[0]
     # Collect the data in data,rows,cols format. Then covert to the
     # proper type at the end
-    data = np.zeros((0,),dtype=float)  
-    rows = np.zeros((0,),dtype=np.int32)  
-    cols = np.zeros((0,),dtype=np.int32)  
+    data = []
+    rows = []
+    cols = []
     # count is the total number of rows added to the output covariance
     # matrix thus far
     count = 0 
@@ -120,19 +125,22 @@ def chunkify_covariance(cov_in,chunk_size):
       if sp.issparse(cov_chunk):
         # if sparse convert to coo and get the data
         cov_chunk = cov_chunk.tocoo()
-        data = np.hstack((data,cov_chunk.data))
-        rows = np.hstack((rows,start + cov_chunk.row))
-        cols = np.hstack((cols,cov_chunk.col))
+        data += [cov_chunk.data]
+        rows += [start + cov_chunk.row]
+        cols += [cov_chunk.col]
 
       else:
         # if dense unravel cov_chunk
         r,c = np.mgrid[start:stop,:N2]
-        data = np.hstack((data,cov_chunk.ravel()))
-        rows = np.hstack((rows,r.ravel()))
-        cols = np.hstack((cols,c.ravel()))
+        data += [cov_chunk.ravel()]
+        rows += [r.ravel()]
+        cols += [c.ravel()]
         
       count = min(count+chunk_size,N1)
       
+    data = np.hstack(data)
+    rows = np.hstack(rows)
+    cols = np.hstack(cols)
     # Decide whether to make the output array sparse or dense based on
     # the number of non-zeros. I could have alternatively had the
     # output mimic the input covariance function.

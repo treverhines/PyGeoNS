@@ -559,6 +559,17 @@ will be returned instead of velocities and velocity gradients.
 '''
 }
 #####################################################################
+NO_UNCERTAINTY = {
+'dest':'uncertainty',
+'action':'store_false',
+'help':
+''' 
+If this flag is raised then the uncertainties will not be calculated.
+This may significantly reduce computation time and may be appropriate
+for data exploration purposes.
+'''
+}
+#####################################################################
 OUTLIER_TOL = {
 'type':float, 
 'metavar':'FLOAT', 
@@ -626,6 +637,7 @@ GLOSSARY = {
 'station_noise_params':STATION_NOISE_PARAMS,
 'station_noise_model':STATION_NOISE_MODEL,
 'no_rate':NO_RATE,
+'no_uncertainty':NO_UNCERTAINTY,
 'network_fix':NETWORK_FIX,
 'station_fix':STATION_FIX,
 'outlier_tol':OUTLIER_TOL,
