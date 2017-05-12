@@ -26,8 +26,9 @@ def station_sigma_and_p(gp,time,mask):
   sigma_i = gp._covariance(time,time,diff,diff)
   p_i = gp._basis(time,diff)
 
-  Nt,Np = p_i.shape
-  _,Nx = mask.shape
+  Nt,Np = p_i.shape # number of times and basis functions
+  _,Nx = mask.shape # number of stations
+  Nu = np.sum(~mask) # number of unmasked data
 
   # break sigma_i into data,rows,cols
   if sp.issparse(sigma_i):
@@ -43,44 +44,40 @@ def station_sigma_and_p(gp,time,mask):
     rows_i = rows_i.ravel()
     cols_i = cols_i.ravel()
   
-  # build the data for the sparse covariance matrix for all data
-  # (including the masked ones) then crop out the masked ones
-  # afterwards. This is not efficient if there are many masked
-  # observations but I cannot think of a better way to do this.
-  Nnz, = data_i.shape  # number of non-zeros in sigma_i
   p = np.zeros((Nt,Nx,Np,Nx),dtype=float)
-  data = np.zeros((Nx,Nnz),dtype=float)  
-  rows = np.zeros((Nx,Nnz),dtype=np.int32)  
-  cols = np.zeros((Nx,Nnz),dtype=np.int32)  
+  data = np.zeros((0,),dtype=float)
+  rows = np.zeros((0,),dtype=np.int32)
+  cols = np.zeros((0,),dtype=np.int32)
   for i in range(Nx):
-    data[i,:] = data_i
-    rows[i,:] = i + rows_i*Nx
-    cols[i,:] = i + cols_i*Nx
+    # mask_i indicates the elements of data_i that correspond to a
+    # masked datum. Dont include them in the output array
+    mask_i = mask[rows_i,i] | mask[cols_i,i]
+    data = np.hstack((data,data_i[~mask_i]))
+    rows = np.hstack((rows,i + rows_i[~mask_i]*Nx))
+    cols = np.hstack((cols,i + cols_i[~mask_i]*Nx))
     p[:,i,:,i] = p_i
 
-  data = data.ravel()
-  rows = rows.ravel()
-  cols = cols.ravel()
   p = p.reshape((Nt*Nx,Np*Nx))
-
-  if Nx*Nnz > (0.5*Nt**2*Nx**2):
-    # if the matrix has more than 50% non-zeros then make the output
-    # matrix dense
-    sigma = np.zeros((Nt*Nx,Nt*Nx))
+  p = p[~mask.ravel(),:]
+  # map rows and cols to the rows and cols of the array after the
+  # masked data have been removed
+  idx_map = np.cumsum(~mask.ravel()) - 1
+  rows = idx_map[rows]
+  cols = idx_map[cols]
+  
+  if data.size > 0.5*Nu**2:
+    # if the output matrix has more than 50% non-zeros then make the
+    # it dense
+    sigma = np.zeros((Nu,Nu))
     sigma[rows,cols] = data
     logger.debug('Station covariance matrix is dense')
   
   else:
     # otherwise make it csc sparse    
-    sigma = sp.csc_matrix((data,(rows,cols)),(Nt*Nx,Nt*Nx),dtype=float)
+    sigma = sp.csc_matrix((data,(rows,cols)),(Nu,Nu),dtype=float)
     density = (100.0*sigma.nnz)/np.prod(sigma.shape)
     logger.debug('Station covariance matrix is sparse with %.3f%% '
                  'non-zeros' % density)
-
-  # toss out rows and columns for masked data
-  maskf = mask.ravel()
-  sigma = sigma[:,~maskf][~maskf,:]
-  p = p[~maskf,:]
 
   if p.size != 0:
     # remove singluar values from p
@@ -139,8 +136,7 @@ def chunkify_covariance(cov_in,chunk_size):
     # Decide whether to make the output array sparse or dense based on
     # the number of non-zeros. I could have alternatively had the
     # output mimic the input covariance function.
-    Nnz, = data.shape
-    if Nnz > (0.5*N1*N2):
+    if data.size > (0.5*N1*N2):
       # if the matrix has more than 50% non-zeros then make the output
       # matrix dense
       out = np.zeros((N1,N2))
