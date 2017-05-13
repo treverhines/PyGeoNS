@@ -88,34 +88,24 @@ def strain(t,x,d,sd,
   if uncertainty:
     # compute the uncertainties, which can be very expensive
     u,su = u_gp.meansd(out_z,chunk_size=1000)
-    u = u.reshape((out_t.shape[0],out_x.shape[0]))
-    su = su.reshape((out_t.shape[0],out_x.shape[0]))
-  
     dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
-    dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
-    sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
-  
     dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
-    dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
-    sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
 
   else:
     # return zeros for the uncertainties
     u = u_gp.mean(out_z)
     su = np.zeros_like(u)
-    u = u.reshape((out_t.shape[0],out_x.shape[0]))
-    su = su.reshape((out_t.shape[0],out_x.shape[0]))
-  
     dudx = dudx_gp.mean(out_z)
     sdudx = np.zeros_like(u)
-    dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
-    sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
-  
     dudy = dudy_gp.mean(out_z)
     sdudy = np.zeros_like(u)
-    dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
-    sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
         
+  u = u.reshape((out_t.shape[0],out_x.shape[0]))
+  su = su.reshape((out_t.shape[0],out_x.shape[0]))
+  dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
+  sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
+  dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
+  sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
 
   out  = (u,su,dudx,sdudx,dudy,sdudy)
   return out

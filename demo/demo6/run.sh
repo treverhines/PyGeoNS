@@ -37,9 +37,10 @@ pygeons crop -v 'work/data.h5' \
 pygeons strain -vv 'work/data.crop.h5' \
                --network-prior-model 'spwen12-se' \
                --network-prior-params 1.0 0.1 100.0 \
-               --station-noise-model 'p0' 'p1' \
+               --station-noise-model 'p0' 'p1' 'per' \
                --station-noise-params \
-               --no-uncertainty
+               --output-stem 'work/data.vel' \
+               --no-uncertainty \
 
 #pygeons vector-view work/data.crop.h5 work/data.crop.fit.h5
 
