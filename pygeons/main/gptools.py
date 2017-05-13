@@ -43,13 +43,21 @@ def station_sigma_and_p(gp,time,mask):
     rows_i,cols_i = np.mgrid[:Nt,:Nt]
     rows_i = rows_i.ravel()
     cols_i = cols_i.ravel()
+    
+  # do the same for p_i, which is always dense
+  p_data_i = p_i.ravel()   
+  p_rows_i,p_cols_i = np.mgrid[:Nt,:Np]
+  p_rows_i = p_rows_i.ravel()
+  p_cols_i = p_cols_i.ravel()
   
   # collect the covariance data dynamically using data, row, col
   # format
-  data = []
-  rows = []
-  cols = []
-  p = np.zeros((Nt,Nx,Np,Nx),dtype=float)
+  data = [] # container for non-zero elements of the cov matrix
+  rows = [] # container for row numbers for each non-zero 
+  cols = [] # container for column numbers for each non-zero 
+  p_data = [] # data for elements of basis vector matrix
+  p_rows = [] 
+  p_cols = [] 
   for i in range(Nx):
     # mask_i indicates the elements of data_i that correspond to a
     # masked datum. Dont include them in the output array
@@ -57,19 +65,26 @@ def station_sigma_and_p(gp,time,mask):
     data += [data_i[~mask_i]]
     rows += [i + rows_i[~mask_i]*Nx]
     cols += [i + cols_i[~mask_i]*Nx]
-    p[:,i,:,i] = p_i
+    # make basis vector data
+    mask_i = mask[p_rows_i,i]
+    p_data += [p_data_i[~mask_i]]
+    p_rows += [i + p_rows_i[~mask_i]*Nx]
+    p_cols += [i*Np + p_cols_i[~mask_i]]
 
   data = np.hstack(data)
   rows = np.hstack(rows)
   cols = np.hstack(cols)
-  p = p.reshape((Nt*Nx,Np*Nx))
-  p = p[~mask.ravel(),:]
+  p_data = np.hstack(p_data)
+  p_rows = np.hstack(p_rows)
+  p_cols = np.hstack(p_cols)
   # map rows and cols to the rows and cols of the array after the
   # masked data have been removed
   idx_map = np.cumsum(~mask.ravel()) - 1
   rows = idx_map[rows]
   cols = idx_map[cols]
+  p_rows = idx_map[p_rows]
   
+  # build final covariance matrix array
   if data.size > 0.5*Nu**2:
     # if the output matrix has more than 50% non-zeros then make the
     # it dense
@@ -84,6 +99,9 @@ def station_sigma_and_p(gp,time,mask):
     logger.debug('Station covariance matrix is sparse with %.3f%% '
                  'non-zeros' % density)
 
+  # build final basis vector array
+  p = np.zeros((Nu,Nx*Np))
+  p[p_rows,p_cols] = p_data
   if p.size != 0:
     # remove singluar values from p
     u,s,_ = np.linalg.svd(p,full_matrices=False)
