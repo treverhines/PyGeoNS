@@ -93,14 +93,26 @@ Name of the file containing edits that will be applied to the dataset.
 '''
 }
 #####################################################################
-POSITIONS = {
+POSITIONS_FILE = {
 'type':str,
 'metavar':'STR',
 'help':
 ''' 
-Name of the file containing IDs, latitudes, and longitudes of the 
-output positions. If this is not specified then the output positions 
-will be the same as the positions in the input dataset.
+File containing output positions. Each line contains an ID, longitude,
+and latitude. These are in addition to positions specified with
+"positions". If no output positions are specified then the posterior
+will be evaluated at each station in the input data file.
+'''
+}
+#####################################################################
+POSITIONS = {
+'nargs':'+',
+'type':str,
+'metavar':'STR',
+'help':
+''' 
+Output positions specified as a sequence of IDs, longitudes, and
+latitudes. For example "A000 -124.0 45.0 A001 -125.0 46.0"
 '''
 }
 #####################################################################
@@ -599,6 +611,7 @@ GLOSSARY = {
 'input_edits_file':INPUT_EDITS_FILE,
 'no_display':NO_DISPLAY,
 'positions':POSITIONS,
+'positions_file':POSITIONS_FILE,
 'verbose':VERBOSE,
 'file_type':FILE_TYPE,
 'xdiff_file':XDIFF_FILE,

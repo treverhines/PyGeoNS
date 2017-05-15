@@ -182,7 +182,7 @@ def _log_strain(input_file,
                 network_prior_model,network_prior_params, 
                 network_noise_model,network_noise_params, 
                 station_noise_model,station_noise_params, 
-                start_date,stop_date,positions,rate,
+                start_date,stop_date,output_id,rate,vertical,
                 output_u_file,output_dx_file,output_dy_file):
   msg  = '\n'
   msg += '--------------- PYGEONS STRAIN RUN INFORMATION ---------------\n\n'
@@ -205,13 +205,10 @@ def _log_strain(input_file,
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['vertical']])
-  msg += 'output start date : %s\n' % start_date
-  msg += 'output stop date : %s\n' % stop_date
-  if positions is None:
-    msg += 'output positions file : < using same positions as input >\n'
-
-  else:   
-    msg += 'output positions file : %s\n' % positions
+  msg += 'start date for output : %s\n' % start_date
+  msg += 'stop date for output : %s\n' % stop_date
+  msg += 'number of output positions : %s\n' % len(output_id)
+  msg += 'ignore vertical deformation : %s\n' % (not vertical)
 
   if rate:
     msg += 'output velocity file : %s\n' % output_u_file
@@ -424,8 +421,10 @@ def pygeons_strain(input_file,
                    network_noise_params=(),
                    station_noise_model=('p0','p1'),
                    station_noise_params=(),
-                   start_date=None,stop_date=None,positions=None,
-                   rate=True,uncertainty=True,vertical=True,output_stem=None):
+                   start_date=None,stop_date=None,
+                   positions=None,positions_file=None,
+                   rate=True,uncertainty=True,vertical=True,
+                   output_stem=None):
   ''' 
   calculates strain
   '''
@@ -445,24 +444,42 @@ def pygeons_strain(input_file,
   network_prior_params = _params_dict(network_prior_params)
   network_noise_params = _params_dict(network_noise_params)
   station_noise_params = _params_dict(station_noise_params)
-
+  
   # convert geodetic input positions to cartesian
   bm = make_basemap(data['longitude'],data['latitude'])
   x,y = bm(data['longitude'],data['latitude'])
   xy = np.array([x,y]).T
 
   # set output positions
-  if positions is None:
+  if (positions is None) & (positions_file is None):
+    # no output positions were specified so return the solution at the
+    # input data positions
     output_id = np.array(data['id'],copy=True)
     output_lon = np.array(data['longitude'],copy=True)
     output_lat = np.array(data['latitude'],copy=True)
 
   else:  
-    pos = np.loadtxt(positions,dtype=str)
-    # pos = id,longitude,latitude
-    output_id = pos[:,0]
-    output_lon = pos[:,1].astype(float)
-    output_lat = pos[:,2].astype(float)
+    output_id = np.zeros((0,),dtype=str)
+    output_lon = np.zeros((0,),dtype=float)
+    output_lat = np.zeros((0,),dtype=float)
+    if positions_file is not None:
+      # if positions file was specified
+      pos = np.loadtxt(positions_file,dtype=str,ndmin=2)
+      if pos.shape[1] != 3:
+        raise ValueError(
+          'positions file must contain a column for IDs, longitudes, '
+          'and latitudes')
+          
+      output_id = np.hstack((output_id,pos[:,0]))
+      output_lon = np.hstack((output_lon,pos[:,1].astype(float)))
+      output_lat = np.hstack((output_lat,pos[:,2].astype(float)))
+    
+    if positions is not None:  
+      # if positions were specified via the command line
+      pos = np.array(positions,dtype=str).reshape((-1,3))
+      output_id = np.hstack((output_id,pos[:,0]))
+      output_lon = np.hstack((output_lon,pos[:,1].astype(float)))
+      output_lat = np.hstack((output_lat,pos[:,2].astype(float)))
 
   # convert geodetic output positions to cartesian
   output_x,output_y = bm(output_lon,output_lat)
@@ -491,7 +508,7 @@ def pygeons_strain(input_file,
               network_prior_model,network_prior_params, 
               network_noise_model,network_noise_params, 
               station_noise_model,station_noise_params, 
-              start_date,stop_date,positions,rate,
+              start_date,stop_date,output_id,rate,vertical,
               output_u_file,output_dx_file,output_dy_file)
 
   for dir in ['east','north','vertical']:
