@@ -425,7 +425,7 @@ def pygeons_strain(input_file,
                    station_noise_model=('p0','p1'),
                    station_noise_params=(),
                    start_date=None,stop_date=None,positions=None,
-                   rate=True,uncertainty=True,output_stem=None):
+                   rate=True,uncertainty=True,vertical=True,output_stem=None):
   ''' 
   calculates strain
   '''
@@ -495,17 +495,30 @@ def pygeons_strain(input_file,
               output_u_file,output_dx_file,output_dy_file)
 
   for dir in ['east','north','vertical']:
-    u,su,dx,sdx,dy,sdy  = strain(data['time'][:,None],xy,
-                            data[dir],data[dir+'_std_dev'],
-                            network_prior_model=network_prior_model,
-                            network_prior_params=network_prior_params[dir],
-                            network_noise_model=network_noise_model,
-                            network_noise_params=network_noise_params[dir],
-                            station_noise_model=station_noise_model,
-                            station_noise_params=station_noise_params[dir],
-                            out_t=output_time[:,None],
-                            out_x=output_xy,
-                            rate=rate,uncertainty=uncertainty)
+    if (dir == 'vertical') & (not vertical):
+      logger.debug('Not computing vertical deformation gradients')
+      # do not compute the deformation gradients for vertical. Just
+      # return zeros.
+      u = np.zeros((output_time.shape[0],output_xy.shape[0]))
+      su = np.zeros((output_time.shape[0],output_xy.shape[0]))
+      dx = np.zeros((output_time.shape[0],output_xy.shape[0]))
+      sdx = np.zeros((output_time.shape[0],output_xy.shape[0]))
+      dy = np.zeros((output_time.shape[0],output_xy.shape[0]))
+      sdy = np.zeros((output_time.shape[0],output_xy.shape[0]))
+       
+    else:      
+      u,su,dx,sdx,dy,sdy  = strain(data['time'][:,None],xy,
+                              data[dir],data[dir+'_std_dev'],
+                              network_prior_model=network_prior_model,
+                              network_prior_params=network_prior_params[dir],
+                              network_noise_model=network_noise_model,
+                              network_noise_params=network_noise_params[dir],
+                              station_noise_model=station_noise_model,
+                              station_noise_params=station_noise_params[dir],
+                              out_t=output_time[:,None],
+                              out_x=output_xy,
+                              rate=rate,uncertainty=uncertainty)
+
     out_u[dir] = u
     out_u[dir+'_std_dev'] = su
     out_dx[dir] = dx

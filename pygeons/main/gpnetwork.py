@@ -45,11 +45,23 @@ def mat32(sigma,cls):
   return gauss.gpiso(rbf.basis.mat32,(0.0,sigma**2,cls),dim=2)
 
 
-def mat52_2d(sigma,cls):
+def mat52(sigma,cls):
   ''' 
   Matern space covariance function with nu=5/2
   '''
   return gauss.gpiso(rbf.basis.mat52,(0.0,sigma**2,cls),dim=2)
+
+def wen32(sigma,cls):
+  ''' 
+  Matern space covariance function with nu=5/2
+  '''
+  return gauss.gpiso(rbf.basis.wen32,(0.0,sigma**2,cls),dim=2)
+
+def spwen32(sigma,cls):
+  ''' 
+  Matern space covariance function with nu=5/2
+  '''
+  return gauss.gpiso(rbf.basis.spwen32,(0.0,sigma**2,cls),dim=2)
 
 
 # 3D GaussianProcess constructors
@@ -219,6 +231,38 @@ def spwen12_se(sigma,cts,cls):
   return kernel_product(tgp,sgp)
 
 
+@set_units(['mm','yr','km'])
+def wen12_wen32(sigma,cts,cls):
+  ''' 
+  WEN11 in time and SE in space covariance function
+  
+  Parameters
+  ----------
+  sigma [mm] : Standard deviation of displacements
+  cts [yr] : Characteristic time-scale
+  cls [km] : Characteristic length-scale
+  '''
+  tgp = gpstation.wen12(sigma,cts,convert=False)
+  sgp = wen32(1.0,cls)
+  return kernel_product(tgp,sgp)
+
+
+@set_units(['mm','yr','km'])
+def spwen12_spwen32(sigma,cts,cls):
+  ''' 
+  WEN11 in time and SE in space covariance function
+  
+  Parameters
+  ----------
+  sigma [mm] : Standard deviation of displacements
+  cts [yr] : Characteristic time-scale
+  cls [km] : Characteristic length-scale
+  '''
+  tgp = gpstation.spwen12(sigma,cts,convert=False)
+  sgp = spwen32(1.0,cls)
+  return kernel_product(tgp,sgp)
+
+
 @set_units(['mm','yr'])
 def exp_p0(sigma,cts):
   ''' 
@@ -377,4 +421,6 @@ CONSTRUCTORS = {'p00':p00,
                 'mat32-se':mat32_se,
                 'mat52-se':mat52_se,
                 'wen12-se':wen12_se,
-                'spwen12-se':spwen12_se}
+                'spwen12-se':spwen12_se,
+                'wen12-wen32':wen12_wen32,
+                'spwen12-spwen32':spwen12_spwen32}

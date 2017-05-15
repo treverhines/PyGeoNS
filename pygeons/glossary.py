@@ -559,6 +559,16 @@ will be returned instead of velocities and velocity gradients.
 '''
 }
 #####################################################################
+NO_VERTICAL = {
+'dest':'vertical',
+'action':'store_false',
+'help':
+''' 
+If this flag is raised then vertical deformation gradients will not be
+computed.
+'''
+}
+#####################################################################
 NO_UNCERTAINTY = {
 'dest':'uncertainty',
 'action':'store_false',
@@ -637,6 +647,7 @@ GLOSSARY = {
 'station_noise_params':STATION_NOISE_PARAMS,
 'station_noise_model':STATION_NOISE_MODEL,
 'no_rate':NO_RATE,
+'no_vertical':NO_VERTICAL,
 'no_uncertainty':NO_UNCERTAINTY,
 'network_fix':NETWORK_FIX,
 'station_fix':STATION_FIX,
