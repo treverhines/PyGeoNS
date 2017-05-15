@@ -16,15 +16,15 @@
 # over a slow slip event.
 
 # download data from the urls in *urls.txt*
-rm -rf 'work/csv'
-mkdir -p 'work/csv'
-for i in `cat 'urls.txt'`
-  do
-  wget -P 'work/csv' $i
-  done
+#rm -rf 'work/csv'
+#mkdir -p 'work/csv'
+#for i in `cat 'urls.txt'`
+#  do
+#  wget -P 'work/csv' $i
+#  done
 
 # use sed to concatenate all the data files and separate them with ***
-sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+#sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
 ## convert the csv file to an hdf5 file
 pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
