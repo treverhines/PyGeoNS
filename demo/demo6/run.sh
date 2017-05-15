@@ -15,41 +15,34 @@
 # then use PyGeoNS to calculate the time-dependent strain accumulated
 # over a slow slip event.
 
-## download data from the urls in *urls.txt*
-#rm -rf 'work/csv'
-#mkdir -p 'work/csv'
-#for i in `cat 'urls.txt'`
-#  do
-#  wget -P 'work/csv' $i
-#  done
-#
-## use sed to concatenate all the data files and separate them with ***
-#sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
-#
+# download data from the urls in *urls.txt*
+rm -rf 'work/csv'
+mkdir -p 'work/csv'
+for i in `cat 'urls.txt'`
+  do
+  wget -P 'work/csv' $i
+  done
+
+# use sed to concatenate all the data files and separate them with ***
+sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+
 ## convert the csv file to an hdf5 file
 pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
 
 ## crop out data prior to 2015-01-01 and after 2017-01-01
 pygeons crop -v 'work/data.h5' \
-             --start-date '2016-02-01' \
-             --stop-date '2016-04-01' \
+             --start-date '2015-05-01' \
+             --stop-date '2017-05-01' \
 
 pygeons strain -vv 'work/data.crop.h5' \
                --network-prior-model 'spwen12-se' \
                --network-prior-params 1.0 0.1 100.0 \
-               --station-noise-model 'p0' 'p1' \
+               --station-noise-model 'p0' 'p1' 'per' \
                --station-noise-params \
-               --start-date 2016-02-01 \
+               --start-date 2015-10-01 \
                --stop-date 2016-04-01 \
-               --no-vertical \
-               --output-stem 'work/data.test' \
+               --no-vertical
 
-pygeons strain-view -v 'work/data.test.dudx.h5' \
-                       'work/data.test.dudy.h5'
+pygeons strain-view -v 'work/data.crop.strain.dudx.h5' \
+                       'work/data.crop.strain.dudy.h5'
 
-#pygeons vector-view work/data.crop.h5 work/data.crop.fit.h5
-
-#pygeons strain -vv 'work/data.crop.h5' \
-#             --network-prior-model 'p10' 'p11' \
-#             --network-prior-params \
-#

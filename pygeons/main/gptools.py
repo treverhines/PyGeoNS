@@ -40,13 +40,13 @@ def station_sigma_and_p(gp,time,mask):
   else:
     # the matrix is dense
     data_i = sigma_i.ravel()
-    rows_i,cols_i = np.mgrid[:Nt,:Nt]
+    rows_i,cols_i = np.mgrid[:Nt,:Nt].astype(np.int32)
     rows_i = rows_i.ravel()
     cols_i = cols_i.ravel()
     
   # do the same for p_i, which is always dense
   p_data_i = p_i.ravel()   
-  p_rows_i,p_cols_i = np.mgrid[:Nt,:Np]
+  p_rows_i,p_cols_i = np.mgrid[:Nt,:Np].astype(np.int32)
   p_rows_i = p_rows_i.ravel()
   p_cols_i = p_cols_i.ravel()
   
@@ -149,7 +149,7 @@ def chunkify_covariance(cov_in,chunk_size):
 
       else:
         # if dense unravel cov_chunk
-        r,c = np.mgrid[start:stop,:N2]
+        r,c = np.mgrid[start:stop,:N2].astype(np.int32)
         data += [cov_chunk.ravel()]
         rows += [r.ravel()]
         cols += [c.ravel()]
