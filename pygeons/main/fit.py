@@ -10,7 +10,7 @@ from pygeons.main import gpnetwork
 from pygeons.main import gpstation
 from rbf.gauss import (_as_sparse_or_array,
                        _as_covariance,
-                       _PartitionedFactor)
+                       _PartitionedPosDefSolver)
 logger = logging.getLogger(__name__)
 
 
@@ -24,9 +24,9 @@ def _fit(d,s,mu,sigma,p):
   # *sigma_and_s* is the Gaussian process covariance with the noise
   # covariance added
   sigma_and_s = _as_sparse_or_array(sigma + _as_covariance(s))
-  Kfact = _PartitionedFactor(sigma_and_s,p)
+  Ksolver = _PartitionedPosDefSolver(sigma_and_s,p)
   # compute mean of the posterior 
-  vec1,vec2 = Kfact.solve(d - mu,np.zeros(m)) 
+  vec1,vec2 = Ksolver.solve(d - mu,np.zeros(m)) 
   u = mu + sigma.dot(vec1) + p.dot(vec2)   
   # dont bother computing the uncertainties and just return zero for
   # now

@@ -125,9 +125,9 @@ def pygeons_crop(input_file,start_date=None,stop_date=None,
                  min_lon=-np.inf,max_lon=np.inf,
                  stations=None,output_stem=None):
   ''' 
-  Sets the time span of the data set to be between *start_date* and 
-  *stop_date*. Sets the stations to be within the latitude and 
-  longitude bounds.
+  Sets the time span of the data set to be between *start_date* and
+  *stop_date*. Sets the stations to be within the latitude and
+  longitude bounds. 
   
   Parameters
   ----------
