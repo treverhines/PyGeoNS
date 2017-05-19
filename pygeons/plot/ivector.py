@@ -633,20 +633,6 @@ Notes :
     colors = sm.to_rgba(self.data_sets[1][self.tidx,:,2])
     self.scatter.set_facecolors(colors)
 
-  def _init_highlighter(self):
-    # Creates a highlighter indicating the location of the station 
-    # currently plotted in the time series axes.
-    self.highlighter = self.map_ax.plot(self.x[self.xidx,0],
-                                   self.x[self.xidx,1],'ko',
-                                   markersize=20*self.highlight)[0]
-
-  def _update_highlighter(self):
-    # Updates the highlighter for changes in *tidx* or *xidx*. This changes 
-    # the location of the highlighter to the new current station
-    self.highlighter.set_data(self.x[self.xidx,0],
-                         self.x[self.xidx,1])
-    self.highlighter.set_markersize(20*self.highlight)
-
   def _init_quiver(self):
     # Initially plots the horizontal deformation vectors and a key
     self.quiver = []
@@ -692,15 +678,51 @@ Notes :
                                np.zeros(self.x.shape[0])))
 
   def _init_pickers(self):
-    # Initially plots the picker artists, which are used to select 
-    # station by clicking on them. These pickers never change and so 
-    # there is no corresponding update function
+    # Initially plots the picker artists, which are used to select
+    # station by clicking on them. The currently picked station has a
+    # slightly larger marker. Labels are also created for each picker
     self.pickers = []
-    for xi in self.x:
-      self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
-                                       picker=10,
-                                       markersize=0)
+    self.text = []
+    for i,(si,xi) in enumerate(zip(self.station_labels,self.x)):
+      if self.highlight:
+        # make pickers and text visible
+        if i == self.xidx:
+          # make the picker larger if i==xidx
+          self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                           picker=10,
+                                           markersize=15,
+                                           markerfacecolor='k',
+                                           markeredgecolor='k')
 
+        else:          
+          self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                           picker=10,
+                                           markersize=5,
+                                           markerfacecolor='k',
+                                           markeredgecolor='k')
+                                           
+        self.text += [self.map_ax.text(xi[0],xi[1],si,
+                                       fontsize=self.fontsize,
+                                       color=(0.4,0.4,0.4))]
+      else:                                       
+        # just create the pickers and dont make them visible
+        self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                         picker=10,
+                                         markersize=0,
+                                         markerfacecolor='k',
+                                         markeredgecolor='k')
+
+  def _update_pickers(self):
+    # Change the larger picker according to the current xidx
+    if self.highlight:
+      # only make the changes if highlight is True
+      for i,p in enumerate(self.pickers):
+        if i == self.xidx:
+          p.set_markersize(15)
+
+        else:
+          p.set_markersize(5)  
+        
   def _init_lines(self):
     # Initially plots the time series for each component of 
     # deformation
@@ -806,7 +828,7 @@ Notes :
     for f in self.err2: f.remove()
     for f in self.err3: f.remove()
     self._init_err()
-
+    
   def _remove_artists(self):
     # This function should remove EVERY artist
     for f in self.err1: f.remove()
@@ -817,8 +839,8 @@ Notes :
     for l in self.line3: l.remove()
     for q in self.quiver: q.remove()
     for p in self.pickers: p.remove()
+    for t in self.text: t.remove()
     self.key.remove()
-    self.highlighter.remove()
     self.image.remove()
     if self.scatter is not None:
       self.scatter.remove()        
@@ -827,7 +849,6 @@ Notes :
 
   def _init(self):
     # Calls every _init function
-    self._init_highlighter()
     self._init_pickers()
     self._init_map_ax()
     self._init_quiver()
@@ -842,7 +863,7 @@ Notes :
 
   def update(self):
     # Calls every _update function
-    self._update_highlighter()
+    self._update_pickers()
     self._update_map_ax()
     self._update_quiver()
     self._update_lines()
