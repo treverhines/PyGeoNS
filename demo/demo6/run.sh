@@ -37,18 +37,15 @@ pygeons crop -v 'work/data.h5' \
 pygeons autoclean -vv 'work/data.crop.h5' \
                   --network-model 'spwen12-se' \
                   --network-params 1.0 0.1 100.0 \
-                  --station-model 'p0' 'p1' 'per' \
+                  --station-model 'linear' 'per' \
                   --station-params \
                   --outlier-tol 4.0
 
 pygeons strain -vv 'work/data.crop.autoclean.h5' \
                --network-prior-model 'spwen12-se' \
                --network-prior-params 1.0 0.1 100.0 \
-               --station-noise-model 'p0' 'p1' 'per' \
+               --station-noise-model 'linear' 'per' \
                --station-noise-params \
-               --start-date 2015-05-01 \
-               --stop-date 2017-05-01 \
-               --positions 0000 -124.0 48.0 \
                --no-vertical
 
 pygeons strain-view -v 'work/data.crop.autoclean.strain.dudx.h5' \
