@@ -7,6 +7,7 @@ import rbf.poly
 from rbf import gauss
 from pygeons.main.gptools import set_units
                                
+
 @set_units([])
 def p0():
   ''' 
@@ -17,8 +18,10 @@ def p0():
   None
   '''
   def basis(x,diff):
+    # use 2000-01-01 as the reference time which is 51544 in MJD
+    t0 = np.array([51544.0])
     powers = np.array([[0]])
-    out = rbf.poly.mvmonos(x,powers,diff)
+    out = rbf.poly.mvmonos(x - t0,powers,diff)
     return out
 
   return gauss.gpbfci(basis,dim=1)  
@@ -34,41 +37,57 @@ def p1():
   None
   '''
   def basis(x,diff):
+    # use 2000-01-01 as the reference time which is 51544 in MJD
+    t0 = np.array([51544.0])
     powers = np.array([[1]])
-    out = rbf.poly.mvmonos(x,powers,diff)
+    out = rbf.poly.mvmonos(x - t0,powers,diff)
     return out
 
   return gauss.gpbfci(basis,dim=1)  
 
 
-@set_units(['mm'])
-def per(sigma):
+@set_units([])
+def const():
   ''' 
-  Annual and semiannual sinusoid basis functions
+  Constant in time basis function  
   
   Parameters
   ----------
-  sigma [mm] : Standard deviation of the basis function coefficients
-
+  None
   '''
-  def basis(x):
-    # no derivatives because im lazy
-    out = np.array([np.sin(2*np.pi*x[:,0]/365.25),
-                    np.cos(2*np.pi*x[:,0]/365.25),
-                    np.sin(4*np.pi*x[:,0]/365.25),
-                    np.cos(4*np.pi*x[:,0]/365.25)]).T
+  def basis(x,diff):
+    # use 2000-01-01 as the reference time which is 51544 in MJD
+    t0 = np.array([51544.0])
+    powers = np.array([[0]])
+    out = rbf.poly.mvmonos(x - t0,powers,diff)
     return out
 
-  mu = np.zeros(4)
-  sigma = np.full(4,sigma)
-  return gauss.gpbfc(basis,mu,sigma,dim=1)
+  return gauss.gpbfci(basis,dim=1)  
 
 
 @set_units([])
-def peri():
+def linear():
   ''' 
-  Annual and semiannual sinusoid basis functions with unconstrained
-  coefficients
+  Constant and linear in time basis functions
+  
+  Parameters
+  ----------
+  None
+  '''
+  def basis(x,diff):
+    # use 2000-01-01 as the reference time which is 51544 in MJD
+    t0 = np.array([51544.0])
+    powers = np.array([[0],[1]])
+    out = rbf.poly.mvmonos(x - t0,powers,diff)
+    return out
+
+  return gauss.gpbfci(basis,dim=1)  
+
+
+@set_units([])
+def per():
+  ''' 
+  Annual and semiannual sinusoid basis functions 
   
   Parameters
   ----------
@@ -85,36 +104,10 @@ def peri():
   return gauss.gpbfci(basis,dim=1)
 
 
-@set_units(['mm','mjd'])
-def step(sigma,t0):
+@set_units(['mjd'])
+def step(t0):
   ''' 
   Heaviside step function
-  
-  Parameters
-  ----------
-  sigma [mm] : Standard deviation of the step size
-  t0 [mjd] : Time of the step
-  '''
-  def basis(x,diff):
-    if diff == (0,):
-      out = (x[:,0] >= t0).astype(float)
-    else:
-      # derivative is zero everywhere (ignore the step at t0)
-      out = np.zeros(x.shape[0],dtype=float)  
-    
-    # turn into an (N,1) array
-    out = out[:,None]
-    return out
-
-  mu = np.zeros(1)
-  sigma = np.full(1,sigma)
-  return gauss.gpbfc(basis,mu,sigma,dim=1)
-
-
-@set_units(['mjd'])
-def stepi(t0):
-  ''' 
-  Heaviside step function with an unconstrained step size
   
   Parameters
   ----------
@@ -134,38 +127,10 @@ def stepi(t0):
   return gauss.gpbfci(basis,dim=1)
 
 
-@set_units(['mm/yr','mjd'])
-def ramp(sigma,t0):
-  ''' 
-  Ramp function
-  
-  Parameters
-  ----------
-  sigma [mm/yr] : Standard deviation of the ramp slope
-  t0 [mjd] : Time of the ramp
-  '''
-  def basis(x,diff):
-    if diff == (0,):
-      out = (x[:,0] - t0)*((x[:,0] >= t0).astype(float))
-    elif diff == (1,):
-      out = (x[:,0] >= t0).astype(float)
-    else:
-      # derivative is zero everywhere (ignore the step at t0)
-      out = np.zeros(x.shape[0],dtype=float)  
-    
-    # turn into an (N,1) array
-    out = out[:,None]
-    return out
-
-  mu = np.zeros(1)
-  sigma = np.full(1,sigma)
-  return gauss.gpbfc(basis,mu,sigma,dim=1)
-
-
 @set_units(['mjd'])
-def rampi(t0):
+def ramp(t0):
   ''' 
-  Ramp function with unconstrained slope
+  Ramp function 
   
   Parameters
   ----------
@@ -395,29 +360,14 @@ def ibm(sigma,t0):
 
   return gauss.GaussianProcess(mean,cov,dim=1)  
 
-#CONSTRUCTORS = {'p0':p0, 
-#                'p1':p1, 
-#                'peri':peri, 
-#                'per':per, 
-#                'stepi':stepi,
-#                'step':step,
-#                'rampi':rampi,
-#                'ramp':ramp,
-#                'bm':bm,
-#                'ibm':ibm,
-#                'fogm':fogm,
-#                'mat32':mat32,
-#                'mat52':mat52,
-#                'se':se,
-#                'exp':exp}
 
-# trim down constructors to the ones that are useful for strain
-# analysis
 CONSTRUCTORS = {'p0':p0, 
                 'p1':p1, 
-                'per':peri, 
-                'step':stepi,
-                'ramp':rampi,
+                'const':const,
+                'linear':linear,
+                'per':per, 
+                'step':step,
+                'ramp':ramp,
                 'bm':bm,
                 'ibm':ibm,
                 'fogm':fogm,
