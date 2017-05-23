@@ -200,7 +200,7 @@ def _log_strain(input_file,
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_noise_params['north']])
   msg += '    vertical parameters : %s\n' % ', '.join(['%0.4e' % i for i in network_noise_params['vertical']])
   msg += 'station noise :\n' 
-  msg += '    model : %s\n' % ' '.join(station_noise_model)
+  msg += '    model : %s\n' % ', '.join(station_noise_model)
   msg += '    parameter units : %s\n' % ', '.join(composite_units(station_noise_model,gpstation.CONSTRUCTORS))
   msg += '    east parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['east']])
   msg += '    north parameters : %s\n' % ', '.join(['%0.4e' % i for i in station_noise_params['north']])

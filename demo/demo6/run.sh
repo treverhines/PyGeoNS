@@ -1,53 +1,65 @@
-#!/bin/bash
-#PBS -A ehetland_flux
-#PBS -M hinest@umich.edu
-#PBS -N run
-#PBS -m abe
-#PBS -V
-#PBS -j oe
-#PBS -o run.log
-#PBS -q flux
-#PBS -l qos=flux
-#PBS -l nodes=1:ppn=8,mem=32000mb,walltime=40:00:00
-#cd $PBS_O_WORKDIR
-
 # This script demonstrates how to download GPS data from UNAVCO and
-# then use PyGeoNS to calculate the time-dependent strain accumulated
-# over a slow slip event.
+# then use PyGeoNS to calculate the time-dependent strain rates during
+# a slow slip event. This will take several minutes to run.
 
 # download data from the urls in *urls.txt*
-#rm -rf 'work/csv'
-#mkdir -p 'work/csv'
-#for i in `cat 'urls.txt'`
-#  do
-#  wget -P 'work/csv' $i
-#  done
+rm -rf 'work'
+mkdir -p 'work/csv'
+for i in `cat 'urls.txt'`
+  do
+  wget -P 'work/csv' $i
+  done
 
 # use sed to concatenate all the data files and separate them with ***
-#sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
+sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
-## convert the csv file to an hdf5 file
-pygeons toh5 -v 'work/data.csv' --file-type 'pbocsv'
+# convert the csv file to an hdf5 file
+pygeons toh5 'work/data.csv' \
+             --file-type 'pbocsv' \
+             -vv
 
-## crop out data prior to 2015-01-01 and after 2017-01-01
-pygeons crop -v 'work/data.h5' \
+# crop out data prior to 2015-01-01 and after 2017-01-01
+pygeons crop 'work/data.h5' \
              --start-date '2015-05-01' \
              --stop-date '2017-05-01' \
+             -vv
 
-pygeons autoclean -vv 'work/data.crop.h5' \
+# remove outliers
+pygeons autoclean 'work/data.crop.h5' \
                   --network-model 'spwen12-se' \
                   --network-params 1.0 0.1 100.0 \
                   --station-model 'linear' 'per' \
                   --station-params \
-                  --outlier-tol 4.0
+                  --outlier-tol 4.0 \
+                  -vv
 
-pygeons strain -vv 'work/data.crop.autoclean.h5' \
+# calculate deformation gradients from 2015-10-01 to 2016-04-01 using
+# data from 2015-05-01 to 2017-05-01. Outputting over a wider range of
+# time will increase run time.
+pygeons strain 'work/data.crop.autoclean.h5' \
                --network-prior-model 'spwen12-se' \
                --network-prior-params 1.0 0.1 100.0 \
                --station-noise-model 'linear' 'per' \
                --station-noise-params \
-               --no-vertical
+               --start-date '2015-10-01' \
+               --stop-date '2016-04-01' \
+               -vv
 
-pygeons strain-view -v 'work/data.crop.autoclean.strain.dudx.h5' \
-                       'work/data.crop.autoclean.strain.dudy.h5'
+# view the strain rates. Use the arrow keys to cycle through times and
+# stations
+pygeons strain-view 'work/data.crop.autoclean.strain.dudx.h5' \
+                    'work/data.crop.autoclean.strain.dudy.h5' \
+                    --scale 20000.0 \
+                    --key-magnitude 1.0 \
+                    --key-position 0.15 0.85 \
+                    -vv
 
+# Convert the deformation gradients from an hdf5 file to a
+# user-friendly text file. The output files will be named
+# work/dudx.csv and work/dudy.csv
+pygeons totext 'work/data.crop.autoclean.strain.dudx.h5' \
+        --output-stem 'work/dudx' \
+        -vv
+pygeons totext 'work/data.crop.autoclean.strain.dudy.h5' \
+        --output-stem 'work/dudy' \
+        -vv
