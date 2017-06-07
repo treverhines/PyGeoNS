@@ -261,19 +261,19 @@ def exp(sigma,cts):
 
 
 @set_units(['mm/yr^0.5','yr^-1'])
-def fogm(sigma,fc):
+def fogm(sigma,w):
   ''' 
   First-order Gauss Markov process
     
-  cov(t,t') = sigma^2/(4*pi*fc) * exp(-2*pi*fc*|t - t'|)  
+  cov(t,t') = sigma^2/(2*w) * exp(-w*|t - t'|)  
 
   Parameters
   ----------
   sigma [mm/yr^0.5] : Standard deviation of the forcing term
-  cts [yr^-1] : Cutoff frequency 
+  w [yr^-1] : Cutoff angular frequency 
   '''
-  coeff = sigma**2/(4*np.pi*fc)
-  cts   = 1.0/(2*np.pi*fc)
+  coeff = sigma**2/(2*w)
+  cts   = 1.0/w
   return gauss.gpexp((0.0,coeff,cts),dim=1)
 
 
