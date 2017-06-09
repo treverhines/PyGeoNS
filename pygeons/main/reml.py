@@ -15,13 +15,14 @@ from rbf.gauss import (_as_sparse_or_array,
 logger = logging.getLogger(__name__)
 
 
-def fmin_pos(func,x0,*args,**kwargs):
-  '''fmin with positivity constraint and multiple start points'''
+def fmax_pos(func,x0,*args,**kwargs):
+  '''maximize the function with positivity constraint'''
   def pos_func(x,*blargs):
-    return func(np.exp(x),*blargs)
+    return -func(np.exp(x),*blargs)
 
   xopt,fopt,_,_,_ = fmin(pos_func,np.log(x0),*args,full_output=True,**kwargs)
   xopt = np.exp(xopt)
+  fopt = -fopt
   return xopt,fopt
 
 
@@ -107,20 +108,21 @@ def reml(t,x,d,sd,
     p = np.hstack((sta_p,net_p))
     del sta_sigma,net_sigma,obs_sigma,sta_p,net_p
     try:
-      out = -likelihood(d,mu,sigma,p=p)
+      out = likelihood(d,mu,sigma,p=p)
     except np.linalg.LinAlgError as err:
       logger.warning(
         'An error was raised while computing the log '
         'likelihood:\n\n%s\n' % repr(err))
       logger.warning('Returning -INF for the log likelihood')   
-      out = np.inf
+      out = -np.inf
       
+    logger.debug('Log likelihood : %.8e' % out)
     return out  
 
-  opt,val = fmin_pos(objective,params[free],disp=False)
-  logger.info('Optimal hyperparameters : ' + ' '.join('%0.4e' % i for i in opt))
+  opt,val = fmax_pos(objective,params[free],disp=False)
+  logger.info('Optimal hyperparameters : ' + ' '.join('%.4e' % i for i in opt))
   params[free] = opt
   out_network_params = params[:n]
   out_station_params = params[n:]
-  out_likelihood = -val
+  out_likelihood = val
   return out_network_params,out_station_params,out_likelihood
