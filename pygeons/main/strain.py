@@ -14,16 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 def strain(t,x,d,sd,
-           network_prior_model=('se-se',),
-           network_prior_params=(5.0,0.05,50.0),
-           network_noise_model=(),
-           network_noise_params=(),
-           station_noise_model=('p0','p1'),
-           station_noise_params=(),
-           out_t=None,
-           out_x=None,
-           rate=True,
-           uncertainty=False):
+           network_prior_model,
+           network_prior_params,
+           network_noise_model,
+           network_noise_params,
+           station_noise_model,
+           station_noise_params,
+           out_t,out_x,rate):
   ''' 
   Computes deformation gradients from displacement data.
   '''  
@@ -32,16 +29,6 @@ def strain(t,x,d,sd,
   d = np.array(d,dtype=float)
   sd = np.array(sd,dtype=float)
   diff = np.array([0,0,0])
-  # allocate array indicating which data have been removed
-  if out_t is None:
-    out_t = t
-
-  if out_x is None:
-    out_x = x
-
-  prior_gp = composite(network_prior_model,network_prior_params,gpnetwork.CONSTRUCTORS)
-  noise_gp = composite(network_noise_model,network_noise_params,gpnetwork.CONSTRUCTORS)
-  sta_gp   = composite(station_noise_model,station_noise_params,gpstation.CONSTRUCTORS)
 
   t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')  
   t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')  
@@ -57,9 +44,13 @@ def strain(t,x,d,sd,
                     x0_grid.ravel(),
                     x1_grid.ravel()]).T
 
+  prior_gp = composite(network_prior_model,network_prior_params,gpnetwork.CONSTRUCTORS)
+  noise_gp = composite(network_noise_model,network_noise_params,gpnetwork.CONSTRUCTORS)
+  sta_gp   = composite(station_noise_model,station_noise_params,gpstation.CONSTRUCTORS)
+
   # find missing data
   mask = np.isinf(sd)
-  # unmasked data and uncertainties
+  # get unmasked data and uncertainties
   z,d,sd = z[~mask.ravel()],d[~mask],sd[~mask]
   # build noise covariance and basis vectors
   sta_sigma,sta_p = station_sigma_and_p(sta_gp,t,mask)
@@ -85,20 +76,9 @@ def strain(t,x,d,sd,
     dudx_gp = post_gp.differentiate((0,1,0)) # x derivative of displacement
     dudy_gp = post_gp.differentiate((0,0,1)) # y derivative of displacement
 
-  if uncertainty:
-    # compute the uncertainties, which can be very expensive
-    u,su = u_gp.meansd(out_z,chunk_size=1000)
-    dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
-    dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
-
-  else:
-    # return zeros for the uncertainties
-    u = u_gp.mean(out_z)
-    su = np.zeros_like(u)
-    dudx = dudx_gp.mean(out_z)
-    sdudx = np.zeros_like(u)
-    dudy = dudy_gp.mean(out_z)
-    sdudy = np.zeros_like(u)
+  u,su = u_gp.meansd(out_z,chunk_size=1000)
+  dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
+  dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
         
   u = u.reshape((out_t.shape[0],out_x.shape[0]))
   su = su.reshape((out_t.shape[0],out_x.shape[0]))

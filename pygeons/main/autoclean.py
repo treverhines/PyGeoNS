@@ -13,26 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 def autoclean(t,x,d,sd,
-              network_model=('se-se',),
-              network_params=(5.0,0.05,50.0),
-              station_model=('p0','p1'),
-              station_params=(),tol=4.0):
+              network_model,
+              network_params,
+              station_model,
+              station_params,
+              tol):
   ''' 
   Returns a dataset that has been cleaned of outliers using a data
   editing algorithm.
-
-  Parameters
-  ----------
-  t : (Nt,) array
-  x : (Nx,2) array
-  d : (Nt,Nx) array
-  s : (Nt,Nx) array
-  network_model : str array
-  network_params : float array
-  station_model : str array
-  station_params : float array
-  tol : float
-
   '''
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)

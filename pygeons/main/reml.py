@@ -27,46 +27,21 @@ def fmax_pos(func,x0,*args,**kwargs):
 
 
 def reml(t,x,d,sd,
-         network_model=('se-se',),
-         network_params=(5.0,0.05,50.0),
-         network_fix=(),
-         station_model=('p0','p1'),
-         station_params=(),
-         station_fix=()):
+         network_model,
+         network_params,
+         network_fix,
+         station_model,
+         station_params,
+         station_fix):
   ''' 
   Returns the Restricted Maximum Likelihood (REML) estimatates of the
   unknown hyperparameters.
-
-  Parameters
-  ----------
-  t : (Nt,) array
-  x : (Nx,2) array
-  d : (Nt,Nx) array
-  s : (Nt,Nx) array
-  model : str array
-  params : float array
-    initial guess
-  fix : int array
-
-  Returns
-  -------
-  theta : (P,) float array
-    optimal hyperparameters 
-  units : (P,) str array
-    units of the hyperparameters 
-  like : float array  
-    likelihoods associated the optimal hyperparameters
-    
   '''
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)
   d = np.array(d,dtype=float)
   sd = np.array(sd,dtype=float)
   diff = np.array([0,0,0])
-  network_params = np.asarray(network_params,dtype=float)
-  station_params = np.asarray(station_params,dtype=float)
-  network_fix = np.asarray(network_fix,dtype=int)
-  station_fix = np.asarray(station_fix,dtype=int)
 
   t_grid,x0_grid = np.meshgrid(t,x[:,0],indexing='ij')
   t_grid,x1_grid = np.meshgrid(t,x[:,1],indexing='ij')

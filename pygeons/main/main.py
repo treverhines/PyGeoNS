@@ -323,12 +323,15 @@ def pygeons_autoclean(input_file,
                  output_file)
   
   for dir in ['east','north','vertical']:
-    de,sde = autoclean(data['time'][:,None],xy, 
-                       data[dir],data[dir+'_std_dev'],
+    de,sde = autoclean(t=data['time'][:,None],
+                       x=xy, 
+                       d=data[dir],
+                       sd=data[dir+'_std_dev'],
                        network_model=network_model,
                        network_params=network_params[dir],
                        station_model=station_model,
-                       station_params=station_params[dir])
+                       station_params=station_params[dir],
+                       tol=outlier_tol)
     out[dir] = de
     out[dir+'_std_dev'] = sde
 
@@ -388,8 +391,10 @@ def pygeons_reml(input_file,
   # make a dictionary storing likelihoods
   likelihood = {}
   for dir in ['east','north','vertical']:
-    net_opt,sta_opt,like = reml(data['time'][:,None],xy, 
-                                data[dir],data[dir+'_std_dev'],
+    net_opt,sta_opt,like = reml(t=data['time'][:,None],
+                                x=xy, 
+                                d=data[dir],
+                                sd=data[dir+'_std_dev'],
                                 network_model=network_model,
                                 network_params=network_params[dir],
                                 network_fix=network_fix,
@@ -423,7 +428,7 @@ def pygeons_strain(input_file,
                    station_noise_params=(),
                    start_date=None,stop_date=None,
                    positions=None,positions_file=None,
-                   rate=True,uncertainty=True,vertical=True,
+                   rate=True,vertical=True,
                    output_stem=None):
   ''' 
   calculates strain
@@ -524,8 +529,11 @@ def pygeons_strain(input_file,
       sdy = np.zeros((output_time.shape[0],output_xy.shape[0]))
        
     else:      
-      u,su,dx,sdx,dy,sdy  = strain(data['time'][:,None],xy,
-                              data[dir],data[dir+'_std_dev'],
+      u,su,dx,sdx,dy,sdy  = strain(
+                              t=data['time'][:,None],
+                              x=xy,
+                              d=data[dir],
+                              sd=data[dir+'_std_dev'],
                               network_prior_model=network_prior_model,
                               network_prior_params=network_prior_params[dir],
                               network_noise_model=network_noise_model,
@@ -534,7 +542,7 @@ def pygeons_strain(input_file,
                               station_noise_params=station_noise_params[dir],
                               out_t=output_time[:,None],
                               out_x=output_xy,
-                              rate=rate,uncertainty=uncertainty)
+                              rate=rate)
 
     out_u[dir] = u
     out_u[dir+'_std_dev'] = su
