@@ -12,7 +12,7 @@ if __name__ == '__main__':
         url='www.github.com/treverhines/PyGeoNS',
         scripts=['exec/pygeons'],
         packages=['pygeons','pygeons.io','pygeons.plot',
-                  'pygeons.clean','pygeons.filter','pygeons.main'],
+                  'pygeons.clean','pygeons.main'],
         ext_modules=cythonize(ext),                  
         license='MIT')
 

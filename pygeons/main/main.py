@@ -225,9 +225,9 @@ def _log_strain(input_file,
   
 
 def pygeons_fit(input_file,
-                network_model=('se-se',),
-                network_params=(5.0,0.05,50.0),
-                station_model=('p0','p1'),
+                network_model=('spwen12-se',),
+                network_params=(1.0,0.1,100.0),
+                station_model=('linear'),
                 station_params=(),
                 output_stem=None):
   ''' 
@@ -281,9 +281,9 @@ def pygeons_fit(input_file,
 
 
 def pygeons_autoclean(input_file,
-                      network_model=('se-se',),
-                      network_params=(5.0,0.05,50.0),
-                      station_model=('p0','p1'),
+                      network_model=('spwen12-se',),
+                      network_params=(1.0,0.1,100.0),
+                      station_model=('linear'),
                       station_params=(),
                       output_stem=None,
                       outlier_tol=4.0):
@@ -341,10 +341,10 @@ def pygeons_autoclean(input_file,
 
 
 def pygeons_reml(input_file,
-                 network_model=('se-se',),
-                 network_params=(5.0,0.05,50.0),
+                 network_model=('spwen12-se',),
+                 network_params=(1.0,0.1,100.0),
                  network_fix=(),
-                 station_model=('p0','p1'),
+                 station_model=('linear'),
                  station_params=(),
                  station_fix=(),
                  output_stem=None):
@@ -420,11 +420,11 @@ def pygeons_reml(input_file,
 
 
 def pygeons_strain(input_file,
-                   network_prior_model=('se-se',),
-                   network_prior_params=(5.0,0.05,50.0),
+                   network_prior_model=('spwen12-se',),
+                   network_prior_params=(1.0,0.1,100.0),
                    network_noise_model=(),
                    network_noise_params=(),
-                   station_noise_model=('p0','p1'),
+                   station_noise_model=('linear'),
                    station_noise_params=(),
                    start_date=None,stop_date=None,
                    positions=None,positions_file=None,
