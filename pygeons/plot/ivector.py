@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # this is an entirely white colormap. This is used to hide the 
 # vertical deformation.
-_blank_cmap = ListedColormap([[1.0,1.0,1.0]])
+_blank_cmap = ListedColormap([[1.0,1.0,1.0,0.0]])
 
 def _roll(lst):
   # rolls elements by 1 to the right. does not convert lst to an array

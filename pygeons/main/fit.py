@@ -3,6 +3,7 @@ Contains a function for fitting a Gaussian process to the
 observations.
 '''
 import numpy as np
+import scipy.sparse as sp
 import logging
 from pygeons.main.gptools import (composite,
                                   station_sigma_and_p)
@@ -28,40 +29,29 @@ def _fit(d,s,mu,sigma,p):
   # compute mean of the posterior 
   vec1,vec2 = Ksolver.solve(d - mu,np.zeros(m)) 
   u = mu + sigma.dot(vec1) + p.dot(vec2)   
-  # dont bother computing the uncertainties and just return zero for
-  # now
-  su = np.zeros_like(u)
   # compute std. dev. of the posterior
-  #  mat1,mat2 = Kinv.dot(sigma.T,p.T)
-  #  del Kinv
+  if sp.issparse(sigma):
+    sigma = sigma.A
+
+  mat1,mat2 = Ksolver.solve(sigma.T,p.T)
+  del Ksolver
   #  # just compute the diagonal components of the covariance matrix
   #  # note that A.dot(B).diagonal() == np.sum(A*B.T,axis=1)
-  #  su = np.sqrt(sigma.diagonal() - 
-  #               np.sum(sigma*mat1.T,axis=1) -
-  #               np.sum(p*mat2.T,axis=1))
+  su = np.sqrt(sigma.diagonal() - 
+               np.sum(sigma*mat1.T,axis=1) -
+               np.sum(p*mat2.T,axis=1))
+                 
   return u,su
 
 
 def fit(t,x,d,sd,
-        network_model=('se-se',),
-        network_params=(5.0,0.05,50.0),
-        station_model=('p0','p1'),
-        station_params=()):
+        network_model,
+        network_params,
+        station_model,
+        station_params):
   ''' 
-  Returns the mean of the conditioned Gaussian process evaluated at
-  the data points. This is a quick calculation used to assess whether
-  the Gaussian process is actually able to describe the observations.
-
-  Parameters
-  ----------
-  t : (Nt,) array
-  x : (Nx,2) array
-  d : (Nt,Nx) array
-  s : (Nt,Nx) array
-  network_model : str array
-  network_params : float array
-  station_model : str array
-  station_params : float array
+  Fit network and station processes to the observations, not
+  distinguishing between signal and noise.
   '''
   t = np.asarray(t,dtype=float)
   x = np.asarray(x,dtype=float)

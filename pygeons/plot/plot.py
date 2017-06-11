@@ -88,6 +88,8 @@ def _setup_map_ax(bm,ax):
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=1,color=(0.3,0.3,0.3,1.0))
+  bm.drawmapboundary(ax=ax,fill_color=(0.8,0.8,0.8),zorder=0)
+  bm.fillcontinents(ax=ax,color=(1.0,1.0,1.0),lake_color=(0.8,0.8,0.8),zorder=0)
   scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
                            inverse=True)
   scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0

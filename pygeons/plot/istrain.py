@@ -323,26 +323,51 @@ Notes :
       self.map_ax.set_title(self.map_title,
                             fontsize=self.fontsize)
 
-  def _init_marker(self):
-    # Creates a highlighter indicating the location of the station
-    # currently plotted in the time seris axes.
-    self.marker, = self.map_ax.plot(self.x[self.xidx,0],
-                                    self.x[self.xidx,1],'ko',
-                                    markersize=20*self.highlight)
-
-  def _update_marker(self):
-    # Updates the highlighter for changes in *tidx* or *xidx*.
-    self.marker.set_data(self.x[self.xidx,0],
-                         self.x[self.xidx,1])
-    self.marker.set_markersize(20*self.highlight)
-
   def _init_pickers(self):
-    # Create a pickable artist for each point in *x*
+    # Initially plots the picker artists, which are used to select
+    # station by clicking on them. The currently picked station has a
+    # slightly larger marker. Labels are also created for each picker
     self.pickers = []
-    for xi in self.x:
-      self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
-                                       picker=10,
-                                       markersize=0)
+    self.text = []
+    for i,(si,xi) in enumerate(zip(self.station_labels,self.x)):
+      if self.highlight:
+        # make pickers and text visible
+        if i == self.xidx:
+          # make the picker larger if i==xidx
+          self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                           picker=10,
+                                           markersize=15,
+                                           markerfacecolor='k',
+                                           markeredgecolor='k')
+
+        else:
+          self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                           picker=10,
+                                           markersize=5,
+                                           markerfacecolor='k',
+                                           markeredgecolor='k')
+
+        self.text += [self.map_ax.text(xi[0],xi[1],si,
+                                       fontsize=self.fontsize,
+                                       color=(0.4,0.4,0.4))]
+      else:
+        # just create the pickers and dont make them visible
+        self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
+                                         picker=10,
+                                         markersize=0,
+                                         markerfacecolor='k',
+                                         markeredgecolor='k')
+
+  def _update_pickers(self):
+    # Change the larger picker according to the current xidx
+    if self.highlight:
+      # only make the changes if highlight is True
+      for i,p in enumerate(self.pickers):
+        if i == self.xidx:
+          p.set_markersize(15)
+
+        else:
+          p.set_markersize(5)
 
   def _init_key(self):
     # Initially create the strain glyph key
@@ -380,11 +405,6 @@ Notes :
 
     for a in self.glyph_key: self.map_ax.add_artist(a)
   
-  def _update_key(self):
-    # Remakes the strain glyph key
-    for a in self.glyph_key: a.remove()
-    self._init_key()
-
   def _init_strain(self): 
     # Initially plots the strain glyphs
     self.glyphs = []
@@ -473,7 +493,6 @@ Notes :
 
   def _init(self):
     self._init_pickers()
-    self._init_marker()
     self._init_key()
     self._init_strain()
     self._init_lines()
@@ -486,8 +505,7 @@ Notes :
     self.ts_fig.canvas.draw()
 
   def update(self):
-    self._update_marker()
-    self._update_key()
+    self._update_pickers()
     self._update_strain()
     self._update_lines()
     self._update_fill()
@@ -497,7 +515,6 @@ Notes :
     self.map_fig.canvas.draw()
 
   def _remove_artists(self):
-    self.marker.remove()
     self.line1.remove()
     self.line2.remove()
     self.line3.remove()
@@ -505,6 +522,7 @@ Notes :
     self.fill2.remove()
     self.fill3.remove()
     for a in self.pickers: a.remove()
+    for a in self.text: a.remove()
     for a in self.glyphs: a.remove()
     for a in self.glyph_key: a.remove()
 
@@ -585,7 +603,7 @@ Notes :
 
     elif event.key == 'h':
       self.highlight = not self.highlight
-      self.update()
+      self.hard_update()
 
     elif event.key == 'r':
       # refresh  
