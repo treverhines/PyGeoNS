@@ -441,9 +441,9 @@ Notes :
     self.ts_ax[0].set_ylabel(ts_ylabel_0)
     self.ts_ax[1].set_ylabel(ts_ylabel_1)
     self.ts_ax[2].set_ylabel(ts_ylabel_2)
-    self.ts_ax[0].grid(c='0.5',alpha=0.5)
-    self.ts_ax[1].grid(c='0.5',alpha=0.5)
-    self.ts_ax[2].grid(c='0.5',alpha=0.5)
+    self.ts_ax[0].grid(zorder=0)
+    self.ts_ax[1].grid(zorder=0)
+    self.ts_ax[2].grid(zorder=0)
     self.ts_ax[0].xaxis.label.set_fontsize(self.fontsize)
     self.ts_ax[1].xaxis.label.set_fontsize(self.fontsize)
     self.ts_ax[2].xaxis.label.set_fontsize(self.fontsize)
@@ -566,7 +566,7 @@ Notes :
                    origin='lower',
                    vmin=image_clim[0],vmax=image_clim[1],
                    cmap=self.image_cmap,
-                   zorder=0)
+                   zorder=1)
     # Allocate a space in the figure for the colorbar if a colorbar 
     # has not already been generated.
     if not hasattr(self,'cbar'):
@@ -618,7 +618,7 @@ Notes :
     colors = sm.to_rgba(self.data_sets[1][self.tidx,:,2])
     self.scatter = self.map_ax.scatter(self.x[:,0],self.x[:,1],
                                        c=colors,s=self.scatter_size,
-                                       zorder=1,edgecolor=self.colors[1])
+                                       zorder=2,edgecolor=self.colors[1])
 
   def _update_scatter(self):
     # Updates the scatter points for changes in *tidx* or *xidx*. This 
@@ -646,8 +646,8 @@ Notes :
                         self.sigma_sets[si][self.tidx,:,1],
                         np.zeros(self.x.shape[0])), 
                  color=self.colors[si],
-                 ellipse_kwargs={'edgecolors':'k','zorder':1+si},
-                 zorder=2+si)
+                 ellipse_kwargs={'edgecolors':'k','zorder':2+si},
+                 zorder=3+si)
       self.map_ax.add_collection(q,autolim=True)
       self.map_ax.autoscale_view()                 
       self.quiver += [q]                        
@@ -664,7 +664,7 @@ Notes :
                      self.quiver_key_pos[0],
                      self.quiver_key_pos[1],
                      self.quiver_key_length,
-                     quiver_key_label,zorder=2,labelsep=0.05,
+                     quiver_key_label,zorder=3,labelsep=0.05,
                      fontproperties={'size':self.fontsize})
                      
   def _update_quiver(self):
@@ -734,21 +734,24 @@ Notes :
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
-                      linewidth=1.0)
+                      linewidth=1.0,
+                      zorder=3)
       self.line2 += self.ts_ax[1].plot(
                       self.t,self.data_sets[si][:,self.xidx,1],
                       color=self.colors[si],
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
-                      linewidth=1.0)
+                      linewidth=1.0,
+                      zorder=3)
       self.line3 += self.ts_ax[2].plot(
                       self.t,self.data_sets[si][:,self.xidx,2],
                       color=self.colors[si],
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
-                      linewidth=1.0)
+                      linewidth=1.0,
+                      zorder=3)
     
   def _update_lines(self):
     # Updates the deformation time series for changes in *tidx* or 
@@ -775,7 +778,8 @@ Notes :
                        self.data_sets[si][:,self.xidx,0] +
                        self.sigma_sets[si][:,self.xidx,0],
                        edgecolor='none',
-                       color=self.colors[si],alpha=0.2)]
+                       facecolor=self.colors[si],alpha=0.2,
+                       zorder=2)]
         self.err2 += [self.ts_ax[1].fill_between(
                        self.t,
                        self.data_sets[si][:,self.xidx,1] -
@@ -783,7 +787,8 @@ Notes :
                        self.data_sets[si][:,self.xidx,1] +
                        self.sigma_sets[si][:,self.xidx,1],
                        edgecolor='none',
-                       color=self.colors[si],alpha=0.2)]
+                       facecolor=self.colors[si],alpha=0.2,
+                       zorder=2)]
         self.err3 += [self.ts_ax[2].fill_between(
                        self.t,
                        self.data_sets[si][:,self.xidx,2] -
@@ -791,7 +796,8 @@ Notes :
                        self.data_sets[si][:,self.xidx,2] +
                        self.sigma_sets[si][:,self.xidx,2],
                        edgecolor='none',
-                       color=self.colors[si],alpha=0.2)]
+                       facecolor=self.colors[si],alpha=0.2,
+                       zorder=2)]
 
       elif self.error_styles[si] == 'bar':
         self.err1 += [self.ts_ax[0].errorbar(
@@ -799,19 +805,22 @@ Notes :
                        self.data_sets[si][:,self.xidx,0],
                        self.sigma_sets[si][:,self.xidx,0],
                        linestyle='None',
-                       color=self.colors[si])]
+                       color=self.colors[si],
+                       zorder=2)]
         self.err2 += [self.ts_ax[1].errorbar(
                        self.t,
                        self.data_sets[si][:,self.xidx,1],
                        self.sigma_sets[si][:,self.xidx,1],
                        linestyle='None',
-                       color=self.colors[si])]
+                       color=self.colors[si],
+                       zorder=2)]
         self.err3 += [self.ts_ax[2].errorbar(
                        self.t,
                        self.data_sets[si][:,self.xidx,2],
                        self.sigma_sets[si][:,self.xidx,2],
                        linestyle='None',
-                       color=self.colors[si])]
+                       color=self.colors[si],
+                       zorder=2)]
 
       elif self.error_styles[si] == 'None':
         return

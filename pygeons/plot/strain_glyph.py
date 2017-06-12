@@ -5,7 +5,7 @@ from matplotlib.container import Container
 def strain_glyph(x,strain,sigma=None,
                  ext_color='b',cmp_color='r',
                  alpha=0.2,linewidth=1.0,vert=500,
-                 scale=1.0,snr_mask=True):
+                 scale=1.0,snr_mask=True,zorder=None):
     ''' 
     Returns a container of artists making up a strain glyph.
     
@@ -158,6 +158,7 @@ def strain_glyph(x,strain,sigma=None,
                           facecolor='none',
                           linewidth=linewidth,
                           alpha=snr_alpha,
+                          zorder=zorder,
                           label='extensional mean')]
 
     if mean_vert_cmp.shape[0] != 0:
@@ -166,6 +167,7 @@ def strain_glyph(x,strain,sigma=None,
                           facecolor='none',
                           linewidth=linewidth,
                           alpha=snr_alpha,
+                          zorder=zorder,
                           label='compressional mean')]
 
     if sigma_vert_ext.shape[0] != 0:
@@ -174,6 +176,7 @@ def strain_glyph(x,strain,sigma=None,
                           edgecolor='none',
                           alpha=alpha*snr_alpha,
                           linewidth=linewidth,
+                          zorder=zorder,
                           label='extensional confidence interval')]
 
     if sigma_vert_cmp.shape[0] != 0:
@@ -182,6 +185,7 @@ def strain_glyph(x,strain,sigma=None,
                           edgecolor='none',
                           alpha=alpha*snr_alpha,
                           linewidth=linewidth,
+                          zorder=zorder,
                           label='compressional confidence interval')]
 
     out = Container(artists)

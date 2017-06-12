@@ -230,9 +230,9 @@ Notes :
     self.ts_ax[0].set_ylabel(ts_ylabel_0)
     self.ts_ax[1].set_ylabel(ts_ylabel_1)
     self.ts_ax[2].set_ylabel(ts_ylabel_2)
-    self.ts_ax[0].grid(c='0.5',alpha=0.5)
-    self.ts_ax[1].grid(c='0.5',alpha=0.5)
-    self.ts_ax[2].grid(c='0.5',alpha=0.5)
+    self.ts_ax[0].grid(zorder=0)
+    self.ts_ax[1].grid(zorder=0)
+    self.ts_ax[2].grid(zorder=0)
     self.ts_ax[0].xaxis.label.set_fontsize(self.fontsize)
     self.ts_ax[1].xaxis.label.set_fontsize(self.fontsize)
     self.ts_ax[2].xaxis.label.set_fontsize(self.fontsize)
@@ -386,7 +386,8 @@ Notes :
                                    ext_color=self.extension_color,
                                    cmp_color=self.compression_color,
                                    alpha=self.alpha,
-                                   vert=self.vertices)
+                                   vert=self.vertices,
+                                   zorder=3)
     if units is None:
       text_str = '%s' % mag
     else:
@@ -396,12 +397,14 @@ Notes :
     texty = posy
     self.glyph_key += [Text(textx,texty,text_str,
                             fontsize=10,
-                            color=self.extension_color)]
+                            color=self.extension_color,
+                            zorder=3)]
     textx = posx
     texty = posy + 1.1*mag*self.scale
     self.glyph_key += [Text(textx,texty,'-' + text_str,
                             fontsize=10,
-                            color=self.compression_color)]
+                            color=self.compression_color,
+                            zorder=3)]
 
     for a in self.glyph_key: self.map_ax.add_artist(a)
   
@@ -417,7 +420,8 @@ Notes :
                                   cmp_color=self.compression_color,
                                   alpha=self.alpha,
                                   vert=self.vertices,
-                                  snr_mask=self.snr_mask)
+                                  snr_mask=self.snr_mask,
+                                  zorder=2)
        
     for a in self.glyphs: self.map_ax.add_artist(a)
 
@@ -433,19 +437,22 @@ Notes :
                     self.data_set[:,self.xidx,0],
                     color='k',
                     linestyle='-',
-                    linewidth=1.0)
+                    linewidth=1.0,
+                    zorder=3)
     self.line2, = self.ts_ax[1].plot(
                     self.t,
                     self.data_set[:,self.xidx,1],
                     color='k',
                     linestyle='-',
-                    linewidth=1.0)
+                    linewidth=1.0,
+                    zorder=3)
     self.line3, = self.ts_ax[2].plot(
                     self.t,
                     self.data_set[:,self.xidx,2],
                     color='k',
                     linestyle='-',
-                    linewidth=1.0)
+                    linewidth=1.0,
+                    zorder=3)
 
   def _update_lines(self):
     # Update strain time series lines
@@ -466,7 +473,8 @@ Notes :
                    self.data_set[:,self.xidx,0] +
                    self.sigma_set[:,self.xidx,0],
                    edgecolor='none',
-                   color='k',alpha=0.2)
+                   facecolor='k',alpha=0.2,
+                   zorder=2)
     self.fill2 = self.ts_ax[1].fill_between(
                    self.t,
                    self.data_set[:,self.xidx,1] -
@@ -474,7 +482,8 @@ Notes :
                    self.data_set[:,self.xidx,1] +
                    self.sigma_set[:,self.xidx,1],
                    edgecolor='none',
-                   color='k',alpha=0.2)
+                   facecolor='k',alpha=0.2,
+                   zorder=2)
     self.fill3 = self.ts_ax[2].fill_between(
                    self.t,
                    self.data_set[:,self.xidx,2] -
@@ -482,7 +491,8 @@ Notes :
                    self.data_set[:,self.xidx,2] +
                    self.sigma_set[:,self.xidx,2],
                    edgecolor='none',
-                   color='k',alpha=0.2)
+                   facecolor='k',alpha=0.2,
+                   zorder=2)
 
   def _update_fill(self):
     # Replot uncertainties in the strain timeseries
