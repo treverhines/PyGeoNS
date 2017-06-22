@@ -1,68 +1,65 @@
 # This script demonstrates how to download GPS data from UNAVCO and
-# then use PyGeoNS to calculate time dependent strain rates. This
-# script performs the following tasks:
-#
-#   1. Download GPS data from the urls in urls.txt
-#   2. Concatenate the data files into a single text file
-#   3. Convert the text file to an HDF5 file
-#   4. Crop out data prior to 2015-01-01 and after 2017-01-01
-#   5. Temporally differentiate the data to get velocities
-#   6. Spatially differentiate the data to get deformation gradients
-#   7. View the time dependent strain
+# then use PyGeoNS to calculate the time-dependent strain rates during
+# a slow slip event. This will take several minutes to run.
 
-# Define the parameters describing the prior Gaussian processes used
-# to temporally smooth and differentiate displacements and then
-# spatially smooth and differentiate velocities. See demo/demo3/run.py
-# for a demonstration of how these values were chosen.
-DISP_CLS=0.05  # Characteristic time scale of the prior Gaussian
-               # process for displacements. This is in years.
-DISP_STD=5.0   # Standard deviation of the prior Gaussian process for
-               # displacements. This is in mm.
-DISP_ORDER=1   # Order of the polynomial null space. Setting this to 1
-               # means that constant and linear trends in the data
-               # will not be damped out in the smoothed solution.
-
-VEL_CLS=200.0  # Characteristic length scale of the prior Gaussian
-               # process for velocities. This is in kilometers.
-VEL_STD=50.0   # Standard deviation of the prior Gaussian process for
-               # velocities. This is in mm/yr.
-VEL_ORDER=1    # Order of the polynomial null space. Setting this to 1
-               # means that constant and linear trends in the data
-               # will not be damped out in the smoothed solution.
-
-# The data for each Plate Boundary Observatory (PBO) station can be
-# downloaded from UNAVCO with the wget command. The URLs for several
-# stations in Washington are saved in the file urls.txt. Use the Data
-# Archive Interface (DAI) at www.unavco.org to find the urls for
-# other PBO stations.
-rm -rf work/csv
-mkdir -p work/csv
-for i in `cat urls.txt`
+# download data from the urls in *urls.txt*
+rm -rf 'work'
+mkdir -p 'work/csv'
+for i in `cat 'urls.txt'`
   do
-  wget -P work/csv $i
+  wget -P 'work/csv' $i
   done
 
 # use sed to concatenate all the data files and separate them with ***
 sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
 # convert the csv file to an hdf5 file
-pygeons toh5 work/data.csv --file-type pbocsv -vv
+pygeons toh5 'work/data.csv' \
+             --file-type 'pbocsv' \
+             -vv
 
 # crop out data prior to 2015-01-01 and after 2017-01-01
-pygeons crop work/data.h5 --start-date 2015-01-01 --stop-date 2017-01-01 -vv
+pygeons crop 'work/data.h5' \
+             --start-date '2015-05-01' \
+             --stop-date '2017-05-01' \
+             -vv
 
-# Temporally differentiate the displacement dataset
-pygeons tgpr work/data.crop.h5 'linear+se' $DISP_STD $DISP_CLS --diff 1 -vv
+# remove outliers
+pygeons autoclean 'work/data.crop.h5' \
+                  --network-model 'spwen12-se' \
+                  --network-params 1.0 0.1 100.0 \
+                  --station-model 'linear' 'per' \
+                  --station-params \
+                  --outlier-tol 4.0 \
+                  -vv
 
-# Spatially differentiate the dataset
-pygeons sgpr work/data.crop.tgpr.h5 'linear+se' $VEL_STD $VEL_CLS --output-file work/xdiff.h5 \
-             --diff 1 0 -vv
-pygeons sgpr work/data.crop.tgpr.h5 'linear+se' $VEL_STD $VEL_CLS --output-file work/ydiff.h5 \
-             --diff 0 1 -vv
+# calculate deformation gradients from 2015-10-01 to 2016-04-01 using
+# data from 2015-05-01 to 2017-05-01. Outputting over a wider range of
+# time will increase run time.
+pygeons strain 'work/data.crop.autoclean.h5' \
+               --network-prior-model 'spwen12-se' \
+               --network-prior-params 1.0 0.1 100.0 \
+               --station-noise-model 'linear' 'per' \
+               --station-noise-params \
+               --start-date '2015-10-01' \
+               --stop-date '2016-04-01' \
+               -vv
 
-# Save the deformation gradients as text files
-pygeons totext work/xdiff.h5 -vv
-pygeons totext work/ydiff.h5 -vv
+# view the strain rates. Use the arrow keys to cycle through times and
+# stations
+pygeons strain-view 'work/data.crop.autoclean.strain.dudx.h5' \
+                    'work/data.crop.autoclean.strain.dudy.h5' \
+                    --scale 20000.0 \
+                    --key-magnitude 1.0 \
+                    --key-position 0.15 0.85 \
+                    -vv
 
-# view the estimated strain
-pygeons strain work/xdiff.h5 work/ydiff.h5 --scale 3.0e4 -vv
+# Convert the deformation gradients from an hdf5 file to a
+# user-friendly text file. The output files will be named
+# work/dudx.csv and work/dudy.csv
+pygeons totext 'work/data.crop.autoclean.strain.dudx.h5' \
+        --output-stem 'work/dudx' \
+        -vv
+pygeons totext 'work/data.crop.autoclean.strain.dudy.h5' \
+        --output-stem 'work/dudy' \
+        -vv
