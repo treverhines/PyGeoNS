@@ -148,10 +148,37 @@ specifying a smaller range of times and positions to output at.
                    --stop-date '2016-04-01' \
                    -vv
 
-We also specify the times when we want to estimate strain. A smal
+This returns two files, ``work/data.crop.autoclean.strain.dudx.h5``
+and ``work/data.crop.autoclean.strain.dudy.h5``, which are the
+deformation gradients along the x (east) direction and the y (north)
+direction, respectively. The deformation gradients can be viewed with
+``pygeons vector-view``. We can also use the deformation gradients to
+view strain with ``pygeons strain-view``.
 
+.. code-block:: bash
 
+  $ pygeons strain-view 'work/data.crop.autoclean.strain.dudx.h5' \
+                        'work/data.crop.autoclean.strain.dudy.h5' \
+                        --scale 20000.0 \
+                        --key-magnitude 1.0 \
+                        --key-position 0.15 0.85 \
+                        -vv
 
+The deformation gradients can be output to a user-friendly csv file
+format with the command ``pygeons totext``. The name of the output
+file (minus the extension) is specified with the ``--output-stem``
+argument
+
+.. code-block:: bash
+
+  $ pygeons totext 'work/data.crop.autoclean.strain.dudx.h5' \
+                   --output-stem 'dudx'
+  $ pygeons totext 'work/data.crop.autoclean.strain.dudy.h5' \
+                   --output-stem 'dudy'
+
+And that completes the demonstration. More detailed information about
+PyGeoNS can be found below or by calling each PyGeoNS subcommand with
+the `-h` flag.
 
 
 Executables
