@@ -51,7 +51,7 @@ Demonstration
 
 This demonstration walks through the script ``demo/demo2/run.sh``,
 which estimates transient strain resulting from a slow slip event in
-Washington. First, navigate to the direction ``demo/demo2/``. 
+Washington. First, navigate to the directory ``demo/demo2/``. 
 
 .. code-block:: bash
 
@@ -82,23 +82,27 @@ file, which is more efficient for i/o.
 .. code-block:: bash
 
   $ pygeons toh5 work/data.csv \
-            --file-type `pbocsv` 
+                 --file-type 'pbocsv' 
 
 This will generate a file ``work/data.h5``. We can now interactively
 view the data file with
 
 .. code-block:: bash
 
-  $ pygeons vector-view work/data.h5
+  $ pygeons vector-view work/data.h5 \
+                        --no-show-vertical \
+                        -v
 
-To keep this demonstration tractible, we crop the dataset down so that
-is only spans two years.
+The '-v' flag increased the verbosity and caused instructions for the
+interactive viewer to be printed to the screen. Use the arrows to view
+different stations and times. To keep this demonstration tractible, we
+crop the dataset down so that is only spans two years.
 
 .. code-block:: bash
 
   $ pygeons crop 'work/data.h5' \
-               --start-date '2015-05-01' \
-               --stop-date '2017-05-01'
+                 --start-date '2015-05-01' \
+                  --stop-date '2017-05-01'
 
 This produces the file ``work/data.crop.h5``. Next we automatically
 identify and remove outliers in the dataset with the command ``pygeons
@@ -114,10 +118,9 @@ We can compare the dataset before and after cleaning by using
 
 .. code-block:: bash
 
-  $ pygeons vector-view work/data.crop.h5 work/data.crop.autoclean.h5
+  $ pygeons vector-view work/data.crop.h5 work/data.crop.autoclean.h5 \
+                        --no-show-vertical 
 
-
-should be tweaked
 
 Executables
 ===========
