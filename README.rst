@@ -1,39 +1,34 @@
 PyGeoNS (Python-based Geodetic Network Strain software)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-NOTE: This package is still being developed. Some of the examples in
-this document and in the ``demo`` directory may not work with the
-latest user interface. 
+NOTE: The interface for PyGeoNS is now fairly stable, but the
+documentation still needs to be updated. Demonstrations can be found
+in the ``demo`` directory.
 
-What PyGeoNS can do
-===================
-PyGeoNS (pronounced like the bird) is a suite of command line 
-executables that are used to smooth and differentiate geodetic GPS 
-data in both space and time.  This analysis is performed in a Bayesian 
-framework, using Gaussian process regression, and thus the 
-uncertainties on the data products are well-quantified and meaningful. 
-This software is primarily intended for estimating time dependent 
-strain rates from GPS networks with tens to hundreds of stations.
+PyGeoNS (pronounced like the bird) is a suite of command line
+functions that are used to identify transient strain in GNSS data.
+This analysis is performed in a Bayesian framework, using Gaussian
+process regression, and thus the results have well-quantified and
+meaningful uncertainties. Gaussian process regression is not robust
+against outliers, which is a common defect in GNSS data. Thus, PyGeoNS
+provides a function for detecting outliers as a pre-processing step.
+The outlier detection algorithm flags data which are spatially or
+temporally anomalous. PyGeoNS also provides a function for
+interactively removing data defects. Lastly, PyGeoNS provides
+functions to interactively view the data and results.
 
-What PyGeoNS does not do
-========================
-The core processing algorithms used by PyGeoNS come from the RBF 
-python package, which can be found `here 
-<http://www.github.com/treverhines/RBF>`_. PyGeoNS mostly does the 
-requisit data munging, and it provides functions to interactively view 
-and clean the data. There are several assumptions that have been hard 
-coded into PyGeoNS which may make this software inapplicable to your 
-project. In particular, if the Earth's curvature is non-negligible in 
-your study region, then the map projection used by PyGeoNS 
-(transverse-mercator) would not be appropriate. Additionally, PyGeoNS 
-is designed to handle data with daily sampling rates. Less frequent 
-sampling rates can be handled, such as for campaign GPS, but PyGeoNS 
-cannot use data that has been sampled at higher frequencies. If these 
-limitations conflict with your project needs, then it may be better to 
-directly interface with the RBF package. Finally, the plotting 
-functions in PyGeoNS are intended to be a convenient way of 
-interactively viewing GPS data, but they are not intended to be 
-customizable to meet everyones plotting needs. 
+Limitations
+===========
+Gaussian process regression requires solving a system of equations
+where the number of unknowns is equal to the number of observations.
+Assuming that a high-end desktop computer is being used, this means
+that datasets will be limited to several dozen stations and a few
+years of daily observations. This limitation can be alleviated to some
+extent by using a compact prior covariance function (see below).
+
+PyGeoNS calculates strain on a transverse-mercator projection. It is
+assumed that the stations cover a sufficiently small area that such a
+projection is appropriate. 
 
 Installation
 ============
@@ -50,6 +45,11 @@ following commands
   $ git clone http://www.github.com/treverhines/PyGeoNS.git
   $ cd PyGeoNS 
   $ python setupy.py install
+
+Demonstration
+=============
+
+
 
 Executables
 ===========
