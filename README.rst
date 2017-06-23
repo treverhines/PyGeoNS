@@ -100,7 +100,7 @@ crop the dataset down so that is only spans two years.
 
 .. code-block:: bash
 
-  $ pygeons crop 'work/data.h5' \
+  $ pygeons crop work/data.h5 \
                  --start-date '2015-05-01' \
                   --stop-date '2017-05-01'
 
@@ -111,15 +111,47 @@ be tweaked, but we will just use the defaults for now.
 
 .. code-block:: bash
 
-  $ pygeons autoclean 'work/data.crop.h5'
+  $ pygeons autoclean work/data.crop.h5 -vv
 
-We can compare the dataset before and after cleaning by using
-``pygeons vector-view`` again.
+This function will take a few minutes to run. The verbosity has been
+increased so that we can see its progress. We can compare the dataset
+before and after cleaning by using ``pygeons vector-view`` again.
 
 .. code-block:: bash
 
   $ pygeons vector-view work/data.crop.h5 work/data.crop.autoclean.h5 \
                         --no-show-vertical 
+
+We now estimate transient strain from the cleaned GNSS data. Since
+PyGeoNS performs Bayesian analysis, we must specify a prior for
+transient displacements and a noise model. Our prior is a Gaussian
+process with temporal covariance described by a Wendland function and
+spatial covariance described by a squared exponential. We also specify
+three hyperparameters for the prior. The first describes the standard
+deviation of our prior (in mm), the second is a time-scale parameter
+(in 1/yr), and the third is a length-scale parameter (in km). The
+noise in our data consists of white noise (which we do not need to
+specify) and a linear trend that is unique for each station. This
+linear trend is secular tectonic deformation, which we are not
+interested in for this demonstration. By default, strains will be
+estimated at the locations of each station in the dataset and for each
+day in the dataset. The computation time can be decreased by
+specifying a smaller range of times and positions to output at.
+
+.. code-block:: bash
+
+  $ pygeons strain 'work/data.crop.autoclean.h5' \
+                   --network-prior-model 'spwen12-se' \
+                   --network-prior-params 1.0 0.1 100.0 \
+                   --station-noise-model 'linear' \
+                   --start-date '2015-10-01' \
+                   --stop-date '2016-04-01' \
+                   -vv
+
+We also specify the times when we want to estimate strain. A smal
+
+
+
 
 
 Executables
