@@ -81,7 +81,7 @@ file, which is more efficient for i/o.
 
 .. code-block:: bash
 
-  $ pygeons toh5 work/data.csv \
+  $ pygeons toh5 'work/data.csv' \
                  --file-type 'pbocsv' 
 
 This will generate a file ``work/data.h5``. We can now interactively
@@ -89,7 +89,7 @@ view the data file with
 
 .. code-block:: bash
 
-  $ pygeons vector-view work/data.h5 \
+  $ pygeons vector-view 'work/data.h5' \
                         --no-show-vertical \
                         -v
 
@@ -100,9 +100,9 @@ crop the dataset down so that is only spans two years.
 
 .. code-block:: bash
 
-  $ pygeons crop work/data.h5 \
+  $ pygeons crop 'work/data.h5' \
                  --start-date '2015-05-01' \
-                  --stop-date '2017-05-01'
+                 --stop-date '2017-05-01'
 
 This produces the file ``work/data.crop.h5``. Next we automatically
 identify and remove outliers in the dataset with the command ``pygeons
@@ -111,7 +111,7 @@ be tweaked, but we will just use the defaults for now.
 
 .. code-block:: bash
 
-  $ pygeons autoclean work/data.crop.h5 -vv
+  $ pygeons autoclean 'work/data.crop.h5' -vv
 
 This function will take a few minutes to run. The verbosity has been
 increased so that we can see its progress. We can compare the dataset
@@ -119,7 +119,7 @@ before and after cleaning by using ``pygeons vector-view`` again.
 
 .. code-block:: bash
 
-  $ pygeons vector-view work/data.crop.h5 work/data.crop.autoclean.h5 \
+  $ pygeons vector-view 'work/data.crop.h5' 'work/data.crop.autoclean.h5' \
                         --no-show-vertical 
 
 We now estimate transient strain from the cleaned GNSS data. Since
