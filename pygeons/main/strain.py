@@ -67,25 +67,20 @@ def strain(t,x,d,sd,
   # condition the prior with the data
   post_gp = prior_gp.condition(z,d,sigma=noise_sigma,p=noise_p)
   if rate:
-    u_gp    = post_gp.differentiate((1,0,0)) # velocity
     dudx_gp = post_gp.differentiate((1,1,0)) # x derivative of velocity
     dudy_gp = post_gp.differentiate((1,0,1)) # y derivative of velocity
 
   else:  
-    u_gp    = post_gp.differentiate((0,0,0)) # displacement
     dudx_gp = post_gp.differentiate((0,1,0)) # x derivative of displacement
     dudy_gp = post_gp.differentiate((0,0,1)) # y derivative of displacement
 
-  u,su = u_gp.meansd(out_z,chunk_size=1000)
   dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
   dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
         
-  u = u.reshape((out_t.shape[0],out_x.shape[0]))
-  su = su.reshape((out_t.shape[0],out_x.shape[0]))
   dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
   sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
   dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
   sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
 
-  out  = (u,su,dudx,sdudx,dudy,sdudy)
+  out  = (dudx,sdudx,dudy,sdudy)
   return out

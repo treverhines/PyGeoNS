@@ -24,8 +24,8 @@ dudx,dvdx,dzdx = dispdx.T
 dudy,dvdy,dzdy = dispdy.T
 
 # make disp. time dependent
-start_time = mjd('2016-01-01','%Y-%m-%d')
-stop_time = mjd('2017-01-01','%Y-%m-%d')
+start_time = mjd('2015-07-01','%Y-%m-%d')
+stop_time = mjd('2017-07-01','%Y-%m-%d')
 peak_time = float(mjd('2016-07-01','%Y-%m-%d'))
 times = np.arange(start_time,stop_time+1).astype(float)
 Nt = len(times)

@@ -183,7 +183,7 @@ def _log_strain(input_file,
                 network_noise_model,network_noise_params, 
                 station_noise_model,station_noise_params, 
                 start_date,stop_date,output_id,rate,vertical,
-                output_u_file,output_dx_file,output_dy_file):
+                output_dx_file,output_dy_file):
   msg  = '\n'
   msg += '--------------- PYGEONS STRAIN RUN INFORMATION ---------------\n\n'
   msg += 'input file : %s\n' % input_file
@@ -211,12 +211,10 @@ def _log_strain(input_file,
   msg += 'ignore vertical deformation : %s\n' % (not vertical)
 
   if rate:
-    msg += 'output velocity file : %s\n' % output_u_file
     msg += 'output east derivative file : %s\n' % output_dx_file
     msg += 'output north derivative file : %s\n\n' % output_dy_file
 
   else:
-    msg += 'output displacement file : %s\n' % output_u_file
     msg += 'output east derivative file : %s\n' % output_dx_file
     msg += 'output north derivative file : %s\n\n' % output_dy_file
   
@@ -443,7 +441,6 @@ def pygeons_strain(input_file,
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
     
-  out_u = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dx = dict((k,np.copy(v)) for k,v in data.iteritems())
   out_dy = dict((k,np.copy(v)) for k,v in data.iteritems())
 
@@ -507,7 +504,6 @@ def pygeons_strain(input_file,
   if output_stem is None:
     output_stem = _remove_extension(input_file) + '.strain'
 
-  output_u_file = output_stem + '.u.h5'
   output_dx_file = output_stem + '.dudx.h5'
   output_dy_file = output_stem + '.dudy.h5'
 
@@ -516,50 +512,36 @@ def pygeons_strain(input_file,
               network_noise_model,network_noise_params, 
               station_noise_model,station_noise_params, 
               start_date,stop_date,output_id,rate,vertical,
-              output_u_file,output_dx_file,output_dy_file)
+              output_dx_file,output_dy_file)
 
   for dir in ['east','north','vertical']:
     if (dir == 'vertical') & (not vertical):
       logger.debug('Not computing vertical deformation gradients')
       # do not compute the deformation gradients for vertical. Just
       # return zeros.
-      u = np.zeros((output_time.shape[0],output_xy.shape[0]))
-      su = np.zeros((output_time.shape[0],output_xy.shape[0]))
       dx = np.zeros((output_time.shape[0],output_xy.shape[0]))
       sdx = np.zeros((output_time.shape[0],output_xy.shape[0]))
       dy = np.zeros((output_time.shape[0],output_xy.shape[0]))
       sdy = np.zeros((output_time.shape[0],output_xy.shape[0]))
        
     else:      
-      u,su,dx,sdx,dy,sdy  = strain(
-                              t=data['time'][:,None],
-                              x=xy,
-                              d=data[dir],
-                              sd=data[dir+'_std_dev'],
-                              network_prior_model=network_prior_model,
-                              network_prior_params=network_prior_params[dir],
-                              network_noise_model=network_noise_model,
-                              network_noise_params=network_noise_params[dir],
-                              station_noise_model=station_noise_model,
-                              station_noise_params=station_noise_params[dir],
-                              out_t=output_time[:,None],
-                              out_x=output_xy,
-                              rate=rate)
-
-    out_u[dir] = u
-    out_u[dir+'_std_dev'] = su
+      dx,sdx,dy,sdy = strain(t=data['time'][:,None],
+                             x=xy,
+                             d=data[dir],
+                             sd=data[dir+'_std_dev'],
+                             network_prior_model=network_prior_model,
+                             network_prior_params=network_prior_params[dir],
+                             network_noise_model=network_noise_model,
+                             network_noise_params=network_noise_params[dir],
+                             station_noise_model=station_noise_model,
+                             station_noise_params=station_noise_params[dir],
+                             out_t=output_time[:,None],
+                             out_x=output_xy,
+                             rate=rate)
     out_dx[dir] = dx
     out_dx[dir+'_std_dev'] = sdx
     out_dy[dir] = dy
     out_dy[dir+'_std_dev'] = sdy
-
-  # set the new lon lat and id if positions was given
-  out_u['time'] = output_time
-  out_u['longitude'] = output_lon
-  out_u['latitude'] = output_lat
-  out_u['id'] = output_id
-  out_u['time_exponent'] = -int(rate)
-  out_u['space_exponent'] = 1
 
   out_dx['time'] = output_time
   out_dx['longitude'] = output_lon
@@ -575,15 +557,12 @@ def pygeons_strain(input_file,
   out_dy['time_exponent'] = -int(rate)
   out_dy['space_exponent'] = 0
 
-  hdf5_from_dict(output_u_file,out_u)
   hdf5_from_dict(output_dx_file,out_dx)
   hdf5_from_dict(output_dy_file,out_dy)
   if rate:
-    logger.info('Posterior velocities written to %s' % output_u_file)
     logger.info('Posterior velocity gradients written to %s and %s' % (output_dx_file,output_dy_file))
 
   else:  
-    logger.info('Posterior displacements written to %s' % output_u_file)
     logger.info('Posterior displacement gradients written to %s and %s' % (output_dx_file,output_dy_file))
 
   return

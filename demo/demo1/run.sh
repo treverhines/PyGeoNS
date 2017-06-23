@@ -54,4 +54,5 @@ pygeons strain-view work/data.strain.dudx.h5 \
                     work/data.strain.dudy.h5 \
                     --scale 20000.0 \
                     --key-magnitude 0.5 \
+                    --key-position 0.15 0.3 \
                     -vv
