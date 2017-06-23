@@ -22,7 +22,7 @@ Nw = 30
 
 ## observation points
 #####################################################################
-Nx = 25
+Nx = 50
 #pos_geo = np.random.uniform(-3,3,(Nx,3))
 pos_geo = np.random.normal(0.0,0.5,(Nx,3))
 pos_geo[:,0] += -84.2
@@ -85,13 +85,13 @@ dvdy = (disp_dy[:,1] - disp[:,1])/dy
 dzdy = (disp_dy[:,2] - disp[:,2])/dy
 
 # make disp. time dependent
-start_time = mjd('2016-04-01','%Y-%m-%d')
-stop_time = mjd('2016-10-01','%Y-%m-%d')
+start_time = mjd('2016-01-01','%Y-%m-%d')
+stop_time = mjd('2017-01-01','%Y-%m-%d')
 peak_time = float(mjd('2016-07-01','%Y-%m-%d'))
 times = np.arange(start_time,stop_time+1).astype(float)
 Nt = len(times)
 # slip rate (m/day) through time
-b = 0.005/(((times-peak_time)/10.0)**2 + 1.0)  
+b = 0.005/(((times-peak_time)/5.0)**2 + 1.0)  
 # slip (m) through time
 intb = np.cumsum(b)
 
@@ -131,7 +131,7 @@ data['north'] = v
 data['vertical'] = z
 data['east_std_dev'] = su
 data['north_std_dev'] = sv
-data['vertical_std_dev'] = sv
+data['vertical_std_dev'] = sz
 data['time_exponent'] = 0
 data['space_exponent'] = 1
 text_from_dict('data.csv',data)
