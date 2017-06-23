@@ -216,7 +216,8 @@ Notes :
                colors=None,
                line_styles=None,
                line_markers=None,
-               error_styles=None):
+               error_styles=None,
+               show_vertical=False):
     ''' 
     Interactively views vector valued data which is time and space 
     dependent
@@ -396,6 +397,7 @@ Notes :
     self.tidx = 0
     self.xidx = 0
     self.units = units
+    self.show_vertical = show_vertical
     self.image_cmap = image_cmap
     self.image_clim = image_clim
     self.image_resolution = image_resolution
@@ -544,6 +546,13 @@ Notes :
     #
     # CALL THIS AFTER *_init_map_ax*
     #
+    if not self.show_vertical:
+      # use a transparent cmap if show_vertical is false
+      cmap = _blank_cmap
+
+    else:
+      cmap = self.image_cmap
+      
     self.x_itp = [np.linspace(self.map_xlim[0],
                               self.map_xlim[1],
                               self.image_resolution),
@@ -565,7 +574,7 @@ Notes :
                    interpolation='bicubic',
                    origin='lower',
                    vmin=image_clim[0],vmax=image_clim[1],
-                   cmap=self.image_cmap,
+                   cmap=cmap,
                    zorder=1)
     # Allocate a space in the figure for the colorbar if a colorbar 
     # has not already been generated.
@@ -977,13 +986,7 @@ Notes :
       
     elif event.key == 'v':
       # toggle vertical deformation 
-      if self.image_cmap is _blank_cmap:
-        self.image_cmap = self._previous_cmap
-      
-      else:
-        self._previous_cmap = self.image_cmap
-        self.image_cmap = _blank_cmap  
-        
+      self.show_vertical = not self.show_vertical
       self.hard_update()
 
     elif event.key == 'r':

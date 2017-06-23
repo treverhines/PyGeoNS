@@ -571,6 +571,15 @@ will be returned instead of velocities and velocity gradients.
 '''
 }
 #####################################################################
+NO_SHOW_VERTICAL = {
+'dest':'show_vertical',
+'action':'store_false',
+'help':
+''' 
+If this flag is raised then vertical components will not be shown.
+'''
+}
+#####################################################################
 NO_VERTICAL = {
 'dest':'vertical',
 'action':'store_false',
@@ -650,6 +659,7 @@ GLOSSARY = {
 'station_noise_model':STATION_NOISE_MODEL,
 'no_rate':NO_RATE,
 'no_vertical':NO_VERTICAL,
+'no_show_vertical':NO_SHOW_VERTICAL,
 'network_fix':NETWORK_FIX,
 'station_fix':STATION_FIX,
 'outlier_tol':OUTLIER_TOL,
