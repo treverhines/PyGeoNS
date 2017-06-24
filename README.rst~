@@ -90,7 +90,7 @@ view the data file with
 The '-v' flag increased the verbosity and caused instructions for the
 interactive viewer to be printed to the screen. Use the arrows to view
 different stations and times. To keep this demonstration tractable, we
-crop the dataset down so that is only spans two years.
+crop the dataset down so that it only spans two years.
 
 .. code-block:: bash
 
@@ -440,5 +440,5 @@ continuous.
 
 Bugs, Comments, or Suggestions
 ==============================
-Please report any issues at github.com/treverhines/PyGeoNS/issues.  
+Please report any issues at www.github.com/treverhines/PyGeoNS/issues.  
 
