@@ -170,9 +170,10 @@ strain-view``.
 This will open up an interactive viewer for the estimated strain
 rates. The following two figures were saved from the interactive
 strain viewer. The strain glyphs in the map view figure show the
-normal strain rates for all azimuths. The time series figure shows the
-strain rate components through time at one station. The shaded regions
-in both figures indicate the 68% confidence interval.
+normal strain rates for all azimuths. Orange indicates compression and
+blue indicates extension. The time series figure shows the strain rate
+components through time at one station. The shaded regions in both
+figures indicate the 68% confidence interval.
 
 .. figure:: demo/demo2/figures/map_view.png
 
@@ -192,13 +193,13 @@ is specified with the ``--output-stem`` argument
 
 That completes the demonstration. More detailed information about
 PyGeoNS can be found below or by calling each PyGeoNS subcommand with
-the `-h` flag.
+the ``-h`` flag.
 
 
 Subcommands
 ===========
 PyGeoNS contains the following subcommands. Call these functions with
-a '-h' flag to see more information.
+a ``-h`` flag to see more information.
 
 * ``pygeons toh5`` : Convert data from a text file to an HDF5 file.
 * ``pygeons totext`` : Convert data from an HDF5 file to a text file.
@@ -243,16 +244,14 @@ Each HDF5 file contain the following entries
   each component of the data.  The units should be the same as those 
   used for the data components. If data is missing for a particular 
   time and station then it should be set to inf.
-* ``time_exponent`` : Integer. This indicates the power of the time 
+* ``time_exponent`` : Integer. This indicates the exponent of the time 
   units for the data. -1 indicates that the data is a rate, -2 indicates 
   an acceleration, etc.
-* ``space_exponent`` : Integer. Indicates the power of the spatial 
+* ``space_exponent`` : Integer. Indicates the exponent of the spatial 
   units for the data.
-
 
 Text Data Format
 ================
-
 An HDF5 file can be created from a text file of GNSS data with
 ``pygeons toh5``. This function is currently able to read three text
 file formats: PBO csv files, PBO pos files, and a csv file format
