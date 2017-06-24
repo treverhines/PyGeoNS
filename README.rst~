@@ -1,10 +1,5 @@
 PyGeoNS (Python-based Geodetic Network Strain software)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-NOTE: The interface for PyGeoNS is now fairly stable, but the
-documentation still needs to be updated. Demonstrations can be found
-in the ``demo`` directory.
-
 PyGeoNS (pronounced like the bird) is a suite of command line
 functions that are used to identify transient strain in GNSS data.
 This analysis is performed in a Bayesian framework, using Gaussian
@@ -94,7 +89,7 @@ view the data file with
 
 The '-v' flag increased the verbosity and caused instructions for the
 interactive viewer to be printed to the screen. Use the arrows to view
-different stations and times. To keep this demonstration tractible, we
+different stations and times. To keep this demonstration tractable, we
 crop the dataset down so that is only spans two years.
 
 .. code-block:: bash
@@ -360,4 +355,90 @@ format because PyGeoNS does not ever use that information.
   ...
   2017-01-26, 5.014000e-02, 7.203000e-02, 1.106000e-02, 1.930000e-03, 1.490000e-03, 6.340000e-03
 
+
+Network and Station Processes
+=============================
+The subcommands ``pygeons strain``, ``pygeons autoclean``, and
+``pygeons reml`` require the user to specify Gaussian processes,
+either as a prior model or a noise model. PyGeoNS distinguishes
+Gaussian processes at either "network" processes, which are spatially
+and temporally correlated, or "station" processes, which are only
+temporally correlated. The processes may contain hyperparameters that
+the user must also specify. Some of the available processes and their
+corresponding hyperparameters are documented below
+
+Network Processes
+-----------------
+* ``wen12-se`` : Temporal covariance is described by a Wendland
+  function. Spatial covariance is described by a squared exponential.
+  Requires three hyperparameters to be specified : standard deviation
+  (mm), characteristic time-scale (yr), and characteristic
+  length-scale (km).
+* ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
+  treated as sparse.
+* ``se-se`` : Temporal covariance is described by a squared
+  exponential. Spatial covariance is described by a squared
+  exponential. Requires three hyperparameters to be specified :
+  standard deviation (mm), characteristic time-scale (yr), and
+  characteristic length-scale (km).
+* ``ibm-se`` : Temporal covariance is described by integrated
+  brownian motion. Spatial covariance is described by a squared
+  exponential. Requires three hyperparameters to be specified :
+  standard deviation of the forcing term (mm/yr^1.5), reference time
+  (mjd), and characteristic length-scale (km).
+
+Station Processes
+-----------------
+* ``fogm`` : Covariance is described by a first-order Gauss-Markov
+  process. Requires two hyperparameters to be specified : standard
+  deviation of the forcing term (mm/yr^0.5) and cutoff frequency
+  (1/yr).
+* ``bm`` : Covariance is described by Brownian motion. Requires two
+  hyperparameters to be specified : standard deviation of the forcing
+  term (mm/yr^0.5) and reference time (mjd).
+* ``linear`` : Unconstrained offset and linear trend. Requires no
+  hyperparameters to be specified.
+* ``per`` : Unconstrained annual and semiannual sinusoids. Requires no
+  hyperparameters to be specified.
+
+Examples
+--------
+``pygeons autoclean`` and ``pygeons reml`` require the user to specify
+some combination of network and station processes to describe the
+data. Suppose we want to clean the displacements saved in ``data.h5``.
+We expect that the data consists of a ``se-se`` network process with
+hyperparameters 1.0 mm, 0.1 yr, and 100.0 km. We also expect each
+station to have an independent offset and linear trend. We can clean
+the data with the command
+
+.. code-block:: bash
+
+  $ pygeons autoclean data.h5 \
+                      --network-model 'se-se' \
+                      --network-params 1.0 0.1 100.0 \
+                      --station-model 'linear' \
+                      --station-params 
+
+We can also specify multiple network and station processes to combine
+them. Suppose we also expect periodic deformation and a FOGM process
+at each station. We can then clean the data with the modified command
+
+.. code-block:: bash
+
+  $ pygeons autoclean data.h5 \
+                      --network-model 'se-se' \
+                      --network-params 1.0 0.1 100.0 \
+                      --station-model 'linear' 'per' 'fogm' \
+                      --station-params 0.5 0.01
+
+``pygeons strain`` also requires the user to distinguish processes as
+being part of the prior or part of the noise. Hence, the models are
+specified as ``--network-prior-model``, ``--network-noise-model``, and
+``--station-noise-model``. There is no ``--station-prior-model``
+argument because the prior must be spatially and temporally
+continuous.
+
+Bugs, Comments, or Suggestions
+==============================
+Please report any issues at github.com/treverhines/PyGeoNS/issues.  
 
