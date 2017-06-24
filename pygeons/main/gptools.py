@@ -289,7 +289,9 @@ def composite(components,args,constructors):
   arguments are passed to *se*.
   '''
   # use cythonized functions when evaluating RBFs  
-  add_diffs_to_caches()
+  # XXX DECYTHONIZE XXX
+  #add_diffs_to_caches()
+  # XXXXXXXXXXXXXXXXXX
 
   components = list(components)
   args = list(args)
