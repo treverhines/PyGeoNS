@@ -78,9 +78,9 @@ def _setup_map_ax(bm,ax):
     return out
 
   ax.format_coord = coord_formatter
-  bm.drawcountries(ax=ax)
-  bm.drawstates(ax=ax) 
-  bm.drawcoastlines(ax=ax)
+  bm.drawcountries(ax=ax,zorder=2)
+  bm.drawstates(ax=ax,zorder=2) 
+  bm.drawcoastlines(ax=ax,zorder=2)
   mer,par =  _get_meridians_and_parallels(bm,3)
   bm.drawmeridians(mer,
                    labels=[0,0,0,1],dashes=[2,2],
@@ -88,8 +88,8 @@ def _setup_map_ax(bm,ax):
   bm.drawparallels(par,
                    labels=[1,0,0,0],dashes=[2,2],
                    ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
-  bm.drawmapboundary(ax=ax,fill_color=(0.8,0.8,0.8),zorder=0)
-  bm.fillcontinents(ax=ax,color=(1.0,1.0,1.0),lake_color=(0.8,0.8,0.8),zorder=0)
+  bm.drawmapboundary(ax=ax,fill_color=(0.9,0.9,0.9),zorder=2)
+  bm.fillcontinents(ax=ax,color=(1.0,1.0,1.0),lake_color=(0.9,0.9,0.9),zorder=0)
   scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
                            inverse=True)
   scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0

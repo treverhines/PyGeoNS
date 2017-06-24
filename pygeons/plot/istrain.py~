@@ -84,9 +84,9 @@ Notes :
                map_title=None,
                map_ylim=None,
                map_xlim=None,
-               compression_color='r',
-               extension_color='b',
-               alpha=0.2,
+               compression_color=(1.0000, 0.4980, 0.0549),
+               extension_color=(0.1215, 0.4666, 0.7058),
+               alpha=0.4,
                vertices=100,
                key_magnitude=None,
                key_position=(0.15,0.2),
@@ -338,25 +338,29 @@ Notes :
                                            picker=10,
                                            markersize=15,
                                            markerfacecolor='k',
-                                           markeredgecolor='k')
+                                           markeredgecolor='k',
+                                           zorder=3)
 
         else:
           self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
                                            picker=10,
                                            markersize=5,
                                            markerfacecolor='k',
-                                           markeredgecolor='k')
+                                           markeredgecolor='k',
+                                           zorder=3)
 
         self.text += [self.map_ax.text(xi[0],xi[1],si,
                                        fontsize=self.fontsize,
-                                       color=(0.4,0.4,0.4))]
+                                       color=(0.4,0.4,0.4),
+                                       zorder=3)]
       else:
         # just create the pickers and dont make them visible
         self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
                                          picker=10,
                                          markersize=0,
                                          markerfacecolor='k',
-                                         markeredgecolor='k')
+                                         markeredgecolor='k',
+                                         zorder=3)
 
   def _update_pickers(self):
     # Change the larger picker according to the current xidx
@@ -435,23 +439,23 @@ Notes :
     self.line1, = self.ts_ax[0].plot(
                     self.t,
                     self.data_set[:,self.xidx,0],
-                    color='k',
+                    color=(0.1215, 0.4666, 0.7058),
                     linestyle='-',
-                    linewidth=1.0,
+                    linewidth=1.5,
                     zorder=3)
     self.line2, = self.ts_ax[1].plot(
                     self.t,
                     self.data_set[:,self.xidx,1],
-                    color='k',
+                    color=(0.1215, 0.4666, 0.7058),
                     linestyle='-',
-                    linewidth=1.0,
+                    linewidth=1.5,
                     zorder=3)
     self.line3, = self.ts_ax[2].plot(
                     self.t,
                     self.data_set[:,self.xidx,2],
-                    color='k',
+                    color=(0.1215, 0.4666, 0.7058),
                     linestyle='-',
-                    linewidth=1.0,
+                    linewidth=1.5,
                     zorder=3)
 
   def _update_lines(self):
@@ -473,7 +477,8 @@ Notes :
                    self.data_set[:,self.xidx,0] +
                    self.sigma_set[:,self.xidx,0],
                    edgecolor='none',
-                   facecolor='k',alpha=0.2,
+                   facecolor=(0.1215, 0.4666, 0.7058),
+                   alpha=0.4,
                    zorder=2)
     self.fill2 = self.ts_ax[1].fill_between(
                    self.t,
@@ -482,7 +487,8 @@ Notes :
                    self.data_set[:,self.xidx,1] +
                    self.sigma_set[:,self.xidx,1],
                    edgecolor='none',
-                   facecolor='k',alpha=0.2,
+                   facecolor=(0.1215, 0.4666, 0.7058),
+                   alpha=0.4,
                    zorder=2)
     self.fill3 = self.ts_ax[2].fill_between(
                    self.t,
@@ -491,7 +497,8 @@ Notes :
                    self.data_set[:,self.xidx,2] +
                    self.sigma_set[:,self.xidx,2],
                    edgecolor='none',
-                   facecolor='k',alpha=0.2,
+                   facecolor=(0.1215, 0.4666, 0.7058),
+                   alpha=0.4,
                    zorder=2)
 
   def _update_fill(self):
@@ -503,11 +510,11 @@ Notes :
 
   def _init(self):
     self._init_pickers()
-    self._init_key()
     self._init_strain()
     self._init_lines()
     self._init_fill()
     self._init_map_ax()
+    self._init_key() # key placement depends on map axis
     self._init_ts_ax()
     self.map_fig.canvas.draw()
     self.map_ax.autoscale_view()

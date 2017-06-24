@@ -312,8 +312,18 @@ Notes :
     #################################################################
     # dataset colors
     if colors is None:
-      cycle = ['k',(0.0,0.7,0.0),'b','r','m','c','y']
-      colors = [cycle[i%7] for i in range(Ns)]
+      # These are the colors C0, C1, ... in mpl2.0
+      cycle = [(0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+               (1.0, 0.4980392156862745, 0.054901960784313725),
+               (0.17254901960784313, 0.6274509803921569, 0.17254901960784313),
+               (0.8392156862745098, 0.15294117647058825, 0.1568627450980392),
+               (0.5803921568627451, 0.403921568627451, 0.7411764705882353),
+               (0.5490196078431373, 0.33725490196078434, 0.29411764705882354),
+               (0.8901960784313725, 0.4666666666666667, 0.7607843137254902),
+               (0.4980392156862745, 0.4980392156862745, 0.4980392156862745),
+               (0.7372549019607844, 0.7411764705882353, 0.13333333333333333),
+               (0.09019607843137255, 0.7450980392156863, 0.8117647058823529)]
+      colors = [cycle[i%10] for i in range(Ns)]
 
     # if only one color was specified then use it for all datasets
     elif len(colors) == 1:
@@ -743,7 +753,7 @@ Notes :
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
-                      linewidth=1.0,
+                      linewidth=1.5,
                       zorder=3)
       self.line2 += self.ts_ax[1].plot(
                       self.t,self.data_sets[si][:,self.xidx,1],
@@ -751,7 +761,7 @@ Notes :
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
-                      linewidth=1.0,
+                      linewidth=1.5,
                       zorder=3)
       self.line3 += self.ts_ax[2].plot(
                       self.t,self.data_sets[si][:,self.xidx,2],
@@ -759,7 +769,7 @@ Notes :
                       label=self.dataset_labels[si],
                       linestyle=self.line_styles[si],
                       marker=self.line_markers[si],
-                      linewidth=1.0,
+                      linewidth=1.5,
                       zorder=3)
     
   def _update_lines(self):
@@ -787,7 +797,7 @@ Notes :
                        self.data_sets[si][:,self.xidx,0] +
                        self.sigma_sets[si][:,self.xidx,0],
                        edgecolor='none',
-                       facecolor=self.colors[si],alpha=0.2,
+                       facecolor=self.colors[si],alpha=0.4,
                        zorder=2)]
         self.err2 += [self.ts_ax[1].fill_between(
                        self.t,
@@ -796,7 +806,7 @@ Notes :
                        self.data_sets[si][:,self.xidx,1] +
                        self.sigma_sets[si][:,self.xidx,1],
                        edgecolor='none',
-                       facecolor=self.colors[si],alpha=0.2,
+                       facecolor=self.colors[si],alpha=0.4,
                        zorder=2)]
         self.err3 += [self.ts_ax[2].fill_between(
                        self.t,
@@ -805,7 +815,7 @@ Notes :
                        self.data_sets[si][:,self.xidx,2] +
                        self.sigma_sets[si][:,self.xidx,2],
                        edgecolor='none',
-                       facecolor=self.colors[si],alpha=0.2,
+                       facecolor=self.colors[si],alpha=0.4,
                        zorder=2)]
 
       elif self.error_styles[si] == 'bar':

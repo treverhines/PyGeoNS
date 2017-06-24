@@ -3,8 +3,9 @@ from matplotlib.patches import Polygon
 from matplotlib.container import Container
 
 def strain_glyph(x,strain,sigma=None,
-                 ext_color='b',cmp_color='r',
-                 alpha=0.2,linewidth=1.0,vert=500,
+                 ext_color=(0.1215, 0.4666, 0.7058),
+                 cmp_color=(1.0000, 0.4980, 0.0549),
+                 alpha=0.4,linewidth=1.5,vert=500,
                  scale=1.0,snr_mask=True,zorder=None):
     ''' 
     Returns a container of artists making up a strain glyph.

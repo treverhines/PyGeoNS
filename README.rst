@@ -44,7 +44,7 @@ following commands
 
   $ git clone http://www.github.com/treverhines/PyGeoNS.git
   $ cd PyGeoNS 
-  $ python setupy.py install
+  $ python setup.py install
 
 Demonstration
 =============
@@ -64,7 +64,7 @@ directory ``work/csv``
 .. code-block:: bash
 
   $ mkdir -p work/csv
-  $ for i in `cat 'urls.txt'`
+  $ for i in `cat urls.txt`
       do
       wget -P 'work/csv' $i
       done
@@ -129,14 +129,16 @@ process with temporal covariance described by a Wendland function and
 spatial covariance described by a squared exponential. We also specify
 three hyperparameters for the prior. The first describes the standard
 deviation of our prior (in mm), the second is a time-scale parameter
-(in 1/yr), and the third is a length-scale parameter (in km). The
-noise in our data consists of white noise (which we do not need to
-specify) and a linear trend that is unique for each station. This
-linear trend is secular tectonic deformation, which we are not
-interested in for this demonstration. By default, strains will be
-estimated at the locations of each station in the dataset and for each
-day in the dataset. The computation time can be decreased by
-specifying a smaller range of times and positions to output at.
+(in yr), and the third is a length-scale parameter (in km). The noise
+in our data consists of white noise (which we do not need to specify)
+and a linear trend that is unique for each station. This linear trend
+is secular tectonic deformation, which we are not interested in for
+this demonstration. By default, strains will be estimated at the
+locations of each station in the dataset and for each day in the
+dataset. The computation time can be decreased by specifying a smaller
+range of times and positions to output at. Use the ``--start-date``
+and ``--end-date`` arguments to set the range of output times. Use the
+``--positions`` or ``--positions-file`` to set the output positions.
 
 .. code-block:: bash
 
@@ -150,10 +152,12 @@ specifying a smaller range of times and positions to output at.
 
 This returns two files, ``work/data.crop.autoclean.strain.dudx.h5``
 and ``work/data.crop.autoclean.strain.dudy.h5``, which are the
-deformation gradients along the x (east) direction and the y (north)
-direction, respectively. The deformation gradients can be viewed with
-``pygeons vector-view``. We can also use the deformation gradients to
-view strain with ``pygeons strain-view``.
+velocity gradients along the x (east) direction and the y (north)
+direction, respectively. Use the ``--no-rate`` flag to return
+displacement gradients rather than the velocity gradients. The
+deformation gradients can be viewed with ``pygeons vector-view``. We
+can also use the deformation gradients to view strain with ``pygeons
+strain-view``.
 
 .. code-block:: bash
 
@@ -164,10 +168,13 @@ view strain with ``pygeons strain-view``.
                         --key-position 0.15 0.85 \
                         -vv
 
-The deformation gradients can be output to a user-friendly csv file
-format with the command ``pygeons totext``. The name of the output
-file (minus the extension) is specified with the ``--output-stem``
-argument
+This will open up an interactive viewer for the estimated strain
+rates. The glyphs show the normal strain for all azimuths. Orange
+indicates compression and blue indicates extension. The deformation
+gradients (or any of the intermediary HDF5 files) can be output to a
+user-friendly csv file format with the command ``pygeons totext``. The
+name of the output file (minus the extension) is specified with the
+``--output-stem`` argument
 
 .. code-block:: bash
 
@@ -176,7 +183,7 @@ argument
   $ pygeons totext 'work/data.crop.autoclean.strain.dudy.h5' \
                    --output-stem 'dudy'
 
-And that completes the demonstration. More detailed information about
+That completes the demonstration. More detailed information about
 PyGeoNS can be found below or by calling each PyGeoNS subcommand with
 the `-h` flag.
 
