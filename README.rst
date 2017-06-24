@@ -168,21 +168,15 @@ strain-view``.
                         -vv
 
 This will open up an interactive viewer for the estimated strain
-rates. The glyphs show the normal strain rates for all azimuths.
-Orange indicates compression and blue indicates extension. 
+rates. The following two figures were saved from the interactive
+strain viewer. The strain glyphs in the map view figure show the
+normal strain rates for all azimuths. The time series figure shows the
+strain rate components through time at one station. The shaded regions
+in both figures indicate the 68% confidence interval.
 
 .. figure:: demo/demo2/figures/map_view.png
 
-  Map view of strain rates during a slow slip event. The glyphs show
-  the normal strain rates along each azimuth, where orange indicates
-  compression and blue indicates extension. The shaded region
-  indicates the 68% confidence interval in the normal strain rates.
-
 .. figure:: demo/demo2/figures/time_series_view.png
-
-  Time series for each component of the strain rate tensor at the 
-  station indicated by the black dot. The shaded region indicates the 
-  68% confidence interval. 
 
 The deformation gradients (or any of the intermediary HDF5 files) can
 be output to a user-friendly csv file format with the command
