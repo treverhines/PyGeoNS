@@ -48,7 +48,6 @@ following commands
 
 Demonstration
 =============
-
 This demonstration walks through the script ``demo/demo2/run.sh``,
 which estimates transient strain resulting from a slow slip event in
 Washington. First, navigate to the directory ``demo/demo2``. 
@@ -169,12 +168,12 @@ strain-view``.
                         -vv
 
 This will open up an interactive viewer for the estimated strain
-rates. The glyphs show the normal strain for all azimuths. Orange
-indicates compression and blue indicates extension. The deformation
-gradients (or any of the intermediary HDF5 files) can be output to a
-user-friendly csv file format with the command ``pygeons totext``. The
-name of the output file (minus the extension) is specified with the
-``--output-stem`` argument
+rates. The glyphs show the normal strain rates for all azimuths.
+Orange indicates compression and blue indicates extension. The
+deformation gradients (or any of the intermediary HDF5 files) can be
+output to a user-friendly csv file format with the command ``pygeons
+totext``. The name of the output file (minus the extension) is
+specified with the ``--output-stem`` argument
 
 .. code-block:: bash
 
@@ -188,25 +187,29 @@ PyGeoNS can be found below or by calling each PyGeoNS subcommand with
 the `-h` flag.
 
 
-Executables
+Subcommands
 ===========
-PyGeoNS contains the following command line executable functions. Call 
-these functions with a '-h' flag to see more information.
+PyGeoNS contains the following subcommands. Call these functions with
+a '-h' flag to see more information.
 
-* ``pygeons-toh5`` : Converts data from a text file to an hdf5 file.
-* ``pygeons-totext`` : Converts data from a hdf5 file to a csv file.
-* ``pygeons-info`` : Prints metadata from a data file to stdout.
-* ``pygeons-view`` : Starts an interactive map view and time series 
-  view of vector data sets (e.g. displacements, deformation gradients, 
-  etc.).
-* ``pygeons-strain`` : Starts an interactive map view and time series 
-  view of strain. 
-* ``pygeons-clean`` : Starts the interactive cleaner, which is used to 
-  manually remove jumps and outliers.
-* ``pygeons-crop`` : Bounds the spatial and temporal extent of the data 
-  set.
-* ``pygeons-tgpr`` : Temporally smooths and differentiates a data set.
-* ``pygeons-sgpr`` : Spatially smooths and differentiates a data set.
+* ``pygeons toh5`` : Convert data from a text file to an HDF5 file.
+* ``pygeons totext`` : Convert data from an HDF5 file to a text file.
+* ``pygeons info`` : Display metadata for an HDF5 data file.
+* ``pygeons vector-view`` : Interactively view an HDF5 data file or
+  multiple data files.
+* ``pygeons strain-view`` : Interactively view strain from the
+  deformation gradient files, which are the HDF5 files returned by
+  ``pygeons strain``.
+* ``pygeons reml`` : Estimate prior and noise hyperparameters with the
+  restricted maximum likelihood (REML) method.
+* ``pygeons strain`` : Estimate transient strain from an HDF5 file of
+  displacements. 
+* ``pygeons clean`` : Interactively remove jumps and outliers in an
+  HDF5 data file. 
+* ``pygeons autoclean`` : Automatically remove outliers in an HDF5
+  file of displacements.
+* ``pygeons crop`` : Spatially and temporally crops an HDF5 data file.
+* ``pygeons merge`` : Combine HDF5 data files.
 
 Text Data Format
 ================
