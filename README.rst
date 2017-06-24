@@ -178,7 +178,7 @@ Orange indicates compression and blue indicates extension.
   compression and blue indicates extension. The shaded region
   indicates the 68% confidence interval in the normal strain rates.
 
-.. figure:: demo/demo4/figures/time_series_view.png
+.. figure:: demo/demo2/figures/time_series_view.png
 
   Time series for each component of the strain rate tensor at the 
   station indicated by the black dot. The shaded region indicates the 
@@ -258,11 +258,26 @@ Each HDF5 file contain the following entries
 
 Text Data Format
 ================
+
 An HDF5 file can be created from a text file of GNSS data with
 ``pygeons toh5``. This function is currently able to read three text
 file formats: PBO csv files, PBO pos files, and a csv file format
-designed for PyGeoNS. See www.unavco.org for information on the PBO
-data file formats. An example of each file format is provided below.
+designed for PyGeoNS. To use ``pygeons toh5``, the text files for each
+station must be concatenated into a single file with delimiter
+``***``. For example, if the data files are in the current directory
+and contain a ``.csv`` extension then they can be concatenated with
+the following sed incantation
+
+.. code-block::
+
+  $ sed -s '$a***' *.csv | sed '$d' > data.csv 
+
+Next, call ``pygeons toh5`` with the new file name and specify the
+file type with ``--file-type``. The file type can be ``csv``,
+``pbocsv``, or ``pbopos``.
+
+See www.unavco.org for information on the PBO data file formats. An
+example of each file format is provided below.
 
 PBO CSV
 -------
@@ -353,17 +368,3 @@ format because PyGeoNS does not ever use that information.
   2017-01-26, 5.014000e-02, 7.203000e-02, 1.106000e-02, 1.930000e-03, 1.490000e-03, 6.340000e-03
 
 
-To use ``pygeons toh5``, the files for each station must be
-concatenated into a single file with delimiter ``***``. For example,
-if the data files are in the current directory and contain a ``.csv``
-extension then they can be concatenated with the following sed
-incantation
-
-.. code-block::
-
-  $ sed -s '$a***' *.csv | sed '$d' > data.csv 
-
-Next, call ``pygeons toh5`` with the new file name and specify the
-file type with ``--file-type``. The file type can be ``csv``,
-``pbocsv``, or ``pbopos``.
-  
