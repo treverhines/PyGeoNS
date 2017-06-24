@@ -9,7 +9,7 @@ from rbf.gauss import (GaussianProcess,
                        _zero_covariance,
                        _empty_basis)
 from pygeons.units import unit_conversion as conv
-from pygeons.main.cbasis import add_diffs_to_caches
+#from pygeons.main.cbasis import add_diffs_to_caches
 import logging
 logger = logging.getLogger(__name__)
 
@@ -289,9 +289,7 @@ def composite(components,args,constructors):
   arguments are passed to *se*.
   '''
   # use cythonized functions when evaluating RBFs  
-  # XXX DECYTHONIZE XXX
   #add_diffs_to_caches()
-  # XXXXXXXXXXXXXXXXXX
 
   components = list(components)
   args = list(args)

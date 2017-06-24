@@ -3,7 +3,7 @@ if __name__ == '__main__':
   from numpy.distutils.extension import Extension
   from Cython.Build import cythonize
   ext = []
-  ext += [Extension(name='pygeons.main.cbasis',sources=['pygeons/main/cbasis.pyx'])]
+  #ext += [Extension(name='pygeons.main.cbasis',sources=['pygeons/main/cbasis.pyx'])]
   setup(name='PyGeoNS',
         version='0.1',
         description='Python-based Geodetic Network Smoother',

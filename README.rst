@@ -27,13 +27,23 @@ projection is appropriate.
 
 Installation
 ============
-PyGeoNS requires the standard scientific python packages, which can be 
-found in the base Anaconda python installation 
-(http://www.continuum.io/downloads). Additionally, PyGeoNS requires 
-that the RBF package be installed 
-(http://www.github.com/treverhines/RBF). Once these dependencies are 
-satisfied, this package can be downloaded and installed with the 
-following commands
+
+PyGeoNS requires the standard scientific python packages, which can be
+found in the base Anaconda python installation
+(http://www.continuum.io/downloads). Additionally, PyGeoNS require RBF
+and scikit sparse. Assuming that Anaconda is already installed, we can
+satisfy these dependencies with
+
+.. code-block:: bash
+
+  $ git clone http://www.github.com/treverhines/RBF.git
+  $ cd RBF
+  $ python setup.py install
+  $ cd ..
+  $ conda install -c conda-forge scikit-sparse
+
+Once these dependencies are satisfied, PyGeoNS can be downloaded
+and installed with the following commands
 
 .. code-block:: bash
 
