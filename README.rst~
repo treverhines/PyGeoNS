@@ -51,7 +51,7 @@ Demonstration
 
 This demonstration walks through the script ``demo/demo2/run.sh``,
 which estimates transient strain resulting from a slow slip event in
-Washington. First, navigate to the directory ``demo/demo2/``. 
+Washington. First, navigate to the directory ``demo/demo2``. 
 
 .. code-block:: bash
 
