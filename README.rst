@@ -169,11 +169,25 @@ strain-view``.
 
 This will open up an interactive viewer for the estimated strain
 rates. The glyphs show the normal strain rates for all azimuths.
-Orange indicates compression and blue indicates extension. The
-deformation gradients (or any of the intermediary HDF5 files) can be
-output to a user-friendly csv file format with the command ``pygeons
-totext``. The name of the output file (minus the extension) is
-specified with the ``--output-stem`` argument
+Orange indicates compression and blue indicates extension. 
+
+.. figure:: demo/demo2/figures/map_view.png
+
+  Map view of strain rates during a slow slip event. The glyphs show
+  the normal strain rates along each azimuth, where orange indicates
+  compression and blue indicates extension. The shaded region
+  indicates the 68% confidence interval in the normal strain rates.
+
+.. figure:: demo/demo4/figures/time_series_view.png
+
+  Time series for each component of the strain rate tensor at the 
+  station indicated by the black dot. The shaded region indicates the 
+  68% confidence interval. 
+
+The deformation gradients (or any of the intermediary HDF5 files) can
+be output to a user-friendly csv file format with the command
+``pygeons totext``. The name of the output file (minus the extension)
+is specified with the ``--output-stem`` argument
 
 .. code-block:: bash
 
@@ -211,12 +225,44 @@ a '-h' flag to see more information.
 * ``pygeons crop`` : Spatially and temporally crops an HDF5 data file.
 * ``pygeons merge`` : Combine HDF5 data files.
 
+HDF5 Data Format
+================
+PyGeoNS subcommands mostly read from and write to HDF5 data files. An
+HDF5 file can be read using, for example, the h5py package in python.
+Each HDF5 file contain the following entries
+
+* ``time`` : Array of unique integers with shape (Nt,). Integer values 
+  of modified Julian dates.
+* ``id`` : Array of unique strings with shape (Nx,). 4-character IDs 
+  for each station.
+* ``longitude``, ``latitude`` : Array of floats with shape (Nx,). 
+  Coordinates for each station.
+* ``east``, ``north``, ``vertical`` : Array of floats with shape 
+  (Nt,Nx). These are the data components. The units should be in terms 
+  of meters and days and should be consistent with the values 
+  specified for ``space_exponent`` and ``time_exponent``. For example, 
+  if ``time_exponent`` is -1 and ``space_exponent`` is 1 then the units 
+  should be in meters per day. If data is missing for a particular 
+  time and station then it should be set to nan.
+* ``east_std_dev``, ``north_std_dev``, ``vertical_std_dev`` : Array of 
+  floats with shape (Nt,Nx). One standard deviation uncertainties for 
+  each component of the data.  The units should be the same as those 
+  used for the data components. If data is missing for a particular 
+  time and station then it should be set to inf.
+* ``time_exponent`` : Integer. This indicates the power of the time 
+  units for the data. -1 indicates that the data is a rate, -2 indicates 
+  an acceleration, etc.
+* ``space_exponent`` : Integer. Indicates the power of the spatial 
+  units for the data.
+
+
 Text Data Format
 ================
-PyGeoNS is currently able to read three text file formats: PBO csv 
-files, PBO pos files, and a csv file format designed for PyGeoNS. See 
-www.unavco.org for information on the PBO data file formats. An 
-example of each file format is provided below.
+An HDF5 file can be created from a text file of GNSS data with
+``pygeons toh5``. This function is currently able to read three text
+file formats: PBO csv files, PBO pos files, and a csv file format
+designed for PyGeoNS. See www.unavco.org for information on the PBO
+data file formats. An example of each file format is provided below.
 
 PBO CSV
 -------
@@ -306,239 +352,18 @@ format because PyGeoNS does not ever use that information.
   ...
   2017-01-26, 5.014000e-02, 7.203000e-02, 1.106000e-02, 1.930000e-03, 1.490000e-03, 6.340000e-03
 
-HDF5 Data Format
-================
-To cut out overhead associated with reading and writing, most PyGeoNS
-executables read from and write to HDF5 files. Any of the above text 
-file formats can be converted to an HDF5 file by doing the following. 
-First, concatenate the data files for each station into one file 
-separated by ``***``. For example, if the data files are in the 
-current directory and contain a ``.csv`` extension then they can be 
-concatenated with the following sed incantation
+
+To use ``pygeons toh5``, the files for each station must be
+concatenated into a single file with delimiter ``***``. For example,
+if the data files are in the current directory and contain a ``.csv``
+extension then they can be concatenated with the following sed
+incantation
 
 .. code-block::
 
   $ sed -s '$a***' *.csv | sed '$d' > data.csv 
 
-Second, convert the new text file to an HDF5 file with the PyGeoNS 
-command ``pygeons-toh5`` and use the ``--file_type`` flag followed by 
-either ``csv``, ``pbocsv``, or ``pbopos``. By default, this is set to 
-``csv``, indicating the file is a PyGeoNS csv file. Once you have 
-converted the data to an HDF5 file, it can be passed as an argument to 
-the remaining PyGeoNS executables for analysis and processing. An HDF5 
-file can be converted back to a PyGeoNS csv file using 
-``pygeons-totext`` followed by the file name.
-
-An HDF5 file can be read using, for example, the h5py package in 
-python. Each HDF5 file contain the following entries
-
-* ``time`` : Array of unique integers with shape (Nt,). Integer values 
-  of modified Julian dates.
-* ``id`` : Array of unique strings with shape (Nx,). 4-character IDs 
-  for each station.
-* ``longitude``, ``latitude`` : Array of floats with shape (Nx,). 
-  Coordinates for each station.
-* ``east``, ``north``, ``vertical`` : Array of floats with shape 
-  (Nt,Nx). These are the data components. The units should be in terms 
-  of meters and days and should be consistent with the values 
-  specified for ``space_exponent`` and ``time_exponent``. For example, 
-  if ``time_exponent`` is -1 and ``space_exponent`` is 1 then the units 
-  should be in meters per day. If data is missing for a particular 
-  time and station then it should be set to nan.
-* ``east_std_dev``, ``north_std_dev``, ``vertical_std_dev`` : Array of 
-  floats with shape (Nt,Nx). One standard deviation uncertainties for 
-  each component of the data.  The units should be the same as those 
-  used for the data components. If data is missing for a particular 
-  time and station then it should be set to inf.
-* ``time_exponent`` : Integer. This indicates the power of the time 
-  units for the data. -1 indicates that the data is a rate, -2 indicates 
-  an acceleration, etc.
-* ``space_exponent`` : Integer. Indicates the power of the spatial 
-  units for the data.
+Next, call ``pygeons toh5`` with the new file name and specify the
+file type with ``--file-type``. The file type can be ``csv``,
+``pbocsv``, or ``pbopos``.
   
-Demonstration
-=============
-See the scripts named ``run.sh`` in the ``demo`` directory for 
-examples of how to use PyGeoNS. The below commands run through the 
-script ``demo/demo4/run.sh``. In this demonstration we will be looking 
-for elevated strain rates resulting from slow slip events in the 
-Cascadia subduction zone. The stations we will use are all located on 
-or near the Olympic Peninsula in Washington.
-
-We begin by downloading GPS data from UNAVCO's FTP repository. We have 
-the URLs for the station files saved in ``urls.txt``. Below are the contents of 
-``urls.txt``
-
-.. code-block::
-
-  ftp://data-out.unavco.org/pub/products/position/TWHL/TWHL.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/SEDR/SEDR.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/SEAT/SEAT.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/SC03/SC03.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/SC02/SC02.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/PCOL/PCOL.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/PABH/PABH.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P816/P816.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P815/P815.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P439/P439.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P438/P438.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P437/P437.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P436/P436.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P435/P435.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P426/P426.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P424/P424.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P423/P423.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P419/P419.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P418/P418.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P403/P403.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P402/P402.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P401/P401.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P400/P400.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P399/P399.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/P064/P064.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/NEAH/NEAH.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/KTBW/KTBW.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/BLYN/BLYN.pbo.nam08.csv
-  ftp://data-out.unavco.org/pub/products/position/ALBH/ALBH.pbo.nam08.csv
-
-We use ``wget`` and ``sed`` to download the station files and merge 
-them into a single csv file.
-
-.. code-block::
-
-  $ mkdir -p work/csv
-  $ for i in `cat urls.txt`; do wget -P work/csv $i; done 
-  $ sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
-
-The csv file ``work/data.csv`` is then converted to an HDF5 data file 
-and temporally cropped to keep this demonstration computationally 
-light-weight.
-
-.. code-block::
-
-  $ pygeons-toh5 work/data.csv \
-                 --file_type pbocsv \
-                 --output_file work/data.h5
-  $ pygeons-crop work/data.h5 \
-                 --start_date 2015-01-01 \
-                 --stop_date 2017-01-01 \
-                 --output_file work/data.h5
-
-Metadata for the newly created data file can be viewed with the 
-following command
-
-.. code-block::
-  
-  $ pygeons-info work/data.h5
-
-  units : meters**1 days**0
-  stations : 29
-  times : 732
-  time range : 2015-01-01, 2017-01-01
-  longitude range : -124.624907154, -122.223847947
-  latitude range : 47.0159055879, 48.7081927394
-  station names : ALBH, BLYN, KTBW, NEAH, P064, P399, P400, P401, P402, P403, P418, P419, P423, P424, P426, P435, P436, P437, P438, P439, P815, P816, PABH, PCOL, SC02, SC03, SEAT, SEDR, TWHL
-
-The data set can be interactively viewed with the command
-
-.. code-block::
-  
-  $ pygeons-view work/data.h5
-  
-This will open up two interactive figures. Use the left/right arrow 
-keys to scroll through time and the up/down arrow keys to scroll 
-through stations. More instructions will be printed to the screen when 
-the interactive figures are displayed.
-
-PyGeoNS is primarily intended for calculating strain rates from GPS 
-displacement time series. This is done in two steps. First, the 
-displacements are temporally smoothed and differentiated with 
-``pygeons-tgpr``. Then the resulting velocities are spatially smoothed 
-and differentiated with ``pygeons-sgpr`` to get the deformation 
-gradients. Viewing the strain rates is done by calling 
-``pygeons-strain``. The below code blocks demonstrate this process 
-using the dataset created above. 
-
-We specify a prior for the underlying signal which we are trying to 
-recover. That signal is the deformation resulting from slow slip 
-events. We assume that slow slip events have a characteristic 
-time-scale of 0.05 years, and the standard deviation of the signals 
-amplitude is 10 mm (which is roughly the magnitude of observed 
-displacements resulting from slow slip events). Temporal smoothing is 
-then done by
-
-.. code-block:: 
-  
-  $ pygeons-tgpr work/data.h5 10.0 0.05 \
-                 --output_file work/smooth.h5 -vv
-
-We can compare the observed and smoothed data to make sure that our 
-prior was not too restrictive with the following command
-
-.. code-block::
-  
-  $ pygeons-view work/data.h5 work/smooth.h5
-
-To calculate velocities we call ``pygeons-tgpr`` again but with the 
-``diff`` argument
-
-.. code-block::
-  
-  $ pygeons-tgpr work/data.h5 10.0 0.05 \
-                 --diff 1 \
-                 --output_file work/velocity.h5 -vv
-
-We then spatially smooth and differentiate the velocities. We assume 
-that surface velocities resulting from slow slip events have a 
-characteristic length-scale of 150 km, and the standard deviation of 
-the signals amplitude is 100 mm/yr (which is roughly the magnitude of 
-velocities resulting from slow slip events). We spatially 
-differentiate the velocities along the east (x) and north (y) 
-direction with two commands.
-
-.. code-block::
-  
-  $ pygeons-sgpr work/velocity.h5 100.0 150.0 \
-                 --diff 1 0 \
-                 --output_file work/xdiff.h5 -vv
-  $ pygeons-sgpr work/velocity.h5 100.0 150.0 \
-                 --diff 0 1 \
-                 --output_file work/ydiff.h5 -vv
-
-We now have two HDF5 data files which contain the deformation 
-gradients. We can interactively view the strain rates with the command
-
-.. code-block::
-
-  $ pygeons-strain work/xdiff.h5 work/ydiff.h5 \
-                   --scale 1e4 \
-                   --key_magnitude 1.0 \
-                   --key_position 0.1 0.9
-
-Which will produce the following figures
-
-.. figure:: demo/demo4/figures/map_view.png
-
-  Map view of strain rates during a slow slip event. The glyphs show 
-  the normal strain rates along each azimuth, where red indicates 
-  compression and blue indicates extension. The shaded region 
-  indicates the 68% confidence interval in the normal strain rates. 
-
-.. figure:: demo/demo4/figures/time_series_view.png
-
-  Time series of each component of the strain rate tensor at the 
-  station indicated by the black dot. The shaded region indicates the 
-  68% confidence interval. The jaggedness in the solution is a result 
-  of the outlier detection algorithm. When the outlier detection 
-  algorithm flags a station for having anomalously high velocities, 
-  that station is not used to calculate the deformation gradient. As a 
-  result, the deformation gradient has small jumps whenever a station 
-  is flagged.
-
-Lastly, if you would prefer a human-readable format for the 
-deformation gradients, the HDF5 files can be converted to text files by
-
-.. code-block::
-
-  $ pygeons-totext work/xdiff.h5 
-  $ pygeons-totext work/ydiff.h5 
