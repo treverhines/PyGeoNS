@@ -396,10 +396,10 @@ where X and T are spatial and temporal covariance functions.
 
   Spatial covariance is described by a squared exponential.
 
-  X(x,x') = exp( -||x - x'||₂² / (2l²) )
+  X(x,x') = exp( -||x - x'||₂² / (2ℓ²) )
   
   Requires three hyperparameters to be specified : φ [mm], τ [yr], and
-  l [km].
+  ℓ [km].
   
 
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
