@@ -370,26 +370,37 @@ format because PyGeoNS does not ever use that information.
 
 Network and Station Processes
 =============================
+
 The subcommands ``pygeons strain``, ``pygeons autoclean``, and
-``pygeons reml`` require the user to specify Gaussian processes,
-either as a prior model or a noise model. PyGeoNS distinguishes
-Gaussian processes at either "network" processes, which are spatially
-and temporally correlated, or "station" processes, which are only
-temporally correlated. The processes may contain hyperparameters that
-the user must also specify. Some of the available processes and their
-corresponding hyperparameters are documented below
+``pygeons reml`` require the user to specify Gaussian process models.
+PyGeoNS distinguishes Gaussian processes at either "network"
+processes, which are spatially and temporally correlated, or "station"
+processes, which are only temporally correlated. The processes may
+contain hyperparameters that the user must also specify. Some of the
+available processes and their corresponding hyperparameters are
+documented below
 
 Network Processes
 -----------------
-* ``wen12-se`` : Temporal covariance is described by a Wendland
-  function. Spatial covariance is described by a squared exponential.
-  Requires three hyperparameters to be specified : standard deviation
-  (mm), characteristic time-scale (yr), and characteristic
-  length-scale (km). :math:`x` :math:`test` 
-  test 
-  test
+Each network process has zero mean and a covariance function that can
+be described as
 
-  test
+C((x,t),(x',t')) = T(t,t')X(x,x')
+
+where X and T are spatial and temporal covariance functions. 
+
+* ``wen12-se`` : Temporal covariance is described by a Wendland
+  function. 
+
+  T(t,t') = φ²(1 - |t - t'|/τ)₊³ (3|t - t'|/τ + 1)
+
+  Spatial covariance is described by a squared exponential.
+
+  X(x,x') = exp( -||x - x'||₂² / (2l²) )
+  
+  Requires three hyperparameters to be specified : φ [mm], τ [yr], and
+  l [km].
+  
 
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
   treated as sparse.
