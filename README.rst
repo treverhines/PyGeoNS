@@ -25,13 +25,16 @@ PyGeoNS calculates strain on a transverse-mercator projection. It is
 assumed that the stations cover a sufficiently small area that such a
 projection is appropriate. 
 
+If you want to use Gaussian process regression to analyze your data,
+but PyGeoNS is too rigid for your needs, then consider working
+directly with the RBF python package (www.github.com/treverhines/RBF).
+
 Installation
 ============
-
 PyGeoNS requires the standard scientific python packages, which can be
 found in the base Anaconda python installation
-(http://www.continuum.io/downloads). Additionally, PyGeoNS require RBF
-and scikit sparse. Assuming that Anaconda is already installed, we can
+(www.continuum.io/downloads). Additionally, PyGeoNS require RBF and
+scikit sparse. Assuming that Anaconda is already installed, we can
 satisfy these dependencies with
 
 .. code-block:: bash
@@ -199,7 +202,6 @@ is specified with the ``--output-stem`` argument
 That completes the demonstration. More detailed information about
 PyGeoNS can be found below or by calling each PyGeoNS subcommand with
 the ``-h`` flag.
-
 
 Subcommands
 ===========
@@ -383,7 +385,7 @@ Network Processes
   function. Spatial covariance is described by a squared exponential.
   Requires three hyperparameters to be specified : standard deviation
   (mm), characteristic time-scale (yr), and characteristic
-  length-scale (km).
+  length-scale (km). :math:`x` :math:`test`
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
   treated as sparse.
 * ``se-se`` : Temporal covariance is described by a squared
