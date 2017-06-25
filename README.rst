@@ -385,7 +385,12 @@ Network Processes
   function. Spatial covariance is described by a squared exponential.
   Requires three hyperparameters to be specified : standard deviation
   (mm), characteristic time-scale (yr), and characteristic
-  length-scale (km). :math:`x` :math:`test` τ
+  length-scale (km). :math:`x` :math:`test` 
+  test 
+  test
+
+  test
+
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
   treated as sparse.
 * ``se-se`` : Temporal covariance is described by a squared
