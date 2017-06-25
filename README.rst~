@@ -385,21 +385,22 @@ Network Processes
 Each network process has zero mean and a covariance function that can
 be described as
 
-C((x,t),(x',t')) = T(t,t')X(x,x')
+C( (x,t) , (x',t') ) = T(t,t') X(x,x')
 
 where X and T are spatial and temporal covariance functions. 
 
 * ``wen12-se`` : Temporal covariance is described by a Wendland
-  function. 
+  function,
 
-  T(t,t') = φ²(1 - |t - t'|/τ)₊³ (3|t - t'|/τ + 1)
+  T(t,t') = φ²(1 - |t - t'|/τ)₊³ (3|t - t'|/τ + 1).
 
-  Spatial covariance is described by a squared exponential.
+  Spatial covariance is described by a squared exponential,
 
-  X(x,x') = exp( -||x - x'||₂² / (2ℓ²) )
+  X(x,x') = exp( -||x - x'||₂² / (2ℓ²) ).
   
-  Requires three hyperparameters to be specified : φ [mm], τ [yr], and
-  l [km].
+  Requires three hyperparameters to be specified, 
+
+  φ [mm], τ [yr], and ℓ [km].
   
 
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
