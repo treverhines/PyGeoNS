@@ -385,14 +385,14 @@ Network Processes
 Each network process has zero mean and a covariance function that can
 be described as
 
-C( ( x , t ) , ( x' , t' ) ) = T( t , t' ) X( x , x' )
+C( (x,t) , (x',t') ) = T(t,t') X(x,x')
 
 where X and T are spatial and temporal covariance functions. 
 
 * ``wen12-se`` : Temporal covariance is described by a Wendland
   function,
 
-  T(t,t') = φ²(1 - |t - t'|/τ)₊³ (3|t - t'|/τ + 1).
+  T(t,t') = φ² (1 - |t - t'|/τ)₊³ (3|t - t'|/τ + 1).
 
   Spatial covariance is described by a squared exponential,
 
@@ -405,14 +405,38 @@ where X and T are spatial and temporal covariance functions.
 
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
   treated as sparse.
+  
 * ``se-se`` : Temporal covariance is described by a squared
-  exponential. Spatial covariance is described by a squared
-  exponential. Requires three hyperparameters to be specified :
-  standard deviation (mm), characteristic time-scale (yr), and
-  characteristic length-scale (km).
+  exponential, 
+
+  T(t,t') = φ² exp( -|t - t'| / (2τ²) ).
+
+  Spatial covariance is described by a squared
+  exponential,
+
+  X(x,x') = exp( -||x - x'||₂² / (2ℓ²) ).
+
+  Requires three hyperparameters to be specified,
+
+  φ [mm], τ [yr], and ℓ [km].
+
 * ``ibm-se`` : Temporal covariance is described by integrated
-  brownian motion. Spatial covariance is described by a squared
-  exponential. Requires three hyperparameters to be specified :
+  brownian motion,
+
+  T(t,t') = φ²/2 min(s,s')² ( max(s,s') - min(s,s')/3 ),  
+
+  where 
+
+  s = t - τ, s' = t' - τ.
+  
+  Spatial covariance is described by a squared exponential,
+
+  X(x,x') = exp( -||x - x'||₂² / (2ℓ²) ).
+  
+  Requires three hyperparameters to be specified,
+
+  φ [mm], τ [mjd], and ℓ [km].
+  
   standard deviation of the forcing term (mm/yr^1.5), reference time
   (mjd), and characteristic length-scale (km).
 
