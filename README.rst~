@@ -400,7 +400,7 @@ where X and T are spatial and temporal covariance functions.
   
   Requires three hyperparameters to be specified, 
 
-  φ [mm], τ [yr], and ℓ [km].
+  φ [mm], τ [yr], ℓ [km].
   
 
 * ``spwen12-se`` : Same as ``wen12-se`` but covariance matrices are
@@ -409,7 +409,7 @@ where X and T are spatial and temporal covariance functions.
 * ``se-se`` : Temporal covariance is described by a squared
   exponential, 
 
-  T(t,t') = φ² exp( -|t - t'| / (2τ²) ).
+  T(t,t') = φ² exp( -|t - t'|² / (2τ²) ).
 
   Spatial covariance is described by a squared
   exponential,
@@ -418,10 +418,10 @@ where X and T are spatial and temporal covariance functions.
 
   Requires three hyperparameters to be specified,
 
-  φ [mm], τ [yr], and ℓ [km].
+  φ [mm], τ [yr], ℓ [km].
 
 * ``ibm-se`` : Temporal covariance is described by integrated
-  brownian motion,
+  Brownian motion,
 
   T(t,t') = φ²/2 min(s,s')² ( max(s,s') - min(s,s')/3 ),  
 
@@ -435,22 +435,32 @@ where X and T are spatial and temporal covariance functions.
   
   Requires three hyperparameters to be specified,
 
-  φ [mm], τ [mjd], and ℓ [km].
-  
-  standard deviation of the forcing term (mm/yr^1.5), reference time
-  (mjd), and characteristic length-scale (km).
+  φ [mm/yr^1.5], τ [mjd], ℓ [km].
 
 Station Processes
 -----------------
-* ``fogm`` : Covariance is described by a first-order Gauss-Markov
-  process. Requires two hyperparameters to be specified : standard
-  deviation of the forcing term (mm/yr^0.5) and cutoff frequency
-  (1/yr).
-* ``bm`` : Covariance is described by Brownian motion. Requires two
-  hyperparameters to be specified : standard deviation of the forcing
-  term (mm/yr^0.5) and reference time (mjd).
+
+* ``fogm`` : A Gaussian process with zero mean and covariance
+  described by
+
+  C(t,t') = β²/(2α) exp( -α|t - t'| ). 
+
+  Requires two hyperparameters to be specified,
+
+  β [mm/yr^0.5], α [1/yr]
+
+* ``bm`` : A Gaussian process with zero mean and covariance described
+  by
+
+  C(t,t') = β² min( t - α , t' - α ).
+
+  Requires two hyperparameters to be specified,
+
+  β [mm/yr^0.5], α [mjd]
+
 * ``linear`` : Unconstrained offset and linear trend. Requires no
   hyperparameters to be specified.
+
 * ``per`` : Unconstrained annual and semiannual sinusoids. Requires no
   hyperparameters to be specified.
 
