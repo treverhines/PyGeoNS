@@ -125,8 +125,8 @@ view the data file with
                         -v
 
 The ``-v`` flag increased the verbosity and caused instructions for
-the interactive viewer to be printed to the screen. Use the arrows to
-view different stations and times. To keep this demonstration
+the interactive viewer to be printed to the screen. Use the arrow keys
+to view different stations and times. To keep this demonstration
 tractable, we crop the dataset down so that it only spans two years.
 
 .. code-block:: bash
