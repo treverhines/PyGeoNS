@@ -19,7 +19,7 @@ where the number of unknowns is equal to the number of observations.
 Assuming that a high-end desktop computer is being used, this means
 that datasets will be limited to several dozen stations and a few
 years of daily observations. This limitation can be alleviated to some
-extent by using a compact prior covariance function (see below).
+extent by using a compact prior covariance function.
 
 PyGeoNS calculates strain on a transverse-mercator projection. It is
 assumed that the stations cover a sufficiently small area that such a
@@ -140,12 +140,14 @@ deviation of our prior (in mm), the second is a time-scale parameter
 in our data consists of white noise (which we do not need to specify)
 and a linear trend that is unique for each station. This linear trend
 is secular tectonic deformation, which we are not interested in for
-this demonstration. By default, strains will be estimated at the
-locations of each station in the dataset and for each day in the
-dataset. The computation time can be decreased by specifying a smaller
-range of times and positions to output at. Use the ``--start-date``
-and ``--end-date`` arguments to set the range of output times. Use the
-``--positions`` or ``--positions-file`` to set the output positions.
+this demonstration. See `Network and Station Processes`_ for more
+information on specifying noise and prior models. By default, strains
+will be estimated at the locations of each station in the dataset and
+for each day in the dataset. The computation time can be decreased by
+specifying a smaller range of times and positions to output at. Use
+the ``--start-date`` and ``--end-date`` arguments to set the range of
+output times. Use the ``--positions`` or ``--positions-file`` to set
+the output positions.
 
 .. code-block:: bash
 
@@ -370,7 +372,6 @@ format because PyGeoNS does not ever use that information.
 
 Network and Station Processes
 =============================
-
 The subcommands ``pygeons strain``, ``pygeons autoclean``, and
 ``pygeons reml`` require the user to specify Gaussian process models.
 PyGeoNS distinguishes Gaussian processes at either "network"
@@ -503,5 +504,8 @@ continuous.
 
 Bugs, Comments, or Suggestions
 ==============================
-Please report any issues at www.github.com/treverhines/PyGeoNS/issues.  
+There is absolutely no guarantee that this software is free of bugs.
+It is recommended that you perform synthetic tests to verify that
+PyGeoNS is working properly. Please report any issues at
+www.github.com/treverhines/PyGeoNS/issues.
 
