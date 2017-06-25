@@ -385,7 +385,7 @@ Network Processes
 Each network process has zero mean and a covariance function that can
 be described as
 
-C( ( x , t ) , ( x' , t' ) ) = T( t , t' ) X( x , x' )
+C( ( x,t ) , ( x',t' ) ) = T( t,t' ) X( x,x' )
 
 where X and T are spatial and temporal covariance functions. 
 
