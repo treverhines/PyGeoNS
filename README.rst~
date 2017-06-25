@@ -54,6 +54,30 @@ and installed with the following commands
   $ cd PyGeoNS 
   $ python setup.py install
 
+Subcommands
+===========
+PyGeoNS contains the following subcommands. Call these functions with
+a ``-h`` flag to see more information.
+
+* ``pygeons toh5`` : Convert data from a text file to an HDF5 file.
+* ``pygeons totext`` : Convert data from an HDF5 file to a text file.
+* ``pygeons info`` : Display metadata for an HDF5 data file.
+* ``pygeons vector-view`` : Interactively view an HDF5 data file or
+  multiple data files.
+* ``pygeons strain-view`` : Interactively view strain from the
+  deformation gradient files, which are the HDF5 files returned by
+  ``pygeons strain``.
+* ``pygeons reml`` : Estimate prior and noise hyperparameters with the
+  restricted maximum likelihood (REML) method.
+* ``pygeons strain`` : Estimate transient strain from an HDF5 file of
+  displacements. 
+* ``pygeons clean`` : Interactively remove jumps and outliers in an
+  HDF5 data file. 
+* ``pygeons autoclean`` : Automatically remove outliers in an HDF5
+  file of displacements.
+* ``pygeons crop`` : Spatially and temporally crops an HDF5 data file.
+* ``pygeons merge`` : Combine HDF5 data files.
+
 Demonstration
 =============
 This demonstration walks through the script ``demo/demo2/run.sh``,
@@ -204,30 +228,6 @@ is specified with the ``--output-stem`` argument
 That completes the demonstration. More detailed information about
 PyGeoNS can be found below or by calling each PyGeoNS subcommand with
 the ``-h`` flag.
-
-Subcommands
-===========
-PyGeoNS contains the following subcommands. Call these functions with
-a ``-h`` flag to see more information.
-
-* ``pygeons toh5`` : Convert data from a text file to an HDF5 file.
-* ``pygeons totext`` : Convert data from an HDF5 file to a text file.
-* ``pygeons info`` : Display metadata for an HDF5 data file.
-* ``pygeons vector-view`` : Interactively view an HDF5 data file or
-  multiple data files.
-* ``pygeons strain-view`` : Interactively view strain from the
-  deformation gradient files, which are the HDF5 files returned by
-  ``pygeons strain``.
-* ``pygeons reml`` : Estimate prior and noise hyperparameters with the
-  restricted maximum likelihood (REML) method.
-* ``pygeons strain`` : Estimate transient strain from an HDF5 file of
-  displacements. 
-* ``pygeons clean`` : Interactively remove jumps and outliers in an
-  HDF5 data file. 
-* ``pygeons autoclean`` : Automatically remove outliers in an HDF5
-  file of displacements.
-* ``pygeons crop`` : Spatially and temporally crops an HDF5 data file.
-* ``pygeons merge`` : Combine HDF5 data files.
 
 HDF5 Data Format
 ================
