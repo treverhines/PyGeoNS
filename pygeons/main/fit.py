@@ -19,13 +19,14 @@ def _fit(d,s,mu,sigma,p):
   ''' 
   conditions the discrete Gaussian process described by *mu*, *sigma*,
   and *p* with the observations *d* which have uncertainty *s*.
-  Returns the mean of the posterior.
+  Returns the mean and standard deviation of the posterior at the
+  observation points.  
   '''  
   n,m = p.shape
-  # *sigma_and_s* is the Gaussian process covariance with the noise
+  # *A* is the Gaussian process covariance with the noise
   # covariance added
-  sigma_and_s = _as_sparse_or_array(sigma + _as_covariance(s))
-  Ksolver = _PartitionedPosDefSolver(sigma_and_s,p)
+  A = _as_sparse_or_array(sigma + _as_covariance(s))
+  Ksolver = _PartitionedPosDefSolver(A,p)
   # compute mean of the posterior 
   vec1,vec2 = Ksolver.solve(d - mu,np.zeros(m)) 
   u = mu + sigma.dot(vec1) + p.dot(vec2)   
@@ -34,7 +35,7 @@ def _fit(d,s,mu,sigma,p):
     sigma = sigma.A
 
   mat1,mat2 = Ksolver.solve(sigma.T,p.T)
-  del Ksolver
+  del A,Ksolver
   #  # just compute the diagonal components of the covariance matrix
   #  # note that A.dot(B).diagonal() == np.sum(A*B.T,axis=1)
   su = np.sqrt(sigma.diagonal() - 
