@@ -3,4 +3,5 @@ demo/*/work
 *~
 *.pyc
 *.h5
+*.csv
 
