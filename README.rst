@@ -374,7 +374,7 @@ Network and Station Processes
 =============================
 The subcommands ``pygeons strain``, ``pygeons autoclean``, and
 ``pygeons reml`` require the user to specify Gaussian process models.
-PyGeoNS distinguishes Gaussian processes at either "network"
+PyGeoNS distinguishes Gaussian processes as either "network"
 processes, which are spatially and temporally correlated, or "station"
 processes, which are only temporally correlated. The processes may
 contain hyperparameters that the user must also specify. Some of the
@@ -393,7 +393,7 @@ where X and T are spatial and temporal covariance functions.
 * ``wen12-se`` : Temporal covariance is described by a Wendland
   function,
 
-  T(t,t') = φ² (1 - |t - t'|/τ)₊³ (3|t - t'|/τ + 1).
+  T(t,t') = φ² (1 - |t - t'|/τ)₊⁵ (8|t - t'|²/τ² + 5|t - t'|/τ + 1).
 
   Spatial covariance is described by a squared exponential,
 
