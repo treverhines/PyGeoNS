@@ -53,20 +53,20 @@ p = subs.add_parser('toh5',
   usage='pygeons toh5 STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Converts a text data file to an HDF5 file. The text file should
-contain the content of each station file separated by three asterisks,
-***. The station files can have one of three formats: the PBO csv
-format, the PBO pos format, or the PyGeoNS csv format. Indicate the
-file format by specifying either 'pbocsv', 'pbopos', or 'csv' for
-*file_type*. See the README file or www.unavco.org for more
+'''Converts data from a text file to an HDF5 file.
+
+The input text file should be the concatenation of individual station
+files with "***" as the delimiter. The station files can have one of
+three formats: the PBO csv format, the PBO pos format, or the PyGeoNS
+csv format. Indicate the file format by specifying either 'pbocsv',
+'pbopos', or 'csv' for *file-type*. See the README for more
 information on these file formats.
 
 The resulting HDF5 file will contain data entries for each station in
 the text file and for each day ranging from the earliest observation
 to the latest. If data does not exist in the text file for a
 particular station and day then it will be assigned a value of NaN
-with INF uncertainty in the HDF5 file. This indicates that the data is
-missing.''')
+with INF uncertainty. This indicates that the data is missing.''')
 
 p.add_argument('input_text_file',**GLOSSARY['input_text_file'])
 p.add_argument('-f','--file-type',**GLOSSARY['file_type'])
@@ -80,12 +80,14 @@ p = subs.add_parser('totext',
   usage='pygeons totext STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Converts an HDF5 data file to a text file. If a station is missing
-data for each component, north, east, and vertical, for a particular
-day, then that day will not be written to the text file. If all the
-data for a station is missing then that station will not be included
-in the resulting text file. The text file will have the PyGeoNS csv
-format.''')
+'''Converts data from an HDF5 file to a text file.
+
+The output text file will have the PyGeoNS csv format. If a station is
+missing data for the north, east, and vertical component for a
+particular day, then that day will not be written to the text file. If
+all the data for a station is missing then that station will not be
+included in the resulting text file.''')
+
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-o','--output-stem',**GLOSSARY['output_stem'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
@@ -97,7 +99,7 @@ p = subs.add_parser('info',
   usage='pygeons info STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Prints metadata for an HDF5 data file to stdout.''')
+'''Displays metadata for an HDF5 data file.''')
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
 p.set_defaults(func=pygeons_info)
@@ -108,9 +110,12 @@ p = subs.add_parser('vector-view',
   usage='pygeons vector-view STR [STR ...] [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Runs the PyGeoNS Interactive Vector Viewer. This function can take
-multiple data files as arguments, which allows for side-by-side
-comparison of datasets.''')
+'''Interactively view a data file or multiple data files.
+
+This takes one or multiple HDF5 data files as arguments, allowing for
+side-by-side comparison of dataset. Raise the *verbose* flag to display
+the instructions for how to interact with the viewer.''')
+
 p.add_argument('input_files',**GLOSSARY['input_files'])
 p.add_argument('--dataset-labels',**GLOSSARY['dataset_labels'])
 p.add_argument('--colors',**GLOSSARY['colors'])
@@ -140,8 +145,14 @@ p = subs.add_parser('strain-view',
   usage='pygeons strain-vew STR STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Runs the PyGeoNS Interactive Strain Viewer. This function takes two
-data files, which specify the deformation gradients, as arguments.''')
+'''Interactively view strain from the deformation gradients returned by
+*pygeons strain*.
+
+This function takes the two HDF5 files returned by *pygeons strain* as
+arguments. The x (east) derivative file should be given first followed
+by the y (north) derivative file. Raise the *verbose* flag to display
+the instructions for how to interact with the viewer.''')
+
 p.add_argument('xdiff_file',**GLOSSARY['xdiff_file'])
 p.add_argument('ydiff_file',**GLOSSARY['ydiff_file'])
 p.add_argument('--scale',**GLOSSARY['scale'])
@@ -167,8 +178,14 @@ p = subs.add_parser('clean',
   usage='pygeons clean STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Runs the PyGeoNS interactive cleaner which is used to remove jumps and 
-outliers.''')
+'''Interactively remove jumps and outliers in a data file.
+
+This takes a single HDF5 file as an argument and returns an HDF5 file
+as well as a log of edits. Hold down *D* and click and drag on the
+time series figure to remove outliers. Hold down *J* and click and
+drag on the time series figure to remove jumps. The jump size is the
+difference between the mean values over the selected intervals.''')
+
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-o','--output-stem',**GLOSSARY['output_stem'])
 p.add_argument('--input-edits-file',**GLOSSARY['input_edits_file'])
@@ -199,13 +216,14 @@ p.set_defaults(func=pygeons_clean)
 p = subs.add_parser('crop',
   usage='pygeons crop STR [options]',
   description=
-'''Limits the spatial and temporal extent of the dataset. The dates
-contained in the resulting dataset will be each day ranging from
-*start_date* to *end_date*. The stations in the resulting datasets
-will be within the bounds set by *min/max_lon/lat*. Unlike for
-*pygeons-clean*, this function removes the dates and stations from the
-datset, rather than masking them.
-''')  
+'''Spatially and temporally crops an HDF5 data file.
+
+The output HDF5 file will have dates ranging from *start_date* to
+*end_date*. The stations in the output file will be within the bounds
+set by *min/max_lon/lat*. Unlike for *pygeons clean* or *pygeons
+autoclean*, this function removes the dates and stations from the
+datset, rather than masking them.''')
+
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('-o','--output-stem',**GLOSSARY['output_stem'])
 p.add_argument('--start-date',**GLOSSARY['start_date'])
@@ -221,10 +239,13 @@ p.set_defaults(func=pygeons_crop)
 # MERGE
 #####################################################################
 p = subs.add_parser('merge',
-  usage='pygeons merge STR [options]',
+  usage='pygeons merge STR [STR ...] [options]',
   description=
-'''Merges datasets.
-''')  
+'''Combines multiple HDF5 data files. 
+
+If data files contain data for the same time and station, then the
+data from the last-specified file will be used.''')  
+
 p.add_argument('input_files',**GLOSSARY['input_files'])
 p.add_argument('-o','--output-stem',**GLOSSARY['output_stem'])
 p.add_argument('-v','--verbose',**GLOSSARY['verbose'])
@@ -236,7 +257,15 @@ p = subs.add_parser('fit',
   usage='pygeons fit STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Returns the conditioned Gaussian process''')
+'''Fits a Gaussian process to the displacements. This is used to judge
+whether a Gaussian process model is appropriate.
+
+This takes an HDF5 file of observed displacements and returns an HDF5
+file of posterior displacements. The Gaussian processes specified by
+*network-model/params* and *station-model/params* are fit to the
+observations. The noise is considered to be uncorrelated with standard
+deviation given by the formal data uncertainties.''')
+
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('--network-model',**GLOSSARY['network_model'])
 p.add_argument('--network-params',**GLOSSARY['network_params'])
@@ -252,7 +281,15 @@ p = subs.add_parser('autoclean',
   usage='pygeons autoclean STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Automatically removes outliers with a data editing algorithm''')
+'''Automatically removes outliers in displacements.
+
+This takes an HDF5 file of observed displacements and returns an HDF5
+file of the observed displacements with outliers masked. Outliers are
+determined based on how consistent a Gaussian process is with the
+observations. The Gaussian process is specified with
+*network-model/params* and *station-model/params*.
+
+Automatically removes outliers with a data editing algorithm''')
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('--network-model',**GLOSSARY['network_model'])
 p.add_argument('--network-params',**GLOSSARY['network_params'])
@@ -269,7 +306,16 @@ p = subs.add_parser('reml',
   usage='pygeons reml STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Finds the most likely hyperparameters''')
+'''Estimates hyperparameters with the restricted maximum likelihood
+(REML) method.
+
+The REML method finds the hyperparameters for a Gaussian process which
+are most consistent with the displacement observations. This takes an
+HDF5 file of displacements and returns a text file of the REML
+results. The Gaussian process is specified with *network-model* and
+*station-model*. The initial guess for the hyperparameters are
+specified with *network-params* and *station-params*.''')
+
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('--network-model',**GLOSSARY['network_model'])
 p.add_argument('--network-params',**GLOSSARY['network_params'])
@@ -284,10 +330,24 @@ p.set_defaults(func=pygeons_reml)
 # STRAIN
 #####################################################################
 p = subs.add_parser('strain',
-  usage='pygeons reml STR [options]',
+  usage='pygeons strain STR [options]',
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=
-'''Calculates time dependent strain''')
+
+'''Conditions a Gaussian process with displacements to form a
+posterior estimate of transient displacements. The posterior is
+spatially and temporally differentiated to form the transient velocity
+gradients.
+
+This takes an HDF5 file of displacements and returns two HDF5 files
+containing deformation gradients. The output files have the extensions
+*dudx* and *dudy* indicating that they are the x (east) and y (north)
+derivatives of posterior velocities (displacements if the *no-rate*
+flag is raised). The prior Gaussian process is specified with
+*network-prior-model/params*. The noise consists of the formal data
+uncertainties and the Gaussian processes specified with
+*network-noise-model/params* and *station-noise-model/params*.''')
+
 p.add_argument('input_file',**GLOSSARY['input_file'])
 p.add_argument('--network-prior-model',**GLOSSARY['network_prior_model'])
 p.add_argument('--network-prior-params',**GLOSSARY['network_prior_params'])

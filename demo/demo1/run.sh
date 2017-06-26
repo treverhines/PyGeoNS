@@ -14,7 +14,7 @@ pygeons vector-view work/data.h5 \
 
 # calculate deformation gadients
 pygeons strain work/data.h5 \
-        --network-prior-model spwen12-se \
+        --network-prior-model spwen11-se \
         --network-prior-params 1.0 0.1 100.0 \
         --station-noise-model linear \
         --station-noise-params \
