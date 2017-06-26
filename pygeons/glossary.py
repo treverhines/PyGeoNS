@@ -515,7 +515,7 @@ NETWORK_PARAMS = {
 'nargs':'*',
 'help': 
 ''' 
-Initial guess for the network model hyperparameters.
+Network model hyperparameters.
 '''
 }
 #####################################################################
@@ -546,7 +546,7 @@ STATION_PARAMS = {
 'nargs':'*',
 'help': 
 ''' 
-Initial guess for the station model hyperparameters.
+Station model hyperparameters.
 '''
 }
 #####################################################################
