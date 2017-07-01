@@ -1,0 +1,8 @@
+* Cythonize covariance functions so that less time if spent building
+  the covariance matrices
+
+* Make "pygeons fit" more memory efficient by evaluating the posterior
+  in chunks
+
+* Somehow make it clearer which Gaussian process models are available
+  and what their hyperparameters are

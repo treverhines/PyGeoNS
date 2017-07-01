@@ -33,6 +33,7 @@ pygeons autoclean 'work/data.crop.h5' \
                   --outlier-tol 4.0 \
                   -vv
 
+
 # calculate deformation gradients from 2015-10-01 to 2016-04-01 using
 # data from 2015-05-01 to 2017-05-01. Outputting over a wider range of
 # time will increase run time.
