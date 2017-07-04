@@ -20,7 +20,8 @@ def strain(t,x,d,sd,
            network_noise_params,
            station_noise_model,
            station_noise_params,
-           out_t,out_x,rate):
+           out_t,out_x,rate,
+           covariance):
   ''' 
   Computes deformation gradients from displacement data.
   '''  
@@ -74,13 +75,35 @@ def strain(t,x,d,sd,
     dudx_gp = post_gp.differentiate((0,1,0)) # x derivative of displacement
     dudy_gp = post_gp.differentiate((0,0,1)) # y derivative of displacement
 
-  dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
-  dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
-        
-  dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
-  sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
-  dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
-  sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
+  if covariance:
+    # Evaluate the mean and covariances of the posterior
+    dudx = dudx_gp.mean(out_z)
+    cdudx = dudx_gp.covariance(out_z,out_z)
+    sdudx = np.sqrt(np.diag(cdudx))
 
-  out  = (dudx,sdudx,dudy,sdudy)
+    dudy = dudy_gp.mean(out_z)
+    cdudy = dudy_gp.covariance(out_z,out_z)
+    sdudy = np.sqrt(np.diag(cdudy))
+
+    dudx  = dudx.reshape((out_t.shape[0],out_x.shape[0]))
+    sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
+    cdudx = cdudx.reshape((out_t.shape[0],out_x.shape[0],
+                           out_t.shape[0],out_x.shape[0]))
+    dudy  = dudy.reshape((out_t.shape[0],out_x.shape[0]))
+    sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
+    cdudy = cdudy.reshape((out_t.shape[0],out_x.shape[0],
+                           out_t.shape[0],out_x.shape[0]))
+    out = (dudx,sdudx,cdudx,dudy,sdudy,cdudy)
+
+  else:
+    # Just evaluate the mean and standard deviations of the posterior
+    dudx,sdudx = dudx_gp.meansd(out_z,chunk_size=1000)
+    dudy,sdudy = dudy_gp.meansd(out_z,chunk_size=1000)
+
+    dudx = dudx.reshape((out_t.shape[0],out_x.shape[0]))
+    sdudx = sdudx.reshape((out_t.shape[0],out_x.shape[0]))
+    dudy = dudy.reshape((out_t.shape[0],out_x.shape[0]))
+    sdudy = sdudy.reshape((out_t.shape[0],out_x.shape[0]))
+    out = (dudx,sdudx,dudy,sdudy)
+        
   return out

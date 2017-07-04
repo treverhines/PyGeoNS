@@ -571,6 +571,16 @@ will be returned instead of velocities and velocity gradients.
 '''
 }
 #####################################################################
+COVARIANCE = {
+'action':'store_true',
+'help':
+''' 
+If this flag is raised then the posterior covariances will be
+evaluated and saved in the output HDF5 file. This will significantly
+increase the run time and the memory requirements.
+'''
+}
+#####################################################################
 NO_SHOW_VERTICAL = {
 'dest':'show_vertical',
 'action':'store_false',
@@ -657,6 +667,7 @@ GLOSSARY = {
 'network_noise_model':NETWORK_NOISE_MODEL,
 'station_noise_params':STATION_NOISE_PARAMS,
 'station_noise_model':STATION_NOISE_MODEL,
+'covariance':COVARIANCE,
 'no_rate':NO_RATE,
 'no_vertical':NO_VERTICAL,
 'no_show_vertical':NO_SHOW_VERTICAL,
