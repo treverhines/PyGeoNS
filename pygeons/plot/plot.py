@@ -98,7 +98,7 @@ def _setup_map_ax(bm,ax):
   return
                      
 
-def _setup_ts_ax(ax_lst):
+def _setup_ts_ax(ax_lst,maxn=6):
   ''' 
   prepares the time series axes for display
   '''
@@ -126,7 +126,7 @@ def _setup_ts_ax(ax_lst):
     return out
     
   for a in ax_lst: a.get_xaxis().set_major_formatter(xtick_formatter)
-  for a in ax_lst: a.get_xaxis().set_major_locator(MaxNLocator(6))
+  for a in ax_lst: a.get_xaxis().set_major_locator(MaxNLocator(maxn))
   for a in ax_lst: a.format_coord = coord_formatter
   return
 
