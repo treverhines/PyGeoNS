@@ -5,8 +5,8 @@ import numpy as np
 import logging
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
-from rbf.gauss import (_as_sparse_or_array,
-                       _as_covariance)
+from rbf.linalg import as_sparse_or_array
+from rbf.gauss import _as_covariance
 from pygeons.main.gptools import (composite,
                                   station_sigma_and_p)
 
@@ -57,12 +57,12 @@ def strain(t,x,d,sd,
   sta_sigma,sta_p = station_sigma_and_p(sta_gp,t,mask)
   # add data noise to the station noise
   obs_sigma = _as_covariance(sd)
-  sta_sigma = _as_sparse_or_array(sta_sigma + obs_sigma)
+  sta_sigma = as_sparse_or_array(sta_sigma + obs_sigma)
   # make network noise
   net_sigma = noise_gp._covariance(z,z,diff,diff)
   net_p = noise_gp._basis(z,diff)
   # combine noise processes
-  noise_sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+  noise_sigma = as_sparse_or_array(sta_sigma + net_sigma)
   noise_p = np.hstack((sta_p,net_p))
   del sta_sigma,net_sigma,obs_sigma,sta_p,net_p
   # condition the prior with the data

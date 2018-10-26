@@ -9,9 +9,9 @@ from pygeons.main.gptools import (composite,
                                   station_sigma_and_p)
 from pygeons.main import gpnetwork
 from pygeons.main import gpstation
-from rbf.gauss import (_as_sparse_or_array,
-                       _as_covariance,
-                       _PartitionedPosDefSolver)
+from rbf.linalg import (as_sparse_or_array,
+                        PartitionedPosDefSolver)
+from rbf.gauss import _as_covariance
 logger = logging.getLogger(__name__)
 
 
@@ -25,8 +25,8 @@ def _fit(d,s,mu,sigma,p):
   n,m = p.shape
   # *A* is the Gaussian process covariance with the noise
   # covariance added
-  A = _as_sparse_or_array(sigma + _as_covariance(s))
-  Ksolver = _PartitionedPosDefSolver(A,p)
+  A = as_sparse_or_array(sigma + _as_covariance(s))
+  Ksolver = PartitionedPosDefSolver(A,p)
   # compute mean of the posterior 
   vec1,vec2 = Ksolver.solve(d - mu,np.zeros(m)) 
   u = mu + sigma.dot(vec1) + p.dot(vec2)   
@@ -81,7 +81,7 @@ def fit(t,x,d,sd,
   net_p = net_gp._basis(z,diff)
   # combine station gp with the network gp
   mu = np.zeros(z.shape[0])
-  sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+  sigma = as_sparse_or_array(sta_sigma + net_sigma)
   p = np.hstack((sta_p,net_p))
   del sta_sigma,net_sigma,sta_p,net_p
   # best fit combination of signal and noise to the observations

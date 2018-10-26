@@ -4,7 +4,7 @@ mkdir -p work
 pygeons toh5 data.csv \
         --output-stem work/data
 
-# view the raw dataset
+## view the raw dataset
 pygeons vector-view work/data.h5 \
                     --quiver-scale 0.0005 \
                     --quiver-key-length 10.0 \
@@ -56,3 +56,4 @@ pygeons strain-view work/data.strain.dudx.h5 \
                     --key-magnitude 0.5 \
                     --key-position 0.15 0.3 \
                     -vv
+

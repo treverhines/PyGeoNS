@@ -7,8 +7,8 @@ from pygeons.main import gpnetwork
 from pygeons.main import gpstation
 from pygeons.main.gptools import (composite,
                                   station_sigma_and_p)  
-from rbf.gauss import (_as_sparse_or_array,
-                       outliers)
+from rbf.linalg import as_sparse_or_array                                  
+from rbf.gauss import outliers
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +48,7 @@ def autoclean(t,x,d,sd,
   net_p = net_gp._basis(zu,diff)
   # combine station gp with the network gp
   mu = np.zeros(zu.shape[0])  
-  sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+  sigma = as_sparse_or_array(sta_sigma + net_sigma)
   p = np.hstack((sta_p,net_p))
   del sta_sigma,net_sigma,sta_p,net_p
   # returns the indices of outliers 

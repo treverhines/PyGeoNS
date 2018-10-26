@@ -9,8 +9,8 @@ from pygeons.main import gpnetwork
 from pygeons.main import gpstation
 from pygeons.main.gptools import (composite,
                                   station_sigma_and_p)
-from rbf.gauss import (_as_sparse_or_array,
-                       _as_covariance,
+from rbf.linalg import as_sparse_or_array                                  
+from rbf.gauss import (_as_covariance,
                        likelihood)
 logger = logging.getLogger(__name__)
 
@@ -73,13 +73,13 @@ def reml(t,x,d,sd,
     # add data noise to the diagonals of sta_sigma. Both matrices are
     # sparse so this is efficient
     obs_sigma = _as_covariance(sd)
-    sta_sigma = _as_sparse_or_array(sta_sigma + obs_sigma)
+    sta_sigma = as_sparse_or_array(sta_sigma + obs_sigma)
     # network process
     net_sigma = net_gp._covariance(z,z,diff,diff)
     net_p = net_gp._basis(z,diff)
     # combine station gp with the network gp
     mu = np.zeros(z.shape[0])
-    sigma = _as_sparse_or_array(sta_sigma + net_sigma)
+    sigma = as_sparse_or_array(sta_sigma + net_sigma)
     p = np.hstack((sta_p,net_p))
     del sta_sigma,net_sigma,obs_sigma,sta_p,net_p
     try:

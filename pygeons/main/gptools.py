@@ -3,8 +3,8 @@ Tools for creating Gaussian processes.
 '''
 import numpy as np
 import scipy.sparse as sp
+from rbf.utils import get_arg_count
 from rbf.gauss import (GaussianProcess,
-                       _get_arg_count,
                        _zero_mean,
                        _zero_covariance,
                        _empty_basis)
@@ -199,7 +199,7 @@ def set_units(units):
       return fin(*args)
 
     fout.units = units
-    fout.nargs = _get_arg_count(fin)
+    fout.nargs = get_arg_count(fin)
     fout.__doc__ = fin.__doc__
     fout.__name__ = fin.__name__
     if fout.nargs != len(fout.units):
