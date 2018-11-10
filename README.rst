@@ -29,13 +29,39 @@ If you want to use Gaussian process regression to analyze your data,
 but PyGeoNS is too rigid for your needs, then consider working
 directly with the RBF python package (www.github.com/treverhines/RBF).
 
-Installation
-============
-PyGeoNS requires the standard scientific python packages, which can be
-found in the base Anaconda python installation
-(www.continuum.io/downloads). Additionally, PyGeoNS require RBF and
-scikit sparse. Assuming that Anaconda is already installed, we can
-satisfy these dependencies with
+Installation for Linux
+======================
+PyGeoNS runs in Python 2.7 and it requires older versions of the
+packages `basemap` and `matplotlib`. I recommend installing PyGeoNS in
+its own conda environment to avoid package conflicts. Assuming that
+conda is installed (www.continuum.io/downloads), you can install
+PyGeoNS by following these steps:
+
+Create and activate a new conda environment called `pygeons-env` which
+uses Python 2.7 and contains the default anaconda packages.
+
+.. code-block:: bash
+
+  $ conda create -n pygeons-env anaconda python=2.7
+  $ source activate pygeons-env 
+
+Install additional required packages. Note that these are not the
+lastest versions of `basemap` and `matplotlib`.
+
+.. code-block:: bash
+
+  $ conda install basemap=1.0.7
+  $ conda install matplotlib=2.1.2
+  $ conda install scikit-sparse=0.4.4 -c conda-forge
+
+Create a new directory where we will install PyGeoNS and RBF
+
+.. code-block:: bash
+
+  $ mkdir pygeons_packages
+  $ cd pygeons_packages
+
+Clone and install RBF
 
 .. code-block:: bash
 
@@ -43,16 +69,23 @@ satisfy these dependencies with
   $ cd RBF
   $ python setup.py install
   $ cd ..
-  $ conda install -c conda-forge scikit-sparse
 
-Once these dependencies are satisfied, PyGeoNS can be downloaded
-and installed with the following commands
+Clone and install PyGeoNS
 
 .. code-block:: bash
 
   $ git clone http://www.github.com/treverhines/PyGeoNS.git
-  $ cd PyGeoNS 
+  $ cd PyGeoNS
   $ python setup.py install
+
+We can verify that PyGeoNS was installed successfully by running one
+of its demos. This should compute and display transient strain from a
+slow slip event in the Pacific Northwest.
+
+.. code-block:: bash
+
+  $ cd demo/demo2
+  $ bash run.sh
 
 Subcommands
 ===========
