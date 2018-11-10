@@ -10,21 +10,26 @@ for i in `cat 'urls.txt'`
   wget -P 'work/csv' $i
   done
 
-# use sed to concatenate all the data files and separate them with ***
+# Use sed to concatenate all the data files and separate them with ***
 sed -s '$a***' work/csv/* | sed '$d' > work/data.csv
 
-# convert the csv file to an hdf5 file
+# Convert the csv file to an hdf5 file
 pygeons toh5 'work/data.csv' \
              --file-type 'pbocsv' \
              -vv
 
-# crop out data prior to 2015-01-01 and after 2017-01-01
+# Crop out data prior to 2015-01-01 and after 2017-01-01
 pygeons crop 'work/data.h5' \
              --start-date '2015-05-01' \
              --stop-date '2017-05-01' \
              -vv
 
-# remove outliers
+# Remove outliers. Outliers are data points that are abnormally
+# inconsistent with our prior. The spatio-temporal prior is a Gaussian
+# process that is described spatially by a squared exponential (se)
+# and temporally by a Wendland covariance function (spwen12). The
+# prior also consists of an linear trend (lin) and seasonal terms
+# (per) for each station
 pygeons autoclean 'work/data.crop.h5' \
                   --network-model 'spwen12-se' \
                   --network-params 1.0 0.1 100.0 \
@@ -33,10 +38,13 @@ pygeons autoclean 'work/data.crop.h5' \
                   --outlier-tol 4.0 \
                   -vv
 
-
 # calculate deformation gradients from 2015-10-01 to 2016-04-01 using
 # data from 2015-05-01 to 2017-05-01. Outputting over a wider range of
-# time will increase run time.
+# time will increase run time. This function requires us to specify a
+# prior model for transient deformation and a noise model. The prior
+# model is the spatio-temporal Gaussian process described above. The
+# noise model consists of the linear trend and seasonal terms in
+# addition to the white noise that is specified in the data files.
 pygeons strain 'work/data.crop.autoclean.h5' \
                --network-prior-model 'spwen12-se' \
                --network-prior-params 1.0 0.1 100.0 \
