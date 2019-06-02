@@ -85,9 +85,10 @@ def parse_csv(file_str):
   fmt = '%Y-%m-%d'
   delim = ','
 
-  def date_conv(date_str): 
+  def date_conv(date_bytes): 
     # return a float, rather than an integer, to be consistent with 
     # the other data types
+    date_str = date_bytes.decode()
     return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
@@ -146,7 +147,8 @@ def parse_pbocsv(file_str):
   fmt = '%Y-%m-%d'
   delim = ','
 
-  def date_conv(date_str): 
+  def date_conv(date_bytes): 
+    date_str = date_bytes.decode()
     return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
@@ -191,7 +193,8 @@ def parse_tdecsv(file_str):
   fmt = '%Y-%m-%d'
   delim = ','
 
-  def date_conv(date_str): 
+  def date_conv(date_bytes): 
+    date_str = date_bytes.decode()
     return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 
@@ -234,7 +237,8 @@ def parse_pbopos(file_str):
   '''
   fmt = '%Y%m%d'
 
-  def date_conv(date_str): 
+  def date_conv(date_bytes): 
+    date_str = date_bytes.decode()
     return float(mjd(date_str,fmt))
 
   # make everything lowercase so that field searches are not case 

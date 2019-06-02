@@ -7,6 +7,7 @@ dictionaries as input, as well as additional plotting parameters.
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
+import cartopy.feature as cfeature
 import logging
 from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.io.convert import dict_from_hdf5
@@ -66,39 +67,41 @@ def _get_meridians_and_parallels(bm,ticks):
   return meridians,parallels
   
 
-def _setup_map_ax(bm,ax):
+def _setup_map_ax(ax):
   ''' 
   prepares the map axis for display
   '''
+  proj = ax.projection
   # function which prints out the coordinates on the bottom left 
   # corner of the figure
   def coord_formatter(x,y):                         
+    lon, lat = proj.as_geodetic().transform_point(x, y, proj)
     out = 'x : %g  y : %g  ' % (x,y)
-    out += '(lon : %g E  lat : %g N)' % bm(x,y,inverse=True)
+    out += '(lon : %g E  lat : %g N)' % (lon, lat)
     return out
 
   ax.format_coord = coord_formatter
-  bm.drawcountries(ax=ax,zorder=2)
-  bm.drawstates(ax=ax,zorder=2) 
-  bm.drawcoastlines(ax=ax,zorder=2)
-  mer,par =  _get_meridians_and_parallels(bm,3)
-  bm.drawmeridians(mer,
-                   labels=[0,0,0,1],dashes=[2,2],
-                   ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
-  bm.drawparallels(par,
-                   labels=[1,0,0,0],dashes=[2,2],
-                   ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
-  bm.drawmapboundary(ax=ax,fill_color=(0.9,0.9,0.9),zorder=2)
-  bm.fillcontinents(ax=ax,color=(1.0,1.0,1.0),lake_color=(0.9,0.9,0.9),zorder=0)
-  scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
-                           inverse=True)
-  scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0
-  bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,scale_size,
-                  ax=ax,barstyle='fancy',fontsize=10,zorder=2)
+  #bm.drawcountries(ax=ax,zorder=2)
+  #bm.drawstates(ax=ax,zorder=2) 
+  #bm.drawcoastlines(ax=ax,zorder=2)
+  #mer,par =  _get_meridians_and_parallels(bm,3)
+  #bm.drawmeridians(mer,
+  #                 labels=[0,0,0,1],dashes=[2,2],
+  #                 ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
+  #bm.drawparallels(par,
+  #                 labels=[1,0,0,0],dashes=[2,2],
+  #                 ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
+  #bm.drawmapboundary(ax=ax,fill_color=(0.9,0.9,0.9),zorder=2)
+  #bm.fillcontinents(ax=ax,color=(1.0,1.0,1.0),lake_color=(0.9,0.9,0.9),zorder=0)
+  #scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
+  #                         inverse=True)
+  #scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0
+  #bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,scale_size,
+  #                ax=ax,barstyle='fancy',fontsize=10,zorder=2)
   return
                      
 
-def _setup_ts_ax(ax_lst):
+def _setup_ts_ax(ax_lst,maxn=6):
   ''' 
   prepares the time series axes for display
   '''
@@ -126,7 +129,7 @@ def _setup_ts_ax(ax_lst):
     return out
     
   for a in ax_lst: a.get_xaxis().set_major_formatter(xtick_formatter)
-  for a in ax_lst: a.get_xaxis().set_major_locator(MaxNLocator(6))
+  for a in ax_lst: a.get_xaxis().set_major_locator(MaxNLocator(maxn))
   for a in ax_lst: a.format_coord = coord_formatter
   return
 
@@ -172,11 +175,12 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
-  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-  bm = make_basemap(lon,lat,resolution=map_resolution)
-  _setup_map_ax(bm,map_ax)
-  x,y = bm(lon,lat)
-  pos = np.array([x,y]).T
+  proj = make_basemap(lon,lat)
+  map_fig,map_ax = plt.subplots(num='Map View',
+                                facecolor='white',
+                                subplot_kw={'projection':proj})
+  _setup_map_ax(map_ax)
+  pos = proj.transform_points(proj.as_geodetic(), lon, lat)[:,:2]
   interactive_vector_viewer(
     t,pos,u=u,v=v,z=z,su=su,sv=sv,sz=sz,
     ts_ax=ts_ax,map_ax=map_ax,
@@ -232,11 +236,12 @@ def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
   ts_fig,ts_ax = plt.subplots(3,1,sharex=True,num='Time Series View',
                               facecolor='white')
   _setup_ts_ax(ts_ax)
-  map_fig,map_ax = plt.subplots(num='Map View',facecolor='white')
-  bm = make_basemap(lon,lat,resolution=map_resolution)
-  _setup_map_ax(bm,map_ax)
-  x,y = bm(lon,lat)
-  pos = np.array([x,y]).T
+  proj = make_basemap(lon,lat)
+  map_fig,map_ax = plt.subplots(num='Map View',
+                                facecolor='white',
+                                subplot_kw={'projection':proj})
+  _setup_map_ax(map_ax)
+  pos = proj.transform_points(proj.as_geodetic(), lon, lat)[:,:2]
   interactive_strain_viewer(
     t,pos,exx,eyy,exy,sxx=sxx,syy=syy,sxy=sxy,
     map_ax=map_ax,ts_ax=ts_ax,time_labels=dates,

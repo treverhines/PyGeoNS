@@ -237,7 +237,7 @@ def pygeons_fit(input_file,
     raise ValueError('input dataset must have units of displacement')
 
   # create output dictionary
-  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out = dict((k,np.copy(v)) for k,v in data.items())
 
   # convert params to a dictionary of hyperparameters for each direction
   network_params = _params_dict(network_params)
@@ -250,9 +250,10 @@ def pygeons_fit(input_file,
   output_file = output_stem + '.h5'
   
   # convert geodetic positions to cartesian
-  bm = make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  xy = np.array([x,y]).T
+  proj = make_basemap(data['longitude'],data['latitude'])
+  xy = proj.transform_points(proj.as_geodetic(),
+                             data['longitude'],
+                             data['latitude'])[:,:2]
 
   _log_fit(input_file,
            network_model,network_params,
@@ -295,7 +296,7 @@ def pygeons_autoclean(input_file,
     raise ValueError('input dataset must have units of displacement')
 
   # dictionary which will contain the edited data
-  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out = dict((k,np.copy(v)) for k,v in data.items())
 
   # convert params to a dictionary of hyperparameters for each direction
   network_params = _params_dict(network_params)
@@ -308,9 +309,10 @@ def pygeons_autoclean(input_file,
   output_file = output_stem + '.h5'
   
   # convert geodetic positions to cartesian
-  bm = make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  xy = np.array([x,y]).T
+  proj = make_basemap(data['longitude'],data['latitude'])
+  xy = proj.transform_points(proj.as_geodetic(),
+                             data['longitude'],
+                             data['latitude'])[:,:2]
 
   _log_autoclean(input_file,
                  network_model,network_params,
@@ -368,9 +370,10 @@ def pygeons_reml(input_file,
   output_file = output_stem + '.txt'
   
   # convert geodetic positions to cartesian
-  bm = make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  xy = np.array([x,y]).T
+  proj = make_basemap(data['longitude'],data['latitude'])
+  xy = proj.transform_points(proj.as_geodetic(),
+                             data['longitude'],
+                             data['latitude'])[:,:2]
 
   # call "pygeons info" on the input data file. pipe the results to
   # the output file
@@ -437,8 +440,8 @@ def pygeons_strain(input_file,
   if data['space_exponent'] != 1:
     raise ValueError('input dataset must have units of displacement')
     
-  out_dx = dict((k,np.copy(v)) for k,v in data.iteritems())
-  out_dy = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out_dx = dict((k,np.copy(v)) for k,v in data.items())
+  out_dy = dict((k,np.copy(v)) for k,v in data.items())
 
   # convert params to a dictionary of hyperparameters for each direction
   network_prior_params = _params_dict(network_prior_params)
@@ -446,9 +449,10 @@ def pygeons_strain(input_file,
   station_noise_params = _params_dict(station_noise_params)
   
   # convert geodetic input positions to cartesian
-  bm = make_basemap(data['longitude'],data['latitude'])
-  x,y = bm(data['longitude'],data['latitude'])
-  xy = np.array([x,y]).T
+  proj = make_basemap(data['longitude'],data['latitude'])
+  xy = proj.transform_points(proj.as_geodetic(),
+                             data['longitude'],
+                             data['latitude'])[:,:2]
 
   # set output positions
   if (positions is None) & (positions_file is None):
@@ -482,9 +486,9 @@ def pygeons_strain(input_file,
       output_lat = np.hstack((output_lat,pos[:,2].astype(float)))
 
   # convert geodetic output positions to cartesian
-  output_x,output_y = bm(output_lon,output_lat)
-  output_xy = np.array([output_x,output_y]).T 
-  
+  output_xy = proj.transform_points(proj.as_geodetic(),
+                                    output_lon,
+                                    output_lat)[:,:2]
   # set output times
   if start_date is None:
     start_date = mjd_inv(np.min(data['time']),'%Y-%m-%d')

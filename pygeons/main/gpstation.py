@@ -24,7 +24,7 @@ def const():
     out = rbf.poly.mvmonos(x - t0,powers,diff)
     return out
 
-  return gauss.gpbfci(basis,dim=1)  
+  return gauss.gpbasis(basis,dim=1)  
 
 
 @set_units([])
@@ -43,7 +43,7 @@ def linear():
     out = rbf.poly.mvmonos(x - t0,powers,diff)
     return out
 
-  return gauss.gpbfci(basis,dim=1)  
+  return gauss.gpbasis(basis,dim=1)  
 
 
 @set_units([])
@@ -62,7 +62,7 @@ def per():
                     np.cos(4*np.pi*x[:,0]/365.25)]).T
     return out
 
-  return gauss.gpbfci(basis,dim=1)
+  return gauss.gpbasis(basis,dim=1)
 
 
 @set_units(['mjd'])
@@ -85,7 +85,7 @@ def step(t0):
     out = out[:,None]
     return out
 
-  return gauss.gpbfci(basis,dim=1)
+  return gauss.gpbasis(basis,dim=1)
 
 
 @set_units(['mm','yr'])

@@ -28,7 +28,7 @@ def unit_conversion(units,time='day',space='m'):
           'mjd':24.0*60.0*60.0,
           'yr':365.25*24.0*60.0*60.0}
   # converts to user-specified space units and time units
-  conv = dict([(k,v/to_m[space]) for k,v in to_m.iteritems()] +
-              [(k,v/to_s[time]) for k,v in to_s.iteritems()])
+  conv = dict([(k,v/to_m[space]) for k,v in to_m.items()] +
+              [(k,v/to_s[time]) for k,v in to_s.items()])
   out = eval(units,conv)
   return out

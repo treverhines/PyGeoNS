@@ -26,7 +26,7 @@ def check_entries(data):
           'vertical','east_std_dev','north_std_dev','vertical_std_dev',
           'time_exponent','space_exponent']
   for k in keys:
-    if not data.has_key(k):
+    if k not in data:
       raise DataError('Data dictionary is missing *%s*' % k)
   
 

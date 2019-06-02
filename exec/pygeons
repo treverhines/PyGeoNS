@@ -371,7 +371,7 @@ p.set_defaults(func=pygeons_strain)
 kwargs = vars(main.parse_args())
 # toss out Nones and let the lower level functions determine the
 # defaults
-for k in kwargs.keys():
+for k in list(kwargs.keys()):
   if kwargs[k] is None:
     kwargs.pop(k)  
 

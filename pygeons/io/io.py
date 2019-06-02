@@ -157,7 +157,7 @@ def pygeons_crop(input_file,start_date=None,stop_date=None,
   '''
   logger.info('Running pygeons crop ...')
   data = dict_from_hdf5(input_file)
-  out = dict((k,np.copy(v)) for k,v in data.iteritems())
+  out = dict((k,np.copy(v)) for k,v in data.items())
 
   if start_date is None:
     start_date = mjd.mjd_inv(data['time'].min(),'%Y-%m-%d')

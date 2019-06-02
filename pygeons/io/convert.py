@@ -101,7 +101,13 @@ def hdf5_from_dict(outfile,data):
   check_data(data)
   fout = h5py.File(outfile,'w') 
   for k in data.keys():
-    fout[k] = data[k]
+    # HDF5 is not able to store unicode strings and they need to be
+    # converted to bytes. 'id' is the only field that contains unicode
+    # strings
+    if k == 'id':
+        fout[k] = data[k].astype('S')
+    else:
+        fout[k] = data[k]
     
   fout.close()
   return
@@ -190,7 +196,12 @@ def dict_from_hdf5(infile):
   out = {}
   fin = h5py.File(infile,'r')
   for k in fin.keys():
-    out[k] = fin[k][...]
+    # the 'id' dataset is saved as bytes. these need to be converted
+    # to unicode
+    if k == 'id':
+        out[k] = fin[k][...].astype('U')
+    else:        
+        out[k] = fin[k][...]
 
   fin.close()
   check_data(out)
