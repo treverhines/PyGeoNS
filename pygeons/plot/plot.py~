@@ -81,7 +81,25 @@ def _setup_map_ax(ax):
     return out
 
   ax.format_coord = coord_formatter
-  #bm.drawcountries(ax=ax,zorder=2)
+  ocean = cfeature.NaturalEarthFeature(
+    category='physical',
+    name='ocean',
+    scale='50m',
+    facecolor='0.9',
+    edgecolor='k',
+    zorder=2)
+  countries = cfeature.NaturalEarthFeature(
+    category='cultural',
+    name='admin_0_countries',
+    scale='50m',
+    facecolor='none',
+    edgecolor='black',
+    zorder=2)
+  ax.add_feature(ocean)    
+  ax.add_feature(countries)    
+  # TODO get labels on the gridlines
+  ax.gridlines(linestyle=':', color='black')
+
   #bm.drawstates(ax=ax,zorder=2) 
   #bm.drawcoastlines(ax=ax,zorder=2)
   #mer,par =  _get_meridians_and_parallels(bm,3)
