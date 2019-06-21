@@ -61,11 +61,11 @@ Create a new directory where we will install PyGeoNS and RBF
   $ mkdir pygeons_packages
   $ cd pygeons_packages
 
-Clone and install RBF
+Clone and install the last compatible version of RBF
 
 .. code-block:: bash
 
-  $ git clone http://www.github.com/treverhines/RBF.git
+  $ git clone --single-branch --branch=2019.04.28 --depth=1 http://www.github.com/treverhines/RBF.git
   $ cd RBF
   $ python setup.py install
   $ cd ..
@@ -86,6 +86,12 @@ slow slip event in the Pacific Northwest.
 
   $ cd demo/demo2
   $ bash run.sh
+
+
+I am currently working on updating PyGeoNS so that it runs in Python 3, and has
+`cartopy`, rather than `basemap`, as a a dependency. This version of PyGeoNS is
+on the branch `py3` and it should be compatible with the latest versions of
+each of its dependencies.
 
 Subcommands
 ===========
