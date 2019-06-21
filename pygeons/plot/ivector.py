@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from pygeons.plot.quiver import Quiver
+from pygeons.plot.quiver import QuiverWithUncertainty
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import ListedColormap
 from code import InteractiveConsole
@@ -200,7 +200,7 @@ Notes :
                dataset_labels=None,
                quiver_key_length=None,
                quiver_scale=None,
-               quiver_key_pos=(0.15,0.2),
+               quiver_key_pos=(0.1, 0.1),
                image_clim=None,
                image_cmap='RdBu_r',
                image_resolution=300,
@@ -657,45 +657,36 @@ Notes :
     # Initially plots the horizontal deformation vectors and a key
     self.quiver = []
     for si in range(len(self.data_sets)):
-      q = Quiver(self.map_ax,self.x[:,0],self.x[:,1],
-                 self.data_sets[si][self.tidx,:,0],
-                 self.data_sets[si][self.tidx,:,1],
-                 scale=self.quiver_scale,  
-                 width=0.005,
-                 sigma=(self.sigma_sets[si][self.tidx,:,0],
-                        self.sigma_sets[si][self.tidx,:,1],
-                        np.zeros(self.x.shape[0])), 
-                 color=self.colors[si],
-                 ellipse_kwargs={'edgecolors':'k','zorder':2+si},
-                 zorder=3+si)
-      self.map_ax.add_collection(q,autolim=True)
+      # plot quiver key for the first data set
+      if self.units is None:
+        quiver_key_label = '%s' % self.quiver_key_length
+      else:
+        quiver_key_label = '%s %s' % (self.quiver_key_length, self.units)
+        
+      q = QuiverWithUncertainty(self.map_ax,
+                                x=self.x[:,0],y=self.x[:,1],
+                                u=self.data_sets[si][self.tidx,:,0],
+                                v=self.data_sets[si][self.tidx,:,1],
+                                su=self.sigma_sets[si][self.tidx,:,0],
+                                sv=self.sigma_sets[si][self.tidx,:,1],
+                                scale=self.quiver_scale,  
+                                include_key=(si==0),
+                                key_label=quiver_key_label,
+                                key_pos=self.quiver_key_pos,
+                                key_mag=self.quiver_key_length,
+                                ellipse_kwargs={'edgecolors':'k','facecolor':'none', 'zorder':2+si},
+                                quiver_kwargs={'color':self.colors[si], 'width':0.005, 'zorder':3+si},
+                                text_kwargs={'size':self.fontsize})
       self.map_ax.autoscale_view()                 
       self.quiver += [q]                        
-      if si == 0:
-        # plot quiver key for the first data set
-        if self.units is None:
-          quiver_key_label = '%s' % self.quiver_key_length
-        else:
-          quiver_key_label = '%s %s' % (self.quiver_key_length,
-                                        self.units)
-          
-        self.key = self.map_ax.quiverkey(
-                     self.quiver[si],
-                     self.quiver_key_pos[0],
-                     self.quiver_key_pos[1],
-                     self.quiver_key_length,
-                     quiver_key_label,zorder=3,labelsep=0.05,
-                     fontproperties={'size':self.fontsize})
                      
   def _update_quiver(self):
     # Updates the deformation vectors for changes in *tidx* or *xidx* 
     for si in range(len(self.data_sets)):
-      self.quiver[si].set_UVC(
-                        self.data_sets[si][self.tidx,:,0],
-                        self.data_sets[si][self.tidx,:,1],
-                        sigma=(self.sigma_sets[si][self.tidx,:,0],
-                               self.sigma_sets[si][self.tidx,:,1],
-                               np.zeros(self.x.shape[0])))
+      self.quiver[si].set_data(u=self.data_sets[si][self.tidx,:,0],
+                               v=self.data_sets[si][self.tidx,:,1],
+                               su=self.sigma_sets[si][self.tidx,:,0],
+                               sv=self.sigma_sets[si][self.tidx,:,1])
 
   def _init_pickers(self):
     # Initially plots the picker artists, which are used to select
@@ -723,7 +714,7 @@ Notes :
                                            
         self.text += [self.map_ax.text(xi[0],xi[1],si,
                                        fontsize=self.fontsize,
-                                       color=(0.4,0.4,0.4))]
+                                       color=(0.4, 0.4, 0.4))]
       else:                                       
         # just create the pickers and dont make them visible
         self.pickers += self.map_ax.plot(xi[0],xi[1],'.',
@@ -869,7 +860,6 @@ Notes :
     for q in self.quiver: q.remove()
     for p in self.pickers: p.remove()
     for t in self.text: t.remove()
-    self.key.remove()
     self.image.remove()
     if self.scatter is not None:
       self.scatter.remove()        

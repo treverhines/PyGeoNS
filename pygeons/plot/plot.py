@@ -11,7 +11,7 @@ import cartopy.feature as cfeature
 import logging
 from matplotlib.ticker import FuncFormatter,MaxNLocator
 from pygeons.io.convert import dict_from_hdf5
-from pygeons.plot.ivector import interactive_vector_viewer,one_sigfig
+from pygeons.plot.ivector import interactive_vector_viewer
 from pygeons.plot.istrain import interactive_strain_viewer
 from pygeons.mjd import mjd_inv
 from pygeons.basemap import make_basemap
@@ -40,54 +40,19 @@ def _unit_string(space_exponent,time_exponent):
     time_str = '/yr^%s' % -time_exponent
   
   return space_str + time_str
-  
 
-def _get_meridians_and_parallels(bm,ticks):
-  ''' 
-  attempts to find nice locations for the meridians and parallels 
-  based on the current axis limits
-  '''
-  diff_lon = (bm.urcrnrlon-bm.llcrnrlon)
-  round_digit = int(np.ceil(np.log10(ticks/diff_lon)))
-  dlon = np.round(diff_lon/ticks,round_digit)
-
-  diff_lat = (bm.urcrnrlat-bm.llcrnrlat)
-  round_digit = int(np.ceil(np.log10(ticks/diff_lat)))
-  dlat = np.round(diff_lat/ticks,round_digit)
-
-  # round down to the nearest rounding digit
-  lon_low = np.floor(bm.llcrnrlon*10**round_digit)/10**round_digit
-  lat_low = np.floor(bm.llcrnrlat*10**round_digit)/10**round_digit
-  # round up to the nearest rounding digit
-  lon_high = np.ceil(bm.urcrnrlon*10**round_digit)/10**round_digit
-  lat_high = np.ceil(bm.urcrnrlat*10**round_digit)/10**round_digit
-
-  meridians = np.arange(lon_low,lon_high+dlon,dlon)
-  parallels = np.arange(lat_low,lat_high+dlat,dlat)
-  return meridians,parallels
-  
 
 def _setup_map_ax(ax):
   ''' 
   prepares the map axis for display
   '''
-  proj = ax.projection
-  # function which prints out the coordinates on the bottom left 
-  # corner of the figure
-  def coord_formatter(x,y):                         
-    lon, lat = proj.as_geodetic().transform_point(x, y, proj)
-    out = 'x : %g  y : %g  ' % (x,y)
-    out += '(lon : %g E  lat : %g N)' % (lon, lat)
-    return out
-
-  ax.format_coord = coord_formatter
   ocean = cfeature.NaturalEarthFeature(
     category='physical',
     name='ocean',
     scale='50m',
     facecolor='0.9',
     edgecolor='k',
-    zorder=2)
+    zorder=1)
   countries = cfeature.NaturalEarthFeature(
     category='cultural',
     name='admin_0_countries',
@@ -99,23 +64,8 @@ def _setup_map_ax(ax):
   ax.add_feature(countries)    
   # TODO get labels on the gridlines
   ax.gridlines(linestyle=':', color='black')
-
-  #bm.drawstates(ax=ax,zorder=2) 
-  #bm.drawcoastlines(ax=ax,zorder=2)
-  #mer,par =  _get_meridians_and_parallels(bm,3)
-  #bm.drawmeridians(mer,
-  #                 labels=[0,0,0,1],dashes=[2,2],
-  #                 ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
-  #bm.drawparallels(par,
-  #                 labels=[1,0,0,0],dashes=[2,2],
-  #                 ax=ax,zorder=2,color=(0.3,0.3,0.3,1.0))
-  #bm.drawmapboundary(ax=ax,fill_color=(0.9,0.9,0.9),zorder=2)
-  #bm.fillcontinents(ax=ax,color=(1.0,1.0,1.0),lake_color=(0.9,0.9,0.9),zorder=0)
-  #scale_lon,scale_lat = bm(*ax.transData.inverted().transform(ax.transAxes.transform([0.15,0.1])),
-  #                         inverse=True)
-  #scale_size = one_sigfig((bm.urcrnrx - bm.llcrnrx)/5.0)/1000.0
-  #bm.drawmapscale(scale_lon,scale_lat,scale_lon,scale_lat,scale_size,
-  #                ax=ax,barstyle='fancy',fontsize=10,zorder=2)
+  # TODO add scalebar. the scale bar is difficult because we do not yet know
+  # the data extent
   return
                      
 
@@ -152,7 +102,7 @@ def _setup_ts_ax(ax_lst,maxn=6):
   return
 
 
-def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
+def pygeons_vector_view(input_files,**kwargs):
   ''' 
   runs the PyGeoNS interactive vector viewer
   
@@ -161,9 +111,6 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
     data_list : (N,) list of dicts
       list of data dictionaries being plotted
       
-    map_resolution : str
-      basemap resolution
-    
     **kwargs :
       gets passed to pygeons.plot.view.interactive_view
 
@@ -209,7 +156,7 @@ def pygeons_vector_view(input_files,map_resolution='i',**kwargs):
   return
 
 
-def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
+def pygeons_strain_view(xdiff_file,ydiff_file,**kwargs):
   ''' 
   runs the PyGeoNS Interactive Strain Viewer
   
@@ -218,9 +165,6 @@ def pygeons_strain_view(xdiff_file,ydiff_file,map_resolution='i',**kwargs):
     xdiff_file : str
 
     ydiff_file : str
-      
-    map_resolution : str
-      basemap resolution
       
     **kwargs :
       gets passed to pygeons.strain.view
