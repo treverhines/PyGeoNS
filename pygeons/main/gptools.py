@@ -5,9 +5,9 @@ import numpy as np
 import scipy.sparse as sp
 from rbf.utils import get_arg_count
 from rbf.gauss import (GaussianProcess,
-                       _zero_mean,
-                       _zero_covariance,
-                       _empty_basis)
+                       zero_mean,
+                       zero_sparse_covariance,
+                       empty_basis)
 from pygeons.units import unit_conversion as conv
 #from pygeons.main.cbasis import add_diffs_to_caches
 import logging
@@ -252,7 +252,7 @@ def null():
   returns a GaussianProcess with zero mean and covariance and not
   basis functions
   '''
-  return GaussianProcess(_zero_mean,_zero_covariance,_empty_basis)
+  return GaussianProcess(zero_mean, zero_sparse_covariance, empty_basis)
 
 
 def composite_units(components,constructors):
